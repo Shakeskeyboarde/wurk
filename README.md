@@ -1,0 +1,2 @@
+# npmws
+NPM workspaces utility.
