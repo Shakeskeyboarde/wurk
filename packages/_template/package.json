@@ -1,0 +1,34 @@
+{
+  "private": true,
+  "name": "template",
+  "description": "",
+  "version": "0.1.0",
+  "author": "Chris Ackerman <chris@topher.land>",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shakeskeyboarde/monox.git"
+  },
+  "files": [
+    "lib/**"
+  ],
+  "directories": {
+    "lib": "lib"
+  },
+  "type": "module",
+  "types": "lib/main.d.ts",
+  "main": "lib/main.js",
+  "exports": {
+    ".": {
+      "types": "./lib/main.d.ts",
+      "default": "./lib/main.js"
+    }
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "private": true,
+  "name": "root",
+  "license": "ISC",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "build": "npm -ws run build && npm update monox",
+    "test": "npm run build && npm run lint && vitest run",
+    "clean": "rm -rf out **/out lib **/lib",
+    "modernize": "npx npm-check-updates@latest -i --workspaces --root --format group",
+    "start": "npm run --silent build && npx monox"
+  },
+  "workspaces": [
+    "packages/_template",
+    "packages/monox",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=18",
+    "npm": ">=9",
+    "yarn": "please-use-npm",
+    "pnpm": "please-use-npm"
+  },
+  "engineStrict": true,
+  "devDependencies": {
+    "@testing-library/react": "^14.0.0",
+    "@types/eslint": "^8.40.0",
+    "@types/node": "^20.2.5",
+    "@vitest/coverage-c8": "^0.31.1",
+    "eslint": "^8.41.0",
+    "eslint-config-rational": "^2.0.23",
+    "prettier": "^2.8.8",
+    "typescript": "^5.0.4",
+    "vitest": "^0.31.1"
+  }
+}

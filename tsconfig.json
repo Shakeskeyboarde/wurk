@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext",
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "forceConsistentCasingInFileNames": true,
+    "downlevelIteration": true,
+    "useDefineForClassFields": true,
+    "noUncheckedIndexedAccess": true,
+    "declaration": true,
+    "sourceMap": true,
+    "allowJs": true,
+    "noEmit": true
+  },
+  "include": ["**/*", ".eslintrc.cjs", ".prettierrc.cjs"],
+  "exclude": ["node_modules", "out", "lib"]
+}

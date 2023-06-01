@@ -1,0 +1,55 @@
+{
+  "name": "monox",
+  "description": "Modular and extensible monorepo workspace command orchestration.",
+  "version": "1.0.0",
+  "author": "Chris Ackerman <chris@topher.land>",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shakeskeyboarde/monox.git"
+  },
+  "files": [
+    "lib/**"
+  ],
+  "directories": {
+    "lib": "lib"
+  },
+  "type": "module",
+  "types": "lib/exports.d.ts",
+  "main": "lib/exports.js",
+  "exports": {
+    ".": {
+      "types": "./lib/exports.d.ts",
+      "default": "./lib/exports.js"
+    }
+  },
+  "bin": "./lib/main.js",
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && chmod +x lib/main.js"
+  },
+  "engines": {
+    "node": ">=18",
+    "npm": ">=9"
+  },
+  "engineStrict": true,
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@commander-js/extra-typings": "^10.0.3",
+    "@types/cross-spawn": "^6.0.2",
+    "@types/find-root": "^1.1.2",
+    "@types/shell-quote": "^1.7.1",
+    "ansi-regex": "^6.0.1",
+    "async-sema": "^3.1.1",
+    "chalk": "^5.2.0",
+    "commander": "^10.0.1",
+    "cross-spawn": "^7.0.3",
+    "find-root": "^1.1.0",
+    "npm-run-path": "^5.1.0",
+    "semver": "^7.5.1",
+    "shell-quote": "^1.8.1",
+    "type-fest": "^3.11.1"
+  }
+}
