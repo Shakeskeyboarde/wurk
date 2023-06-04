@@ -1,12 +1,12 @@
 {
-  "name": "monox-command-run",
-  "description": "MonoX: Run package.json scripts.",
+  "name": "@werk/command-run",
+  "description": "Werk: Run package.json scripts.",
   "version": "1.0.0",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Shakeskeyboarde/monox.git"
+    "url": "git+https://github.com/Shakeskeyboarde/werk.git"
   },
   "files": [
     "lib/**"
@@ -31,6 +31,6 @@
     "access": "public"
   },
   "dependencies": {
-    "monox": "^1.0.0"
+    "@werk/cli": "^1.0.0"
   }
 }

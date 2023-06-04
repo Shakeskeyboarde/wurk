@@ -2,7 +2,7 @@ import { spawn as crossSpawn } from 'cross-spawn';
 import { npmRunPath } from 'npm-run-path';
 import { quote } from 'shell-quote';
 
-import { type Log, log as defaultLog } from './log.js';
+import { type Log, log as defaultLog } from '../log.js';
 
 export interface SpawnPromise extends Promise<void> {
   stdout(): Promise<Buffer>;

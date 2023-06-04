@@ -1,12 +1,12 @@
 {
-  "name": "monox",
-  "description": "Modular and extensible monorepo workspace command orchestration.",
+  "name": "@werk/cli",
+  "description": "Modular and extensible monorepo command framework.",
   "version": "1.0.0",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Shakeskeyboarde/monox.git"
+    "url": "git+https://github.com/Shakeskeyboarde/werk.git"
   },
   "files": [
     "lib/**"
@@ -23,10 +23,10 @@
       "default": "./lib/exports.js"
     }
   },
-  "bin": "./lib/main.js",
+  "bin": "./lib/bin.js",
   "sideEffects": false,
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && chmod +x lib/main.js"
+    "build": "tsc -p tsconfig.build.json && chmod +x lib/bin.js"
   },
   "engines": {
     "node": ">=18",
@@ -46,9 +46,8 @@
     "chalk": "^5.2.0",
     "commander": "^10.0.1",
     "cross-spawn": "^7.0.3",
-    "find-root": "^1.1.0",
+    "immer": "^10.0.2",
     "npm-run-path": "^5.1.0",
-    "semver": "^7.5.1",
     "shell-quote": "^1.8.1",
     "type-fest": "^3.11.1"
   }

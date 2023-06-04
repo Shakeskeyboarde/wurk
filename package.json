@@ -5,15 +5,15 @@
   "type": "module",
   "scripts": {
     "lint": "eslint .",
-    "build": "npm -ws run build && npm update monox",
+    "build": "npm -ws run build && npm update @werk/cli",
     "test": "npm run build && npm run lint && vitest run",
     "clean": "rm -rf out **/out lib **/lib",
     "modernize": "npx npm-check-updates@latest -i --workspaces --root --format group",
-    "start": "npm run --silent build && npx monox"
+    "start": "npm run --silent build && npx @werk/cli"
   },
   "workspaces": [
     "packages/_template",
-    "packages/monox",
+    "packages/werk",
     "packages/*"
   ],
   "engines": {

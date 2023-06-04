@@ -1,3 +1,3 @@
-# MonoX
+# Werk
 
-Modular and extensible monorepo workspace command orchestration.
+Modular and extensible monorepo workspaces command orchestration.

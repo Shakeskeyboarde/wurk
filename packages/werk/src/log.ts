@@ -8,13 +8,16 @@ export interface LogOptions {
   trim?: boolean;
 }
 
-export class Log {
-  #prefix: string;
-  #trim: boolean;
+export class Log implements LogOptions {
+  readonly prefix: string;
+  readonly trim: boolean;
 
+  /**
+   * Copy constructor for threading support.
+   */
   constructor({ prefix = '', trim = false }: LogOptions = {}) {
-    this.#prefix = prefix;
-    this.#trim = trim;
+    this.prefix = prefix;
+    this.trim = trim;
   }
 
   /**
@@ -62,14 +65,14 @@ export class Log {
   #format(message: unknown, formatLine?: (message: string) => string): string {
     let str = String(message ?? '');
 
-    if (!this.#prefix && !this.#trim) {
+    if (!this.prefix && !this.trim) {
       if (formatLine) str = formatLine(str);
       return str.endsWith('\n') ? str.slice(0, -1) : str;
     }
 
     let lines = str.replace(ansiRegex, '').split('\n');
 
-    if (this.#trim) {
+    if (this.trim) {
       lines = lines.flatMap((line) => {
         line = line.trim();
         return line ? [line] : [];
@@ -79,7 +82,7 @@ export class Log {
     }
 
     if (formatLine) lines = lines.map((line) => line && formatLine(line));
-    if (this.#prefix) lines = lines.map((line) => this.#prefix + line);
+    if (this.prefix) lines = lines.map((line) => this.prefix + line);
 
     return lines.join('\n');
   }
