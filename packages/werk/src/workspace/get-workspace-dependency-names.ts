@@ -4,7 +4,7 @@ import { getKeys } from '../utils/get-keys.js';
 
 export const getWorkspaceDependencyNames = (
   workspace: Pick<PackageJson, 'dependencies' | 'peerDependencies' | 'optionalDependencies' | 'devDependencies'>,
-): ReadonlySet<string> => {
+): string[] => {
   return getKeys(
     workspace.dependencies,
     workspace.peerDependencies,

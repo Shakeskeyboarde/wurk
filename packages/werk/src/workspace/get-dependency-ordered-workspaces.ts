@@ -18,7 +18,7 @@ export const getDependencyOrderedWorkspaces = <
     let count = 0;
 
     unresolved.forEach((workspace) => {
-      const isBlocked = [...getWorkspaceDependencyNames(workspace)].some(
+      const isBlocked = getWorkspaceDependencyNames(workspace).some(
         (name) => localNames.has(name) && !resolvedNames.has(name),
       );
 

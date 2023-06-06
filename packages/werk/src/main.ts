@@ -153,7 +153,7 @@ const commandAction = async ({
     const logPrefixColor = PREFIX_COLORS[prefixColorIndex++ % PREFIX_COLORS.length] as PrefixColor;
     const logPrefix = prefix ? chalk.bold(chalk[`${logPrefixColor}Bright`](workspace.name) + ': ') : '';
     const dependencyNames = getWorkspaceDependencyNames(workspace);
-    const prerequisites = Promise.allSettled([...dependencyNames].map((name) => promises.get(name)));
+    const prerequisites = Promise.allSettled(dependencyNames.map((name) => promises.get(name)));
     const promise = Promise.resolve().then(async () => {
       await prerequisites;
       await semaphore?.acquire();

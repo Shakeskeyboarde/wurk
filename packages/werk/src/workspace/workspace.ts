@@ -31,7 +31,7 @@ export class Workspace implements WorkspaceOptions {
   readonly devDependencies: Readonly<Partial<Record<string, string>>>;
   readonly keywords: readonly string[];
   readonly selected: boolean;
-  readonly dependencyNames: ReadonlySet<string>;
+  readonly dependencyNames: readonly string[];
 
   constructor(options: WorkspaceOptions) {
     this.dir = options.dir;
