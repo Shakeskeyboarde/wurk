@@ -67,7 +67,7 @@ A context object is passed to each hook callback. The properties attached to tho
 - `rootDir`: Absolute path of the workspaces root.
 - `commander` (**init** hook only): Configurable [Commander](https://www.npmjs.com/package/commander) instance for defining command options, arguments, and help text.
 - `args` (**before**, **each**, and **after** hooks only): Positional arguments parsed from command line.
-- `options` (**before**, **each**, and **after** hooks only): Named options parsed from the command line.
+- `opts` (**before**, **each**, and **after** hooks only): Named options parsed from the command line.
 - `workspaces` (**before**, **each**, and **after** hooks only): A map (by name) of all [workspaces](#workspaces).
 - `workspace` (**each** hook only): The current [workspace](#workspaces).
 - `spawn` (**before**, **each**, and **after** hooks only): Spawn a process. The working directory will be the root of the current workspace if available (`each` hook), or the workspaces root otherwise.
