@@ -144,15 +144,21 @@ The context `spawn(cmd, args?, options?)` function is a promise based helper for
 - Based on [cross-spawn](https://www.npmjs.com/package/cross-spawn), so spawning be fairly consistent on Windows, Mac, and Linux.
 - Adds `node_modules/.bin` directories to the environment `PATH`, so locally installed binaries can be executed.
 
+**NOTE:** Using this helper is optional. However, please consider piping output from alternatively spawned processes to `log.stdout` and `log.stderr`.
+
 ```ts
 const spawned = spawn('git', ['status', '--porcelain'], {
   // Pass through output streams.
   //  Default: false
   echo: true,
 
-  // Buffer stdout and stderr data
+  // Buffer stdout and stderr data.
   //  Default: false
   capture: true,
+
+  // Pipe stdout and stderr streams for streaming.
+  //  Default: false
+  stream: true,
 
   // Pipe stdin so that data can be written to the process.
   //  Default: false
@@ -160,7 +166,16 @@ const spawned = spawn('git', ['status', '--porcelain'], {
 
   // Throw an error on non-zero exit codes.
   //  Default: true
-  throw: true,
+  errorThrow: true,
+
+  // Echo all output to stderr (if echo is not set) on non-zero
+  // exit codes.
+  //  Default: false
+  errorEcho: true,
+
+  // Log an error message on non-zero exit codes.
+  //  Default: undefined
+  errorMessage: (error, exitCode) => `Something went wrong`,
 
   // Working directory of the child process.
   //  Default: context.workspace.dir or context.rootDir
@@ -172,7 +187,7 @@ const spawned = spawn('git', ['status', '--porcelain'], {
 });
 ```
 
-If you don't care about the process result or output, you can just wait for the process to finish.
+If you don't care about the output, you can just wait for the process to finish.
 
 ```ts
 await spawned;
@@ -210,7 +225,7 @@ Write to stdin (if `input = true`).
 spawned.stdin?.write(data);
 ```
 
-Stream from stdout and stderr (if `capture = true` or `echo = true`).
+Stream from stdout and stderr (if `stream = true`).
 
 ```ts
 spawned.stdout?.on('data', handleData);
@@ -220,6 +235,8 @@ spawned.stderr?.on('data', handleData);
 ## Starting Threads
 
 Any hook except `init` can spawn a copy of itself in a worker thread by calling the context `startWorker(data?)` function.
+
+**NOTE:** Using this helper is optional. However, please consider piping output from alternatively created threads to `log.stdout` and `log.stderr`.
 
 The simplest case is to always run a hook in a separate thread.
 
@@ -253,7 +270,7 @@ More complicated scenarios where some processing happens in the main thread, and
 
 Please avoid using the global `console` object. The `log`, `warn`, and `error` methods are monkey patched to pipe through the context `log`, and using them will print a warning.
 
-The context `log` has the following methods.
+The context `log` has the following properties.
 
 - `trace`: Print a dimmed log message to stderr. This is intended to be useful only to developers.
 - `debug`: Print a dimmed log message to stderr. This is intended to help users do their own troubleshooting.
@@ -263,7 +280,9 @@ The context `log` has the following methods.
 - `error`: Print a red log message to stderr. This is intended for things that are definitely wrong, and are probably immediate failures.
 - `writeOut`: Print an undecorated log message to stdout. This is mostly intended for internal use, but is guaranteed never to be decorated.
 - `writeErr`: Print an undecorated log message to stderr. This is mostly intended for internal use, but is guaranteed never to be decorated.
-- `getLevel()`: Returns the current log level (eg. `{ name: 'info', value: 40 }`).
+- `stdout`: Writable stream which can be used for piping.
+- `stderr`: Writable stream which can be used for piping.
+- `getLevel()`: Function which returns the current log level (eg. `{ name: 'info', value: 40 }`).
 
 Any logged messages may be modified in the following ways:
 
