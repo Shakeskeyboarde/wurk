@@ -1,4 +1,4 @@
-export type { CommandHooks } from './command/command.js';
+export { type CommandHooks } from './command/command.js';
 export { createCommand } from './command/create-command.js';
 export { type Commander, type CommanderArgs, type CommanderOptions } from './commander/commander.js';
 export { type InitContext, type InitContextOptions } from './context/init-context.js';

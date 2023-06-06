@@ -11,7 +11,7 @@ export interface InitContextOptions {
 
 export class InitContext implements InitContextOptions {
   /**
-   * Logger.
+   * Contextual logger.
    */
   readonly log: Log;
 

@@ -18,6 +18,11 @@ type CommandWorkerData<A extends CommanderArgs, O extends CommanderOptions> =
       readonly data: any;
     };
 
+/**
+ * Define a Werk custom command.
+ *
+ * The result of this function should be the default export of the command package.
+ */
 export const createCommand = <A extends CommanderArgs, O extends CommanderOptions>(
   hooks: CommandHooks<A, O>,
 ): unknown => {

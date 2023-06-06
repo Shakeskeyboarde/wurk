@@ -7,9 +7,21 @@ import { WorkspaceContext, type WorkspaceContextOptions } from '../context/works
 import { startWorker } from '../utils/start-worker.js';
 
 export interface CommandHooks<A extends CommanderArgs, O extends CommanderOptions, AA extends A = A, OO extends O = O> {
+  /**
+   * Called when the command is loaded. Intended for configuration of command options, arguments, and help text.
+   */
   readonly init?: (context: InitContext) => Commander<A, O>;
+  /**
+   * Run once before handling individual workspaces.
+   */
   readonly before?: (context: RootContext<AA, OO>) => Promise<void>;
+  /**
+   * Run once for each workspace.
+   */
   readonly each?: (context: WorkspaceContext<AA, OO>) => Promise<void>;
+  /**
+   * Run once after handling individual workspaces.
+   */
   readonly after?: (context: RootContext<AA, OO>) => Promise<void>;
 }
 

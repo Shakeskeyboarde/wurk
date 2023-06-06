@@ -18,7 +18,7 @@ export interface RootContextOptions<A extends CommanderArgs, O extends Commander
 
 export class RootContext<A extends CommanderArgs, O extends CommanderOptions> {
   /**
-   * Logger.
+   * Contextual logger.
    */
   readonly log: Log;
 
