@@ -165,34 +165,51 @@ const spawned = spawn('git', ['status', '--porcelain'], {
   //  Default: process.env
   env: {},
 });
+```
 
-// Just wait for the process to finish.
-await spawned; // void
+If you don't care about the process result or output, you can just wait for the process to finish.
 
-// Get the process output.
+```ts
+await spawned;
+```
+
+Get the process output as byte, text, or decoded JSON.
+
+```ts
 const stdoutBytes = await spawned.getStdout();
 const stdoutText = await spawned.getStdout('utf-8');
 const stderrBytes = await spawned.getStderr();
 const stderrText = await spawned.getStderr('utf-8');
+
 // Both stdout and stderr as one combined value.
 const outputBytes = await spawned.getOutput();
 const outputText = await spawned.getOutput('utf-8');
+
 // JSON parsed stdout.
 const json = await spawned.getJson();
 const jsonOrUndefined = await spawned.tryGetJson();
+```
 
-// Wait process success or failure.
+Wait for the process to exit, and get the error or error code.
+
+```ts
 const exitCode = await spawned.getExitCode();
 const error = await spawned.getError();
 const isSuccessful = await spawned.succeeded();
 const isFailed = await spawned.failed();
+```
 
-// If the input option is true.
-spawned.stdin;
+Write to stdin (if `input = true`).
 
-// If the capture or echo options are true.
-spawned.stdout;
-spawned.stderr;
+```ts
+spawned.stdin?.write(data);
+```
+
+Stream from stdout and stderr (if `capture = true` or `echo = true`).
+
+```ts
+spawned.stdout?.on('data', handleData);
+spawned.stderr?.on('data', handleData);
 ```
 
 ## Starting Threads
