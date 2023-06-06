@@ -17,7 +17,7 @@ The first goal of Werk is to make it easier to build or choose the monorepo orch
 
 ## Overview
 
-Werk provides the following capabilities so that your custom command can focus on doing it's job.
+Werk provides the following capabilities so that your custom command can focus on doing its job.
 
 - **Log** messages prefixed with the current workspace.
 - **Parse** CLI **options** and **arguments** using [commander](https://www.npmjs.com/package/commander).
