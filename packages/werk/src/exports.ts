@@ -5,6 +5,7 @@ export { type InitContext, type InitContextOptions } from './context/init-contex
 export { type RootContext, type RootContextOptions } from './context/root-context.js';
 export { type WorkspaceContext, type WorkspaceContextOptions } from './context/workspace-context.js';
 export { type Log, LOG_LEVEL, type LogLevel } from './utils/log.js';
-export { type Spawn, type SpawnOptions, type SpawnedProcess as SpawnPromise } from './utils/spawn.js';
+export { type Spawn, type SpawnOptions, type SpawnPromise } from './utils/spawn.js';
+export { type WorkerPromise } from './utils/start-worker.js';
 export { type Workspace } from './workspace/workspace.js';
 export { type PackageJson } from 'type-fest';

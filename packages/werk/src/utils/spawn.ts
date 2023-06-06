@@ -1,10 +1,13 @@
+import { type ChildProcess } from 'node:child_process';
+
 import { spawn as crossSpawn } from 'cross-spawn';
 import { npmRunPath } from 'npm-run-path';
 import { quote } from 'shell-quote';
 
 import { type Log, log as defaultLog } from './log.js';
 
-export interface SpawnedProcess extends Promise<void> {
+export interface SpawnPromise extends Promise<void> {
+  readonly childProcess: ChildProcess;
   readonly stdin: NodeJS.WritableStream | null;
   readonly stdout: NodeJS.ReadableStream;
   readonly stderr: NodeJS.ReadableStream;
@@ -64,9 +67,9 @@ export const spawn = (
     log = defaultLog,
     ...options
   }: SpawnOptions = {},
-): SpawnedProcess => {
+): SpawnPromise => {
   const env = options.env ?? process.env;
-  const cp = crossSpawn(command, args, {
+  const childProcess = crossSpawn(command, args, {
     ...options,
     stdio: [
       input ? 'pipe' : 'ignore',
@@ -86,23 +89,23 @@ export const spawn = (
   let error: unknown = undefined;
 
   if (echo) {
-    cp.stdout?.pipe(log.stdout);
-    cp.stderr?.pipe(log.stderr);
+    childProcess.stdout?.pipe(log.stdout);
+    childProcess.stderr?.pipe(log.stderr);
   }
 
   if (capture || errorEcho) {
-    cp.stdout?.on('data', (data: Buffer) => {
+    childProcess.stdout?.on('data', (data: Buffer) => {
       stdout.push(data);
       stdio.push(data);
     });
 
-    cp.stderr?.on('data', (data: Buffer) => {
+    childProcess.stderr?.on('data', (data: Buffer) => {
       stderr.push(data);
       stdio.push(data);
     });
   }
 
-  cp.on('error', (err) => {
+  childProcess.on('error', (err) => {
     error = err;
   });
 
@@ -111,14 +114,14 @@ export const spawn = (
   // necessary, but I think it's better to be safe than sorry.
   Promise.resolve()
     .then(() => {
-      cp.stdout?.resume();
-      cp.stderr?.resume();
+      childProcess.stdout?.resume();
+      childProcess.stderr?.resume();
     })
     .catch(() => undefined);
 
   const promise = new Promise<void>((resolve, reject) =>
-    cp.on('close', () => {
-      exitCode = cp.exitCode ?? 1;
+    childProcess.on('close', () => {
+      exitCode = childProcess.exitCode ?? 1;
 
       if (exitCode && !error) error = new Error(`command failed\n${quote([command, ...args])}\n${stdio}`);
       if (error && !exitCode) exitCode = 1;
@@ -130,10 +133,11 @@ export const spawn = (
     }),
   );
 
-  const result: SpawnedProcess = Object.assign(promise, {
-    stdin: cp.stdin,
-    stdout: cp.stdout as NodeJS.ReadableStream,
-    stderr: cp.stderr as NodeJS.ReadableStream,
+  const result: SpawnPromise = Object.assign(promise, {
+    childProcess,
+    stdin: childProcess.stdin,
+    stdout: childProcess.stdout as NodeJS.ReadableStream,
+    stderr: childProcess.stderr as NodeJS.ReadableStream,
     getStdout: (encoding?: BufferEncoding): Promise<any> =>
       promise.then(() => (encoding == null ? Buffer.concat(stdout) : Buffer.concat(stdout).toString(encoding).trim())),
     getStderr: (encoding?: BufferEncoding): Promise<any> =>

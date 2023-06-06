@@ -147,7 +147,7 @@ The context `spawn(cmd, args?, options?)` function is a promise based helper for
 **NOTE:** Using this helper is optional. However, please consider piping output from alternatively spawned processes to `log.stdout` and `log.stderr`.
 
 ```ts
-const spawned = spawn('git', ['status', '--porcelain'], {
+const spawnPromise = spawn('git', ['status', '--porcelain'], {
   // Pass through output streams.
   //  Default: false
   echo: true,
@@ -190,46 +190,54 @@ const spawned = spawn('git', ['status', '--porcelain'], {
 If you don't care about the output, you can just wait for the process to finish.
 
 ```ts
-await spawned;
+await spawnPromise;
 ```
 
-Get the process output as byte, text, or decoded JSON.
+If you do care about the output, the spawn promise is decorated with helpful properties.
+
+Get the process output as bytes, text, or decoded JSON.
 
 ```ts
-const stdoutBytes = await spawned.getStdout();
-const stdoutText = await spawned.getStdout('utf-8');
-const stderrBytes = await spawned.getStderr();
-const stderrText = await spawned.getStderr('utf-8');
+const stdoutBytes = await spawnPromise.getStdout();
+const stdoutText = await spawnPromise.getStdout('utf-8');
+const stderrBytes = await spawnPromise.getStderr();
+const stderrText = await spawnPromise.getStderr('utf-8');
 
 // Both stdout and stderr as one combined value.
-const outputBytes = await spawned.getOutput();
-const outputText = await spawned.getOutput('utf-8');
+const outputBytes = await spawnPromise.getOutput();
+const outputText = await spawnPromise.getOutput('utf-8');
 
 // JSON parsed stdout.
-const json = await spawned.getJson();
-const jsonOrUndefined = await spawned.tryGetJson();
+const json = await spawnPromise.getJson();
+const jsonOrUndefined = await spawnPromise.tryGetJson();
 ```
 
 Wait for the process to exit, and get the error or error code.
 
 ```ts
-const exitCode = await spawned.getExitCode();
-const error = await spawned.getError();
-const isSuccessful = await spawned.succeeded();
-const isFailed = await spawned.failed();
+const exitCode = await spawnPromise.getExitCode();
+const error = await spawnPromise.getError();
+const isSuccessful = await spawnPromise.succeeded();
+const isFailed = await spawnPromise.failed();
 ```
 
 Write to stdin (if `input = true`).
 
 ```ts
-spawned.stdin?.write(data);
+spawnPromise.stdin?.write(data);
 ```
 
 Stream from stdout and stderr (if `stream = true`).
 
 ```ts
-spawned.stdout?.on('data', handleData);
-spawned.stderr?.on('data', handleData);
+spawnPromise.stdout?.on('data', handleData);
+spawnPromise.stderr?.on('data', handleData);
+```
+
+As a last resort, the [NodeJS ChildProcess](https://nodejs.org/api/child_process.html#class-childprocess) is also available.
+
+```ts
+spawnPromise.childProcess.on('close', handleClose);
 ```
 
 ## Starting Threads
@@ -255,16 +263,27 @@ If the `startWorker()` function is called from the main thread, it starts a work
 You can pass data to the worker thread. The data must be compatible with the [Structured Clone](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm) algorithm.
 
 ```ts
-export default createCommand({
-  each: async (context): Promise<void> => {
-    if (await context.startWorker({ timestamp: Data.now() })) return;
+if (await context.startWorker({ timestamp: Data.now() })) {
+  return;
+}
 
-    context.log.info(`Current Timestamp: ${context.data.timestamp}`);
-  },
-});
+context.log.info(`Current Timestamp: ${context.data.timestamp}`);
 ```
 
 More complicated scenarios where some processing happens in the main thread, and some happens in one or more workers, can be achieved by checking the `context.isWorker` value.
+
+If you need access to the [NodeJS Worker](https://nodejs.org/api/worker_threads.html#class-worker), it's attached to the returned promise.
+
+```ts
+const workerPromise = context.startWorker();
+
+if (workerPromise.isStarted) {
+  workerPromise.worker.on('message', handleMessage);
+}
+
+// Don't forget to await the promise.
+await workerPromise;
+```
 
 ## Logging
 
