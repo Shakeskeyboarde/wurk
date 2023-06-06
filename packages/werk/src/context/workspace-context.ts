@@ -24,7 +24,7 @@ export class WorkspaceContext<A extends CommanderArgs, O extends CommanderOption
   }
 
   /**
-   * Spawn a child process at the workspaces root.
+   * Spawn a child process at the current workspace root.
    */
   readonly spawn: Spawn = (cmd, args, options) => {
     return spawn(cmd, args, { cwd: this.workspace.dir, log: this.log, ...options });

@@ -33,12 +33,12 @@ export class RootContext<A extends CommanderArgs, O extends CommanderOptions> {
   readonly rootDir: string;
 
   /**
-   * Arguments parsed from the command.
+   * Arguments parsed from the command line.
    */
   readonly args: A;
 
   /**
-   * Options parsed from the command.
+   * Options parsed from the command line.
    */
   readonly opts: O;
 
