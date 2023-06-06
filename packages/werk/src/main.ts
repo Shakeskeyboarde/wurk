@@ -11,13 +11,14 @@ import { loadCommand } from './command/load-command.js';
 import { type LoadedCommand } from './command/loaded-command.js';
 import { Commander, getCommanderMetadata } from './commander/commander.js';
 import { onError } from './error.js';
-import { log } from './log.js';
+import { log, LOG_LEVEL, type LogLevel } from './log.js';
 import { getDependencyOrderedWorkspaces } from './workspace/get-dependency-ordered-workspaces.js';
 import { getWorkspaceDependencyNames } from './workspace/get-workspace-dependency-names.js';
 import { selectWorkspaces } from './workspace/select-workspaces.js';
 import { type WorkspaceOptions } from './workspace/workspace.js';
 
 interface GlobalOptions {
+  readonly logLevel?: string;
   readonly parallel?: boolean;
   readonly concurrency?: number;
   readonly workspace?: readonly string[];
@@ -49,6 +50,7 @@ type PrefixColor = (typeof PREFIX_COLORS)[number];
 
 const PREFIX_COLORS = ['cyan', 'magenta', 'yellow', 'blue', 'green', 'red'] as const;
 
+process.env.LOG_LEVEL = process.env.LOG_LEVEL ?? 'info';
 process.on('unhandledRejection', onError);
 process.on('uncaughtException', onError);
 
@@ -60,6 +62,14 @@ export const main = async (): Promise<void> => {
     .addHelpText('after', 'To get help for a specific command, run `werk <command> --help`.')
     .argument('<command>', 'Command to run.')
     .argument('[options...]', 'Options to pass to the command.')
+    .option(
+      '-l, --log-level <level>',
+      'Set the log level (silent, error, warn, notice, info, debug, trace).',
+      (value): LogLevel => {
+        assert(value in LOG_LEVEL, new Error(`Log level must be one of: ${Object.keys(LOG_LEVEL).join(', ')}.`));
+        return value as LogLevel;
+      },
+    )
     .option('-p, --parallel', 'Process workspaces in parallel.')
     .option('-c, --concurrency <count>', 'Number of concurrent workspaces (number or "auto").', (value) => {
       if (value === 'auto') return cpus().length + 1;
@@ -90,6 +100,7 @@ export const main = async (): Promise<void> => {
     .version(version)
     .passThroughOptions()
     .action(async (cmd, cmdArgs, globalOptions) => {
+      process.env.LOG_LEVEL = commander.opts().logLevel ?? process.env.LOG_LEVEL;
       await mainAction({ commander, cmd, cmdArgs, globalOptions });
     });
 

@@ -3,12 +3,24 @@ import util from 'node:util';
 import getAnsiRegex from 'ansi-regex';
 import chalk from 'chalk';
 
-const ansiRegex = getAnsiRegex();
-
 export interface LogOptions {
   prefix?: string;
   trim?: boolean;
 }
+
+export type LogLevel = keyof typeof LOG_LEVEL;
+
+const ansiRegex = getAnsiRegex();
+
+export const LOG_LEVEL = {
+  silent: 0,
+  error: 10,
+  warn: 20,
+  notice: 30,
+  info: 40,
+  debug: 50,
+  trace: 60,
+} as const;
 
 export class Log implements LogOptions {
   readonly prefix: string;
@@ -22,43 +34,65 @@ export class Log implements LogOptions {
     this.trim = trim;
   }
 
+  getLevel(): { name: LogLevel; value: number } {
+    const name: LogLevel =
+      process.env.LOG_LEVEL && process.env.LOG_LEVEL in LOG_LEVEL ? (process.env.LOG_LEVEL as LogLevel) : 'info';
+    const value = LOG_LEVEL[name];
+
+    return { name, value };
+  }
+
   /**
-   * Print a formatted message to stdout.
+   * Print a dimmed message to stderr.
+   */
+  trace(message?: unknown): void {
+    if (LOG_LEVEL.trace <= this.getLevel().value) this.writeOut(message, chalk.dim);
+  }
+
+  /**
+   * Print a dimmed message to stderr.
+   */
+  debug(message?: unknown): void {
+    if (LOG_LEVEL.debug <= this.getLevel().value) this.writeOut(message, chalk.dim);
+  }
+
+  /**
+   * Print an undecorated message to stdout.
    */
   info(message?: unknown): void {
-    this.writeOut(message);
+    if (LOG_LEVEL.info <= this.getLevel().value) this.writeOut(message);
   }
 
   /**
-   * Print a formatted message to stderr.
+   * Print a bold message to stderr.
    */
   notice(message?: unknown): void {
-    this.writeErr(message, chalk.bold);
+    if (LOG_LEVEL.notice <= this.getLevel().value) this.writeErr(message, chalk.bold);
   }
 
   /**
-   * Print a formatted warning to stderr.
+   * Print a yellow message to stderr.
    */
   warn(message?: unknown): void {
-    this.writeErr(message, chalk.yellowBright);
+    if (LOG_LEVEL.warn <= this.getLevel().value) this.writeErr(message, chalk.yellowBright);
   }
 
   /**
-   * Print a formatted error to stderr.
+   * Print a red message to stderr.
    */
   error(message?: unknown): void {
-    this.writeErr(message, chalk.redBright);
+    if (LOG_LEVEL.error <= this.getLevel().value) this.writeErr(message, chalk.redBright);
   }
 
   /**
-   * Write to stdout. A trailing newline is added if not present.
+   * Write an undecorated message to stdout.
    */
   writeOut(message?: unknown, formatLine?: (message: string) => string): void {
     process.stdout.write(this.#format(message, formatLine) + '\n');
   }
 
   /**
-   * Write to stdout. A trailing newline is added if not present.
+   * Write an undecorated message to stdout.
    */
   writeErr(message?: unknown, formatLine?: (message: string) => string): void {
     process.stderr.write(this.#format(message, formatLine) + '\n');

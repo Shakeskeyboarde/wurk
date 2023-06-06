@@ -71,6 +71,8 @@ map command names to packages names in your workspaces root `package.json` file.
 
 Werk provides workspace and task orchestration through a set of options which are global to all commands. These options are for selecting workspaces, workspace ordering, command parallelization, and output formatting.
 
+- `-l, --log-level <level>`
+  - Set the logging level. The default is the `LOG_LEVEL` environment variable, or "info".
 - `-p, --parallel`
   - Process workspaces in parallel.
 - `-c, --concurrency <count>`
@@ -97,7 +99,7 @@ These global options _MUST_ come before the command name, or they will be passed
 ```sh
 # werk [werk-options...] <command> [command-options...]
 werk -p run build
-````
+```
 
 **Example:** Werk executes the `run build -p` command _serially_.
 

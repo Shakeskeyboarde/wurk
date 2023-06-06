@@ -250,12 +250,15 @@ Please avoid using the global `console` object. The `log`, `warn`, and `error` m
 
 The context `log` has the following methods.
 
+- `trace`: Print a dimmed log message to stderr. This is intended to be useful only to developers.
+- `debug`: Print a dimmed log message to stderr. This is intended to help users do their own troubleshooting.
 - `info`: Print an undecorated log message to stdout. This is intended for informational details about the progress or results of a command.
 - `notice`: Print a bold log message to stderr. This is intended for messages that need to stand out a little, and are possibly unexpected.
 - `warn`: Print a yellow log message to stderr. This is intended for problems that are not immediate failures, but may indicate something unexpected or incorrect.
 - `error`: Print a red log message to stderr. This is intended for things that are definitely wrong, and are probably immediate failures.
 - `writeOut`: Print an undecorated log message to stdout. This is mostly intended for internal use, but is guaranteed never to be decorated.
 - `writeErr`: Print an undecorated log message to stderr. This is mostly intended for internal use, but is guaranteed never to be decorated.
+- `getLevel()`: Returns the current log level (eg. `{ name: 'info', value: 40 }`).
 
 Any logged messages may be modified in the following ways:
 
