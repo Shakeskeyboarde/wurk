@@ -20,7 +20,7 @@ export default createCommand({
     const { scripts } = await workspace.readPackageJson();
 
     if (scripts?.[script] == null) {
-      log.warn(`Script "${script}" not found in workspace "${workspace.name}".`);
+      log.debug(`Skipping script "${script}" because it is not defined in workspace "${workspace.name}".`);
       return;
     }
 
