@@ -2,28 +2,26 @@ import { type Commander } from '../commander/commander.js';
 import { type InitContextOptions, type RootContextOptions, type WorkspaceContextOptions } from '../exports.js';
 import { type Command, type CommandType } from './command.js';
 
-export interface LoadedCommandOptions {
-  readonly command: Command<any, any>;
+export interface CommandPackage {
   readonly main: string;
   readonly dir: string;
-  readonly version: string;
+  readonly name: string;
   readonly description: string | undefined;
+  readonly version: string;
+}
+export interface LoadedCommandOptions {
+  readonly command: Command<any, any>;
+  readonly commandPackage: CommandPackage;
 }
 
 export class LoadedCommand implements CommandType<any, any> {
   #command: Command<any, any>;
 
-  readonly main: string;
-  readonly dir: string;
-  readonly version: string;
-  readonly description: string | undefined;
+  readonly package: CommandPackage;
 
-  constructor({ command, main, dir, version, description }: LoadedCommandOptions) {
+  constructor({ command, commandPackage }: LoadedCommandOptions) {
     this.#command = command;
-    this.main = main;
-    this.dir = dir;
-    this.version = version;
-    this.description = description;
+    this.package = commandPackage;
   }
 
   readonly init = (options: InitContextOptions): Commander<any, any> => {

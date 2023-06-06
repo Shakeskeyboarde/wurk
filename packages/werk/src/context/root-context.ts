@@ -1,3 +1,4 @@
+import { type CommandPackage } from '../command/loaded-command.js';
 import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
 import { Log, type LogOptions } from '../log.js';
 import { type Spawn, spawn } from '../utils/spawn.js';
@@ -5,7 +6,7 @@ import { Workspace, type WorkspaceOptions } from '../workspace/workspace.js';
 
 export interface RootContextOptions<A extends CommanderArgs, O extends CommanderOptions> {
   readonly log?: LogOptions;
-  readonly main: string;
+  readonly command: CommandPackage;
   readonly rootDir: string;
   readonly args: A;
   readonly opts: O;
@@ -22,9 +23,9 @@ export class RootContext<A extends CommanderArgs, O extends CommanderOptions> {
   readonly log: Log;
 
   /**
-   * Main filename of the command package.
+   * Information about the command package.
    */
-  readonly main: string;
+  readonly command: CommandPackage;
 
   /**
    * Absolute path of the workspaces root.
@@ -67,10 +68,10 @@ export class RootContext<A extends CommanderArgs, O extends CommanderOptions> {
    * Copy constructor.
    */
   constructor(options: RootContextOptions<A, O>) {
-    const { log, main, rootDir, args, opts, workspaces, isWorker, workerData, startWorker } = options;
+    const { log, command, rootDir, args, opts, workspaces, isWorker, workerData, startWorker } = options;
 
     this.log = new Log(log);
-    this.main = main;
+    this.command = command;
     this.rootDir = rootDir;
     this.args = args;
     this.opts = opts;

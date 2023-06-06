@@ -1,9 +1,10 @@
+import { type CommandPackage } from '../command/loaded-command.js';
 import { type Commander } from '../commander/commander.js';
 import { Log, type LogOptions } from '../log.js';
 
 export interface InitContextOptions {
-  readonly main: string;
   readonly log?: LogOptions;
+  readonly command: CommandPackage;
   readonly rootDir: string;
   readonly commander: Commander;
 }
@@ -15,9 +16,9 @@ export class InitContext implements InitContextOptions {
   readonly log: Log;
 
   /**
-   * Main filename of the command package.
+   * Information about the command package.
    */
-  readonly main: string;
+  readonly command: CommandPackage;
 
   /**
    * Absolute path of the workspaces root.
@@ -29,9 +30,9 @@ export class InitContext implements InitContextOptions {
    */
   readonly commander: Commander;
 
-  constructor({ main, log, rootDir, commander }: InitContextOptions) {
-    this.main = main;
+  constructor({ log, command, rootDir, commander }: InitContextOptions) {
     this.log = new Log(log);
+    this.command = command;
     this.rootDir = rootDir;
     this.commander = commander;
   }

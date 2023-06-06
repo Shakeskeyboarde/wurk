@@ -1,12 +1,11 @@
 import { createCommand } from '@werk/cli';
 
 export default createCommand({
-  init: (context) => {
-    return context.commander
+  init: ({ commander, command }) => {
+    return commander
+      .description(command.description ?? '')
       .description(
-        `Run package.json scripts in workspaces.
-      
-        If a script is not found in a workspace, a warning will be
+        `If a script is not found in a workspace, a warning will be
         printed, but the command will complete successfully.`,
       )
       .argument('<script>', 'Script to run in each workspace.')
@@ -14,17 +13,17 @@ export default createCommand({
       .passThroughOptions();
   },
 
-  each: async (context) => {
-    if (!context.workspace.selected) return;
+  each: async ({ log, args, workspace, spawn }) => {
+    if (!workspace.selected) return;
 
-    const [script, scriptArgs] = context.args;
-    const { scripts } = await context.workspace.readPackageJson();
+    const [script, scriptArgs] = args;
+    const { scripts } = await workspace.readPackageJson();
 
     if (scripts?.[script] == null) {
-      context.log.warn(`Script "${script}" not found in workspace "${context.workspace.name}".`);
+      log.warn(`Script "${script}" not found in workspace "${workspace.name}".`);
       return;
     }
 
-    await context.spawn('npm', ['run', script, ...scriptArgs], { echo: true });
+    await spawn('npm', ['run', script, ...scriptArgs], { echo: true });
   },
 });

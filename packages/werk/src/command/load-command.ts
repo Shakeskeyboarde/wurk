@@ -38,7 +38,15 @@ export const loadCommand = async (
   if (packageInfo == null) throw new Error(`Command "${name}" does not have a valid package.json.`);
 
   const { packageJson, path: dir } = packageInfo;
-  const { version, description } = packageJson;
 
-  return new LoadedCommand({ command, main, dir, version, description });
+  return new LoadedCommand({
+    command,
+    commandPackage: {
+      main,
+      dir,
+      name: packageJson.name,
+      description: packageJson.description,
+      version: packageJson.version,
+    },
+  });
 };

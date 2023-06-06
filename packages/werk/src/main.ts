@@ -115,12 +115,12 @@ const mainAction = async ({ commander, cmd, cmdArgs, globalOptions }: MainAction
 
   const subCommander = commander.command(cmd);
 
-  command.init({ main: command.main, rootDir: workspacesRoot, commander: subCommander });
+  command.init({ command: command.package, rootDir: workspacesRoot, commander: subCommander });
 
   const { isVersionSet, isDescriptionSet } = getCommanderMetadata(subCommander);
 
-  if (!isDescriptionSet && command.description) subCommander.description(command.description);
-  if (!isVersionSet) subCommander.version(command.version);
+  if (!isDescriptionSet && command.package.description) subCommander.description(command.package.description);
+  if (!isVersionSet) subCommander.version(command.package.version);
 
   await subCommander
     .name(cmd)
@@ -147,7 +147,7 @@ const commandAction = async ({
   selectWorkspaces(workspaces.values(), filters);
 
   await command.before({
-    main: command.main,
+    command: command.package,
     rootDir,
     args,
     opts,
@@ -172,8 +172,8 @@ const commandAction = async ({
       try {
         log.notice(`: ${workspace.name}`);
         await command.each({
-          main: command.main,
           log: { prefix: logPrefix, trim: Boolean(logPrefix) },
+          command: command.package,
           rootDir,
           args,
           opts,
@@ -191,7 +191,7 @@ const commandAction = async ({
   }
 
   await command.after({
-    main: command.main,
+    command: command.package,
     rootDir,
     args,
     opts,
