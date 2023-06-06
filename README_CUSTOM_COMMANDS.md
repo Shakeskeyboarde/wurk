@@ -37,10 +37,11 @@ Import the `@werk/cli` package and use the `createCommand` function to define yo
 import { createCommand } from '@werk/cli';
 
 export default createCommand({
-  init: async (context) => { ... },
-  before: async (context) => { ... },
-  each: async (context) => { ... },
-  after: async (context) => { ... },
+  init: (context) => {},
+  before: async (context) => {},
+  each: async (context) => {},
+  after: async (context) => {},
+  cleanup: (context) => {},
 });
 ```
 
@@ -50,8 +51,9 @@ A Werk command consists of several different hook callbacks, which are all optio
 
 - `init`: Called when the command is loaded. Intended for configuration of command options, arguments, and help text.
 - `before`: Run once before handling individual workspaces.
-- `each`: Run once for each workspaces.
-- `after`: Rune once after handling individual workspaces.
+- `each`: Run once for each workspace in order of interdependency ( dependencies before dependents).
+- `after`: Run once after handling individual workspaces.
+- `cleanup`: Run once after handling all workspaces. Intended for synchronous cleanup of temporary files.
 
 ### Hook Contexts
 
@@ -66,14 +68,15 @@ A context object is passed to each hook callback. The properties attached to tho
   - `version`: Version from the command's `package.json` file.
 - `rootDir`: Absolute path of the workspaces root.
 - `commander` (**init** hook only): Configurable [Commander](https://www.npmjs.com/package/commander) instance for defining command options, arguments, and help text.
-- `args` (**before**, **each**, and **after** hooks only): Positional arguments parsed from command line.
-- `opts` (**before**, **each**, and **after** hooks only): Named options parsed from the command line.
+- `args` (**before**, **each**, **after**, and **cleanup** hooks only): Positional arguments parsed from command line.
+- `opts` (**before**, **each**, **after**, and **cleanup** hooks only): Named options parsed from the command line.
 - `workspaces` (**before**, **each**, and **after** hooks only): A map (by name) of all [workspaces](#workspaces).
 - `workspace` (**each** hook only): The current [workspace](#workspaces).
 - `spawn` (**before**, **each**, and **after** hooks only): Spawn a process. The working directory will be the root of the current workspace if available (`each` hook), or the workspaces root otherwise.
 - `startWorker(data?)` (**before**, **each**, and **after** hooks only): Function which re-runs the current hook in a [worker thread](https://nodejs.org/api/worker_threads.html).
 - `isWorker` (**before**, **each**, and **after** hooks only): True if the hook is running in a worker thread.
 - `workerData` (**before**, **each**, and **after** hooks only): Data passed to the `startWorker(data?)` function, or undefined if `isWorker` is false.
+- `exitCode` (**cleanup** hook only): Exit code of the command.
 
 ### Workspaces
 
