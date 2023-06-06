@@ -8,8 +8,9 @@ import { Sema as Semaphore } from 'async-sema';
 import chalk from 'chalk';
 
 import { loadCommand } from './command/load-command.js';
-import { type LoadedCommand } from './command/loaded-command.js';
+import { type LoadedCommand } from './command/load-command.js';
 import { Commander, getCommanderMetadata } from './commander/commander.js';
+import { CleanupContext } from './context/cleanup-context.js';
 import { onError } from './error.js';
 import { log, LOG_LEVEL, type LogLevel } from './utils/log.js';
 import { getWorkspaceDependencyNames } from './workspace/get-workspace-dependency-names.js';
@@ -51,10 +52,17 @@ type PrefixColor = (typeof PREFIX_COLORS)[number];
 const PREFIX_COLORS = ['cyan', 'magenta', 'yellow', 'blue', 'green', 'red'] as const;
 
 process.env.LOG_LEVEL = process.env.LOG_LEVEL ?? 'info';
-process.on('unhandledRejection', onError);
 process.on('uncaughtException', onError);
+process.on('unhandledRejection', (error) => {
+  log.error('Unhandled promise rejection!');
+  throw error;
+});
 
-export const main = async (): Promise<void> => {
+export const main = (): void => {
+  asyncMain().catch(onError);
+};
+
+const asyncMain = async (): Promise<void> => {
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const version = await readFile(join(__dirname, '../package.json'), 'utf8').then((json) => JSON.parse(json).version);
   const commander = new Commander('werk')
@@ -115,7 +123,22 @@ const mainAction = async ({ commander, cmd, cmdArgs, globalOptions }: MainAction
 
   const subCommander = commander.command(cmd);
 
-  command.init({ command: command.package, rootDir: workspacesRoot, commander: subCommander });
+  command.instance.init({ command: command.package, rootDir: workspacesRoot, commander: subCommander });
+
+  process.on('exit', (exitCode) => {
+    const context = new CleanupContext({
+      command: command.package,
+      rootDir: workspacesRoot,
+      args: commander.processedArgs,
+      opts: commander.opts(),
+      exitCode,
+    });
+
+    command.instance.cleanup(context);
+  });
+  ['uncaughtException', 'unhandledRejection', 'SIGINT', 'SIGTERM', 'SIGUSR1', 'SIGUSR2'].forEach((event) => {
+    process.on(event, () => process.exit(process.exitCode || 1));
+  });
 
   const { isVersionSet, isDescriptionSet } = getCommanderMetadata(subCommander);
 
@@ -146,7 +169,7 @@ const commandAction = async ({
 
   selectWorkspaces(workspaces.values(), filters);
 
-  await command.before({
+  await command.instance.before({
     command: command.package,
     rootDir,
     args,
@@ -171,7 +194,7 @@ const commandAction = async ({
 
       try {
         log.notice(`: ${workspace.name}`);
-        await command.each({
+        await command.instance.each({
           log: { prefix: logPrefix, trim: Boolean(logPrefix) },
           command: command.package,
           rootDir,
@@ -190,7 +213,7 @@ const commandAction = async ({
     if (wait) promises.set(workspace.name, promise);
   }
 
-  await command.after({
+  await command.instance.after({
     command: command.package,
     rootDir,
     args,

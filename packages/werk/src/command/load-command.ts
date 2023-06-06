@@ -5,11 +5,23 @@ import { fileURLToPath } from 'node:url';
 import { readPackageUp } from 'read-pkg-up';
 
 import { readJsonFile } from '../utils/read-json-file.js';
-import { isCommand } from './command.js';
-import { LoadedCommand } from './loaded-command.js';
+import { type CommandType, isCommand } from './command.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
+
+export interface CommandPackage {
+  readonly main: string;
+  readonly dir: string;
+  readonly name: string;
+  readonly description: string | undefined;
+  readonly version: string;
+}
+
+export interface LoadedCommand {
+  readonly instance: CommandType<any, any>;
+  readonly package: CommandPackage;
+}
 
 export const loadCommand = async (
   name: string,
@@ -39,14 +51,14 @@ export const loadCommand = async (
 
   const { packageJson, path: dir } = packageInfo;
 
-  return new LoadedCommand({
-    command,
-    commandPackage: {
+  return {
+    instance: command,
+    package: {
       main,
       dir,
       name: packageJson.name,
       description: packageJson.description,
       version: packageJson.version,
     },
-  });
+  };
 };

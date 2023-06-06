@@ -1,6 +1,7 @@
 export { type CommandHooks } from './command/command.js';
 export { createCommand } from './command/create-command.js';
 export { type Commander, type CommanderArgs, type CommanderOptions } from './commander/commander.js';
+export { type CleanupContext, type CleanupContextOptions } from './context/cleanup-context.js';
 export { type InitContext, type InitContextOptions } from './context/init-context.js';
 export { type RootContext, type RootContextOptions } from './context/root-context.js';
 export { type WorkspaceContext, type WorkspaceContextOptions } from './context/workspace-context.js';

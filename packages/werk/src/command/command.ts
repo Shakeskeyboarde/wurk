@@ -1,6 +1,7 @@
 import { isMainThread } from 'node:worker_threads';
 
 import { type Commander, type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
+import { CleanupContext, type CleanupContextOptions } from '../context/cleanup-context.js';
 import { InitContext, type InitContextOptions } from '../context/init-context.js';
 import { RootContext, type RootContextOptions } from '../context/root-context.js';
 import { WorkspaceContext, type WorkspaceContextOptions } from '../context/workspace-context.js';
@@ -8,7 +9,8 @@ import { startWorker } from '../utils/start-worker.js';
 
 export interface CommandHooks<A extends CommanderArgs, O extends CommanderOptions, AA extends A = A, OO extends O = O> {
   /**
-   * Called when the command is loaded. Intended for configuration of command options, arguments, and help text.
+   * Called when the command is loaded. Intended for configuration of
+   * command options, arguments, and help text.
    */
   readonly init?: (context: InitContext) => Commander<A, O>;
   /**
@@ -23,6 +25,11 @@ export interface CommandHooks<A extends CommanderArgs, O extends CommanderOption
    * Run once after handling individual workspaces.
    */
   readonly after?: (context: RootContext<AA, OO>) => Promise<void>;
+  /**
+   * Run once after all other hooks. This is the last chance to perform
+   * cleanup, and it must be synchronous.
+   */
+  readonly cleanup?: (context: CleanupContext<AA, OO>) => void;
 }
 
 export interface CommandType<A extends CommanderArgs, O extends CommanderOptions> {
@@ -30,6 +37,7 @@ export interface CommandType<A extends CommanderArgs, O extends CommanderOptions
   readonly before: (options: Omit<RootContextOptions<A, O>, 'startWorker'>) => Promise<void>;
   readonly each: (options: Omit<WorkspaceContextOptions<A, O>, 'startWorker'>) => Promise<void>;
   readonly after: (options: Omit<RootContextOptions<A, O>, 'startWorker'>) => Promise<void>;
+  readonly cleanup: (context: CleanupContextOptions<A, O>) => void;
 }
 
 const COMMAND = Symbol('WerkCommand');
@@ -39,6 +47,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
   readonly #before: ((context: RootContext<A, O>) => Promise<void>) | undefined;
   readonly #each: ((context: WorkspaceContext<A, O>) => Promise<void>) | undefined;
   readonly #after: ((context: RootContext<A, O>) => Promise<void>) | undefined;
+  readonly #cleanup: ((context: CleanupContext<A, O>) => void) | undefined;
 
   constructor({ init, before, each, after }: CommandHooks<A, O>) {
     Object.assign(this, { [COMMAND]: true });
@@ -93,6 +102,14 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
     });
 
     await this.#after(context);
+  };
+
+  readonly cleanup = (options: CleanupContextOptions<A, O>): void => {
+    if (!this.#cleanup) return;
+
+    const context = new CleanupContext(options);
+
+    this.#cleanup(context);
   };
 }
 

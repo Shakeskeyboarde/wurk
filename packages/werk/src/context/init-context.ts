@@ -1,4 +1,4 @@
-import { type CommandPackage } from '../command/loaded-command.js';
+import { type CommandPackage } from '../command/load-command.js';
 import { type Commander } from '../commander/commander.js';
 import { Log, type LogOptions } from '../utils/log.js';
 
