@@ -5,28 +5,29 @@ Custom commands are supported and encouraged.
 The first goal of Werk is to make it easier to build or choose the monorepo orchestration patterns that make sense for you. You shouldn't have to jump through hoops to do things the way you want and need to do them in your own repos and pipelines. Werk should be to monorepos what Rollup, Vite, and Webpack are to bundling.
 
 - [Overview](#overview)
-- [Implementing Commands](#implementing-commands)
-- [Command Hooks](#command-hooks)
-- [Hook Contexts](#hook-contexts)
-- [Command Line Parsing](#command-line-parsing)
-- [Workspaces](#workspaces)
+  - [Implementing Commands](#implementing-commands)
+  - [Command Hooks](#command-hooks)
+  - [Hook Contexts](#hook-contexts)
+  - [Workspaces](#workspaces)
 - [Patching Workspace `package.json` Files](#patching-workspace-packagejson-files)
+- [Command Line Parsing](#command-line-parsing)
 - [Spawning Processes](#spawning-processes)
 - [Starting Threads](#starting-threads)
+- [Logging](#logging)
 - [Publishing Commands](#publishing-commands)
 
 ## Overview
 
 Werk provides the following capabilities so that your custom command can focus on doing its job.
 
-- **Log** messages prefixed with the current workspace.
-- **Parse** CLI **options** and **arguments** using [commander](https://www.npmjs.com/package/commander).
 - **Resolve** NPM workspaces with **filtering** and interdependency **ordering**.
 - **Read** and **patch** workspace `package.json` files.
+- **Parse** CLI **options** and **arguments** using [commander](https://www.npmjs.com/package/commander).
 - **Spawn** processes and consume their output.
 - **Parallelize** with or without [threading](https://nodejs.org/api/worker_threads.html).
+- **Log** messages with decoration, prefixing, and level filtering.
 
-## Implementing Commands
+### Implementing Commands
 
 A custom command is just an NPM package with a Werk Command default export. Using Typescript is strongly recommended.
 
@@ -43,7 +44,7 @@ export default createCommand({
 });
 ```
 
-## Command Hooks
+### Command Hooks
 
 A Werk command consists of several different hook callbacks, which are all optional.
 
@@ -52,7 +53,7 @@ A Werk command consists of several different hook callbacks, which are all optio
 - `each`: Run once for each workspaces.
 - `after`: Rune once after handling individual workspaces.
 
-## Hook Contexts
+### Hook Contexts
 
 A context object is passed to each hook callback. The properties attached to those contexts are as follows.
 
@@ -68,6 +69,47 @@ A context object is passed to each hook callback. The properties attached to tho
 - `startWorker(data?)` (**before**, **each**, and **after** hooks only): Function which re-runs the current hook in a [worker thread](https://nodejs.org/api/worker_threads.html).
 - `isWorker` (**before**, **each**, and **after** hooks only): True if the hook is running in a worker thread.
 - `workerData` (**before**, **each**, and **after** hooks only): Data passed to the `startWorker(data?)` function, or undefined if `isWorker` is false.
+
+### Workspaces
+
+The context `workspaces` and `workspace` properties contain instances of the `Workspace` class.
+
+Each `Workspace` instance has the following properties extracted from the workspace `package.json` file.
+
+- `name`
+- `version`
+- `private`
+- `dependencies`
+- `peerDependencies`
+- `optionalDependencies`
+- `devDependencies`
+- `keywords`.
+
+The following additional properties are also included.
+
+- `dir`: Absolute root directory of the workspace.
+- `selected`: True if the workspace matched the Werk [global options](README.md#command-line-options)
+- `dependencyNames`: A set of the unique (deduplicated) dependency names collected from all of the dependency maps.
+- `readPackageJson()`: Function which reads the workspace's full `package.json` file.
+- `writePackageJson(json)`: Function which writes the workspace `package.json` file.
+- `writePackageJson(json)`: Function which writes the workspace `package.json` file.
+- `patchPackageJson(patchFn)`: Function which applies a deeply merged patch to the workspace `package.json` file.
+
+## Patching Workspace `package.json` Files
+
+The [workspace](#workspaces) `patchPackageJson(patchFn)` function takes a callback which returns a partial package object. The returned value is deeply merged into the original package, and written back to the workspace `package.json` file.
+
+The following example adds (or replaces) the `cowsay` dependency. All existing dependencies will be left as-is.
+
+```ts
+await context.workspace.writePackageJson((packageJson) => {
+  return {
+    dependencies: {
+      cowsay: '^1.5.0',
+    },
+  };
+});
+```
 
 ## Command Line Parsing
 
@@ -89,47 +131,6 @@ export default createCommand({
 See the Commanders documentation for the full API.
 
 The `description` and `version` from your command's `package.json` file will be used if they are not overridden in the `init` hook.
-
-## Workspaces
-
-The context `workspaces` and `workspace` properties contain instances of the `Workspace` class.
-
-Each `Workspace` instance has the following properties extracted from the workspace `package.json` file.
-
-- `name`
-- `version`
-- `private`
-- `dependencies`
-- `peerDependencies`
-- `optionalDependencies`
-- `devDependencies`
-- `keywords`.
-
-The following additional properties are also included.
-
-- `dir`: Absolute root directory of the workspace.
-- `selected`: True if the workspace matched the Werk [global options](README.md#command-line-options)
-- `localDependencyNames`: The names of dependencies which refer to other workspaces in your monorepo.
-- `readPackageJson()`: Function which reads the workspace's full `package.json` file.
-- `writePackageJson(json)`: Function which writes the workspace `package.json` file.
-- `writePackageJson(json)`: Function which writes the workspace `package.json` file.
-- `patchPackageJson(patchFn)`: Function which applies a deeply merged patch to the workspace `package.json` file.
-
-## Patching Workspace `package.json` Files
-
-The [workspace](#workspaces) `patchPackageJson(patchFn)` function takes a callback which returns a partial package object. The returned value is deeply merged into the original package, and written back to the workspace `package.json` file.
-
-The following example adds (or replaces) the `cowsay` dependency. All existing dependencies will be left as-is.
-
-```ts
-await context.workspace.writePackageJson((packageJson) => {
-  return {
-    dependencies: {
-      cowsay: '^1.5.0',
-    },
-  };
-});
-```
 
 ## Spawning Processes
 
@@ -201,12 +202,38 @@ If the `startWorker()` function is called from the main thread, it starts a work
 You can pass data to the worker thread. The data must be compatible with the [Structured Clone](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm) algorithm.
 
 ```ts
-if (await context.startWorker({ timestamp: Data.now() })) return;
+export default createCommand({
+  each: async (context): Promise<void> => {
+    if (await context.startWorker({ timestamp: Data.now() })) return;
 
-console.log(`Current Timestamp: ${context.data.timestamp}`);
+    context.log.info(`Current Timestamp: ${context.data.timestamp}`);
+  },
+});
 ```
 
 More complicated scenarios where some processing happens in the main thread, and some happens in one or more workers, can be achieved by checking the `context.isWorker` value.
+
+## Logging
+
+Please avoid using the global `console` object. The `log`, `warn`, and `error` methods are monkey patched to pipe through the context `log`, and using them will print a warning.
+
+The context `log` has the following methods.
+
+- `info`: Print an undecorated log message to stdout. This is intended for informational details about the progress or results of a command.
+- `notice`: Print a bold log message to stderr. This is intended for messages that need to stand out a little, and are possibly unexpected.
+- `warn`: Print a yellow log message to stderr. This is intended for problems that are not immediate failures, but may indicate something unexpected or incorrect.
+- `error`: Print a red log message to stderr. This is intended for things that are definitely wrong, and are probably immediate failures.
+- `writeOut`: Print an undecorated log message to stdout. This is mostly intended for internal use, but is guaranteed never to be decorated.
+- `writeErr`: Print an undecorated log message to stderr. This is mostly intended for internal use, but is guaranteed never to be decorated.
+
+Any logged messages may be modified in the following ways:
+
+- ANSI escape sequences are stripped.
+- Workspace name prefixes may be added.
+- Blank lines may be removed.
+- Message may be omitted based on log level.
+
+No hard wrapping is ever added.
 
 ## Publishing Commands
 
