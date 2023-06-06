@@ -92,8 +92,22 @@ export class Log implements LogOptions {
 
 export const log = new Log();
 
+let consoleWarning = (): void => {
+  consoleWarning = () => undefined;
+  log.warn('A Werk command is using the global console object. This is not recommended.');
+};
+
 Object.assign(console, {
-  log: (...args: any[]): void => log.info(util.format(...args)),
-  warn: (...args: any[]): void => log.warn(util.format(...args)),
-  error: (...args: any[]): void => log.error(util.format(...args)),
+  log: (...args: any[]): void => {
+    consoleWarning();
+    log.info(util.format(...args));
+  },
+  warn: (...args: any[]): void => {
+    consoleWarning();
+    log.warn(util.format(...args));
+  },
+  error: (...args: any[]): void => {
+    consoleWarning();
+    log.error(util.format(...args));
+  },
 });
