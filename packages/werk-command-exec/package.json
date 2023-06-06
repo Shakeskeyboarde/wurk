@@ -1,6 +1,6 @@
 {
-  "name": "@werk/command-run",
-  "description": "Run package.json scripts in workspaces.",
+  "name": "@werk/command-exec",
+  "description": "Run arbitrary executables in workspaces.",
   "version": "1.0.0",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",

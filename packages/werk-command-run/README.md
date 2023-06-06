@@ -1,6 +1,6 @@
 # Werk Run Command
 
-Run package.json scripts.
+Run package.json scripts in workspaces.
 
 ## Install
 

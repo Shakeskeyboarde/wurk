@@ -4,7 +4,7 @@ export default createCommand({
   init: (context) => {
     return context.commander
       .description(
-        `Run package.json scripts.
+        `Run package.json scripts in workspaces.
       
         If a script is not found in a workspace, a warning will be
         printed, but the command will complete successfully.`,
@@ -17,7 +17,7 @@ export default createCommand({
   each: async (context) => {
     if (!context.workspace.selected) return;
 
-    const [script, runArgs] = context.args;
+    const [script, scriptArgs] = context.args;
     const { scripts } = await context.workspace.readPackageJson();
 
     if (scripts?.[script] == null) {
@@ -25,6 +25,6 @@ export default createCommand({
       return;
     }
 
-    await context.spawn('npm', ['run', script, ...runArgs], { echo: true });
+    await context.spawn('npm', ['run', script, ...scriptArgs], { echo: true });
   },
 });
