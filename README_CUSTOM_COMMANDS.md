@@ -223,7 +223,7 @@ export default createCommand({
   each: async (context): Promise<void> => {
     if (await context.startWorker()) return;
 
-    // Everything that follows, happens in a worker thread.
+    // Do stuff in the worker thread.
   },
 });
 ```
