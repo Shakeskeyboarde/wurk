@@ -58,7 +58,12 @@ A Werk command consists of several different hook callbacks, which are all optio
 A context object is passed to each hook callback. The properties attached to those contexts are as follows.
 
 - `log`: A logger which should be preferred over `console.*` logging.
-- `main`: The main filename of the command package.
+- `command`: Package information about the command.
+  - `main`: Main filename of the command package.
+  - `dir`: Root directory of the command package.
+  - `name`: Name from the command's `package.json` file.
+  - `description`: Description from the command's `package.json` file.
+  - `version`: Version from the command's `package.json` file.
 - `rootDir`: Absolute path of the workspaces root.
 - `commander` (**init** hook only): Configurable [Commander](https://www.npmjs.com/package/commander) instance for defining command options, arguments, and help text.
 - `args` (**before**, **each**, and **after** hooks only): Positional arguments parsed from command line.
@@ -118,7 +123,7 @@ The `init` hook context contains a `commander` property, which is just a [Comman
 ```ts
 export default createCommand({
   init: (context) => {
-    return context.command
+    return context.commander
       .description('My awesome Werk command.')
       .argument('<foo>', 'A positional argument named foo.')
       .option('--bar', 'A flag option named bar.')
