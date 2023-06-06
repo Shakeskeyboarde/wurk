@@ -172,8 +172,8 @@ const stdoutText = await spawned.getStdout('utf-8');
 const stderrBytes = await spawned.getStderr();
 const stderrText = await spawned.getStderr('utf-8');
 // Both stdout and stderr as one combined value.
-const stdioBytes = await spawned.getStdio();
-const stdioText = await spawned.getStdio('utf-8');
+const outputBytes = await spawned.getOutput();
+const outputText = await spawned.getOutput('utf-8');
 // JSON parsed stdout.
 const json = await spawned.getJson();
 const jsonOrUndefined = await spawned.tryGetJson();

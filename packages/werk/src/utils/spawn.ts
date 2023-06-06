@@ -21,7 +21,7 @@ export interface SpawnedProcess extends Promise<void> {
     (encoding?: BufferEncoding): Promise<string | Buffer>;
   };
 
-  readonly getStdio: {
+  readonly getOutput: {
     (): Promise<Buffer>;
     (encoding: BufferEncoding): Promise<string>;
     (encoding?: BufferEncoding): Promise<string | Buffer>;
@@ -116,7 +116,7 @@ export const spawn = (
       promise.then(() => (encoding == null ? Buffer.concat(stdout) : Buffer.concat(stdout).toString(encoding).trim())),
     getStderr: (encoding?: BufferEncoding): Promise<any> =>
       promise.then(() => (encoding == null ? Buffer.concat(stderr) : Buffer.concat(stderr).toString(encoding).trim())),
-    getStdio: (encoding?: BufferEncoding): Promise<any> =>
+    getOutput: (encoding?: BufferEncoding): Promise<any> =>
       promise.then(() => (encoding == null ? Buffer.concat(stdio) : Buffer.concat(stdio).toString(encoding).trim())),
     getJson: () => result.getStdout('utf-8').then((value) => JSON.parse(value)),
     tryGetJson: () => promise.then(() => JSON.parse(stdout.toString())).catch(() => undefined),
