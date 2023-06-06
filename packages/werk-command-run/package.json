@@ -1,6 +1,6 @@
 {
   "name": "@werk/command-run",
-  "description": "Werk: Run package.json scripts.",
+  "description": "Run package.json scripts.",
   "version": "1.0.0",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",

@@ -1,4 +1,4 @@
-import { spawn } from '../utils/process.js';
+import { spawn } from '../utils/spawn.js';
 
 export default await spawn('npm', ['query', ':root', '--json'], { capture: true })
   .json<[{ workspaces: unknown; path: string; realpath?: string }?]>()

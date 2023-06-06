@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "lint": "eslint .",
-    "build": "npm -ws run build && npm update @werk/cli",
+    "build": "npm -w @werk/cli -w @werk/command-run run build && npm update @werk/cli && npx @werk/cli -p run build",
     "test": "npm run build && npm run lint && vitest run",
     "clean": "rm -rf out **/out lib **/lib",
     "modernize": "npx npm-check-updates@latest -i --workspaces --root --format group",
-    "start": "npm run --silent build && npx @werk/cli"
+    "start": "npm --quiet run build &>/dev/null || ( echo 'build failed' && exit 1 ) && npx @werk/cli"
   },
   "workspaces": [
     "packages/_template",

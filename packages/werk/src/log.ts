@@ -1,3 +1,5 @@
+import util from 'node:util';
+
 import getAnsiRegex from 'ansi-regex';
 import chalk from 'chalk';
 
@@ -52,14 +54,14 @@ export class Log implements LogOptions {
    * Write to stdout. A trailing newline is added if not present.
    */
   writeOut(message?: unknown, formatLine?: (message: string) => string): void {
-    console.log(this.#format(message, formatLine));
+    process.stdout.write(this.#format(message, formatLine) + '\n');
   }
 
   /**
    * Write to stdout. A trailing newline is added if not present.
    */
   writeErr(message?: unknown, formatLine?: (message: string) => string): void {
-    console.error(this.#format(message, formatLine));
+    process.stderr.write(this.#format(message, formatLine) + '\n');
   }
 
   #format(message: unknown, formatLine?: (message: string) => string): string {
@@ -89,3 +91,9 @@ export class Log implements LogOptions {
 }
 
 export const log = new Log();
+
+Object.assign(console, {
+  log: (...args: any[]): void => log.info(util.format(...args)),
+  warn: (...args: any[]): void => log.warn(util.format(...args)),
+  error: (...args: any[]): void => log.error(util.format(...args)),
+});

@@ -1,4 +1,5 @@
-import { spawn } from '../utils/process.js';
+import { spawn } from '../utils/spawn.js';
+import { type WorkspaceOptions } from '../workspace/workspace.js';
 
 interface NpmWorkspace {
   readonly name: string;
@@ -15,7 +16,7 @@ interface NpmWorkspace {
 
 export default await spawn('npm', ['query', '.workspace', '--quiet', '--json'], { capture: true })
   .json<NpmWorkspace[]>()
-  .then((npmWorkspaces) => {
+  .then((npmWorkspaces): WorkspaceOptions[] => {
     return npmWorkspaces.map(({ path, realpath, ...workspace }) => ({
       dir: realpath ?? path,
       ...workspace,

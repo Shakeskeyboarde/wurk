@@ -10,7 +10,7 @@ await import('./npm/workspaces-root.js')
   })
   .catch(async () => {
     const { main } = await import('./main.js');
-    console.log('\u001B[2mUsing globally installed Werk.\u001B[22m');
+    console.warn('\u001B[2mUsing globally installed Werk.\u001B[22m');
     return main;
   })
   .then((main) => main());

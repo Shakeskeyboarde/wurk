@@ -1,8 +1,8 @@
 import { createCommand } from '@werk/cli';
 
 export default createCommand({
-  init: ({ commander }) => {
-    return commander
+  init: (context) => {
+    return context.commander
       .description(
         `Run package.json scripts.
       
@@ -14,17 +14,17 @@ export default createCommand({
       .passThroughOptions();
   },
 
-  each: async ({ workspace, args, log, spawn }) => {
-    if (!workspace.selected) return;
+  each: async (context) => {
+    if (!context.workspace.selected) return;
 
-    const pkg = await workspace.readPackageJson();
-    const [script, runArgs] = args;
+    const [script, runArgs] = context.args;
+    const { scripts } = await context.workspace.readPackageJson();
 
-    if (pkg.scripts?.[script] == null) {
-      log.warn(`Script "${script}" not found in workspace "${workspace.name}".`);
+    if (scripts?.[script] == null) {
+      context.log.warn(`Script "${script}" not found in workspace "${context.workspace.name}".`);
       return;
     }
 
-    await spawn('npm', ['run', script, ...runArgs], { echo: true });
+    await context.spawn('npm', ['run', script, ...runArgs], { echo: true });
   },
 });

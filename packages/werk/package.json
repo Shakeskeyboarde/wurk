@@ -46,8 +46,8 @@
     "chalk": "^5.2.0",
     "commander": "^10.0.1",
     "cross-spawn": "^7.0.3",
-    "immer": "^10.0.2",
     "npm-run-path": "^5.1.0",
+    "read-pkg-up": "^9.1.0",
     "shell-quote": "^1.8.1",
     "type-fest": "^3.11.1"
   }

@@ -4,7 +4,7 @@ import { quote } from 'shell-quote';
 
 import { type Log, log as defaultLog } from '../log.js';
 
-export interface SpawnPromise extends Promise<void> {
+export interface SpawnedProcess extends Promise<void> {
   stdout(): Promise<Buffer>;
   stdout(encoding: BufferEncoding): Promise<string>;
   stdout(encoding?: BufferEncoding): Promise<string | Buffer>;
@@ -40,7 +40,7 @@ export const spawn = (
   command: string,
   args: string[] = [],
   { echo = false, capture = false, throw: throw_ = false, log = defaultLog, ...options }: SpawnOptions = {},
-): SpawnPromise => {
+): SpawnedProcess => {
   const cp = crossSpawn(command, args, {
     ...options,
     stdio: ['inherit', 'pipe', 'pipe'],
@@ -82,38 +82,29 @@ export const spawn = (
 
   const promise = new Promise<void>((resolve, reject) =>
     cp.on('close', () => {
-      exitCode = cp.exitCode;
-      if (throw_ && (exitCode !== 0 || error != null)) {
-        const cmd = quote([command, ...args]);
-        const err = new Error(`command failed\n${cmd}\n${stdio}`);
-        if (error) err.cause = error;
-        reject(err);
-      } else {
-        resolve();
-      }
+      if (cp.exitCode && !error) error = new Error(`command failed\n${quote([command, ...args])}\n${stdio}`);
+      if (error && !cp.exitCode) exitCode = 1;
+
+      if (throw_ && error != null) reject(error);
+      else resolve();
     }),
   );
 
-  const result: SpawnPromise = Object.assign(promise, {
+  const result: SpawnedProcess = Object.assign(promise, {
     stdout: (encoding?: BufferEncoding): Promise<any> =>
       promise.then(() => (encoding == null ? Buffer.concat(stdout) : Buffer.concat(stdout).toString(encoding).trim())),
-
     stderr: (encoding?: BufferEncoding): Promise<any> =>
       promise.then(() => (encoding == null ? Buffer.concat(stderr) : Buffer.concat(stderr).toString(encoding).trim())),
-
     stdio: (encoding?: BufferEncoding): Promise<any> =>
       promise.then(() => (encoding == null ? Buffer.concat(stdio) : Buffer.concat(stdio).toString(encoding).trim())),
-
     json: () => result.stdout('utf-8').then((value) => JSON.parse(value)),
     tryJson: () => promise.then(() => JSON.parse(stdout.toString())).catch(() => undefined),
-
     succeeded: () =>
       promise.then(
         () => exitCode === 0 && error == null,
         () => false,
       ),
     failed: () => result.succeeded().then((value) => !value),
-
     exitCode: () => promise.then(() => exitCode),
     error: () => promise.then(() => error),
   });

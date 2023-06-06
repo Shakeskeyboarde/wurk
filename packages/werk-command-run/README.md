@@ -11,5 +11,5 @@ npm i -D @werk/cli @werk/command-run
 ## Use
 
 ```sh
-npx werk run <script> [args...]
+werk run <script> [args...]
 ```
