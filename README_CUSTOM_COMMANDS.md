@@ -2,7 +2,7 @@
 
 Custom commands are supported and encouraged.
 
-The first goal of Werk is to make it easier to build or choose the monorepo orchestration patterns that make sense for you. You shouldn't have to jump through hoops to do things the way you want and need to do them in your own repos and pipelines. We want Werk to be to monorepos what Rollup, Vite, and Webpack are to bundling.
+The first goal of Werk is to make it easier to build or choose the monorepo orchestration patterns that make sense for you. You shouldn't have to jump through hoops to do things the way you want and need to do them in your own repos and pipelines. Werk should be to monorepos what Rollup, Vite, and Webpack are to bundling.
 
 - [Overview](#overview)
 - [Implementing Commands](#implementing-commands)
