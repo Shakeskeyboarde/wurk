@@ -23,10 +23,10 @@ export interface CommandType<A extends CommanderArgs, O extends CommanderOptions
 const COMMAND = Symbol('WerkCommand');
 
 export class Command<A extends CommanderArgs, O extends CommanderOptions> implements CommandType<A, O> {
-  #init: ((context: InitContext) => Commander<A, O>) | undefined;
-  #before: ((context: RootContext<A, O>) => Promise<void>) | undefined;
-  #each: ((context: WorkspaceContext<A, O>) => Promise<void>) | undefined;
-  #after: ((context: RootContext<A, O>) => Promise<void>) | undefined;
+  readonly #init: ((context: InitContext) => Commander<A, O>) | undefined;
+  readonly #before: ((context: RootContext<A, O>) => Promise<void>) | undefined;
+  readonly #each: ((context: WorkspaceContext<A, O>) => Promise<void>) | undefined;
+  readonly #after: ((context: RootContext<A, O>) => Promise<void>) | undefined;
 
   constructor({ init, before, each, after }: CommandHooks<A, O>) {
     Object.assign(this, { [COMMAND]: true });

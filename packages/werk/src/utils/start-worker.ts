@@ -7,7 +7,7 @@ interface WorkerOptions {
   /**
    * Worker data.
    */
-  workerData?: any;
+  readonly workerData?: any;
 }
 
 export const startWorker = async (filename: string, { workerData }: WorkerOptions = {}): Promise<boolean> => {
