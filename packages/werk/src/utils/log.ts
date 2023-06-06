@@ -1,3 +1,4 @@
+import { PassThrough, type Writable } from 'node:stream';
 import util from 'node:util';
 
 import getAnsiRegex from 'ansi-regex';
@@ -23,6 +24,8 @@ export const LOG_LEVEL = {
 } as const;
 
 export class Log implements LogOptions {
+  readonly stdout: Writable = new PassThrough({ emitClose: false, autoDestroy: false });
+  readonly stderr: Writable = new PassThrough({ emitClose: false, autoDestroy: false });
   readonly prefix: string;
   readonly trim: boolean;
 
@@ -32,73 +35,75 @@ export class Log implements LogOptions {
   constructor({ prefix = '', trim = false }: LogOptions = {}) {
     this.prefix = prefix;
     this.trim = trim;
+    this.stdout.on('data', this.writeOut);
+    this.stderr.on('data', this.writeErr);
   }
 
-  getLevel(): { name: LogLevel; value: number } {
+  readonly getLevel = (): { name: LogLevel; value: number } => {
     const name: LogLevel =
       process.env.LOG_LEVEL && process.env.LOG_LEVEL in LOG_LEVEL ? (process.env.LOG_LEVEL as LogLevel) : 'info';
     const value = LOG_LEVEL[name];
 
     return { name, value };
-  }
+  };
 
   /**
    * Print a dimmed message to stderr.
    */
-  trace(message?: unknown): void {
+  readonly trace = (message?: unknown): void => {
     if (LOG_LEVEL.trace <= this.getLevel().value) this.writeOut(message, chalk.dim);
-  }
+  };
 
   /**
    * Print a dimmed message to stderr.
    */
-  debug(message?: unknown): void {
+  readonly debug = (message?: unknown): void => {
     if (LOG_LEVEL.debug <= this.getLevel().value) this.writeOut(message, chalk.dim);
-  }
+  };
 
   /**
    * Print an undecorated message to stdout.
    */
-  info(message?: unknown): void {
+  readonly info = (message?: unknown): void => {
     if (LOG_LEVEL.info <= this.getLevel().value) this.writeOut(message);
-  }
+  };
 
   /**
    * Print a bold message to stderr.
    */
-  notice(message?: unknown): void {
+  readonly notice = (message?: unknown): void => {
     if (LOG_LEVEL.notice <= this.getLevel().value) this.writeErr(message, chalk.bold);
-  }
+  };
 
   /**
    * Print a yellow message to stderr.
    */
-  warn(message?: unknown): void {
+  readonly warn = (message?: unknown): void => {
     if (LOG_LEVEL.warn <= this.getLevel().value) this.writeErr(message, chalk.yellowBright);
-  }
+  };
 
   /**
    * Print a red message to stderr.
    */
-  error(message?: unknown): void {
+  readonly error = (message?: unknown): void => {
     if (LOG_LEVEL.error <= this.getLevel().value) this.writeErr(message, chalk.redBright);
-  }
+  };
 
   /**
    * Write an undecorated message to stdout.
    */
-  writeOut(message?: unknown, formatLine?: (message: string) => string): void {
+  readonly writeOut = (message?: unknown, formatLine?: (message: string) => string): void => {
     process.stdout.write(this.#format(message, formatLine) + '\n');
-  }
+  };
 
   /**
    * Write an undecorated message to stdout.
    */
-  writeErr(message?: unknown, formatLine?: (message: string) => string): void {
+  readonly writeErr = (message?: unknown, formatLine?: (message: string) => string): void => {
     process.stderr.write(this.#format(message, formatLine) + '\n');
-  }
+  };
 
-  #format(message: unknown, formatLine?: (message: string) => string): string {
+  readonly #format = (message: unknown, formatLine?: (message: string) => string): string => {
     let str = String(message ?? '');
 
     if (!this.prefix && !this.trim) {
@@ -121,7 +126,7 @@ export class Log implements LogOptions {
     if (this.prefix) lines = lines.map((line) => this.prefix + line);
 
     return lines.join('\n');
-  }
+  };
 }
 
 export const log = new Log();

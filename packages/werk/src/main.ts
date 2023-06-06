@@ -11,7 +11,7 @@ import { loadCommand } from './command/load-command.js';
 import { type LoadedCommand } from './command/loaded-command.js';
 import { Commander, getCommanderMetadata } from './commander/commander.js';
 import { onError } from './error.js';
-import { log, LOG_LEVEL, type LogLevel } from './log.js';
+import { log, LOG_LEVEL, type LogLevel } from './utils/log.js';
 import { getDependencyOrderedWorkspaces } from './workspace/get-dependency-ordered-workspaces.js';
 import { getWorkspaceDependencyNames } from './workspace/get-workspace-dependency-names.js';
 import { selectWorkspaces } from './workspace/select-workspaces.js';

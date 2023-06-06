@@ -7,7 +7,7 @@ import {
   type OutputConfiguration,
 } from '@commander-js/extra-typings';
 
-import { log } from '../log.js';
+import { log } from '../utils/log.js';
 import { CommanderHelp } from './commander-help.js';
 import { patchParseArgs } from './patch-parse-args.js';
 

@@ -1,6 +1,6 @@
 import { type CommandPackage } from '../command/loaded-command.js';
 import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
-import { Log, type LogOptions } from '../log.js';
+import { Log, type LogOptions } from '../utils/log.js';
 import { type Spawn, spawn } from '../utils/spawn.js';
 import { Workspace, type WorkspaceOptions } from '../workspace/workspace.js';
 

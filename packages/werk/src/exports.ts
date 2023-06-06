@@ -4,7 +4,7 @@ export { type Commander, type CommanderArgs, type CommanderOptions } from './com
 export { type InitContext, type InitContextOptions } from './context/init-context.js';
 export { type RootContext, type RootContextOptions } from './context/root-context.js';
 export { type WorkspaceContext, type WorkspaceContextOptions } from './context/workspace-context.js';
-export { type Log, LOG_LEVEL, type LogLevel } from './log.js';
+export { type Log, LOG_LEVEL, type LogLevel } from './utils/log.js';
 export { type Spawn, type SpawnOptions, type SpawnedProcess as SpawnPromise } from './utils/spawn.js';
 export { type Workspace } from './workspace/workspace.js';
 export { type PackageJson } from 'type-fest';

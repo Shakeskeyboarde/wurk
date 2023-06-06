@@ -1,5 +1,5 @@
 /* eslint-disable unicorn/no-process-exit */
-import { log } from './log.js';
+import { log } from './utils/log.js';
 
 export const onError = (error: unknown): never => {
   if (process.env.DEBUG) {

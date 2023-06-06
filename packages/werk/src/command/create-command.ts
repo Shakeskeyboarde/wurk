@@ -3,7 +3,7 @@ import { isMainThread, workerData } from 'node:worker_threads';
 import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
 import { type RootContextOptions } from '../context/root-context.js';
 import { type WorkspaceContextOptions } from '../context/workspace-context.js';
-import { log } from '../log.js';
+import { log } from '../utils/log.js';
 import { Command, type CommandHooks } from './command.js';
 
 type CommandWorkerData<A extends CommanderArgs, O extends CommanderOptions> =

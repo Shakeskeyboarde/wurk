@@ -2,7 +2,7 @@ import { spawn as crossSpawn } from 'cross-spawn';
 import { npmRunPath } from 'npm-run-path';
 import { quote } from 'shell-quote';
 
-import { type Log, log as defaultLog } from '../log.js';
+import { type Log, log as defaultLog } from './log.js';
 
 export interface SpawnedProcess extends Promise<void> {
   readonly stdin: NodeJS.WritableStream | null;
@@ -42,8 +42,11 @@ export interface SpawnOptions {
   readonly env?: NodeJS.ProcessEnv;
   readonly echo?: boolean;
   readonly capture?: boolean;
+  readonly stream?: boolean;
   readonly input?: boolean;
-  readonly throw?: boolean;
+  readonly errorThrow?: boolean;
+  readonly errorEcho?: boolean;
+  readonly errorMessage?: (error: unknown, exitCode: number) => string;
   readonly log?: Log;
 }
 
@@ -53,8 +56,11 @@ export const spawn = (
   {
     echo = false,
     capture = false,
+    stream = false,
     input = false,
-    throw: throw_ = false,
+    errorThrow = false,
+    errorEcho = true,
+    errorMessage,
     log = defaultLog,
     ...options
   }: SpawnOptions = {},
@@ -62,7 +68,11 @@ export const spawn = (
   const env = options.env ?? process.env;
   const cp = crossSpawn(command, args, {
     ...options,
-    stdio: [input ? 'pipe' : 'ignore', echo || capture ? 'pipe' : 'ignore', echo || capture ? 'pipe' : 'ignore'],
+    stdio: [
+      input ? 'pipe' : 'ignore',
+      echo || capture || errorEcho || stream ? 'pipe' : 'ignore',
+      echo || capture || errorEcho || stream ? 'pipe' : 'ignore',
+    ],
     env: {
       ...env,
       PATH: npmRunPath({ cwd: options.cwd, path: env.PATH }),
@@ -72,39 +82,50 @@ export const spawn = (
   const stderr: Buffer[] = [];
   const stdio: Buffer[] = [];
 
-  let exitCode: number | null = null;
+  let exitCode = 0;
   let error: unknown = undefined;
 
-  cp.stdout?.on('data', (data: Buffer) => {
-    if (capture) {
+  if (echo) {
+    cp.stdout?.pipe(log.stdout);
+    cp.stderr?.pipe(log.stderr);
+  }
+
+  if (capture || errorEcho) {
+    cp.stdout?.on('data', (data: Buffer) => {
       stdout.push(data);
       stdio.push(data);
-    }
-    if (echo) {
-      log.writeOut(data);
-    }
-  });
+    });
 
-  cp.stderr?.on('data', (data: Buffer) => {
-    if (capture) {
+    cp.stderr?.on('data', (data: Buffer) => {
       stderr.push(data);
       stdio.push(data);
-    }
-    if (echo) {
-      log.writeErr(data);
-    }
-  });
+    });
+  }
 
   cp.on('error', (err) => {
     error = err;
   });
 
+  // Switch the streams to flowing mode on the next tick, if they aren't
+  // already, to prevent memory leaks. Not entirely sure this is
+  // necessary, but I think it's better to be safe than sorry.
+  Promise.resolve()
+    .then(() => {
+      cp.stdout?.resume();
+      cp.stderr?.resume();
+    })
+    .catch(() => undefined);
+
   const promise = new Promise<void>((resolve, reject) =>
     cp.on('close', () => {
-      if (cp.exitCode && !error) error = new Error(`command failed\n${quote([command, ...args])}\n${stdio}`);
-      if (error && !cp.exitCode) exitCode = 1;
+      exitCode = cp.exitCode ?? 1;
 
-      if (throw_ && error != null) reject(error);
+      if (exitCode && !error) error = new Error(`command failed\n${quote([command, ...args])}\n${stdio}`);
+      if (error && !exitCode) exitCode = 1;
+      if (errorEcho && error != null) log.debug(Buffer.concat(stdio).toString('utf-8'));
+      if (errorMessage && error != null) log.error(errorMessage(error, exitCode));
+
+      if (errorThrow && error != null) reject(error);
       else resolve();
     }),
   );
