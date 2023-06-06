@@ -136,6 +136,9 @@ The `description` and `version` from your command's `package.json` file will be 
 
 The context `spawn(cmd, args?, options?)` function is a promise based helper for running child processes.
 
+- Based on [cross-spawn](https://www.npmjs.com/package/cross-spawn), so spawning be fairly consistent on Windows, Mac, and Linux.
+- Adds `node_modules/.bin` directories to the environment `PATH`, so locally installed binaries can be executed.
+
 ```ts
 const spawned = spawn('git', ['status', '--porcelain'], {
   // Pass through output streams.

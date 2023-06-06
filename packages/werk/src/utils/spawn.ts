@@ -59,12 +59,13 @@ export const spawn = (
     ...options
   }: SpawnOptions = {},
 ): SpawnedProcess => {
+  const env = options.env ?? process.env;
   const cp = crossSpawn(command, args, {
     ...options,
     stdio: [input ? 'pipe' : 'ignore', echo || capture ? 'pipe' : 'ignore', echo || capture ? 'pipe' : 'ignore'],
     env: {
-      ...options?.env,
-      PATH: npmRunPath({ cwd: options?.cwd, path: options?.env?.PATH }),
+      ...env,
+      PATH: npmRunPath({ cwd: options.cwd, path: env.PATH }),
     },
   });
   const stdout: Buffer[] = [];
