@@ -214,7 +214,7 @@ spawned.stderr?.on('data', handleData);
 
 ## Starting Threads
 
-Any `hook` except `init` can spawn a copy of itself in a worker thread by calling the context `startWorker(data?)` function.
+Any hook except `init` can spawn a copy of itself in a worker thread by calling the context `startWorker(data?)` function.
 
 The simplest case is to always run a hook in a separate thread.
 
