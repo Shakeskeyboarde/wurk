@@ -72,7 +72,7 @@ export class Log implements LogOptions {
       return str.endsWith('\n') ? str.slice(0, -1) : str;
     }
 
-    let lines = str.replace(ansiRegex, '').split('\n');
+    let lines = str.replace(ansiRegex, '').split(/\r?\n|\r|\n/g);
 
     if (this.trim) {
       lines = lines.flatMap((line) => {
