@@ -8,23 +8,13 @@ interface WorkerOptions {
    * Worker data.
    */
   workerData?: any;
-
-  /**
-   * Pipe and immediately close the worker's stdin stream.
-   */
-  allowStdin?: boolean;
 }
 
-export const startWorker = async (
-  filename: string,
-  { workerData, allowStdin = false }: WorkerOptions = {},
-): Promise<boolean> => {
+export const startWorker = async (filename: string, { workerData }: WorkerOptions = {}): Promise<boolean> => {
   if (!isMainThread) return false;
   if (filename.startsWith('file:')) filename = fileURLToPath(filename);
 
-  const worker = new Worker(filename, { workerData: workerData, stdin: !allowStdin });
-
-  worker.stdin?.end();
+  const worker = new Worker(filename, { workerData: workerData });
 
   await new Promise<void>((resolve, reject) => {
     worker.on('error', reject);

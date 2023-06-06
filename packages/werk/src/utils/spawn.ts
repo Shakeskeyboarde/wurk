@@ -5,45 +5,63 @@ import { quote } from 'shell-quote';
 import { type Log, log as defaultLog } from '../log.js';
 
 export interface SpawnedProcess extends Promise<void> {
-  stdout(): Promise<Buffer>;
-  stdout(encoding: BufferEncoding): Promise<string>;
-  stdout(encoding?: BufferEncoding): Promise<string | Buffer>;
+  readonly stdin: NodeJS.WritableStream | null;
+  readonly stdout: NodeJS.ReadableStream;
+  readonly stderr: NodeJS.ReadableStream;
 
-  stderr(): Promise<Buffer>;
-  stderr(encoding: BufferEncoding): Promise<string>;
-  stderr(encoding?: BufferEncoding): Promise<string | Buffer>;
+  readonly getStdout: {
+    (): Promise<Buffer>;
+    (encoding: BufferEncoding): Promise<string>;
+    (encoding?: BufferEncoding): Promise<string | Buffer>;
+  };
 
-  stdio(): Promise<Buffer>;
-  stdio(encoding: BufferEncoding): Promise<string>;
-  stdio(encoding?: BufferEncoding): Promise<string | Buffer>;
+  readonly getStderr: {
+    (): Promise<Buffer>;
+    (encoding: BufferEncoding): Promise<string>;
+    (encoding?: BufferEncoding): Promise<string | Buffer>;
+  };
 
-  json<T>(): Promise<T>;
-  tryJson<T>(): Promise<T | undefined>;
+  readonly getStdio: {
+    (): Promise<Buffer>;
+    (encoding: BufferEncoding): Promise<string>;
+    (encoding?: BufferEncoding): Promise<string | Buffer>;
+  };
 
-  succeeded(): Promise<boolean>;
-  failed(): Promise<boolean>;
+  readonly getJson: <T>() => Promise<T>;
+  readonly tryGetJson: <T>() => Promise<T | undefined>;
 
-  exitCode(): Promise<number | null>;
-  error(): Promise<unknown>;
+  readonly getExitCode: () => Promise<number | null>;
+  readonly getError: () => Promise<unknown>;
+
+  readonly succeeded: () => Promise<boolean>;
+  readonly failed: () => Promise<boolean>;
 }
 
 export interface SpawnOptions {
-  cwd?: string | URL;
-  env?: NodeJS.ProcessEnv;
-  echo?: boolean;
-  capture?: boolean;
-  throw?: boolean;
-  log?: Log;
+  readonly cwd?: string | URL;
+  readonly env?: NodeJS.ProcessEnv;
+  readonly echo?: boolean;
+  readonly capture?: boolean;
+  readonly input?: boolean;
+  readonly throw?: boolean;
+  readonly log?: Log;
 }
 
 export const spawn = (
   command: string,
   args: string[] = [],
-  { echo = false, capture = false, throw: throw_ = false, log = defaultLog, ...options }: SpawnOptions = {},
+  {
+    echo = false,
+    capture = false,
+    input = false,
+    throw: throw_ = false,
+    log = defaultLog,
+    ...options
+  }: SpawnOptions = {},
 ): SpawnedProcess => {
   const cp = crossSpawn(command, args, {
     ...options,
-    stdio: ['inherit', 'pipe', 'pipe'],
+    stdio: [input ? 'pipe' : 'ignore', echo || capture ? 'pipe' : 'ignore', echo || capture ? 'pipe' : 'ignore'],
     env: {
       ...options?.env,
       PATH: npmRunPath({ cwd: options?.cwd, path: options?.env?.PATH }),
@@ -56,7 +74,7 @@ export const spawn = (
   let exitCode: number | null = null;
   let error: unknown = undefined;
 
-  cp.stdout.on('data', (data: Buffer) => {
+  cp.stdout?.on('data', (data: Buffer) => {
     if (capture) {
       stdout.push(data);
       stdio.push(data);
@@ -66,7 +84,7 @@ export const spawn = (
     }
   });
 
-  cp.stderr.on('data', (data: Buffer) => {
+  cp.stderr?.on('data', (data: Buffer) => {
     if (capture) {
       stderr.push(data);
       stdio.push(data);
@@ -91,22 +109,25 @@ export const spawn = (
   );
 
   const result: SpawnedProcess = Object.assign(promise, {
-    stdout: (encoding?: BufferEncoding): Promise<any> =>
+    stdin: cp.stdin,
+    stdout: cp.stdout as NodeJS.ReadableStream,
+    stderr: cp.stderr as NodeJS.ReadableStream,
+    getStdout: (encoding?: BufferEncoding): Promise<any> =>
       promise.then(() => (encoding == null ? Buffer.concat(stdout) : Buffer.concat(stdout).toString(encoding).trim())),
-    stderr: (encoding?: BufferEncoding): Promise<any> =>
+    getStderr: (encoding?: BufferEncoding): Promise<any> =>
       promise.then(() => (encoding == null ? Buffer.concat(stderr) : Buffer.concat(stderr).toString(encoding).trim())),
-    stdio: (encoding?: BufferEncoding): Promise<any> =>
+    getStdio: (encoding?: BufferEncoding): Promise<any> =>
       promise.then(() => (encoding == null ? Buffer.concat(stdio) : Buffer.concat(stdio).toString(encoding).trim())),
-    json: () => result.stdout('utf-8').then((value) => JSON.parse(value)),
-    tryJson: () => promise.then(() => JSON.parse(stdout.toString())).catch(() => undefined),
+    getJson: () => result.getStdout('utf-8').then((value) => JSON.parse(value)),
+    tryGetJson: () => promise.then(() => JSON.parse(stdout.toString())).catch(() => undefined),
+    getExitCode: () => promise.then(() => exitCode),
+    getError: () => promise.then(() => error),
     succeeded: () =>
       promise.then(
         () => exitCode === 0 && error == null,
         () => false,
       ),
     failed: () => result.succeeded().then((value) => !value),
-    exitCode: () => promise.then(() => exitCode),
-    error: () => promise.then(() => error),
   });
 
   return result;

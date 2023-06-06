@@ -51,11 +51,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
       ...options,
       isWorker: !isMainThread,
       workerData: undefined,
-      startWorker: (data) =>
-        startWorker(options.main, {
-          workerData: { stage: 'before', options, data },
-          allowStdin: !options.log?.prefix,
-        }),
+      startWorker: (data) => startWorker(options.main, { workerData: { stage: 'before', options, data } }),
     });
 
     await this.#before(context);
@@ -68,11 +64,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
       ...options,
       isWorker: !isMainThread,
       workerData: undefined,
-      startWorker: (data) =>
-        startWorker(options.main, {
-          workerData: { stage: 'each', options, data },
-          allowStdin: !options.log?.prefix,
-        }),
+      startWorker: (data) => startWorker(options.main, { workerData: { stage: 'each', options, data } }),
     });
 
     await this.#each(context);
@@ -85,11 +77,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
       ...options,
       isWorker: !isMainThread,
       workerData: undefined,
-      startWorker: (data) =>
-        startWorker(options.main, {
-          workerData: { stage: 'after', options, data },
-          allowStdin: !options.log?.prefix,
-        }),
+      startWorker: (data) => startWorker(options.main, { workerData: { stage: 'after', options, data } }),
     });
 
     await this.#after(context);

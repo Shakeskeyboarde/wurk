@@ -97,15 +97,15 @@ The following additional properties are also included.
 
 ## Patching Workspace `package.json` Files
 
-The [workspace](#workspaces) `patchPackageJson(patchFn)` function takes a callback which returns a partial package object. The returned value is deeply merged into the original package, and written back to the workspace `package.json` file.
+The [workspace](#workspaces) `patchPackageJson(patchFn)` function takes a callback which receives the current package object, and returns an updated partial package object. The returned value is deeply merged into the original package, and written back to the workspace `package.json` file.
 
-The following example adds (or replaces) the `cowsay` dependency. All existing dependencies will be left as-is.
+The following example adds the `cowsay` dependency if it is missing. All existing dependencies will be left as-is.
 
 ```ts
 await context.workspace.writePackageJson((packageJson) => {
   return {
     dependencies: {
-      cowsay: '^1.5.0',
+      cowsay: packageJson.dependencies?.cowsay ?? '^1.5.0',
     },
   };
 });
@@ -113,7 +113,7 @@ await context.workspace.writePackageJson((packageJson) => {
 
 ## Command Line Parsing
 
-The `init` hook context contains a `commander` property, which is just a [Commander](https://www.npmjs.com/package/commander) command. This command can be configured in any way you would like, But, the configured command must be returned so that Typescript can infer the `args` and `opts` context types for the later hooks.
+The `init` hook context contains a `commander` property, which is just a [Commander](https://www.npmjs.com/package/commander) command. This command can be configured in any way you would like, The configured command must be returned so that Typescript can infer the `args` and `opts` context types for the later hooks.
 
 ```ts
 export default createCommand({
@@ -138,13 +138,17 @@ The context `spawn(cmd, args?, options?)` function is a promise based helper for
 
 ```ts
 const spawned = spawn('git', ['status', '--porcelain'], {
+  // Pass through output streams.
+  //  Default: false
+  echo: true,
+
   // Buffer stdout and stderr data
   //  Default: false
   capture: true,
 
-  // Pass through output streams.
+  // Pipe stdin so that data can be written to the process.
   //  Default: false
-  echo: true,
+  input: true,
 
   // Throw an error on non-zero exit codes.
   //  Default: true
@@ -162,23 +166,30 @@ const spawned = spawn('git', ['status', '--porcelain'], {
 // Just wait for the process to finish.
 await spawned; // void
 
-// Get the output.
-const stdoutBytes = await spawned.stdout();
-const stdoutText = await spawned.stdout('utf-8');
-const stderrBytes = await spawned.stderr();
-const stderrText = await spawned.stderr('utf-8');
-// Combined output.
-const stdioBytes = await spawned.stdio();
-const stdioText = await spawned.stdio('utf-8');
+// Get the process output.
+const stdoutBytes = await spawned.getStdout();
+const stdoutText = await spawned.getStdout('utf-8');
+const stderrBytes = await spawned.getStderr();
+const stderrText = await spawned.getStderr('utf-8');
+// Both stdout and stderr as one combined value.
+const stdioBytes = await spawned.getStdio();
+const stdioText = await spawned.getStdio('utf-8');
 // JSON parsed stdout.
-const json = await spawned.json();
-const jsonOrUndefined = await spawned.tryJson();
+const json = await spawned.getJson();
+const jsonOrUndefined = await spawned.tryGetJson();
 
-// Check process success or failure
+// Wait process success or failure.
+const exitCode = await spawned.getExitCode();
+const error = await spawned.getError();
 const isSuccessful = await spawned.succeeded();
 const isFailed = await spawned.failed();
-const exitCode = await spawned.exitCode();
-const error = await spawned.error();
+
+// If the input option is true.
+spawned.stdin;
+
+// If the capture or echo options are true.
+spawned.stdout;
+spawned.stderr;
 ```
 
 ## Starting Threads

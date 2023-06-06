@@ -15,7 +15,7 @@ interface NpmWorkspace {
 }
 
 export default await spawn('npm', ['query', '.workspace', '--quiet', '--json'], { capture: true })
-  .json<NpmWorkspace[]>()
+  .getJson<NpmWorkspace[]>()
   .then((npmWorkspaces): WorkspaceOptions[] => {
     return npmWorkspaces.map(({ path, realpath, ...workspace }) => ({
       dir: realpath ?? path,
