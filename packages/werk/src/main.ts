@@ -12,9 +12,9 @@ import { type LoadedCommand } from './command/loaded-command.js';
 import { Commander, getCommanderMetadata } from './commander/commander.js';
 import { onError } from './error.js';
 import { log, LOG_LEVEL, type LogLevel } from './utils/log.js';
-import { getDependencyOrderedWorkspaces } from './workspace/get-dependency-ordered-workspaces.js';
 import { getWorkspaceDependencyNames } from './workspace/get-workspace-dependency-names.js';
 import { selectWorkspaces } from './workspace/select-workspaces.js';
+import { sortWorkspaces } from './workspace/sort-workspaces.js';
 import { type WorkspaceOptions } from './workspace/workspace.js';
 
 interface GlobalOptions {
@@ -24,10 +24,10 @@ interface GlobalOptions {
   readonly workspace?: readonly string[];
   readonly keyword?: readonly string[];
   readonly notKeyword?: readonly string[];
-  readonly private?: boolean;
-  readonly public?: boolean;
-  readonly order?: boolean;
-  readonly prefix?: boolean;
+  readonly private: boolean;
+  readonly public: boolean;
+  readonly wait: boolean;
+  readonly prefix: boolean;
 }
 
 interface MainActionOptions {
@@ -95,8 +95,8 @@ export const main = async (): Promise<void> => {
     )
     .option('--no-private', 'Exclude private workspaces.')
     .option('--no-public', 'Exclude public workspaces.')
-    .option('--no-order', 'Do not order workspaces by interdependency.')
-    .option('--no-prefix', 'Do not prefix output.')
+    .option('--no-wait', 'No waiting for dependency processing to complete.')
+    .option('--no-prefix', 'No output prefixes.')
     .version(version)
     .passThroughOptions()
     .action(async (cmd, cmdArgs, globalOptions) => {
@@ -141,8 +141,8 @@ const commandAction = async ({
   command,
   globalOptions,
 }: CommandActionOptions): Promise<void> => {
-  const { concurrency, parallel = Boolean(concurrency), order = true, prefix = false, ...filters } = globalOptions;
-  const workspaces = order ? getDependencyOrderedWorkspaces(workspacesArray) : workspacesArray;
+  const { concurrency, parallel = Boolean(concurrency), wait, prefix, ...filters } = globalOptions;
+  const workspaces = sortWorkspaces(workspacesArray);
 
   selectWorkspaces(workspaces.values(), filters);
 
@@ -187,7 +187,7 @@ const commandAction = async ({
       }
     });
 
-    if (order) promises.set(workspace.name, promise);
+    if (wait) promises.set(workspace.name, promise);
   }
 
   await command.after({

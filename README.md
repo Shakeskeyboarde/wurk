@@ -87,8 +87,8 @@ Werk provides workspace and task orchestration through a set of options which ar
   - Exclude private workspaces.
 - `--no-public`
   - Exclude public workspaces.
-- `--no-order`
-  - Do not order workspaces by interdependency. This should not be used for build-like or publish-like commands where interdependency matters. It may be useful for watch-like commands which need to run simultaneously in all (selected) workspaces.
+- `--no-wait`
+  - Do not wait for workspace dependencies to finish processing before processing dependents.
 - `--no-prefix`
   - Do add prefixes to command output.
 

@@ -2,7 +2,7 @@ import { type PackageJson } from 'type-fest';
 
 import { getWorkspaceDependencyNames } from './get-workspace-dependency-names.js';
 
-export const getDependencyOrderedWorkspaces = <
+export const sortWorkspaces = <
   T extends Pick<PackageJson, 'dependencies' | 'peerDependencies' | 'optionalDependencies' | 'devDependencies'> & {
     readonly name: string;
   },
