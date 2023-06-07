@@ -1,7 +1,7 @@
 {
   "name": "@werk/command-exec",
   "description": "Run arbitrary executables in workspaces.",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "repository": {
@@ -31,6 +31,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@werk/cli": "^1.0.0"
+    "@werk/cli": "^0.1.0"
   }
 }

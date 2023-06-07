@@ -14,7 +14,7 @@ interface NpmWorkspace {
   readonly realpath?: string;
 }
 
-export default await spawn('npm', ['query', '.workspace', '--quiet', '--json'], { capture: true })
+export default await spawn('npm', ['query', '.workspace', '--quiet', '--json'], { capture: true, errorThrow: true })
   .getJson<NpmWorkspace[]>()
   .then((npmWorkspaces): WorkspaceOptions[] => {
     return npmWorkspaces.map(({ path, realpath, ...workspace }) => ({

@@ -9,6 +9,6 @@ export default createCommand({
   },
 
   each: async ({ args, workspace, spawn }) => {
-    if (workspace.selected) await spawn(...args, { echo: true });
+    if (workspace.selected) await spawn(...args, { echo: true, errorThrow: true });
   },
 });

@@ -72,8 +72,8 @@ A context object is passed to each hook callback. The properties attached to tho
 - `opts` (**before**, **each**, **after**, and **cleanup** hooks only): Named options parsed from the command line.
 - `workspaces` (**before**, **each**, and **after** hooks only): A map (by name) of all [workspaces](#workspaces).
 - `workspace` (**each** hook only): The current [workspace](#workspaces).
-- `spawn` (**before**, **each**, and **after** hooks only): Spawn a process. The working directory will be the root of the current workspace if available (`each` hook), or the workspaces root otherwise.
-- `startWorker(data?)` (**before**, **each**, and **after** hooks only): Function which re-runs the current hook in a [worker thread](https://nodejs.org/api/worker_threads.html).
+- `spawn` (**before**, **each**, **after**, and **cleanup** hooks only): Spawn a process. The working directory will be the root of the current workspace if available (`each` hook), or the workspaces root otherwise.
+- `startWorker(data?)` (**before**, **each**, and **after** hooks only): Re-runs the current hook in a [worker thread](https://nodejs.org/api/worker_threads.html).
 - `isWorker` (**before**, **each**, and **after** hooks only): True if the hook is running in a worker thread.
 - `workerData` (**before**, **each**, and **after** hooks only): Data passed to the `startWorker(data?)` function, or undefined if `isWorker` is false.
 - `exitCode` (**cleanup** hook only): Exit code of the command.
@@ -98,10 +98,14 @@ The following additional properties are also included.
 - `dir`: Absolute root directory of the workspace.
 - `selected`: True if the workspace matched the Werk [global options](README.md#command-line-options)
 - `dependencyNames`: A set of the unique (deduplicated) dependency names collected from all of the dependency maps.
-- `readPackageJson()`: Function which reads the workspace's full `package.json` file.
-- `writePackageJson(json)`: Function which writes the workspace `package.json` file.
-- `writePackageJson(json)`: Function which writes the workspace `package.json` file.
-- `patchPackageJson(patchFn)`: Function which applies a deeply merged patch to the workspace `package.json` file.
+- `readPackageJson()`: Reads the workspace's full `package.json` file.
+- `writePackageJson(json)`: Writes the workspace `package.json` file.
+- `patchPackageJson(patchFn)`: Applies a deeply merged patch to the workspace `package.json` file.
+- `getLocalDependencies({ scopes? })`: Gets the workspaces which are local dependencies of this workspace. If scopes is not specified, dependencies from all scopes are returned.
+- `getNpmMetadata(version?)`: Gets the NPM metadata for the workspace. If a version is not specified, the workspace's version is used.
+- `getGitHead()`: Gets the commit hash of the workspace's git HEAD.
+- `getIsGitClean()`: Returns true if the workspace's git working tree is clean.
+- `getIsGitUnmodified(commit?)`: Returns true if there is no difference between the commit and the current HEAD. If a commit is not specified, the workspace's git HEAD is used.
 
 ## Patching Workspace `package.json` Files
 
@@ -168,7 +172,7 @@ const spawnPromise = spawn('git', ['status', '--porcelain'], {
   input: true,
 
   // Throw an error on non-zero exit codes.
-  //  Default: true
+  //  Default: false
   errorThrow: true,
 
   // Echo all output to stderr (if echo is not set) on non-zero
@@ -182,7 +186,7 @@ const spawnPromise = spawn('git', ['status', '--porcelain'], {
 
   // Working directory of the child process.
   //  Default: context.workspace.dir or context.rootDir
-  cwd: '...',
+  cwd: '/current/working/directory',
 
   // Environment variables set for the child process.
   //  Default: process.env
@@ -190,7 +194,7 @@ const spawnPromise = spawn('git', ['status', '--porcelain'], {
 });
 ```
 
-If you don't care about the output, you can just wait for the process to finish.
+If you don't care about the result, you can just wait for the process to finish.
 
 ```ts
 await spawnPromise;

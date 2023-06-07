@@ -69,7 +69,7 @@ map command names to packages names in your workspaces root `package.json` file.
 
 ## Command Line Options
 
-Werk provides workspace and task orchestration through a set of options which are global to all commands. These options are for selecting workspaces, workspace ordering, command parallelization, and output formatting.
+Werk has global options for selecting workspaces, parallelization, and output.
 
 - `-l, --log-level <level>`
   - Set the logging level. The default is the `LOG_LEVEL` environment variable, or "info".
@@ -77,16 +77,28 @@ Werk provides workspace and task orchestration through a set of options which ar
   - Process workspaces in parallel.
 - `-c, --concurrency <count>`
   - Limit workspace processing concurrency (number or "auto"). If the count is "auto", the number of CPU cores + 1 will be used.
+- `-d, --with-dependencies`
+  - Always include dependencies when selecting workspaces.
 - `-w, --workspace <name>`
   - Include a workspace by name (repeatable).
 - `-k, --keyword <value>`
   - Include workspaces with a matching keyword (repeatable).
+- `--not-workspace <name>`
+  - Exclude a workspace by name (repeatable).
 - `--not-keyword <value>`
   - Exclude workspaces with a matching keyword (repeatable).
-- `--no-private`
+- `--not-private`
   - Exclude private workspaces.
-- `--no-public`
+- `--not-public`
   - Exclude public workspaces.
+- `--not-published`
+  - Exclude published workspaces.
+- `--not-unpublished`
+  - Exclude published workspaces.
+- `--not-modified`
+  - Exclude modified workspaces.
+- `--not-unmodified`
+  - Exclude unmodified workspaces.
 - `--no-wait`
   - Do not wait for workspace dependencies to finish processing before processing dependents.
 - `--no-prefix`
@@ -107,4 +119,4 @@ werk -p run build
 werk run build -p
 ```
 
-Commands may have their own options. Lookup the documentation for the command package and/or run `werk <command> --help` to see the command usage text.
+Commands may have their own options. Look up the documentation for each command package and/or run `werk <command> --help` to see the command usage text.

@@ -29,9 +29,6 @@ export class Log implements LogOptions {
   readonly prefix: string;
   readonly trim: boolean;
 
-  /**
-   * Copy constructor for threading support.
-   */
   constructor({ prefix = '', trim = false }: LogOptions = {}) {
     this.prefix = prefix;
     this.trim = trim;

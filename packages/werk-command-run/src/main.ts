@@ -24,6 +24,6 @@ export default createCommand({
       return;
     }
 
-    await spawn('npm', ['run', script, ...scriptArgs], { echo: true });
+    await spawn('npm', ['run', script, ...scriptArgs], { echo: true, errorThrow: true });
   },
 });

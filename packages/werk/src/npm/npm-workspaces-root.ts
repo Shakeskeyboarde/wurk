@@ -1,6 +1,6 @@
 import { spawn } from '../utils/spawn.js';
 
-export default await spawn('npm', ['query', ':root', '--json'], { capture: true })
+export default await spawn('npm', ['query', ':root', '--json'], { capture: true, errorThrow: true })
   .getJson<[{ workspaces: unknown; path: string; realpath?: string }?]>()
   .then((values) => values?.[0])
   .then((value) => {

@@ -14,13 +14,10 @@ export class WorkspaceContext<A extends CommanderArgs, O extends CommanderOption
    */
   readonly workspace: Workspace;
 
-  /**
-   * Copy constructor.
-   */
   constructor({ workspace, ...superOptions }: WorkspaceContextOptions<A, O>) {
     super(superOptions);
 
-    this.workspace = new Workspace(workspace);
+    this.workspace = new Workspace({ ...workspace, context: this });
   }
 
   /**

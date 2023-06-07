@@ -1,6 +1,7 @@
 import { type CommandPackage } from '../command/load-command.js';
 import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
 import { Log, type LogOptions } from '../utils/log.js';
+import { type SpawnSync, spawnSync } from '../utils/spawn-sync.js';
 
 export interface CleanupContextOptions<A extends CommanderArgs, O extends CommanderOptions> {
   readonly log?: LogOptions;
@@ -52,4 +53,15 @@ export class CleanupContext<A extends CommanderArgs, O extends CommanderOptions>
     this.opts = opts;
     this.exitCode = exitCode;
   }
+
+  /**
+   * Spawn a child process at the workspaces root.
+   *
+   * Unlike the `spawn` method in the `before`, `each`, and `after`
+   * contexts, this method is synchronous. The output cannot be streamed,
+   * and stdio (combined stdout and stderr) is not available.
+   */
+  readonly spawn: SpawnSync = (cmd, args, options) => {
+    return spawnSync(cmd, args, { cwd: this.rootDir, log: this.log, ...options });
+  };
 }

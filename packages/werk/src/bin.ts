@@ -2,7 +2,7 @@
 import assert from 'node:assert';
 import { join } from 'node:path';
 
-await import('./npm/workspaces-root.js')
+await import('./npm/npm-workspaces-root.js')
   .then(async ({ default: root }) => {
     const { main } = await import(join(root, 'node_modules', '@werk/cli', 'lib', 'main.js'));
     assert(typeof main === 'function');

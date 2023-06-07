@@ -6,39 +6,11 @@ import { quote } from 'shell-quote';
 
 import { type Log, log as defaultLog } from './log.js';
 
-export interface SpawnPromise extends Promise<void> {
-  readonly childProcess: ChildProcess;
-  readonly stdin: NodeJS.WritableStream | null;
-  readonly stdout: NodeJS.ReadableStream;
-  readonly stderr: NodeJS.ReadableStream;
-
-  readonly getStdout: {
-    (): Promise<Buffer>;
-    (encoding: BufferEncoding): Promise<string>;
-    (encoding?: BufferEncoding): Promise<string | Buffer>;
-  };
-
-  readonly getStderr: {
-    (): Promise<Buffer>;
-    (encoding: BufferEncoding): Promise<string>;
-    (encoding?: BufferEncoding): Promise<string | Buffer>;
-  };
-
-  readonly getOutput: {
-    (): Promise<Buffer>;
-    (encoding: BufferEncoding): Promise<string>;
-    (encoding?: BufferEncoding): Promise<string | Buffer>;
-  };
-
-  readonly getJson: <T>() => Promise<T>;
-  readonly tryGetJson: <T>() => Promise<T | undefined>;
-
-  readonly getExitCode: () => Promise<number | null>;
-  readonly getError: () => Promise<unknown>;
-
-  readonly succeeded: () => Promise<boolean>;
-  readonly failed: () => Promise<boolean>;
-}
+type GetOutput = {
+  (): Promise<Buffer>;
+  (encoding: BufferEncoding): Promise<string>;
+  (encoding?: BufferEncoding): Promise<string | Buffer>;
+};
 
 export interface SpawnOptions {
   readonly cwd?: string | URL;
@@ -53,23 +25,44 @@ export interface SpawnOptions {
   readonly log?: Log;
 }
 
+export interface SpawnPromise extends Promise<void> {
+  readonly childProcess: ChildProcess;
+  readonly stdin: NodeJS.WritableStream | null;
+  readonly stdout: NodeJS.ReadableStream;
+  readonly stderr: NodeJS.ReadableStream;
+
+  readonly getStdout: GetOutput;
+  readonly getStderr: GetOutput;
+  readonly getOutput: GetOutput;
+
+  readonly getJson: <T>() => Promise<T>;
+  readonly tryGetJson: <T>() => Promise<T | undefined>;
+
+  readonly getExitCode: () => Promise<number>;
+  readonly getError: () => Promise<unknown>;
+
+  readonly succeeded: () => Promise<boolean>;
+  readonly failed: () => Promise<boolean>;
+}
+
 export const spawn = (
-  command: string,
-  args: string[] = [],
+  cmd: string,
+  args: readonly (string | null | undefined)[] = [],
   {
     echo = false,
     capture = false,
     stream = false,
     input = false,
     errorThrow = false,
-    errorEcho = true,
+    errorEcho = false,
     errorMessage,
     log = defaultLog,
     ...options
   }: SpawnOptions = {},
 ): SpawnPromise => {
+  const args_ = args.filter((value): value is string => value != null);
   const env = options.env ?? process.env;
-  const childProcess = crossSpawn(command, args, {
+  const childProcess = crossSpawn(cmd, args_, {
     ...options,
     stdio: [
       input ? 'pipe' : 'ignore',
@@ -123,7 +116,7 @@ export const spawn = (
     childProcess.on('close', () => {
       exitCode = childProcess.exitCode ?? 1;
 
-      if (exitCode && !error) error = new Error(`command failed\n${quote([command, ...args])}\n${stdio}`);
+      if (exitCode && !error) error = new Error(`Spawned process failed (${quote([cmd, ...args_])}\n${stdio}).`);
       if (error && !exitCode) exitCode = 1;
       if (errorEcho && error != null) log.debug(Buffer.concat(stdio).toString('utf-8'));
       if (errorMessage && error != null) log.error(errorMessage(error, exitCode));
@@ -150,7 +143,7 @@ export const spawn = (
     getError: () => promise.then(() => error),
     succeeded: () =>
       promise.then(
-        () => exitCode === 0 && error == null,
+        () => exitCode === 0,
         () => false,
       ),
     failed: () => result.succeeded().then((value) => !value),

@@ -64,9 +64,6 @@ export class RootContext<A extends CommanderArgs, O extends CommanderOptions> {
    */
   readonly startWorker: (data?: any) => Promise<boolean>;
 
-  /**
-   * Copy constructor.
-   */
   constructor(options: RootContextOptions<A, O>) {
     const { log, command, rootDir, args, opts, workspaces, isWorker, workerData, startWorker } = options;
 
@@ -75,7 +72,9 @@ export class RootContext<A extends CommanderArgs, O extends CommanderOptions> {
     this.rootDir = rootDir;
     this.args = args;
     this.opts = opts;
-    this.workspaces = new Map([...workspaces].map((workspace) => [workspace.name, new Workspace(workspace)]));
+    this.workspaces = new Map(
+      workspaces.map((workspace) => [workspace.name, new Workspace({ ...workspace, context: this })]),
+    );
     this.isWorker = isWorker;
     this.workerData = workerData;
     this.startWorker = startWorker;

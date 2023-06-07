@@ -29,7 +29,7 @@ export interface CommandHooks<A extends CommanderArgs, O extends CommanderOption
    * Run once after all other hooks. This is the last chance to perform
    * cleanup, and it must be synchronous.
    */
-  readonly cleanup?: (context: CleanupContext<AA, OO>) => void;
+  readonly cleanup?: (context: CleanupContext<AA, OO>) => void | undefined;
 }
 
 export interface CommandType<A extends CommanderArgs, O extends CommanderOptions> {
