@@ -4,11 +4,10 @@ import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { type PackageJson } from 'type-fest';
-
 import { getNpmGlobalPackagesRoot } from '../npm/get-npm-global-packages-root.js';
 import { getNpmWorkspacesRoot } from '../npm/get-npm-workspaces-root.js';
 import { memoize } from './memoize.js';
+import { type PackageJson } from './package-json.js';
 
 export interface Plugin {
   readonly exports: Record<string, unknown>;

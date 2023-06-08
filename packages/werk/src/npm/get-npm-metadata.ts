@@ -1,6 +1,5 @@
-import { type PackageJson } from 'type-fest';
-
 import { memoize } from '../utils/memoize.js';
+import { type PackageJson } from '../utils/package-json.js';
 import { spawn } from '../utils/spawn.js';
 
 export type NpmMetadata = PackageJson & {

@@ -107,10 +107,13 @@ The context `workspaces` and `workspace` properties contain instances of the `Wo
 
 - `getLocalDependencies(scopes?)`: Gets the workspaces which are local dependencies of this workspace. If scopes is not specified, dependencies from all scopes are returned.
 - `getNpmMetadata()`: Gets the registry metadata for the workspace. If a version is not specified, the workspace's version is used. This method is memoized.
+- `getNpmIsPublished()`: Returns true if the current workspace name and version are published to the registry.
+- `getGitIsRepo()`: Returns true if the workspace root directory is part of a git repository.
 - `getGitHead()`: Gets the commit hash of the workspace's git HEAD.
 - `getGitIsClean()`: Returns true if the workspace's git working tree is clean.
-- `getIsPublished()`: Returns true if the current workspace name and version are published to the registry.
-- `getIsModified()`: Returns true the workspace is not published, the published `gitHead` metadata is missing, or if there is a difference between the `gitHead` commit and the current HEAD.
+- `getGitIsModified()`: Returns true the workspace is not published, the published `gitHead` metadata is missing, or if there is a difference between the `gitHead` commit and the current HEAD.
+
+**Note:** All Git methods except `getGitIsRepo()` will throw if the workspace is not part of a git repository.
 
 ## Patching Workspace `package.json` Files
 

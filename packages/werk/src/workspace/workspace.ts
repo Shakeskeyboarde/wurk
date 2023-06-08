@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 
-import { type PackageJson } from 'type-fest';
-
 import { type RootContext } from '../context/root-context.js';
+import { type PackageJson } from '../exports.js';
 import { getGitHead } from '../git/get-git-head.js';
 import { getGitIsClean } from '../git/get-git-is-clean.js';
+import { getGitIsRepo } from '../git/get-git-is-repo.js';
 import { getNpmMetadata, type NpmMetadata } from '../npm/get-npm-metadata.js';
 import { patchJsonFile } from '../utils/patch-json-file.js';
 import { readJsonFile } from '../utils/read-json-file.js';
@@ -137,6 +137,20 @@ export class Workspace implements WorkspaceOptions {
   };
 
   /**
+   * Return true if the current version exists in the registry.
+   */
+  readonly getNpmIsPublished = async (): Promise<boolean> => {
+    return Boolean(await this.getNpmMetadata());
+  };
+
+  /**
+   * Return true if the workspace directory is part of a Git repository.
+   */
+  readonly getGitIsRepo = async (): Promise<boolean> => {
+    return await getGitIsRepo(this.dir);
+  };
+
+  /**
    * Get the current Git HEAD commit hash.
    */
   readonly getGitHead = async (): Promise<string | undefined> => {
@@ -152,18 +166,11 @@ export class Workspace implements WorkspaceOptions {
   };
 
   /**
-   * Return true if the current version exists in the registry.
-   */
-  readonly getIsPublished = async (): Promise<boolean> => {
-    return Boolean(await this.getNpmMetadata());
-  };
-
-  /**
    * Return true if the current version is published (with `gitHead`
    * metadata), and there is no difference between the published and
    * local code.
    */
-  readonly getIsModified = async (): Promise<boolean> => {
+  readonly getGitIsModified = async (): Promise<boolean> => {
     const meta = await this.getNpmMetadata();
     return await getWorkspaceIsModified(this.dir, meta?.gitHead);
   };
