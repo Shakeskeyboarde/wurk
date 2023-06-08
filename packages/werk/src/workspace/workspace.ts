@@ -19,10 +19,10 @@ export type WorkspaceOptions = {
   readonly name: string;
   readonly version: string;
   readonly private?: boolean;
-  readonly dependencies?: Readonly<Partial<Record<string, string>>>;
-  readonly peerDependencies?: Readonly<Partial<Record<string, string>>>;
-  readonly optionalDependencies?: Readonly<Partial<Record<string, string>>>;
-  readonly devDependencies?: Readonly<Partial<Record<string, string>>>;
+  readonly dependencies?: Readonly<Record<string, string>>;
+  readonly peerDependencies?: Readonly<Record<string, string>>;
+  readonly optionalDependencies?: Readonly<Record<string, string>>;
+  readonly devDependencies?: Readonly<Record<string, string>>;
   readonly keywords?: readonly string[];
   readonly dir: string;
   readonly selected?: boolean;
@@ -50,19 +50,19 @@ export class Workspace implements WorkspaceOptions {
   /**
    * Dependencies from the workspace `package.json` file.
    */
-  readonly dependencies: Readonly<Partial<Record<string, string>>>;
+  readonly dependencies: Readonly<Record<string, string>>;
   /**
    * Peer dependencies from the workspace `package.json` file.
    */
-  readonly peerDependencies: Readonly<Partial<Record<string, string>>>;
+  readonly peerDependencies: Readonly<Record<string, string>>;
   /**
    * Optional dependencies from the workspace `package.json` file.
    */
-  readonly optionalDependencies: Readonly<Partial<Record<string, string>>>;
+  readonly optionalDependencies: Readonly<Record<string, string>>;
   /**
    * Dev dependencies from the workspace `package.json` file.
    */
-  readonly devDependencies: Readonly<Partial<Record<string, string>>>;
+  readonly devDependencies: Readonly<Record<string, string>>;
   /**
    * Keywords from the workspace `package.json` file.
    */
@@ -115,8 +115,8 @@ export class Workspace implements WorkspaceOptions {
    * always represents the initial state of the workspace when the
    * command was started.
    */
-  readonly patchPackageJson = async (patch: (value: PackageJson) => PackageJson): Promise<void> => {
-    await patchJsonFile(join(this.dir, 'package.json'), patch);
+  readonly patchPackageJson = async <T extends Record<string, unknown>>(json: T): Promise<void> => {
+    await patchJsonFile(join(this.dir, 'package.json'), json);
   };
 
   /**
