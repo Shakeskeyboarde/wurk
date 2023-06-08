@@ -9,6 +9,10 @@ export default createCommand({
   },
 
   each: async ({ args, workspace, spawn }) => {
-    if (workspace.selected) await spawn(...args, { echo: true, errorThrow: true });
+    if (!workspace.selected) return;
+
+    const exitCode = await spawn(...args, { echo: true }).getExitCode();
+
+    if (exitCode !== 0) process.exitCode = exitCode;
   },
 });

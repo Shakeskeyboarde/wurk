@@ -105,7 +105,7 @@ The following additional properties are also included.
 - `getNpmMetadata(version?)`: Gets the NPM metadata for the workspace. If a version is not specified, the workspace's version is used.
 - `getGitHead()`: Gets the commit hash of the workspace's git HEAD.
 - `getIsGitClean()`: Returns true if the workspace's git working tree is clean.
-- `getIsGitUnmodified(commit?)`: Returns true if there is no difference between the commit and the current HEAD. If a commit is not specified, the workspace's git HEAD is used.
+- `getIsGitModified(commit?)`: Returns true if there is a difference between the commit and the current HEAD. If a commit is not specified, the workspace's git HEAD is used.
 
 ## Patching Workspace `package.json` Files
 

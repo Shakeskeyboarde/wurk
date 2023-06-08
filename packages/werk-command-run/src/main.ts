@@ -24,6 +24,8 @@ export default createCommand({
       return;
     }
 
-    await spawn('npm', ['run', script, ...scriptArgs], { echo: true, errorThrow: true });
+    const exitCode = await spawn('npm', ['run', script, ...scriptArgs], { echo: true }).getExitCode();
+
+    if (exitCode !== 0) process.exitCode = exitCode;
   },
 });

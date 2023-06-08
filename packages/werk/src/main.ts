@@ -10,12 +10,11 @@ import { mainAction } from './actions/main-action.js';
 import { Commander } from './commander/commander.js';
 import { onError } from './error.js';
 import { type GlobalOptions } from './options.js';
-import { log, LOG_LEVEL, type LogLevel } from './utils/log.js';
+import { LOG_LEVEL, type LogLevel } from './utils/log.js';
 
 process.env.LOG_LEVEL = process.env.LOG_LEVEL ?? 'info';
 process.on('uncaughtException', onError);
 process.on('unhandledRejection', (error) => {
-  log.error('Unhandled promise rejection!');
   throw error;
 });
 

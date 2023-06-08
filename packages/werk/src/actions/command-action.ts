@@ -41,6 +41,8 @@ export const commandAction = async ({
     workerData: null,
   });
 
+  if (process.exitCode != null) return;
+
   const { parallel, concurrency, wait } = globalOptions.run;
   const { prefix } = globalOptions.log;
   const semaphore = concurrency || !parallel ? new Semaphore(concurrency ?? 1) : null;
@@ -53,10 +55,11 @@ export const commandAction = async ({
     const dependencyNames = getWorkspaceDependencyNames(workspace);
     const prerequisites = Promise.allSettled(dependencyNames.map((name) => promises.get(name)));
     const promise = Promise.resolve().then(async () => {
-      await prerequisites;
+      if (wait) await prerequisites;
       await semaphore?.acquire();
 
       try {
+        if (process.exitCode != null) return;
         log.notice(`: ${workspace.name}`);
         await command.instance.each({
           log: { prefix: logPrefix, trim: Boolean(logPrefix) },
@@ -74,8 +77,12 @@ export const commandAction = async ({
       }
     });
 
-    if (wait) promises.set(workspace.name, promise);
+    promises.set(workspace.name, promise);
   }
+
+  await Promise.all(promises.values());
+
+  if (process.exitCode != null) return;
 
   await command.instance.after({
     command: command.package,

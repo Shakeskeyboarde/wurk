@@ -5,7 +5,7 @@ import { type PackageJson } from 'type-fest';
 import { type RootContext } from '../context/root-context.js';
 import { getGitHead } from '../git/get-git-head.js';
 import { getIsGitClean } from '../git/get-is-git-clean.js';
-import { getIsGitUnmodified } from '../git/get-is-git-unmodified.js';
+import { getIsGitModified } from '../git/get-is-git-modified.js';
 import { getNpmMetadata } from '../npm/get-npm-metadata.js';
 import { patchJsonFile } from '../utils/patch-json-file.js';
 import { readJsonFile } from '../utils/read-json-file.js';
@@ -158,14 +158,14 @@ export class Workspace implements WorkspaceOptions {
    * HEAD. If no commit is provided, then the commit will be read from
    * the NPM registry metadata of the current version.
    */
-  readonly getIsGitUnmodified = async (commit?: string): Promise<boolean> => {
+  readonly getIsGitModified = async (commit?: string): Promise<boolean> => {
     if (commit == null) {
       commit = await this.getNpmMetadata().then((meta) => meta?.gitHead);
     }
 
-    // If there's no commit to compare against, then assume there are no changes.
-    if (commit == null) return true;
+    // If there's no commit to compare against, then assume unmodified.
+    if (commit == null) return false;
 
-    return await getIsGitUnmodified(this.dir, commit);
+    return await getIsGitModified(this.dir, commit);
   };
 }

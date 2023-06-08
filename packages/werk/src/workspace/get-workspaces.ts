@@ -1,6 +1,6 @@
 import memoize from 'lodash.memoize';
 
-import { getIsGitUnmodified } from '../git/get-is-git-unmodified.js';
+import { getIsGitModified } from '../git/get-is-git-modified.js';
 import { getNpmMetadata } from '../npm/get-npm-metadata.js';
 import { getWorkspaceLocalDependencies } from './get-workspace-local-dependencies.js';
 import { type WorkspaceOptions } from './workspace.js';
@@ -20,7 +20,7 @@ export interface SelectOptions {
 }
 
 const getCachedNpmMetadata = memoize(getNpmMetadata, (name, version) => `${name}@${version}`);
-const getCachedIsGitUnmodified = memoize(getIsGitUnmodified, (dir, commit) => JSON.stringify([dir, commit]));
+const getCachedIsGitModified = memoize(getIsGitModified, (dir, commit) => JSON.stringify([dir, commit]));
 
 const getSorted = (workspaces: readonly WorkspaceOptions[]): readonly WorkspaceOptions[] => {
   const unresolved = new Map(workspaces.map((workspace) => [workspace.name, workspace]));
@@ -85,12 +85,12 @@ const getSelected = async (
 
       if (!isExcluded && excludeModified) {
         const commit = await getCachedNpmMetadata(workspace.name, workspace.version).then((meta) => meta?.gitHead);
-        isExcluded = !!commit && !(await getCachedIsGitUnmodified(workspace.dir, commit));
+        isExcluded = !!commit && (await getCachedIsGitModified(workspace.dir, commit));
       }
 
       if (!isExcluded && excludeUnmodified) {
         const commit = await getCachedNpmMetadata(workspace.name, workspace.version).then((meta) => meta?.gitHead);
-        isExcluded = !commit || (await getCachedIsGitUnmodified(workspace.dir, commit));
+        isExcluded = !commit || !(await getCachedIsGitModified(workspace.dir, commit));
       }
 
       if (isExcluded) {

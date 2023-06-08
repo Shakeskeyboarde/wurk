@@ -62,7 +62,7 @@ export const spawnSync = (
         PATH: npmRunPath({ cwd: cwd, path: env.PATH }),
       },
     });
-    error = new Error(`Spawned process failed (${quote([cmd, ...args_])}).`);
+    error = new Error(`Spawned process failed: ${quote([cmd, ...args_])}`);
     exitCode = spawnResult.status ?? 1;
   } catch (err) {
     error = err;

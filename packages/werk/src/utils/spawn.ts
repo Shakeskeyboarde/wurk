@@ -116,7 +116,7 @@ export const spawn = (
     childProcess.on('close', () => {
       exitCode = childProcess.exitCode ?? 1;
 
-      if (exitCode && !error) error = new Error(`Spawned process failed (${quote([cmd, ...args_])}\n${stdio}).`);
+      if (exitCode && !error) error = new Error(`Spawned process failed: ${quote([cmd, ...args_])}`);
       if (error && !exitCode) exitCode = 1;
       if (errorEcho && error != null) log.debug(Buffer.concat(stdio).toString('utf-8'));
       if (errorMessage && error != null) log.error(errorMessage(error, exitCode));
