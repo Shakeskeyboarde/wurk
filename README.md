@@ -92,7 +92,7 @@ For personal or enterprise scoped commands, you can also set a list of package p
 ```json
 {
   "werk": {
-    "prefixes": ["@myscope/werk-command-"]
+    "commandPackagePrefixes": ["@myscope/werk-command-"]
   }
 }
 ```
@@ -158,6 +158,6 @@ By default, workspaces are processed in series. This is generally the slowest op
 - `-l, --log-level <level>`
   - Set the logging level. The default is the `LOG_LEVEL` environment variable, or "info".
 - `--no-prefix`
-  - Do add prefixes to command output.
+  - Do not add prefixes to command output.
 
 By default, messages of level "info" (or more severe) will be printed, and messages which are specific to a workspace will be prefixed with the workspace name.
