@@ -1,10 +1,7 @@
-import { type PackageJson } from 'type-fest';
-
 import { getKeys } from '../utils/get-keys.js';
+import { type WorkspaceOptions } from './workspace.js';
 
-export const getWorkspaceDependencyNames = (
-  workspace: Pick<PackageJson, 'dependencies' | 'peerDependencies' | 'optionalDependencies' | 'devDependencies'>,
-): string[] => {
+export const getWorkspaceDependencyNames = (workspace: WorkspaceOptions): string[] => {
   return getKeys(
     workspace.dependencies,
     workspace.peerDependencies,

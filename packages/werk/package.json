@@ -39,8 +39,6 @@
   "dependencies": {
     "@commander-js/extra-typings": "^10.0.3",
     "@types/cross-spawn": "^6.0.2",
-    "@types/find-root": "^1.1.2",
-    "@types/lodash.memoize": "^4.1.7",
     "@types/semver": "^7.5.0",
     "@types/shell-quote": "^1.7.1",
     "ansi-regex": "^6.0.1",
@@ -48,9 +46,7 @@
     "chalk": "^5.2.0",
     "commander": "^10.0.1",
     "cross-spawn": "^7.0.3",
-    "lodash.memoize": "^4.1.2",
     "npm-run-path": "^5.1.0",
-    "read-pkg-up": "^9.1.0",
     "semver": "^7.5.1",
     "shell-quote": "^1.8.1",
     "type-fest": "^3.11.1"

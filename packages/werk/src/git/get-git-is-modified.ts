@@ -1,6 +1,6 @@
 import { spawn } from '../utils/spawn.js';
 
-export const getIsGitModified = async (dir: string, commit: string): Promise<boolean> => {
+export const getGitIsModified = async (dir: string, commit: string): Promise<boolean> => {
   return await spawn('git', ['diff', '--name-only', `${commit}..HEAD`, '--', dir], {
     cwd: dir,
     capture: true,

@@ -1,10 +1,10 @@
-import { type CommandPackage } from '../command/load-command.js';
+import { type CommandInfo } from '../command/load-command-plugin.js';
 import { type Commander } from '../commander/commander.js';
 import { Log, type LogOptions } from '../utils/log.js';
 
 export interface InitContextOptions {
   readonly log?: LogOptions;
-  readonly command: CommandPackage;
+  readonly command: CommandInfo;
   readonly rootDir: string;
   readonly commander: Commander;
 }
@@ -18,7 +18,7 @@ export class InitContext implements InitContextOptions {
   /**
    * Information about the command package.
    */
-  readonly command: CommandPackage;
+  readonly command: CommandInfo;
 
   /**
    * Absolute path of the workspaces root.

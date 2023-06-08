@@ -63,9 +63,7 @@ A context object is passed to each hook callback. The properties attached to tho
 - `command`: Package information about the command.
   - `main`: Main filename of the command package.
   - `dir`: Root directory of the command package.
-  - `name`: Name from the command's `package.json` file.
-  - `description`: Description from the command's `package.json` file.
-  - `version`: Version from the command's `package.json` file.
+  - `packageJson`: Contents of the command package's `package.json` file.
 - `rootDir`: Absolute path of the workspaces root.
 - `commander` (**init** hook only): Configurable [Commander](https://www.npmjs.com/package/commander) instance for defining command options, arguments, and help text.
 - `args` (**before**, **each**, **after**, and **cleanup** hooks only): Positional arguments parsed from command line.
@@ -80,9 +78,9 @@ A context object is passed to each hook callback. The properties attached to tho
 
 ### Workspaces
 
-The context `workspaces` and `workspace` properties contain instances of the `Workspace` class.
+The context `workspaces` and `workspace` properties contain instances of the `Workspace` class. These instances provide information properties and helper methods for interacting with the workspace.
 
-Each `Workspace` instance has the following properties extracted from the workspace `package.json` file.
+**Normalized package properties:**
 
 - `name`
 - `version`
@@ -93,19 +91,26 @@ Each `Workspace` instance has the following properties extracted from the worksp
 - `devDependencies`
 - `keywords`.
 
-The following additional properties are also included.
+**Werk generated properties:**
 
 - `dir`: Absolute root directory of the workspace.
 - `selected`: True if the workspace matched the Werk [global options](README.md#command-line-options)
 - `dependencyNames`: A set of the unique (deduplicated) dependency names collected from all of the dependency maps.
+
+**Package interaction methods:**
+
 - `readPackageJson()`: Reads the workspace's full `package.json` file.
 - `writePackageJson(json)`: Writes the workspace `package.json` file.
 - `patchPackageJson(patchFn)`: Applies a deeply merged patch to the workspace `package.json` file.
-- `getLocalDependencies({ scopes? })`: Gets the workspaces which are local dependencies of this workspace. If scopes is not specified, dependencies from all scopes are returned.
-- `getNpmMetadata(version?)`: Gets the NPM metadata for the workspace. If a version is not specified, the workspace's version is used.
+
+**Metadata methods:**
+
+- `getLocalDependencies(scopes?)`: Gets the workspaces which are local dependencies of this workspace. If scopes is not specified, dependencies from all scopes are returned.
+- `getNpmMetadata()`: Gets the registry metadata for the workspace. If a version is not specified, the workspace's version is used. This method is memoized.
 - `getGitHead()`: Gets the commit hash of the workspace's git HEAD.
-- `getIsGitClean()`: Returns true if the workspace's git working tree is clean.
-- `getIsGitModified(commit?)`: Returns true if there is a difference between the commit and the current HEAD. If a commit is not specified, the workspace's git HEAD is used.
+- `getGitIsClean()`: Returns true if the workspace's git working tree is clean.
+- `getIsPublished()`: Returns true if the current workspace name and version are published to the registry.
+- `getIsModified()`: Returns true the workspace is not published, the published `gitHead` metadata is missing, or if there is a difference between the `gitHead` commit and the current HEAD.
 
 ## Patching Workspace `package.json` Files
 
@@ -321,4 +326,4 @@ No hard wrapping is ever added.
 
 ## Publishing Commands
 
-If possible, name your package following the `werk-command-<name>` pattern. Add the `werk-command` keyword to make it easier for others to find on the NPM registry.
+If possible, name your package following the `werk-command-<name>` pattern. Add the `werk-command` keyword to make it easier for others to find on the registry.

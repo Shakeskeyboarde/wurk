@@ -1,7 +1,7 @@
 import { Sema as Semaphore } from 'async-sema';
 import chalk from 'chalk';
 
-import { type LoadedCommand } from '../command/load-command.js';
+import { type CommandPlugin } from '../command/load-command-plugin.js';
 import { type GlobalOptions } from '../options.js';
 import { log } from '../utils/log.js';
 import { getWorkspaceDependencyNames } from '../workspace/get-workspace-dependency-names.js';
@@ -13,7 +13,7 @@ interface CommandActionOptions {
   readonly workspaces: readonly WorkspaceOptions[];
   readonly args: unknown;
   readonly opts: unknown;
-  readonly command: LoadedCommand;
+  readonly commandPlugin: CommandPlugin;
   readonly globalOptions: GlobalOptions;
 }
 
@@ -26,13 +26,14 @@ export const commandAction = async ({
   workspaces,
   args,
   opts,
-  command,
+  commandPlugin,
   globalOptions,
 }: CommandActionOptions): Promise<void> => {
   workspaces = await getWorkspaces(workspaces, globalOptions.select);
 
-  await command.instance.before({
-    command: command.package,
+  const { command, ...commandInfo } = commandPlugin;
+  await command.before({
+    command: commandInfo,
     rootDir,
     args,
     opts,
@@ -61,9 +62,9 @@ export const commandAction = async ({
       try {
         if (process.exitCode != null) return;
         log.notice(`: ${workspace.name}`);
-        await command.instance.each({
+        await command.each({
           log: { prefix: logPrefix, trim: Boolean(logPrefix) },
-          command: command.package,
+          command: commandInfo,
           rootDir,
           args,
           opts,
@@ -84,8 +85,8 @@ export const commandAction = async ({
 
   if (process.exitCode != null) return;
 
-  await command.instance.after({
-    command: command.package,
+  await command.after({
+    command: commandInfo,
     rootDir,
     args,
     opts,

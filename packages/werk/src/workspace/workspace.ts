@@ -4,13 +4,13 @@ import { type PackageJson } from 'type-fest';
 
 import { type RootContext } from '../context/root-context.js';
 import { getGitHead } from '../git/get-git-head.js';
-import { getIsGitClean } from '../git/get-is-git-clean.js';
-import { getIsGitModified } from '../git/get-is-git-modified.js';
-import { getNpmMetadata } from '../npm/get-npm-metadata.js';
+import { getGitIsClean } from '../git/get-git-is-clean.js';
+import { getNpmMetadata, type NpmMetadata } from '../npm/get-npm-metadata.js';
 import { patchJsonFile } from '../utils/patch-json-file.js';
 import { readJsonFile } from '../utils/read-json-file.js';
 import { writeJsonFile } from '../utils/write-json-file.js';
 import { getWorkspaceDependencyNames } from './get-workspace-dependency-names.js';
+import { getWorkspaceIsModified } from './get-workspace-is-modified.js';
 import { getWorkspaceLocalDependencies } from './get-workspace-local-dependencies.js';
 
 type Context = Pick<RootContext<[], {}>, 'workspaces' | 'spawn'>;
@@ -123,19 +123,17 @@ export class Workspace implements WorkspaceOptions {
    * Get the local dependencies of the workspace.
    */
   readonly getLocalDependencies = (
-    options: { scopes?: ('dependencies' | 'peerDependencies' | 'optionalDependencies' | 'devDependencies')[] } = {},
+    scopes?: ('dependencies' | 'peerDependencies' | 'optionalDependencies' | 'devDependencies')[],
   ): Workspace[] => {
-    return getWorkspaceLocalDependencies(this, this.#context.workspaces.values(), options);
+    return getWorkspaceLocalDependencies(this, this.#context.workspaces.values(), { scopes });
   };
 
   /**
    * Read the package metadata for this package (name and version)
-   * from an NPM registry. Undefined if the package is not published
+   * from the registry. Returns undefined if the package is not published.
    */
-  readonly getNpmMetadata = async (
-    version = this.version,
-  ): Promise<(PackageJson & { gitHead?: string }) | undefined> => {
-    return await getNpmMetadata(this.name, version);
+  readonly getNpmMetadata = async (): Promise<NpmMetadata | undefined> => {
+    return await getNpmMetadata(this.name, this.version);
   };
 
   /**
@@ -149,23 +147,24 @@ export class Workspace implements WorkspaceOptions {
    * Return true if the Git working tree is clean (ie. there are no
    * uncommitted changes).
    */
-  readonly getIsGitClean = async (): Promise<boolean> => {
-    return await getIsGitClean(this.dir);
+  readonly getGitIsClean = async (): Promise<boolean> => {
+    return await getGitIsClean(this.dir);
   };
 
   /**
-   * Return true if there is no difference between the commit and the
-   * HEAD. If no commit is provided, then the commit will be read from
-   * the NPM registry metadata of the current version.
+   * Return true if the current version exists in the registry.
    */
-  readonly getIsGitModified = async (commit?: string): Promise<boolean> => {
-    if (commit == null) {
-      commit = await this.getNpmMetadata().then((meta) => meta?.gitHead);
-    }
+  readonly getIsPublished = async (): Promise<boolean> => {
+    return Boolean(await this.getNpmMetadata());
+  };
 
-    // If there's no commit to compare against, then assume unmodified.
-    if (commit == null) return false;
-
-    return await getIsGitModified(this.dir, commit);
+  /**
+   * Return true if the current version is published (with `gitHead`
+   * metadata), and there is no difference between the published and
+   * local code.
+   */
+  readonly getIsModified = async (): Promise<boolean> => {
+    const meta = await this.getNpmMetadata();
+    return await getWorkspaceIsModified(this.dir, meta?.gitHead);
   };
 }

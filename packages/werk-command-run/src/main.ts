@@ -3,7 +3,7 @@ import { createCommand } from '@werk/cli';
 export default createCommand({
   init: ({ commander, command }) => {
     return commander
-      .description(command.description ?? '')
+      .description(command.packageJson.description ?? '')
       .description(
         `If a script is not found in a workspace, a warning will be
         printed, but the command will complete successfully.`,

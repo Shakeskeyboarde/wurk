@@ -1,3 +1,4 @@
+import { memoize } from '../utils/memoize.js';
 import { spawn } from '../utils/spawn.js';
 import { type WorkspaceOptions } from '../workspace/workspace.js';
 
@@ -14,11 +15,22 @@ interface NpmWorkspace {
   readonly realpath?: string;
 }
 
-export default await spawn('npm', ['query', '.workspace', '--quiet', '--json'], { capture: true, errorThrow: true })
-  .getJson<NpmWorkspace[]>()
-  .then((npmWorkspaces): WorkspaceOptions[] => {
-    return npmWorkspaces.map(({ path, realpath, ...workspace }) => ({
-      dir: realpath ?? path,
-      ...workspace,
-    }));
-  });
+export const getNpmWorkspaces = memoize(
+  /**
+   * Memoized.
+   */
+  async (dir?: string): Promise<readonly WorkspaceOptions[]> => {
+    return await spawn('npm', ['query', '.workspace', '--quiet', '--json'], {
+      cwd: dir,
+      capture: true,
+      errorThrow: true,
+    })
+      .getJson<NpmWorkspace[]>()
+      .then((npmWorkspaces) => {
+        return npmWorkspaces.map(({ path, realpath, ...workspace }) => ({
+          dir: realpath ?? path,
+          ...workspace,
+        }));
+      });
+  },
+);

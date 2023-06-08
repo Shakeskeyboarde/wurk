@@ -1,7 +1,6 @@
-import memoize from 'lodash.memoize';
-
-import { getIsGitModified } from '../git/get-is-git-modified.js';
 import { getNpmMetadata } from '../npm/get-npm-metadata.js';
+import { memoize } from '../utils/memoize.js';
+import { getWorkspaceIsModified } from './get-workspace-is-modified.js';
 import { getWorkspaceLocalDependencies } from './get-workspace-local-dependencies.js';
 import { type WorkspaceOptions } from './workspace.js';
 
@@ -18,9 +17,6 @@ export interface SelectOptions {
   readonly excludeModified: boolean;
   readonly excludeUnmodified: boolean;
 }
-
-const getCachedNpmMetadata = memoize(getNpmMetadata, (name, version) => `${name}@${version}`);
-const getCachedIsGitModified = memoize(getIsGitModified, (dir, commit) => JSON.stringify([dir, commit]));
 
 const getSorted = (workspaces: readonly WorkspaceOptions[]): readonly WorkspaceOptions[] => {
   const unresolved = new Map(workspaces.map((workspace) => [workspace.name, workspace]));
@@ -66,6 +62,15 @@ const getSelected = async (
     excludeUnmodified,
   }: SelectOptions,
 ): Promise<readonly WorkspaceOptions[]> => {
+  const getIsPublished = async (name: string, version: string): Promise<boolean> => {
+    return Boolean(await getNpmMetadata(name, version));
+  };
+
+  const getIsModified = memoize(async (dir: string, name: string, version: string): Promise<boolean> => {
+    const meta = await getNpmMetadata(name, version);
+    return await getWorkspaceIsModified(dir, meta?.gitHead);
+  });
+
   workspaces = await Promise.all(
     Array.from(workspaces).map(async (workspace) => {
       let isExcluded =
@@ -76,21 +81,19 @@ const getSelected = async (
         (excludePublic && !workspace.private);
 
       if (!isExcluded && excludePublished) {
-        isExcluded = await getCachedNpmMetadata(workspace.name, workspace.version).then(Boolean);
+        isExcluded = await getIsPublished(workspace.name, workspace.version);
       }
 
       if (isExcluded && excludeUnpublished) {
-        isExcluded = await getCachedNpmMetadata(workspace.name, workspace.version).then((meta) => !meta);
+        isExcluded = !(await getIsPublished(workspace.name, workspace.version));
       }
 
       if (!isExcluded && excludeModified) {
-        const commit = await getCachedNpmMetadata(workspace.name, workspace.version).then((meta) => meta?.gitHead);
-        isExcluded = !!commit && (await getCachedIsGitModified(workspace.dir, commit));
+        isExcluded = await getIsModified(workspace.dir, workspace.name, workspace.version);
       }
 
       if (!isExcluded && excludeUnmodified) {
-        const commit = await getCachedNpmMetadata(workspace.name, workspace.version).then((meta) => meta?.gitHead);
-        isExcluded = !commit || !(await getCachedIsGitModified(workspace.dir, commit));
+        isExcluded = !(await getIsModified(workspace.dir, workspace.name, workspace.version));
       }
 
       if (isExcluded) {

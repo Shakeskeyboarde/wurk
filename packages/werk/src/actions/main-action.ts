@@ -1,7 +1,9 @@
 import { commandAction } from '../actions/command-action.js';
-import { loadCommand } from '../command/load-command.js';
+import { loadCommandPlugin } from '../command/load-command-plugin.js';
 import { type Commander, getCommanderMetadata } from '../commander/commander.js';
 import { CleanupContext } from '../context/cleanup-context.js';
+import { getNpmWorkspaces } from '../npm/get-npm-workspaces.js';
+import { getNpmWorkspacesRoot } from '../npm/get-npm-workspaces-root.js';
 import { type GlobalOptions } from '../options.js';
 
 interface MainActionOptions {
@@ -12,29 +14,27 @@ interface MainActionOptions {
 }
 
 export const mainAction = async ({ commander, cmd, cmdArgs, globalOptions }: MainActionOptions): Promise<void> => {
-  const [globalNodeModules, rootDir, workspaces] = await Promise.all([
-    import('../npm/npm-global-modules.js').then((exports) => exports.default),
-    import('../npm/npm-workspaces-root.js').then((exports) => exports.default),
-    import('../npm/npm-workspaces.js').then((exports) => exports.default),
-  ]);
-  const command = await loadCommand(cmd, rootDir, globalNodeModules);
+  const [rootDir, workspaces] = await Promise.all([await getNpmWorkspacesRoot(), await getNpmWorkspaces()]);
+  const commandPlugin = await loadCommandPlugin(cmd);
+  const { command, ...commandInfo } = commandPlugin;
+  const { packageJson } = commandInfo;
 
-  process.chdir(globalNodeModules);
+  process.chdir(rootDir);
 
   const subCommander = commander.command(cmd);
 
-  command.instance.init({ command: command.package, rootDir, commander: subCommander });
+  command.init({ command: commandInfo, rootDir, commander: subCommander });
 
   process.on('exit', (exitCode) => {
     const context = new CleanupContext({
-      command: command.package,
+      command: commandInfo,
       rootDir,
       args: commander.processedArgs,
       opts: commander.opts(),
       exitCode,
     });
 
-    command.instance.cleanup(context);
+    command.cleanup(context);
   });
   ['uncaughtException', 'unhandledRejection', 'SIGINT', 'SIGTERM', 'SIGUSR1', 'SIGUSR2'].forEach((event) => {
     process.on(event, () => process.exit(process.exitCode || 1));
@@ -42,8 +42,8 @@ export const mainAction = async ({ commander, cmd, cmdArgs, globalOptions }: Mai
 
   const { isVersionSet, isDescriptionSet } = getCommanderMetadata(subCommander);
 
-  if (!isDescriptionSet && command.package.description) subCommander.description(command.package.description);
-  if (!isVersionSet) subCommander.version(command.package.version);
+  if (!isDescriptionSet && packageJson.description) subCommander.description(packageJson.description);
+  if (!isVersionSet && packageJson.version) subCommander.version(packageJson.version);
 
   await subCommander
     .name(cmd)
@@ -51,7 +51,7 @@ export const mainAction = async ({ commander, cmd, cmdArgs, globalOptions }: Mai
       const args = subCommander.processedArgs;
       const opts = subCommander.opts();
 
-      await commandAction({ rootDir, workspaces, args, opts, command, globalOptions });
+      await commandAction({ rootDir, workspaces, args, opts, commandPlugin: commandPlugin, globalOptions });
     })
     .parseAsync(cmdArgs, { from: 'user' });
 };

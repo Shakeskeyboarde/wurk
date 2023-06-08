@@ -1,11 +1,11 @@
-import { type CommandPackage } from '../command/load-command.js';
+import { type CommandInfo } from '../command/load-command-plugin.js';
 import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
 import { Log, type LogOptions } from '../utils/log.js';
 import { type SpawnSync, spawnSync } from '../utils/spawn-sync.js';
 
 export interface CleanupContextOptions<A extends CommanderArgs, O extends CommanderOptions> {
   readonly log?: LogOptions;
-  readonly command: CommandPackage;
+  readonly command: CommandInfo;
   readonly rootDir: string;
   readonly args: A;
   readonly opts: O;
@@ -23,7 +23,7 @@ export class CleanupContext<A extends CommanderArgs, O extends CommanderOptions>
   /**
    * Information about the command package.
    */
-  readonly command: CommandPackage;
+  readonly command: CommandInfo;
 
   /**
    * Absolute path of the workspaces root.
