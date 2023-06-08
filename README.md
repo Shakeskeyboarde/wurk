@@ -1,12 +1,16 @@
 # Werk
 
-Modular and extensible monorepo command framework.
+An open-minded monorepo tool, with opinionated plugins.
 
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
-- [Official Commands](#official-commands)
-- [Custom Commands](#custom-commands)
+- [Command Plugins](#command-plugins)
+  - [Official Commands](#official-commands)
+  - [Custom Commands](#custom-commands)
 - [Command Line Options](#command-line-options)
+  - [Filtering Options](#filtering-options)
+  - [Parallelization Options](#parallelization-options)
+  - [Logging Options](#logging-options)
 
 ## Prerequisites
 
@@ -20,17 +24,16 @@ Install Werk globally. It should also be locally installed in each workspaces re
 npm i -g @werk/cli
 ```
 
-All commands are modular and must be installed separately. Commands can be installed either globally or locally in a workspaces root package. Installing them as local dev dependencies in projects is recommended.
+All [commands](#official-commands) are modular and must be installed separately. Commands can be installed either globally or locally in a workspaces root package. Installing them as local dev dependencies in projects is recommended.
 
 ```sh
-npm i -D @werk/command-run
+npm i -D @werk/command-list
 ```
 
-Now, the `run` command is available.
+Now, the `list` command is available.
 
 ```sh
-werk run test --pass-with-no-tests
-werk run build
+werk list
 ```
 
 It's generally a good idea to also install Werk as a local dev dependency of your workspaces root package. The globally installed version will delegate to a locally installed version if it exists. This ensures all monorepo collaborators and CI runners will use a predictable version.
@@ -39,23 +42,40 @@ It's generally a good idea to also install Werk as a local dev dependency of you
 npm i -D @werk/cli
 ```
 
-## Official Commands
+## Command Plugins
 
-Commands are modular and must be installed individually. The following "official" commands are provided to get you started.
+All commands are modular and must be installed individually. By itself, Werk can only print its own help and usage text.
 
+### Official Commands
+
+The following "official" commands are provided to get you started.
+
+- list: [@werk/command-list](https://www.npmjs.com/package/@werk/command-publish)
+  - List workspaces.
 - run: [@werk/command-run](https://www.npmjs.com/package/@werk/command-run)
+  - Run package scripts.
 - exec: [@werk/command-exec](https://www.npmjs.com/package/@werk/command-exec)
+  - Run arbitrary executables.
 - version: [@werk/command-version](https://www.npmjs.com/package/@werk/command-version)
+  - Bump and set versions.
 - publish: [@werk/command-publish](https://www.npmjs.com/package/@werk/command-publish)
+  - Publish package to registries.
 
-## Custom Commands
+### Custom Commands
 
-[Custom commands](README_CUSTOM_COMMANDS.md) are supported and encouraged. Werk is designed first as a _framework_ for developing monorepo management tooling.
+[Custom commands](README_CUSTOM_COMMANDS.md) are supported and encouraged. In fact, Werk is first a framework for developing monorepo tools.
 
-Just install a package named `werk-command-<name>`, and the `<name>` command will be available.
+When you run `werk <command>`, the package for the command will be looked up and loaded dynamically. The package must be installed, either globally or locally to a workspaces root.
+
+Packages will be resolved as follows.
+
+- Local: `@werk/command-<command>`
+- Local: `werk-command-<command>`
+- Global: `@werk/command-<command>`
+- Global: `werk-command-<command>`
 
 If you want to use a command package with a non-standard name, you can
-map command names to packages names in your workspaces root `package.json` file.
+map command names to packages names in your workspaces root `package.json` file. This will completely override the normal package resultion strategy.
 
 ```json
 {
@@ -67,16 +87,28 @@ map command names to packages names in your workspaces root `package.json` file.
 }
 ```
 
+For personal or enterprise scoped commands, you can also set a list of package prefixes that Werk will try when auto-detecting command packages. Prefixes are _prepended_ to the default list: `[...prefixes, "@werk/command-", "werk-command-"]`.
+
+```json
+{
+  "werk": {
+    "prefixes": ["@myscope/werk-command-"]
+  }
+}
+```
+
 ## Command Line Options
 
-Werk has global options for selecting workspaces, parallelization, and output.
+Werk has global options for selecting workspaces, parallelization, and output. These global options _MUST_ come before the command name, or they will be passed through to the command and not handled by Werk.
 
-- `-l, --log-level <level>`
-  - Set the logging level. The default is the `LOG_LEVEL` environment variable, or "info".
-- `-p, --parallel`
-  - Process workspaces in parallel.
-- `-c, --concurrency <count>`
-  - Limit workspace processing concurrency (number or "auto"). If the count is "auto", the number of CPU cores + 1 will be used.
+```sh
+werk [werk-options...] <command> [command-options...]
+```
+
+### Filtering Options
+
+Options which reduce the number of workspaces that are processed.
+
 - `-d, --with-dependencies`
   - Always include dependencies when selecting workspaces.
 - `-w, --workspace <name>`
@@ -99,24 +131,33 @@ Werk has global options for selecting workspaces, parallelization, and output.
   - Exclude modified workspaces.
 - `--not-unmodified`
   - Exclude unmodified workspaces.
+
+By default, all workspaces are included.
+
+If the `--workspace` or `--keyword` options are used, then only workspaces matching any of the given workspace names or keywords will included.
+
+From the remaining workspaces, any matching a `--not` option will be removed. You an consider "not" to be synonymous with "exclude".
+
+And finally, if the `--with-dependencies` option is used, any dependencies of the remaining workspaces will be included, even if they were removed by a `--not` option.
+
+**Note:** It is entirely up to each command to honor the "selected" workspaces. Commands receive all workspaces, with a tag indicating whether they were selected or not. They are strongly encouraged to use that information, but may not if it doesn't make sense to the command.
+
+### Parallelization Options
+
+- `-p, --parallel`
+  - Process workspaces in parallel.
+- `-c, --concurrency <count>`
+  - Limit workspace processing concurrency (number or "auto"). If the count is "auto", the number of CPU cores + 1 will be used.
 - `--no-wait`
   - Do not wait for workspace dependencies to finish processing before processing dependents.
+
+By default, workspaces are processed in series. This is generally the slowest option, but also the safest.
+
+### Logging Options
+
+- `-l, --log-level <level>`
+  - Set the logging level. The default is the `LOG_LEVEL` environment variable, or "info".
 - `--no-prefix`
   - Do add prefixes to command output.
 
-These global options _MUST_ come before the command name, or they will be passed through to the command and not handled by Werk.
-
-**Example:** Werk executes the `run build` command in _parallel_.
-
-```sh
-# werk [werk-options...] <command> [command-options...]
-werk -p run build
-```
-
-**Example:** Werk executes the `run build -p` command _serially_.
-
-```sh
-werk run build -p
-```
-
-Commands may have their own options. Look up the documentation for each command package and/or run `werk <command> --help` to see the command usage text.
+By default, messages of level "info" (or more severe) will be printed, and messages which are specific to a workspace will be prefixed with the workspace name.
