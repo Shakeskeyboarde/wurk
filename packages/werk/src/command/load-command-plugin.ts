@@ -1,5 +1,8 @@
+import { join } from 'node:path';
+
 import { getNpmWorkspacesRoot } from '../npm/get-npm-workspaces-root.js';
 import { loadPlugin, type Plugin } from '../utils/load-plugin.js';
+import { type PackageJson } from '../utils/package-json.js';
 import { readJsonFile } from '../utils/read-json-file.js';
 import { type CommandType, isCommand } from './command.js';
 
@@ -11,9 +14,12 @@ export interface CommandPlugin extends CommandInfo {
 
 export const loadCommandPlugin = async (name: string): Promise<CommandPlugin> => {
   const workspacesRoot = await getNpmWorkspacesRoot();
+  const packageJson = await readJsonFile<PackageJson>(join(workspacesRoot, 'package.json'));
   const packageNames = await readJsonFile(`${workspacesRoot}/package.json`).then((json: any) => {
-    const value = json?.werk?.commands?.[name];
-    return typeof value === 'string' ? [value] : [`@werk/command-${name}`, `werk-command-${name}`];
+    const customPackageName: string | undefined = json?.werk?.commands?.[name];
+    if (typeof customPackageName === 'string') return [customPackageName];
+    const customPrefixes: readonly string[] = packageJson?.werk?.prefixes ?? [];
+    return [...customPrefixes, `@werk/command-`, `werk-command-`].map((prefix) => `${prefix}${name}`);
   });
   const plugin = await loadPlugin(packageNames);
 
