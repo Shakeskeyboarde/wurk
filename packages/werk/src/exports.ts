@@ -7,7 +7,7 @@ export { type InitContext, type InitContextOptions } from './context/init-contex
 export { type RootContext, type RootContextOptions } from './context/root-context.js';
 export { type WorkspaceContext, type WorkspaceContextOptions } from './context/workspace-context.js';
 export { type NpmMetadata } from './npm/get-npm-metadata.js';
-export { type Log, LOG_LEVEL, type LogLevel } from './utils/log.js';
+export { Log } from './utils/log.js';
 export { type Spawn, type SpawnOptions, type SpawnPromise } from './utils/spawn.js';
 export { type SpawnSync, type SpawnSyncOptions, type SpawnSyncResult } from './utils/spawn-sync.js';
 export { type WorkerPromise } from './utils/start-worker.js';
