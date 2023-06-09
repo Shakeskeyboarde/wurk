@@ -1,6 +1,7 @@
 import { type CommandInfo } from '../command/load-command-plugin.js';
 import { type Commander } from '../commander/commander.js';
 import { Log, type LogOptions } from '../utils/log.js';
+import { BaseContext } from './base-context.js';
 
 export interface InitContextOptions {
   readonly log?: LogOptions;
@@ -9,7 +10,7 @@ export interface InitContextOptions {
   readonly commander: Commander;
 }
 
-export class InitContext implements InitContextOptions {
+export class InitContext extends BaseContext implements InitContextOptions {
   /**
    * Contextual logger.
    */
@@ -31,6 +32,7 @@ export class InitContext implements InitContextOptions {
   readonly commander: Commander;
 
   constructor({ log, command, rootDir, commander }: InitContextOptions) {
+    super();
     this.log = new Log(log);
     this.command = command;
     this.rootDir = rootDir;

@@ -2,6 +2,7 @@ import { type CommandInfo } from '../command/load-command-plugin.js';
 import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
 import { Log, type LogOptions } from '../utils/log.js';
 import { type SpawnSync, spawnSync } from '../utils/spawn-sync.js';
+import { BaseContext } from './base-context.js';
 
 export interface CleanupContextOptions<A extends CommanderArgs, O extends CommanderOptions> {
   readonly log?: LogOptions;
@@ -13,6 +14,7 @@ export interface CleanupContextOptions<A extends CommanderArgs, O extends Comman
 }
 
 export class CleanupContext<A extends CommanderArgs, O extends CommanderOptions>
+  extends BaseContext
   implements CleanupContextOptions<A, O>
 {
   /**
@@ -46,6 +48,7 @@ export class CleanupContext<A extends CommanderArgs, O extends CommanderOptions>
   readonly exitCode: number;
 
   constructor({ log, command, rootDir, args, opts, exitCode }: CleanupContextOptions<A, O>) {
+    super();
     this.log = new Log(log);
     this.command = command;
     this.rootDir = rootDir;
@@ -62,6 +65,7 @@ export class CleanupContext<A extends CommanderArgs, O extends CommanderOptions>
    * and stdio (combined stdout and stderr) is not available.
    */
   readonly spawn: SpawnSync = (cmd, args, options) => {
+    this._assertMethodCallsAllowed('spawn');
     return spawnSync(cmd, args, { cwd: this.rootDir, log: this.log, ...options });
   };
 }

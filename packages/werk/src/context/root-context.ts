@@ -3,6 +3,7 @@ import { type CommanderArgs, type CommanderOptions } from '../commander/commande
 import { Log, type LogOptions } from '../utils/log.js';
 import { type Spawn, spawn } from '../utils/spawn.js';
 import { Workspace, type WorkspaceOptions } from '../workspace/workspace.js';
+import { BaseContext } from './base-context.js';
 
 export interface RootContextOptions<A extends CommanderArgs, O extends CommanderOptions> {
   readonly log?: LogOptions;
@@ -16,7 +17,9 @@ export interface RootContextOptions<A extends CommanderArgs, O extends Commander
   readonly startWorker: (data?: any) => Promise<boolean>;
 }
 
-export class RootContext<A extends CommanderArgs, O extends CommanderOptions> {
+export class RootContext<A extends CommanderArgs, O extends CommanderOptions> extends BaseContext {
+  #startWorker: (data?: any) => Promise<boolean>;
+
   /**
    * Contextual logger.
    */
@@ -58,13 +61,8 @@ export class RootContext<A extends CommanderArgs, O extends CommanderOptions> {
    */
   readonly workerData: any;
 
-  /**
-   * Returns false if already running in a worker thread. Creating nested
-   * worker threads is not supported.
-   */
-  readonly startWorker: (data?: any) => Promise<boolean>;
-
   constructor(options: RootContextOptions<A, O>) {
+    super();
     const { log, command, rootDir, args, opts, workspaces, isWorker, workerData, startWorker } = options;
 
     this.log = new Log(log);
@@ -77,13 +75,23 @@ export class RootContext<A extends CommanderArgs, O extends CommanderOptions> {
     );
     this.isWorker = isWorker;
     this.workerData = workerData;
-    this.startWorker = startWorker;
+    this.#startWorker = startWorker;
   }
 
   /**
    * Spawn a child process at the workspaces root.
    */
   readonly spawn: Spawn = (cmd, args, options) => {
+    this._assertMethodCallsAllowed('spawn');
     return spawn(cmd, args, { cwd: this.rootDir, log: this.log, ...options });
+  };
+
+  /**
+   * Returns false if already running in a worker thread. Creating nested
+   * worker threads is not supported.
+   */
+  readonly startWorker = async (data?: any): Promise<boolean> => {
+    this._assertMethodCallsAllowed('startWorker');
+    return await this.#startWorker(data);
   };
 }

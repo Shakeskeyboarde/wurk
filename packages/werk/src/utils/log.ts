@@ -26,6 +26,8 @@ export const LOG_LEVEL = {
 } as const;
 
 export class Log implements LogOptions {
+  #isDestroyed = false;
+
   readonly stdout: Writable = new LogStream();
   readonly stderr: Writable = new LogStream();
   readonly prefix: string;
@@ -49,7 +51,7 @@ export class Log implements LogOptions {
   /**
    * Print a dimmed message to stderr.
    */
-  readonly trace = (message?: unknown): void => {
+  readonly silly = (message?: unknown): void => {
     if (LOG_LEVEL.silly <= this.getLevel().value) this.#write(process.stderr, message, chalk.dim);
   };
 
@@ -88,7 +90,14 @@ export class Log implements LogOptions {
     if (LOG_LEVEL.error <= this.getLevel().value) this.#write(process.stderr, message, chalk.redBright);
   };
 
+  readonly destroy = (): void => {
+    this.#isDestroyed = true;
+    this.stdout.destroy();
+    this.stderr.destroy();
+  };
+
   readonly #write = (stream: Writable, message: unknown, formatLine?: (message: string) => string): void => {
+    if (this.#isDestroyed) return;
     const lines = String(message ?? '').split(/\r?\n|\r/gu);
     if (lines[lines.length - 1] === '') lines.pop();
     lines.forEach((line) => this.#writeLine(stream, line, formatLine));

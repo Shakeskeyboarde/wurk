@@ -5,6 +5,8 @@ export class LogStream extends Transform {
   readonly #decoder = new StringDecoder('utf-8');
 
   #buffer = '';
+  #timeout?: NodeJS.Timeout;
+  #isDestroyed = false;
 
   constructor() {
     super({
@@ -14,26 +16,37 @@ export class LogStream extends Transform {
       writableObjectMode: false,
       readableObjectMode: true,
     });
+
+    process.setMaxListeners(process.getMaxListeners() + 1);
+    process.on('exit', this.#onExit);
   }
 
   flush(): void {
-    this.#update(this.#decoder.end());
-    if (this.#buffer === '') return;
-    this.push(this.#buffer);
-    this.#buffer = '';
+    this._flush();
   }
 
   _transform(chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback): void {
-    this.#update(this.#decoder.write(chunk));
+    this.#send(this.#decoder.write(chunk), false);
     callback();
   }
 
-  _flush(callback: TransformCallback): void {
-    this.flush();
-    callback();
+  _flush(callback?: TransformCallback): void {
+    this.#send(this.#decoder.end(), true);
+    callback?.();
   }
 
-  readonly #update = (chunk: string): void => {
+  _destroy(error: Error | null, callback: (error: Error | null) => void): void {
+    this.#isDestroyed = true;
+    clearTimeout(this.#timeout);
+    process.removeListener('exit', this.#onExit);
+    super._destroy(error, callback);
+  }
+
+  readonly #send = (chunk: string, flush: boolean): void => {
+    if (!chunk || this.#isDestroyed) return;
+
+    clearTimeout(this.#timeout);
+
     const value = this.#buffer + chunk;
     const rx = /(.*?)\r?\n/gu;
     let line: RegExpExecArray | null;
@@ -44,6 +57,24 @@ export class LogStream extends Transform {
       lastIndex = rx.lastIndex;
     }
 
-    this.#buffer = value.slice(lastIndex);
+    const trailer = value.slice(lastIndex);
+
+    if (flush && trailer) {
+      this.push(trailer);
+      this.#buffer = '';
+    } else {
+      this.#buffer = trailer;
+
+      if (this.#buffer) {
+        this.#timeout = setTimeout(() => {
+          this.#timeout = undefined;
+          this.flush();
+        }, 10);
+      }
+    }
+  };
+
+  readonly #onExit = (): void => {
+    this.destroy();
   };
 }
