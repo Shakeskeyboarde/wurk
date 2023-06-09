@@ -3,9 +3,8 @@
     "moduleResolution": "NodeNext",
     "module": "NodeNext",
     "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": ["ES2022"],
     "types": ["node"],
-    "jsx": "react-jsx",
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
@@ -20,6 +19,6 @@
     "allowJs": true,
     "noEmit": true
   },
-  "include": ["**/*", ".eslintrc.cjs", ".prettierrc.cjs"],
+  "include": ["**/*"],
   "exclude": ["node_modules", "out", "lib"]
 }
