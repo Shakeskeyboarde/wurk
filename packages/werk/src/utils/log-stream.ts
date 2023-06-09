@@ -26,12 +26,12 @@ export class LogStream extends Transform {
   }
 
   _transform(chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback): void {
-    this.#send(this.#decoder.write(chunk), false);
+    this.#send(chunk);
     callback();
   }
 
   _flush(callback?: TransformCallback): void {
-    this.#send(this.#decoder.end(), true);
+    this.#sendImmediate();
     callback?.();
   }
 
@@ -42,12 +42,22 @@ export class LogStream extends Transform {
     super._destroy(error, callback);
   }
 
-  readonly #send = (chunk: string, flush: boolean): void => {
+  readonly #send = (chunk: Buffer): void => {
     if (!chunk || this.#isDestroyed) return;
 
+    this.#buffer += this.#decoder.write(chunk);
     clearTimeout(this.#timeout);
+    this.#timeout = setTimeout(this.#sendImmediate, 10);
+  };
 
-    const value = this.#buffer + chunk;
+  readonly #sendImmediate = (): void => {
+    if (this.#isDestroyed) return;
+
+    const value = this.#buffer + this.#decoder.end();
+    this.#buffer = '';
+
+    if (!value) return;
+
     const rx = /(.*?)\r?\n/gu;
     let line: RegExpExecArray | null;
     let lastIndex = 0;
@@ -57,20 +67,8 @@ export class LogStream extends Transform {
       lastIndex = rx.lastIndex;
     }
 
-    const trailer = value.slice(lastIndex);
-
-    if (flush && trailer) {
-      this.push(trailer);
-      this.#buffer = '';
-    } else {
-      this.#buffer = trailer;
-
-      if (this.#buffer) {
-        this.#timeout = setTimeout(() => {
-          this.#timeout = undefined;
-          this.flush();
-        }, 10);
-      }
+    if (lastIndex < value.length) {
+      this.push(value.slice(lastIndex));
     }
   };
 
