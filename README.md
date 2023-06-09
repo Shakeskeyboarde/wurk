@@ -160,4 +160,4 @@ By default, workspaces are processed in series. This is generally the slowest op
 - `--no-prefix`
   - Do not add prefixes to command output.
 
-By default, messages of level "info" (or more severe) will be printed, and messages which are specific to a workspace will be prefixed with the workspace name.
+By default, messages of level "info" (or more severe) will be printed, and messages which are specific to a workspace will be prefixed with the workspace name. Log levels are: `silent`, `error`, `warn`, `info`, `notice`, `debug`, and `trace`.

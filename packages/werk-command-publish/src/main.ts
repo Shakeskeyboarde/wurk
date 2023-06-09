@@ -66,7 +66,7 @@ const publishFromArchive = async (
     return { isPublished: false };
   }
 
-  await spawn('npm', ['publish', ...(dryRun ? ['--dry-run'] : []), filename], { errorEcho: true, errorThrow: true });
+  await spawn('npm', ['publish', ...(dryRun ? ['--dry-run'] : []), filename], { echo: true, errorThrow: true });
 
   return { isPublished: true };
 };
@@ -142,9 +142,9 @@ const publishFromFilesystem = async (
   const { toArchive = false, dryRun = false } = opts;
 
   if (toArchive) {
-    await spawn('npm', ['pack', ...(dryRun ? ['--dry-run'] : [])], { errorEcho: true, errorThrow: true });
+    await spawn('npm', ['pack', ...(dryRun ? ['--dry-run'] : [])], { echo: true, errorThrow: true });
   } else {
-    await spawn('npm', ['publish', ...(dryRun ? ['--dry-run'] : [])], { errorEcho: true, errorThrow: true });
+    await spawn('npm', ['publish', ...(dryRun ? ['--dry-run'] : [])], { echo: true, errorThrow: true });
   }
 
   return { isPublished: true };
