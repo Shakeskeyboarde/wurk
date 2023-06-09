@@ -1,36 +1,40 @@
 {
   "name": "@werk/command-exec",
-  "description": "Run arbitrary executables in workspaces.",
-  "version": "0.1.0",
+  "description": "Run executables.",
+  "version": "1.0.0",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
+  "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-exec/README.md",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Shakeskeyboarde/werk.git"
   },
-  "files": [
-    "lib/**"
-  ],
-  "directories": {
-    "lib": "lib"
-  },
-  "type": "module",
-  "types": "lib/main.d.ts",
-  "main": "lib/main.js",
-  "exports": {
-    ".": {
-      "types": "./lib/main.d.ts",
-      "default": "./lib/main.js"
-    }
-  },
-  "sideEffects": false,
   "scripts": {
     "build": "tsc -p tsconfig.build.json"
   },
+  "type": "module",
+  "exports": {
+    "types": "./lib/main.d.ts",
+    "default": "./lib/main.js"
+  },
+  "files": [
+    "lib/**"
+  ],
+  "keywords": [
+    "werk",
+    "werk-command",
+    "monorepo",
+    "workspaces",
+    "npm",
+    "command",
+    "exec",
+    "execute",
+    "spawn"
+  ],
   "publishConfig": {
     "access": "public"
   },
   "dependencies": {
-    "@werk/cli": "^0.1.0"
+    "@werk/cli": "^1.0.0"
   }
 }
