@@ -90,14 +90,16 @@ export class Log implements LogOptions {
    * Write an undecorated message to stdout.
    */
   readonly writeOut = (message?: unknown, formatLine?: (message: string) => string): void => {
-    process.stdout.write(this.#format(message, formatLine) + '\n');
+    const formatted = this.#format(message, formatLine);
+    if (formatted) process.stdout.write(formatted + '\n');
   };
 
   /**
    * Write an undecorated message to stdout.
    */
   readonly writeErr = (message?: unknown, formatLine?: (message: string) => string): void => {
-    process.stderr.write(this.#format(message, formatLine) + '\n');
+    const formatted = this.#format(message, formatLine);
+    if (formatted) process.stderr.write(formatted + '\n');
   };
 
   readonly #format = (message: unknown, formatLine?: (message: string) => string): string => {
@@ -108,7 +110,7 @@ export class Log implements LogOptions {
       return str.endsWith('\n') ? str.slice(0, -1) : str;
     }
 
-    let lines = str.replace(ansiRegex, '').split(/\r?\n|\r|\n/g);
+    let lines = str.replace(ansiRegex, '').split(/\r?\n|\n/gu);
 
     if (this.trim) {
       lines = lines.flatMap((line) => {
