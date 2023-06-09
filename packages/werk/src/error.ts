@@ -3,7 +3,7 @@ import { log } from './utils/log.js';
 
 export const onError = (error: unknown): never => {
   if (process.env.DEBUG) {
-    console.error(error);
+    log.error(error instanceof Error && 'stack' in error ? error.stack : error);
   } else {
     log.error(error instanceof Error ? error.message : `${error}`);
   }

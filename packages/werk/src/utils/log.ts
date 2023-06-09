@@ -1,8 +1,10 @@
-import { PassThrough, type Writable } from 'node:stream';
+import { type Writable } from 'node:stream';
 import util from 'node:util';
 
 import getAnsiRegex from 'ansi-regex';
 import chalk from 'chalk';
+
+import { LogStream } from './log-stream.js';
 
 export interface LogOptions {
   prefix?: string;
@@ -24,16 +26,16 @@ export const LOG_LEVEL = {
 } as const;
 
 export class Log implements LogOptions {
-  readonly stdout: Writable = new PassThrough({ emitClose: false, autoDestroy: false });
-  readonly stderr: Writable = new PassThrough({ emitClose: false, autoDestroy: false });
+  readonly stdout: Writable = new LogStream();
+  readonly stderr: Writable = new LogStream();
   readonly prefix: string;
   readonly trim: boolean;
 
   constructor({ prefix = '', trim = false }: LogOptions = {}) {
     this.prefix = prefix;
     this.trim = trim;
-    this.stdout.on('data', this.writeOut);
-    this.stderr.on('data', this.writeErr);
+    this.stdout.on('data', (line: string) => this.#writeLine(process.stdout, line));
+    this.stderr.on('data', (line: string) => this.#writeLine(process.stderr, line));
   }
 
   readonly getLevel = (): { name: LogLevel; value: number } => {
@@ -48,83 +50,57 @@ export class Log implements LogOptions {
    * Print a dimmed message to stderr.
    */
   readonly trace = (message?: unknown): void => {
-    if (LOG_LEVEL.trace <= this.getLevel().value) this.writeOut(message, chalk.dim);
+    if (LOG_LEVEL.trace <= this.getLevel().value) this.#write(process.stderr, message, chalk.dim);
   };
 
   /**
    * Print a dimmed message to stderr.
    */
   readonly debug = (message?: unknown): void => {
-    if (LOG_LEVEL.debug <= this.getLevel().value) this.writeOut(message, chalk.dim);
+    if (LOG_LEVEL.debug <= this.getLevel().value) this.#write(process.stderr, message, chalk.dim);
   };
 
   /**
    * Print an undecorated message to stdout.
    */
   readonly info = (message?: unknown): void => {
-    if (LOG_LEVEL.info <= this.getLevel().value) this.writeOut(message);
+    if (LOG_LEVEL.info <= this.getLevel().value) this.#write(process.stdout, message);
   };
 
   /**
    * Print a bold message to stderr.
    */
   readonly notice = (message?: unknown): void => {
-    if (LOG_LEVEL.notice <= this.getLevel().value) this.writeErr(message, chalk.bold);
+    if (LOG_LEVEL.notice <= this.getLevel().value) this.#write(process.stderr, message, chalk.bold);
   };
 
   /**
    * Print a yellow message to stderr.
    */
   readonly warn = (message?: unknown): void => {
-    if (LOG_LEVEL.warn <= this.getLevel().value) this.writeErr(message, chalk.yellowBright);
+    if (LOG_LEVEL.warn <= this.getLevel().value) this.#write(process.stderr, message, chalk.yellowBright);
   };
 
   /**
    * Print a red message to stderr.
    */
   readonly error = (message?: unknown): void => {
-    if (LOG_LEVEL.error <= this.getLevel().value) this.writeErr(message, chalk.redBright);
+    if (LOG_LEVEL.error <= this.getLevel().value) this.#write(process.stderr, message, chalk.redBright);
   };
 
-  /**
-   * Write an undecorated message to stdout.
-   */
-  readonly writeOut = (message?: unknown, formatLine?: (message: string) => string): void => {
-    const formatted = this.#format(message, formatLine);
-    if (formatted) process.stdout.write(formatted + '\n');
+  readonly #write = (stream: Writable, message: unknown, formatLine?: (message: string) => string): void => {
+    const lines = String(message ?? '').split(/\r?\n|\r/gu);
+    if (lines[lines.length - 1] === '') lines.pop();
+    lines.forEach((line) => this.#writeLine(stream, line, formatLine));
   };
 
-  /**
-   * Write an undecorated message to stdout.
-   */
-  readonly writeErr = (message?: unknown, formatLine?: (message: string) => string): void => {
-    const formatted = this.#format(message, formatLine);
-    if (formatted) process.stderr.write(formatted + '\n');
-  };
-
-  readonly #format = (message: unknown, formatLine?: (message: string) => string): string => {
-    let str = String(message ?? '');
-
-    if (!this.prefix && !this.trim) {
-      if (formatLine) str = formatLine(str);
-      return str.endsWith('\n') ? str.slice(0, -1) : str;
-    }
-
-    let lines = str.replace(ansiRegex, '').split(/\r?\n|\n/gu);
-
-    if (this.trim) {
-      lines = lines.flatMap((line) => {
-        line = line.trim();
-        return line ? [line] : [];
-      });
-    } else if (lines[lines.length - 1] === '') {
-      lines.pop();
-    }
-
-    if (formatLine) lines = lines.map((line) => line && formatLine(line));
-    if (this.prefix) lines = lines.map((line) => this.prefix + line);
-
-    return lines.join('\n');
+  readonly #writeLine = (
+    stream: Writable,
+    line: string,
+    formatLine: (message: string) => string = (value) => value,
+  ): void => {
+    line = line.trimEnd().replace(ansiRegex, '');
+    if (!this.trim || line) stream.write(this.prefix + formatLine(line) + '\n');
   };
 }
 

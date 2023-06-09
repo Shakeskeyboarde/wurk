@@ -13,6 +13,7 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 
 export function merge<A, B>(a: A, b: B): Merged<A, B>;
 export function merge(a: any, b: any): any {
+  console.log(a, b);
   if (a !== b && isObject(a) && isObject(b)) {
     let result: Record<string, any> = a;
 

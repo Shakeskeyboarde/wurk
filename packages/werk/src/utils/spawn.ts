@@ -133,7 +133,7 @@ export const spawn = (
 
       if (exitCode && !error) error = new Error(`Spawned process failed: ${quote([cmd, ...args_])}`);
       if (error && !exitCode) exitCode = 1;
-      if (errorEcho && error != null) log.debug(Buffer.concat(stdio).toString('utf-8'));
+      if (errorEcho && error != null) log.debug(Buffer.concat(stdio).toString('utf-8').trim());
       if (errorMessage && error != null) log.error(errorMessage(error, exitCode));
 
       if (errorThrow && error != null) {
@@ -167,9 +167,12 @@ export const spawn = (
     stdin: childProcess.stdin,
     stdout: childProcess.stdout as NodeJS.ReadableStream,
     stderr: childProcess.stderr as NodeJS.ReadableStream,
-    getStdout: (encoding?: BufferEncoding): Promise<any> => promise.then((result) => result.stdout.toString(encoding)),
-    getStderr: (encoding?: BufferEncoding): Promise<any> => promise.then((result) => result.stderr.toString(encoding)),
-    getOutput: (encoding?: BufferEncoding): Promise<any> => promise.then((result) => result.output.toString(encoding)),
+    getStdout: (encoding?: BufferEncoding): Promise<any> =>
+      promise.then((result) => (encoding ? result.stdout.toString(encoding).trim() : result.stdout)),
+    getStderr: (encoding?: BufferEncoding): Promise<any> =>
+      promise.then((result) => (encoding ? result.stderr.toString(encoding).trim() : result.stderr)),
+    getOutput: (encoding?: BufferEncoding): Promise<any> =>
+      promise.then((result) => (encoding ? result.output.toString(encoding).trim() : result.output)),
     getJson: <T>(): Promise<T> => promise.then((result) => result.getJson<T>()),
     tryGetJson: <T>(): Promise<T | undefined> => promise.then((result) => result.tryGetJson<T>()),
     getExitCode: () => promise.then((result) => result.exitCode),
