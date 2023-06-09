@@ -13,14 +13,15 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 
 export function merge<A, B>(a: A, b: B): Merged<A, B>;
 export function merge(a: any, b: any): any {
-  console.log(a, b);
   if (a !== b && isObject(a) && isObject(b)) {
-    let result: Record<string, any> = a;
+    let result: Record<string, any> = { ...a };
 
     for (const [key, value] of Object.entries(b)) {
-      if (key in a) {
-        const merged = merge(a[key], value);
-        if (merged !== a[key]) result = { ...result, [key]: merged };
+      if (key in result) {
+        const merged = merge(result[key], value);
+        if (merged !== result[key]) result = { ...result, [key]: merged };
+      } else {
+        result = { ...result, [key]: value };
       }
     }
 

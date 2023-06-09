@@ -137,7 +137,6 @@ const publishFromFilesystem = async (
     }
   }
 
-  log.info(JSON.stringify(patch, null, 2));
   await workspace.patchPackageJson(patch);
 
   const { toArchive = false, dryRun = false } = opts;

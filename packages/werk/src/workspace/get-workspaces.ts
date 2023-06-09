@@ -103,7 +103,7 @@ const getSelected = async (
       const isIncluded =
         workspace.selected ||
         (!includeWorkspaces.length && !includeKeywords.length) ||
-        Boolean(workspace.name != null && includeWorkspaces.includes(workspace.name)) ||
+        includeWorkspaces.includes(workspace.name) ||
         Boolean(workspace.keywords?.some((keyword) => includeKeywords.includes(keyword)));
 
       return { ...workspace, selected: isIncluded };

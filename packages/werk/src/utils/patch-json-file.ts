@@ -4,5 +4,6 @@ import { writeJsonFile } from './write-json-file.js';
 
 export const patchJsonFile = async (filename: string, patch: unknown): Promise<void> => {
   const json = await readJsonFile(filename);
-  await writeJsonFile(filename, merge(json, patch));
+  const merged = merge(json, patch);
+  await writeJsonFile(filename, merged);
 };
