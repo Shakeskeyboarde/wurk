@@ -14,7 +14,7 @@ interface CommandActionOptions {
   readonly args: unknown;
   readonly opts: unknown;
   readonly commandPlugin: CommandPlugin;
-  readonly globalOptions: GlobalOptions;
+  readonly globalOpts: GlobalOptions;
 }
 
 type PrefixColor = (typeof PREFIX_COLORS)[number];
@@ -27,9 +27,9 @@ export const commandAction = async ({
   args,
   opts,
   commandPlugin,
-  globalOptions,
+  globalOpts,
 }: CommandActionOptions): Promise<void> => {
-  workspaces = await getWorkspaces(workspaces, globalOptions.select);
+  workspaces = await getWorkspaces(workspaces, globalOpts.select);
 
   const { command, ...commandInfo } = commandPlugin;
   await command.before({
@@ -44,8 +44,8 @@ export const commandAction = async ({
 
   if (process.exitCode != null) return;
 
-  const { parallel, concurrency, wait } = globalOptions.run;
-  const { prefix } = globalOptions.log;
+  const { parallel, concurrency, wait } = globalOpts.run;
+  const { prefix } = globalOpts.log;
   const semaphore = concurrency || !parallel ? new Semaphore(concurrency ?? 1) : null;
   const promises = new Map<string, Promise<void>>();
   let prefixColorIndex = 0;

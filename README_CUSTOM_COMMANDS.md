@@ -55,6 +55,8 @@ A Werk command consists of several different hook callbacks, which are all optio
 - `after`: Run once after handling individual workspaces.
 - `cleanup`: Run once after handling all workspaces. Intended for synchronous cleanup of temporary files.
 
+If you set `process.exitCode` to a number (including zero) in any hook, the command will exit with that code after the hook completes. This _STRONGLY_ is preferred to forcing an exit with `process.exit()`.
+
 ### Hook Contexts
 
 A context object is passed to each hook callback. The properties attached to those contexts are as follows.

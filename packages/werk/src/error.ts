@@ -8,5 +8,5 @@ export const onError = (error: unknown): never => {
     log.error(error instanceof Error ? error.message : `${error}`);
   }
 
-  process.exit(process.exitCode ?? 1);
+  process.exit(process.exitCode || 1);
 };

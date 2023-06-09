@@ -10,10 +10,10 @@ interface MainActionOptions {
   readonly commander: Commander<any, any>;
   readonly cmd: string;
   readonly cmdArgs: readonly string[];
-  readonly globalOptions: GlobalOptions;
+  readonly globalOpts: GlobalOptions;
 }
 
-export const mainAction = async ({ commander, cmd, cmdArgs, globalOptions }: MainActionOptions): Promise<void> => {
+export const mainAction = async ({ commander, cmd, cmdArgs, globalOpts }: MainActionOptions): Promise<void> => {
   const [rootDir, workspaces] = await Promise.all([await getNpmWorkspacesRoot(), await getNpmWorkspaces()]);
   const commandPlugin = await loadCommandPlugin(cmd);
   const { command, ...commandInfo } = commandPlugin;
@@ -51,7 +51,7 @@ export const mainAction = async ({ commander, cmd, cmdArgs, globalOptions }: Mai
       const args = subCommander.processedArgs;
       const opts = subCommander.opts();
 
-      await commandAction({ rootDir, workspaces, args, opts, commandPlugin: commandPlugin, globalOptions });
+      await commandAction({ rootDir, workspaces, args, opts, commandPlugin: commandPlugin, globalOpts: globalOpts });
     })
     .parseAsync(cmdArgs, { from: 'user' });
 };

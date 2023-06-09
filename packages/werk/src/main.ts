@@ -79,7 +79,7 @@ const asyncMain = async (): Promise<void> => {
     .passThroughOptions()
     .action(async (cmd, cmdArgs, options) => {
       process.env.LOG_LEVEL = commander.opts().logLevel ?? process.env.LOG_LEVEL;
-      const globalOptions: GlobalOptions = {
+      const globalOpts: GlobalOptions = {
         log: { level: options.logLevel ?? 'info', prefix: options.prefix },
         select: {
           withDependencies: options.withDependencies ?? false,
@@ -101,7 +101,7 @@ const asyncMain = async (): Promise<void> => {
         },
       };
 
-      await mainAction({ commander, cmd, cmdArgs, globalOptions });
+      await mainAction({ commander, cmd, cmdArgs, globalOpts: globalOpts });
     });
 
   await commander.parseAsync().catch(onError);

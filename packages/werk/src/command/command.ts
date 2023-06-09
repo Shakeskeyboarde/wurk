@@ -33,7 +33,7 @@ export interface CommandHooks<A extends CommanderArgs, O extends CommanderOption
 }
 
 export interface CommandType<A extends CommanderArgs, O extends CommanderOptions> {
-  readonly init: (options: InitContextOptions) => Commander<any, any>;
+  readonly init: (options: InitContextOptions) => void;
   readonly before: (options: Omit<RootContextOptions<A, O>, 'startWorker'>) => Promise<void>;
   readonly each: (options: Omit<WorkspaceContextOptions<A, O>, 'startWorker'>) => Promise<void>;
   readonly after: (options: Omit<RootContextOptions<A, O>, 'startWorker'>) => Promise<void>;
@@ -57,12 +57,17 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
     this.#after = after;
   }
 
-  readonly init = (options: InitContextOptions): Commander<any, any> => {
-    if (!this.#init) return options.commander;
+  readonly init = (options: InitContextOptions): void => {
+    if (!this.#init) return;
 
     const context = new InitContext(options);
 
-    return this.#init(context);
+    try {
+      this.#init(context);
+    } catch (error) {
+      context.log.error(error instanceof Error ? error.message : `${error}`);
+      process.exitCode = process.exitCode || 1;
+    }
   };
 
   readonly before = async (options: Omit<RootContextOptions<A, O>, 'startWorker'>): Promise<void> => {
@@ -75,7 +80,10 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
       startWorker: (data) => startWorker(options.command.main, { workerData: { stage: 'before', options, data } }),
     });
 
-    await this.#before(context);
+    await this.#before(context).catch((error) => {
+      context.log.error(error instanceof Error ? error.message : `${error}`);
+      process.exitCode = process.exitCode || 1;
+    });
   };
 
   readonly each = async (options: Omit<WorkspaceContextOptions<A, O>, 'startWorker'>): Promise<void> => {
@@ -88,7 +96,10 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
       startWorker: (data) => startWorker(options.command.main, { workerData: { stage: 'each', options, data } }),
     });
 
-    await this.#each(context);
+    await this.#each(context).catch((error) => {
+      context.log.error(error instanceof Error ? error.message : `${error}`);
+      process.exitCode = process.exitCode || 1;
+    });
   };
 
   readonly after = async (options: Omit<RootContextOptions<A, O>, 'startWorker'>): Promise<void> => {
@@ -101,7 +112,10 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
       startWorker: (data) => startWorker(options.command.main, { workerData: { stage: 'after', options, data } }),
     });
 
-    await this.#after(context);
+    await this.#after(context).catch((error) => {
+      context.log.error(error instanceof Error ? error.message : `${error}`);
+      process.exitCode = process.exitCode || 1;
+    });
   };
 
   readonly cleanup = (options: CleanupContextOptions<A, O>): void => {
@@ -109,7 +123,12 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
 
     const context = new CleanupContext(options);
 
-    this.#cleanup(context);
+    try {
+      this.#cleanup(context);
+    } catch (error) {
+      context.log.error(error instanceof Error ? error.message : `${error}`);
+      process.exitCode = process.exitCode || 1;
+    }
   };
 }
 
