@@ -2,10 +2,10 @@ import assert from 'node:assert';
 import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { createCommand, type MutablePackageJson, type Workspace, type WorkspaceContext } from '@werk/cli';
+import { createCommand, type MutablePackageJson, type WorkspaceContext } from '@werk/cli';
 
 const resultPromises = new Map<string, Promise<{ isPublished: boolean }>>();
-const workspacesToRestore: Workspace[] = [];
+const workspacesToRestore: { name: string; dir: string }[] = [];
 
 export default createCommand({
   init: ({ commander, command }) => {
@@ -117,7 +117,7 @@ const publishFromFilesystem = async (
 
   if (isGitRepo) {
     // Register cleanup of temporary changes to the package.json file.
-    workspacesToRestore.push(workspace);
+    workspacesToRestore.push({ name: workspace.name, dir: workspace.dir });
 
     // Temporarily set "gitHead" in the package.json file. NPM publish
     // should do this automatically. But, it doesn't do it for packing.
