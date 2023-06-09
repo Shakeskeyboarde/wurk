@@ -6,7 +6,7 @@ export class LogStream extends Transform {
 
   #buffer = '';
   #timeout?: NodeJS.Timeout;
-  #isDestroyed = false;
+  #isFinalized = false;
 
   constructor() {
     super({
@@ -18,61 +18,84 @@ export class LogStream extends Transform {
     });
 
     process.setMaxListeners(process.getMaxListeners() + 1);
-    process.on('exit', this.#onExit);
+    process.on('exit', this.#finalize);
   }
 
   flush(): void {
-    this._flush();
+    this.#send(true);
   }
 
   _transform(chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback): void {
-    this.#send(chunk);
+    this.#append(chunk);
     callback();
   }
 
-  _flush(callback?: TransformCallback): void {
-    this.#sendImmediate();
-    callback?.();
+  _flush(callback: TransformCallback): void {
+    this.#send(true);
+    callback();
   }
 
   _destroy(error: Error | null, callback: (error: Error | null) => void): void {
-    this.#isDestroyed = true;
-    clearTimeout(this.#timeout);
-    process.removeListener('exit', this.#onExit);
+    this.#finalize();
     super._destroy(error, callback);
   }
 
-  readonly #send = (chunk: Buffer): void => {
-    if (!chunk || this.#isDestroyed) return;
+  readonly #append = (chunk: Buffer): void => {
+    if (this.#isFinalized || chunk.length === 0) return;
 
     this.#buffer += this.#decoder.write(chunk);
+
+    // Flush completed lines if the buffer is getting too big.
+    if (this.#buffer.length > 40_000) this.#send(false);
+
+    // Delay flushing the buffer as long as we're receiving data, so that
+    // related lines stay together.
     clearTimeout(this.#timeout);
-    this.#timeout = setTimeout(this.#sendImmediate, 10);
+    this.#timeout = setTimeout(() => this.#send(true), 10);
   };
 
-  readonly #sendImmediate = (): void => {
-    if (this.#isDestroyed) return;
+  readonly #send = (flush: boolean): void => {
+    if (this.#isFinalized) return;
 
     const value = this.#buffer + this.#decoder.end();
     this.#buffer = '';
 
     if (!value) return;
 
+    // The exec() regex doesn't match "\r", because it could be half of an
+    // incomplete "\r\n" line ending. If we match it here, we might end
+    // up with an extra blank line.
     const rx = /(.*?)\r?\n/gu;
     let line: RegExpExecArray | null;
     let lastIndex = 0;
 
     while ((line = rx.exec(value))) {
+      // Split on "\r" (which we now know is not followed by a "\n") in
+      // case someone is trying to overwrite lines.
       line[1]?.split('\r').forEach((part) => this.push(part));
       lastIndex = rx.lastIndex;
     }
 
-    if (lastIndex < value.length) {
+    if (lastIndex >= value.length) return;
+
+    if (flush) {
+      // If we're flushing, write the last unterminated line.
       this.push(value.slice(lastIndex));
+    } else {
+      this.#buffer = value.slice(lastIndex);
     }
   };
 
-  readonly #onExit = (): void => {
-    this.destroy();
+  readonly #finalize = (): void => {
+    if (this.#isFinalized) return;
+
+    try {
+      this.#send(true);
+      clearTimeout(this.#timeout);
+      process.removeListener('exit', this.#finalize);
+      process.setMaxListeners(process.getMaxListeners() - 1);
+    } finally {
+      this.#isFinalized = true;
+    }
   };
 }
