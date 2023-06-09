@@ -49,12 +49,13 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
   readonly #after: ((context: RootContext<A, O>) => Promise<void>) | undefined;
   readonly #cleanup: ((context: CleanupContext<A, O>) => void) | undefined;
 
-  constructor({ init, before, each, after }: CommandHooks<A, O>) {
+  constructor({ init, before, each, after, cleanup }: CommandHooks<A, O>) {
     Object.assign(this, { [COMMAND]: true });
     this.#init = init;
     this.#before = before;
     this.#each = each;
     this.#after = after;
+    this.#cleanup = cleanup;
   }
 
   readonly init = (options: InitContextOptions): void => {

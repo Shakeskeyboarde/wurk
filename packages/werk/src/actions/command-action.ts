@@ -3,7 +3,6 @@ import chalk from 'chalk';
 
 import { type CommandPlugin } from '../command/load-command-plugin.js';
 import { type GlobalOptions } from '../options.js';
-import { log } from '../utils/log.js';
 import { getWorkspaceDependencyNames } from '../workspace/get-workspace-dependency-names.js';
 import { getWorkspaces } from '../workspace/get-workspaces.js';
 import { type WorkspaceOptions } from '../workspace/workspace.js';
@@ -61,7 +60,7 @@ export const commandAction = async ({
 
       try {
         if (process.exitCode != null) return;
-        log.notice(`: ${workspace.name}`);
+
         await command.each({
           log: { prefix: logPrefix, trim: Boolean(logPrefix) },
           command: commandInfo,

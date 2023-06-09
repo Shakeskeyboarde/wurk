@@ -30,8 +30,8 @@ export default createCommand({
   },
   cleanup: ({ log, spawn }) => {
     workspacesToRestore.forEach(({ name, dir }) => {
-      if (spawn('git', ['restore', '--source=HEAD', '--staged', '--worktree', '--', dir]).failed) {
-        log.debug(`Failed to restore workspace "${name}".`);
+      if (spawn('git', ['restore', '--source=HEAD', '--staged', '--worktree', '--', dir], { echo: true }).failed) {
+        log.warn(`Failed to restore workspace "${name}".`);
       }
     });
   },
