@@ -84,10 +84,7 @@ const publishFromFilesystem = async (
   const isGitRepo = await workspace.getGitIsRepo();
 
   if (isGitRepo) {
-    const [isClean, isModified] = await Promise.all([workspace.getGitIsClean(), workspace.getGitIsModified()]);
-
-    assert(isClean, `Git working tree of workspace "${workspace.name}" is not clean.`);
-    assert(!isModified, `Workspace "${workspace.name}" is modified, but the version is already published.`);
+    assert(await workspace.getGitIsClean(), `Workspace "${workspace.name}" has uncommitted changes.`);
   }
 
   // Ensure local production dependencies have been published, and there are no local modifications.
