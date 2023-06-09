@@ -40,9 +40,12 @@ export default createCommand({
 const each = async (
   context: WorkspaceContext<[], { toArchive?: true; fromArchive?: true; dryRun?: true }>,
 ): Promise<{ isPublished: boolean }> => {
-  const { opts, workspace } = context;
+  const { log, opts, workspace } = context;
 
-  if (!workspace.selected) return { isPublished: false };
+  if (!workspace.selected) {
+    log.verbose(`Skipping workspace "${workspace.name}" because it is not selected.`);
+    return { isPublished: false };
+  }
 
   if (opts.fromArchive) {
     return await publishFromArchive(context);
@@ -62,11 +65,14 @@ const publishFromArchive = async (
     .catch(() => false);
 
   if (!filenameExists) {
-    log.debug(`Skipping workspace "${workspace.name}@${workspace.version}" because the archive file is missing.`);
+    log.verbose(`Skipping workspace "${workspace.name}@${workspace.version}" because the archive file is missing.`);
     return { isPublished: false };
   }
 
-  await spawn('npm', ['publish', ...(dryRun ? ['--dry-run'] : []), filename], { echo: true, errorThrow: true });
+  await spawn('npm', [`--loglevel=${log.getLevel().name}`, 'publish', ...(dryRun ? ['--dry-run'] : []), filename], {
+    echo: true,
+    errorThrow: true,
+  });
 
   return { isPublished: true };
 };
@@ -77,7 +83,7 @@ const publishFromFilesystem = async (
   const { log, opts, workspace, spawn } = context;
 
   if (await workspace.getNpmIsPublished()) {
-    log.debug(`Skipping workspace "${workspace.name}@${workspace.version}" because it is already published.`);
+    log.verbose(`Skipping workspace "${workspace.name}@${workspace.version}" because it is already published.`);
     return { isPublished: false };
   }
 
@@ -142,9 +148,15 @@ const publishFromFilesystem = async (
   const { toArchive = false, dryRun = false } = opts;
 
   if (toArchive) {
-    await spawn('npm', ['pack', ...(dryRun ? ['--dry-run'] : [])], { echo: true, errorThrow: true });
+    await spawn('npm', [`--loglevel=${log.getLevel().name}`, 'pack', ...(dryRun ? ['--dry-run'] : [])], {
+      echo: true,
+      errorThrow: true,
+    });
   } else {
-    await spawn('npm', ['publish', ...(dryRun ? ['--dry-run'] : [])], { echo: true, errorThrow: true });
+    await spawn('npm', [`--loglevel=${log.getLevel().name}`, 'publish', ...(dryRun ? ['--dry-run'] : [])], {
+      echo: true,
+      errorThrow: true,
+    });
   }
 
   return { isPublished: true };

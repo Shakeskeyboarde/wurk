@@ -133,7 +133,7 @@ export const spawn = (
 
       if (exitCode && !error) error = new Error(`Spawned process failed: ${quote([cmd, ...args_])}`);
       if (error && !exitCode) exitCode = 1;
-      if (errorEcho && error != null) log.debug(Buffer.concat(stdio).toString('utf-8').trim());
+      if (errorEcho && error != null) log.verbose(Buffer.concat(stdio).toString('utf-8').trim());
       if (errorMessage && error != null) log.error(errorMessage(error, exitCode));
 
       if (errorThrow && error != null) {

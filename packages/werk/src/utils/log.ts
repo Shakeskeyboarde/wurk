@@ -21,8 +21,8 @@ export const LOG_LEVEL = {
   warn: 20,
   notice: 30,
   info: 40,
-  debug: 50,
-  trace: 60,
+  verbose: 50,
+  silly: 60,
 } as const;
 
 export class Log implements LogOptions {
@@ -50,14 +50,14 @@ export class Log implements LogOptions {
    * Print a dimmed message to stderr.
    */
   readonly trace = (message?: unknown): void => {
-    if (LOG_LEVEL.trace <= this.getLevel().value) this.#write(process.stderr, message, chalk.dim);
+    if (LOG_LEVEL.silly <= this.getLevel().value) this.#write(process.stderr, message, chalk.dim);
   };
 
   /**
    * Print a dimmed message to stderr.
    */
-  readonly debug = (message?: unknown): void => {
-    if (LOG_LEVEL.debug <= this.getLevel().value) this.#write(process.stderr, message, chalk.dim);
+  readonly verbose = (message?: unknown): void => {
+    if (LOG_LEVEL.verbose <= this.getLevel().value) this.#write(process.stderr, message, chalk.dim);
   };
 
   /**

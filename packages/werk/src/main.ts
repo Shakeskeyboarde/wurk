@@ -32,7 +32,7 @@ const asyncMain = async (): Promise<void> => {
     .argument('[options...]', 'Options to pass to the command.')
     .option(
       '-l, --log-level <level>',
-      'Set the log level (silent, error, warn, notice, info, debug, trace).',
+      'Set the log level (silent, error, warn, notice, info, verbose, silly).',
       (value): LogLevel => {
         assert(value in LOG_LEVEL, new Error(`Log level must be one of: ${Object.keys(LOG_LEVEL).join(', ')}.`));
         return value as LogLevel;
