@@ -8,15 +8,16 @@ export type NpmMetadata = PackageJson & {
 
 export const getNpmMetadata = memoize(
   /**
-   * Memoized.s
+   * Memoized.
    */
   async (name: string, version: string): Promise<NpmMetadata | undefined> => {
-    return await spawn('npm', ['show', '--silent', `${name}@${version}`, 'gitHead'], {
+    return await spawn('npm', ['show', '--silent', `${name}@${version}`], {
       capture: true,
       errorThrow: true,
     })
       .getJson<NpmMetadata>()
       .then((value) => {
+        console.log(value);
         if (typeof value.gitHead !== 'string') delete value.gitHead;
         return value;
       })
