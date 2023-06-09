@@ -62,7 +62,7 @@ export const commandAction = async ({
         if (process.exitCode != null) return;
 
         await command.each({
-          log: { prefix: logPrefix, trim: Boolean(logPrefix) },
+          log: { prefix: logPrefix },
           command: commandInfo,
           rootDir,
           args,

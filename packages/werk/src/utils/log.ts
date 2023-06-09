@@ -8,7 +8,6 @@ import { LogStream } from './log-stream.js';
 
 export interface LogOptions {
   prefix?: string;
-  trim?: boolean;
 }
 
 export type LogLevel = keyof typeof LOG_LEVEL;
@@ -28,14 +27,14 @@ export const LOG_LEVEL = {
 export class Log implements LogOptions {
   #isDestroyed = false;
 
+  readonly #trim;
+  readonly prefix: string;
   readonly stdout: Writable = new LogStream();
   readonly stderr: Writable = new LogStream();
-  readonly prefix: string;
-  readonly trim: boolean;
 
-  constructor({ prefix = '', trim = false }: LogOptions = {}) {
+  constructor({ prefix = '' }: LogOptions = {}) {
     this.prefix = prefix;
-    this.trim = trim;
+    this.#trim = Boolean(prefix);
     this.stdout.on('data', (line: string) => this.#writeLine(process.stdout, line));
     this.stderr.on('data', (line: string) => this.#writeLine(process.stderr, line));
   }
@@ -109,7 +108,7 @@ export class Log implements LogOptions {
     formatLine: (message: string) => string = (value) => value,
   ): void => {
     line = line.trimEnd().replace(ansiRegex, '');
-    if (!this.trim || line) stream.write(this.prefix + formatLine(line) + '\n');
+    if (!this.#trim || line) stream.write(this.prefix + formatLine(line) + '\n');
   };
 }
 
