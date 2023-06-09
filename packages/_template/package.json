@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "template",
+  "name": "@werk/template",
   "description": "",
   "version": "0.1.0",
   "author": "Chris Ackerman <chris@topher.land>",
