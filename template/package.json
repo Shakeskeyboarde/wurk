@@ -1,0 +1,40 @@
+{
+  "name": "werk-command-<template>",
+  "description": "",
+  "version": "1.0.0",
+  "license": "ISC",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepack": "npm run build",
+    "modernize": "npx npm-check-updates@latest -i --format group"
+  },
+  "type": "module",
+  "exports": {
+    "types": "./lib/main.d.ts",
+    "default": "./lib/main.js"
+  },
+  "files": [
+    "lib/**"
+  ],
+  "keywords": [
+    "werk",
+    "werk-command",
+    "monorepo",
+    "workspaces",
+    "npm",
+    "command"
+  ],
+  "dependencies": {
+    "@werk/cli": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/eslint": "^8.40.0",
+    "@types/node": "^20.2.5",
+    "@typescript-eslint/eslint-plugin": "^5.59.9",
+    "@typescript-eslint/parser": "^5.59.9",
+    "eslint": "^8.42.0",
+    "eslint-config-prettier": "^8.8.0",
+    "prettier": "^2.8.8",
+    "typescript": "^5.1.3"
+  }
+}
