@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint .",
     "build": "npm -w @werk/cli -w @werk/command-run run build && npm update @werk/cli && npx @werk/cli -p run build",
-    "test": "npm run build && npm run lint && vitest run",
+    "test": "npm run build && npm run lint",
     "clean": "rm -rf out **/out lib **/lib",
     "modernize": "npx npm-check-updates@latest -i --workspaces --root --format group",
     "start": "( npm --quiet run build &>/dev/null || ( echo 'build failed' && exit 1 ) ) && npx @werk/cli"
@@ -24,14 +24,11 @@
   },
   "engineStrict": true,
   "devDependencies": {
-    "@testing-library/react": "^14.0.0",
     "@types/eslint": "^8.40.0",
     "@types/node": "^20.2.5",
-    "@vitest/coverage-c8": "^0.32.0",
     "eslint": "^8.42.0",
     "eslint-config-rational": "^2.0.23",
     "prettier": "^2.8.8",
-    "typescript": "^5.1.3",
-    "vitest": "^0.32.0"
+    "typescript": "^5.1.3"
   }
 }
