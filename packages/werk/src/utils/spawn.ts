@@ -25,7 +25,22 @@ export interface SpawnOptions {
   readonly log?: Log;
 }
 
-export interface SpawnPromise extends Promise<void> {
+export interface SpawnResult {
+  readonly stdout: Buffer;
+  readonly stderr: Buffer;
+  readonly output: Buffer;
+
+  readonly getJson: <T>() => T;
+  readonly tryGetJson: <T>() => T | undefined;
+
+  readonly exitCode: number;
+  readonly error: unknown;
+
+  readonly succeeded: boolean;
+  readonly failed: boolean;
+}
+
+export interface SpawnPromise extends Promise<SpawnResult> {
   readonly childProcess: ChildProcess;
   readonly stdin: NodeJS.WritableStream | null;
   readonly stdout: NodeJS.ReadableStream;
@@ -112,7 +127,7 @@ export const spawn = (
     })
     .catch(() => undefined);
 
-  const promise = new Promise<void>((resolve, reject) =>
+  const promise = new Promise<SpawnResult>((resolve, reject) =>
     childProcess.on('close', () => {
       exitCode = childProcess.exitCode ?? 1;
 
@@ -121,35 +136,55 @@ export const spawn = (
       if (errorEcho && error != null) log.debug(Buffer.concat(stdio).toString('utf-8'));
       if (errorMessage && error != null) log.error(errorMessage(error, exitCode));
 
-      if (errorThrow && error != null) reject(error);
-      else resolve();
+      if (errorThrow && error != null) {
+        reject(error);
+      } else {
+        const result: SpawnResult = {
+          stdout: Buffer.concat(stdout),
+          stderr: Buffer.concat(stderr),
+          output: Buffer.concat(stdio),
+          exitCode,
+          error,
+          succeeded: exitCode === 0,
+          failed: exitCode !== 0,
+          getJson: <T>(): T => JSON.parse(result.stdout.toString('utf-8')),
+          tryGetJson: <T>(): T | undefined => {
+            try {
+              return result.getJson();
+            } catch {
+              return undefined;
+            }
+          },
+        };
+
+        resolve(result);
+      }
     }),
   );
 
-  const result: SpawnPromise = Object.assign(promise, {
+  return Object.assign(promise, {
     childProcess,
     stdin: childProcess.stdin,
     stdout: childProcess.stdout as NodeJS.ReadableStream,
     stderr: childProcess.stderr as NodeJS.ReadableStream,
-    getStdout: (encoding?: BufferEncoding): Promise<any> =>
-      promise.then(() => (encoding == null ? Buffer.concat(stdout) : Buffer.concat(stdout).toString(encoding).trim())),
-    getStderr: (encoding?: BufferEncoding): Promise<any> =>
-      promise.then(() => (encoding == null ? Buffer.concat(stderr) : Buffer.concat(stderr).toString(encoding).trim())),
-    getOutput: (encoding?: BufferEncoding): Promise<any> =>
-      promise.then(() => (encoding == null ? Buffer.concat(stdio) : Buffer.concat(stdio).toString(encoding).trim())),
-    getJson: () => result.getStdout('utf-8').then((value) => JSON.parse(value)),
-    tryGetJson: () => promise.then(() => JSON.parse(stdout.toString())).catch(() => undefined),
-    getExitCode: () => promise.then(() => exitCode),
-    getError: () => promise.then(() => error),
+    getStdout: (encoding?: BufferEncoding): Promise<any> => promise.then((result) => result.stdout.toString(encoding)),
+    getStderr: (encoding?: BufferEncoding): Promise<any> => promise.then((result) => result.stderr.toString(encoding)),
+    getOutput: (encoding?: BufferEncoding): Promise<any> => promise.then((result) => result.output.toString(encoding)),
+    getJson: <T>(): Promise<T> => promise.then((result) => result.getJson<T>()),
+    tryGetJson: <T>(): Promise<T | undefined> => promise.then((result) => result.tryGetJson<T>()),
+    getExitCode: () => promise.then((result) => result.exitCode),
+    getError: () => promise.then((result) => result.error),
     succeeded: () =>
       promise.then(
-        () => exitCode === 0,
+        (result) => result.succeeded,
         () => false,
       ),
-    failed: () => result.succeeded().then((value) => !value),
+    failed: () =>
+      promise.then(
+        (result) => result.failed,
+        () => true,
+      ),
   });
-
-  return result;
 };
 
 export type Spawn = typeof spawn;

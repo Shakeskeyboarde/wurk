@@ -5,32 +5,14 @@ import { npmRunPath } from 'npm-run-path';
 import { quote } from 'shell-quote';
 
 import { log as defaultLog } from './log.js';
-import { type SpawnOptions } from './spawn.js';
-
-type GetOutputSync = {
-  (): Buffer;
-  (encoding: BufferEncoding): string;
-  (encoding?: BufferEncoding): string | Buffer;
-};
+import { type SpawnOptions, type SpawnResult } from './spawn.js';
 
 export type SpawnSyncOptions = Pick<
   SpawnOptions,
   'cwd' | 'env' | 'echo' | 'capture' | 'errorThrow' | 'errorMessage' | 'log'
 >;
 
-export interface SpawnSyncResult {
-  readonly getStdout: GetOutputSync;
-  readonly getStderr: GetOutputSync;
-
-  readonly getJson: <T>() => T;
-  readonly tryGetJson: <T>() => T | undefined;
-
-  readonly getExitCode: () => number;
-  readonly getError: () => unknown;
-
-  readonly succeeded: () => boolean;
-  readonly failed: () => boolean;
-}
+export type SpawnSyncResult = Omit<SpawnResult, 'output'>;
 
 export const spawnSync = (
   cmd: string,
@@ -50,7 +32,7 @@ export const spawnSync = (
 
   let exitCode = 0;
   let error: unknown;
-  let spawnResult: SpawnSyncReturns<Buffer>;
+  let spawnResult: SpawnSyncReturns<Buffer> | undefined;
 
   try {
     spawnResult = crossSpawnSync(cmd, args_, {
@@ -73,20 +55,20 @@ export const spawnSync = (
   if (errorThrow && error != null) throw error;
 
   const result: SpawnSyncResult = {
-    getStdout: (encoding?: BufferEncoding): any => spawnResult.stdout.toString(encoding),
-    getStderr: (encoding?: BufferEncoding): any => spawnResult.stderr.toString(encoding),
-    getJson: () => JSON.parse(result.getStdout('utf-8')),
-    tryGetJson: () => {
+    stdout: spawnResult?.stdout ?? Buffer.alloc(0),
+    stderr: spawnResult?.stderr ?? Buffer.alloc(0),
+    exitCode,
+    error,
+    succeeded: exitCode === 0,
+    failed: exitCode !== 0,
+    getJson: <T>(): T => JSON.parse(result.stdout.toString('utf-8')),
+    tryGetJson: <T>(): T | undefined => {
       try {
-        return JSON.parse(result.getStdout('utf-8'));
+        return result.getJson();
       } catch {
-        return;
+        return undefined;
       }
     },
-    getExitCode: () => exitCode,
-    getError: () => error,
-    succeeded: () => exitCode === 0,
-    failed: () => !result.succeeded(),
   };
 
   return result;

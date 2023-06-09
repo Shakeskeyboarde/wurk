@@ -11,17 +11,15 @@ export const getNpmMetadata = memoize(
    * Memoized.
    */
   async (name: string, version: string): Promise<NpmMetadata | undefined> => {
-    return await spawn('npm', ['show', '--silent', `${name}@${version}`], {
-      capture: true,
-      errorThrow: true,
-    })
-      .getJson<NpmMetadata>()
-      .then((value) => {
-        console.log(value);
-        if (typeof value.gitHead !== 'string') delete value.gitHead;
-        return value;
-      })
-      .catch(() => undefined);
+    const result = await spawn('npm', ['show', '--silent', '--json', `${name}@${version}`], { capture: true });
+
+    if (result.failed) return undefined;
+
+    const meta = result.getJson<NpmMetadata>();
+
+    if (typeof meta.gitHead !== 'string') delete meta.gitHead;
+
+    return meta;
   },
   (name, version) => `${name}@${version}`,
 );

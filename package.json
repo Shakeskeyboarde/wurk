@@ -9,7 +9,7 @@
     "test": "npm run build && npm run lint && vitest run",
     "clean": "rm -rf out **/out lib **/lib",
     "modernize": "npx npm-check-updates@latest -i --workspaces --root --format group",
-    "start": "npm --quiet run build &>/dev/null || ( echo 'build failed' && exit 1 ) && npx @werk/cli"
+    "start": "( npm --quiet run build &>/dev/null || ( echo 'build failed' && exit 1 ) ) && npx @werk/cli"
   },
   "workspaces": [
     "packages/_template",
