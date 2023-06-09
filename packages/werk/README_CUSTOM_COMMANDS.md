@@ -1,33 +1,17 @@
-# Werk Command Development
+# Werk Custom Commands
 
-Custom commands are supported and encouraged.
-
-The first goal of Werk is to make it easier to build or choose the monorepo orchestration patterns that make sense for you. You shouldn't have to jump through hoops to do things the way you want and need to do them in your own repos and pipelines. Werk should be to monorepos what Rollup, Vite, and Webpack are to bundling.
-
-- [Overview](#overview)
-  - [Implementing Commands](#implementing-commands)
+- [Implementing Commands](#implementing-commands)
   - [Command Hooks](#command-hooks)
   - [Hook Contexts](#hook-contexts)
   - [Workspaces](#workspaces)
-- [Patching Workspace `package.json` Files](#patching-workspace-packagejson-files)
 - [Command Line Parsing](#command-line-parsing)
+- [Patching Workspace `package.json` Files](#patching-workspace-packagejson-files)
 - [Spawning Processes](#spawning-processes)
 - [Starting Threads](#starting-threads)
 - [Logging](#logging)
 - [Publishing Commands](#publishing-commands)
 
-## Overview
-
-Werk provides the following capabilities so that your custom command can focus on doing its job.
-
-- **Resolve** NPM workspaces with **filtering** and interdependency **ordering**.
-- **Read** and **patch** workspace `package.json` files.
-- **Parse** CLI **options** and **arguments** using [commander](https://www.npmjs.com/package/commander).
-- **Spawn** processes and consume their output.
-- **Parallelize** with or without [threading](https://nodejs.org/api/worker_threads.html).
-- **Log** messages with decoration, prefixing, and level filtering.
-
-### Implementing Commands
+## Implementing Commands
 
 A custom command is just an NPM package with a Werk Command default export. Using Typescript is strongly recommended.
 
@@ -44,6 +28,8 @@ export default createCommand({
   cleanup: (context) => {},
 });
 ```
+
+You can also copy the [template](https://github.com/Shakeskeyboarde/werk/blob/main/template) into your own repo to get started.
 
 ### Command Hooks
 
@@ -117,22 +103,6 @@ The context `workspaces` and `workspace` properties contain instances of the `Wo
 
 **Note:** All Git methods except `getGitIsRepo()` will throw if the workspace is not part of a git repository.
 
-## Patching Workspace `package.json` Files
-
-The [workspace](#workspaces) `patchPackageJson(patchFn)` function takes a callback which receives the current package object, and returns an updated partial package object. The returned value is deeply merged into the original package, and written back to the workspace `package.json` file.
-
-The following example adds the `cowsay` dependency if it is missing. All existing dependencies will be left as-is.
-
-```ts
-await context.workspace.writePackageJson((packageJson) => {
-  return {
-    dependencies: {
-      cowsay: packageJson.dependencies?.cowsay ?? '^1.5.0',
-    },
-  };
-});
-```
-
 ## Command Line Parsing
 
 The `init` hook context contains a `commander` property, which is just a [Commander](https://www.npmjs.com/package/commander) command. This command can be configured in any way you would like, The configured command must be returned so that Typescript can infer the `args` and `opts` context types for the later hooks.
@@ -153,6 +123,22 @@ export default createCommand({
 See the Commanders documentation for the full API.
 
 The `description` and `version` from your command's `package.json` file will be used if they are not overridden in the `init` hook.
+
+## Patching Workspace `package.json` Files
+
+The [workspace](#workspaces) `patchPackageJson(patchFn)` function takes a callback which receives the current package object, and returns an updated partial package object. The returned value is deeply merged into the original package, and written back to the workspace `package.json` file.
+
+The following example adds the `cowsay` dependency if it is missing. All existing dependencies will be left as-is.
+
+```ts
+await context.workspace.writePackageJson((packageJson) => {
+  return {
+    dependencies: {
+      cowsay: packageJson.dependencies?.cowsay ?? '^1.5.0',
+    },
+  };
+});
+```
 
 ## Spawning Processes
 
