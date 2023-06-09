@@ -1,14 +1,14 @@
 # Werk Run Command
 
-Run package.json scripts in workspaces.
+Run package scripts.
 
 ## Install
 
 ```sh
-npm i -D @werk/cli @werk/command-run
+npm i -D @werk/command-run
 ```
 
-## Use
+## Run Script
 
 ```sh
 werk run <script> [args...]

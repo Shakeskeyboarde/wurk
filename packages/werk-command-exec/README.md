@@ -1,14 +1,14 @@
 # Werk Exec Command
 
-Run arbitrary executables in workspaces.
+Run executables in workspaces.
 
 ## Install
 
 ```sh
-npm i -D @werk/cli @werk/command-exec
+npm i -D @werk/command-exec
 ```
 
-## Use
+## Run Executables
 
 ```sh
 werk exec <executable> [args...]
