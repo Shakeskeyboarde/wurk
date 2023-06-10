@@ -3,12 +3,12 @@
 - [Implementing Commands](#implementing-commands)
   - [Command Hooks](#command-hooks)
   - [Hook Contexts](#hook-contexts)
+  - [Log](#log)
   - [Workspaces](#workspaces)
 - [Command Line Parsing](#command-line-parsing)
-- [Patching Workspace `package.json` Files](#patching-workspace-packagejson-files)
 - [Spawning Processes](#spawning-processes)
 - [Starting Threads](#starting-threads)
-- [Logging](#logging)
+- [Patching Workspace `package.json` Files](#patching-workspace-packagejson-files)
 - [Publishing Commands](#publishing-commands)
 
 ## Implementing Commands
@@ -33,11 +33,12 @@ You can also copy the [template](https://github.com/Shakeskeyboarde/werk/blob/ma
 
 ### Command Hooks
 
-A Werk command consists of several different hook callbacks, which are all optional.
+A Werk command is compose of hook callbacks (all optional).
 
-- `init`: Called when the command is loaded. Intended for configuration of command options, arguments, and help text.
+- `init`: Called when the command is loaded. Intended for configuring command options, arguments, and help text.
 - `before`: Run once before handling individual workspaces.
 - `each`: Run once for each workspace in order of interdependency ( dependencies before dependents).
+  - _Please honor the `context.workspace.selected` property if possible!_
 - `after`: Run once after handling individual workspaces.
 - `cleanup`: Run once after handling all workspaces. Intended for synchronous cleanup of temporary files.
 
@@ -53,20 +54,43 @@ A context object is passed to each hook callback. The properties attached to tho
   - `dir`: Root directory of the command package.
   - `packageJson`: Contents of the command package's `package.json` file.
 - `rootDir`: Absolute path of the workspaces root.
-- `commander` (**init** hook only): Configurable [Commander](https://www.npmjs.com/package/commander) instance for defining command options, arguments, and help text.
-- `args` (**before**, **each**, **after**, and **cleanup** hooks only): Positional arguments parsed from command line.
-- `opts` (**before**, **each**, **after**, and **cleanup** hooks only): Named options parsed from the command line.
-- `workspaces` (**before**, **each**, and **after** hooks only): A map (by name) of all [workspaces](#workspaces).
-- `workspace` (**each** hook only): The current [workspace](#workspaces).
-- `spawn` (**before**, **each**, **after**, and **cleanup** hooks only): Spawn a process. The working directory will be the root of the current workspace if available (`each` hook), or the workspaces root otherwise.
-- `startWorker(data?)` (**before**, **each**, and **after** hooks only): Re-runs the current hook in a [worker thread](https://nodejs.org/api/worker_threads.html).
-- `isWorker` (**before**, **each**, and **after** hooks only): True if the hook is running in a worker thread.
-- `workerData` (**before**, **each**, and **after** hooks only): Data passed to the `startWorker(data?)` function, or undefined if `isWorker` is false.
-- `exitCode` (**cleanup** hook only): Exit code of the command.
+- `commander` (**init**): Configurable [Commander](https://www.npmjs.com/package/commander) instance for defining command options, arguments, and help text.
+- `args` (**before**, **each**, **after**, **cleanup**): Positional arguments parsed from command line.
+- `opts` (**before**, **each**, **after**, **cleanup**): Named options parsed from the command line.
+- `workspaces` (**before**, **each**, **after**): A map (by name) of all [workspaces](#workspaces).
+- `workspace` (**each**): The current [workspace](#workspaces).
+- `spawn` (**before**, **each**, **after**, **cleanup**): Spawn a process. The working directory will be the root of the current workspace if available (`each` hook), or the workspaces root otherwise.
+- `startWorker(data?)` (**before**, **each**, **after**): Re-runs the current hook in a [worker thread](https://nodejs.org/api/worker_threads.html).
+- `isWorker` (**before**, **each**, **after**): True if the hook is running in a worker thread.
+- `workerData` (**before**, **each**, **after**): Data passed to the `startWorker(data?)` function, or undefined if `isWorker` is false.
+- `exitCode` (**cleanup**): Exit code of the command.
+
+### Log
+
+The `context.log` should be used for all logging. Please don't use the global `console` object.
+
+- `silly`: Print a dimmed log message to stderr. This is intended to be useful only to developers.
+- `verbose`: Print a dimmed log message to stderr. This is intended to help users do their own troubleshooting.
+- `info`: Print an undecorated log message to stdout. This is intended for informational details about the progress or results of a command.
+- `notice`: Print a bold log message to stderr. This is intended for messages that need to stand out a little, and are possibly unexpected.
+- `warn`: Print a yellow log message to stderr. This is intended for problems that are not immediate failures, but may indicate something unexpected or incorrect.
+- `error`: Print a red log message to stderr. This is intended for things that are definitely wrong, and are probably immediate failures.
+- `stdout`: Writable stream which can be used for piping.
+- `stderr`: Writable stream which can be used for piping.
+- `getLevel()`: Function which returns the current log level (eg. `{ name: 'info', value: 40 }`).
+
+Any logged messages may be modified in the following ways:
+
+- ANSI escape sequences are stripped.
+- Workspace name prefixes may be added.
+- Blank lines may be removed.
+- Message may be omitted based on log level.
+
+No hard wrapping is ever added.
 
 ### Workspaces
 
-The context `workspaces` and `workspace` properties contain instances of the `Workspace` class. These instances provide information properties and helper methods for interacting with the workspace.
+The `context.workspaces` and `context.workspace` properties contain instances of the `Workspace` class. These instances provide informational properties and helper methods for interacting with workspaces.
 
 **Normalized package properties:**
 
@@ -79,22 +103,22 @@ The context `workspaces` and `workspace` properties contain instances of the `Wo
 - `devDependencies`
 - `keywords`.
 
-**Werk generated properties:**
+**Generated properties:**
 
 - `dir`: Absolute root directory of the workspace.
-- `selected`: True if the workspace matched the Werk [global options](README.md#command-line-options)
+- `selected`: True if the workspace matched the Werk [global options](README.md#command-line-options).
 - `dependencyNames`: A set of the unique (deduplicated) dependency names collected from all of the dependency maps.
 
-**Package interaction methods:**
+**Package methods:**
 
-- `readPackageJson()`: Reads the workspace's full `package.json` file.
+- `readPackageJson()`: Reads the workspace `package.json` file.
 - `writePackageJson(json)`: Writes the workspace `package.json` file.
 - `patchPackageJson(patchFn)`: Applies a deeply merged patch to the workspace `package.json` file.
 
 **Metadata methods:**
 
 - `getLocalDependencies(scopes?)`: Gets the workspaces which are local dependencies of this workspace. If scopes is not specified, dependencies from all scopes are returned.
-- `getNpmMetadata()`: Gets the registry metadata for the workspace. If a version is not specified, the workspace's version is used. This method is memoized.
+- `getNpmMetadata()`: Gets the registry metadata for the workspace. This method is memoized.
 - `getNpmIsPublished()`: Returns true if the current workspace name and version are published to the registry.
 - `getGitIsRepo()`: Returns true if the workspace root directory is part of a git repository.
 - `getGitHead()`: Gets the commit hash of the workspace's git HEAD.
@@ -105,7 +129,7 @@ The context `workspaces` and `workspace` properties contain instances of the `Wo
 
 ## Command Line Parsing
 
-The `init` hook context contains a `commander` property, which is just a [Commander](https://www.npmjs.com/package/commander) command. This command can be configured in any way you would like, The configured command must be returned so that Typescript can infer the `args` and `opts` context types for the later hooks.
+The `init` hook `context.commander` property is just a [Commander](https://www.npmjs.com/package/commander) command. You may configure it in any way you want. The configured command must be returned so that Typescript can infer the `context.args` and `context.opts` types for the other hooks.
 
 ```ts
 export default createCommand({
@@ -120,31 +144,13 @@ export default createCommand({
 });
 ```
 
-See the Commanders documentation for the full API.
-
 The `description` and `version` from your command's `package.json` file will be used if they are not overridden in the `init` hook.
-
-## Patching Workspace `package.json` Files
-
-The [workspace](#workspaces) `patchPackageJson(patchFn)` function takes a callback which receives the current package object, and returns an updated partial package object. The returned value is deeply merged into the original package, and written back to the workspace `package.json` file.
-
-The following example adds the `cowsay` dependency if it is missing. All existing dependencies will be left as-is.
-
-```ts
-await context.workspace.writePackageJson((packageJson) => {
-  return {
-    dependencies: {
-      cowsay: packageJson.dependencies?.cowsay ?? '^1.5.0',
-    },
-  };
-});
-```
 
 ## Spawning Processes
 
-The context `spawn(cmd, args?, options?)` function is a promise based helper for running child processes.
+The `context.spawn(cmd, args?, options?)` function is a promise based helper for running child processes.
 
-- Based on [cross-spawn](https://www.npmjs.com/package/cross-spawn), so spawning be fairly consistent on Windows, Mac, and Linux.
+- Based on [cross-spawn](https://www.npmjs.com/package/cross-spawn), so spawning should be fairly consistent on Windows, Mac, and Linux.
 - Adds `node_modules/.bin` directories to the environment `PATH`, so locally installed binaries can be executed.
 
 **NOTE:** Using this helper is optional. However, please consider piping output from alternatively spawned processes to `log.stdout` and `log.stderr`.
@@ -159,11 +165,11 @@ const spawnPromise = spawn('git', ['status', '--porcelain'], {
   //  Default: false
   capture: true,
 
-  // Pipe stdout and stderr streams for streaming.
+  // Setup stdout and stderr streams.
   //  Default: false
   stream: true,
 
-  // Pipe stdin so that data can be written to the process.
+  // Setup the stdin stream.
   //  Default: false
   input: true,
 
@@ -180,23 +186,15 @@ const spawnPromise = spawn('git', ['status', '--porcelain'], {
   //  Default: undefined
   errorMessage: (error, exitCode) => `Something went wrong`,
 
-  // Working directory of the child process.
+  // Set the process working directory.
   //  Default: context.workspace.dir or context.rootDir
   cwd: '/current/working/directory',
 
-  // Environment variables set for the child process.
+  // Set the process environment variables (replaces process.env).
   //  Default: process.env
   env: {},
 });
 ```
-
-If you don't care about the result, you can just wait for the process to finish.
-
-```ts
-await spawnPromise;
-```
-
-If you do care about the output, the spawn promise is decorated with helpful properties.
 
 Get the process output as bytes, text, or decoded JSON.
 
@@ -243,11 +241,34 @@ As a last resort, the [NodeJS ChildProcess](https://nodejs.org/api/child_process
 spawnPromise.childProcess.on('close', handleClose);
 ```
 
+The returned object is a promise. You can await it to get a synchronous result object if that meets your needs better.
+
+```ts
+const result = await spawnPromise;
+
+// Output buffers, not streams
+result.stdout.toString('utf-8').trim();
+result.stderr.toString('utf-8').trim();
+result.output.toString('utf-8').trim();
+
+// Get values, not promises.
+result.getJson().field;
+result.tryGetJson()?.field;
+
+// Properties, not getters.
+result.exitCode;
+result.error;
+result.succeeded;
+result.failed;
+```
+
+The synchronous result doesn't include the `childProcess` or `stdin`.
+
 ## Starting Threads
 
-Any hook except `init` can spawn a copy of itself in a worker thread by calling the context `startWorker(data?)` function.
+The `before`, `each`, and `after` hooks can spawn a copies of themselves in worker threads by calling the `context.startWorker(workerData?)` function.
 
-**NOTE:** Using this helper is optional. However, please consider piping output from alternatively created threads to `log.stdout` and `log.stderr`.
+**NOTE:** Using this helper is optional. However, please consider creating and using a new `Log` instance in alternatively created threads.
 
 The simplest case is to always run a hook in a separate thread.
 
@@ -261,7 +282,7 @@ export default createCommand({
 });
 ```
 
-If the `startWorker()` function is called from the main thread, it starts a worker thread and returns true. If it's called from a worker thread, it does nothing and returns false.
+If the `context.startWorker()` function is called from the main thread, it starts a worker thread and returns true. If it's called from a worker thread, it does nothing and returns false.
 
 You can pass data to the worker thread. The data must be compatible with the [Structured Clone](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm) algorithm.
 
@@ -270,12 +291,10 @@ if (await context.startWorker({ timestamp: Data.now() })) {
   return;
 }
 
-context.log.info(`Current Timestamp: ${context.data.timestamp}`);
+context.log.info(`Current Timestamp: ${context.workerData.timestamp}`);
 ```
 
-More complicated scenarios where some processing happens in the main thread, and some happens in one or more workers, can be achieved by checking the `context.isWorker` value.
-
-If you need access to the [NodeJS Worker](https://nodejs.org/api/worker_threads.html#class-worker), it's attached to the returned promise.
+If you need access to the [NodeJS Worker](https://nodejs.org/api/worker_threads.html#class-worker) instance (eg. for messaging), it is attached to the returned promise.
 
 ```ts
 const workerPromise = context.startWorker();
@@ -288,30 +307,21 @@ if (workerPromise.isStarted) {
 await workerPromise;
 ```
 
-## Logging
+## Patching Workspace `package.json` Files
 
-Please avoid using the global `console` object. The `log`, `warn`, and `error` methods are monkey patched to pipe through the context `log`, and using them will print a warning.
+The `workspace.patchPackageJson(patch)` function takes a partial package object and deeply merges it with the current package, before writing the merged value to the disk.
 
-The context `log` has the following properties.
+The following example adds the `cowsay` dependency if it is missing. All existing dependencies will be left as-is.
 
-- `silly`: Print a dimmed log message to stderr. This is intended to be useful only to developers.
-- `verbose`: Print a dimmed log message to stderr. This is intended to help users do their own troubleshooting.
-- `info`: Print an undecorated log message to stdout. This is intended for informational details about the progress or results of a command.
-- `notice`: Print a bold log message to stderr. This is intended for messages that need to stand out a little, and are possibly unexpected.
-- `warn`: Print a yellow log message to stderr. This is intended for problems that are not immediate failures, but may indicate something unexpected or incorrect.
-- `error`: Print a red log message to stderr. This is intended for things that are definitely wrong, and are probably immediate failures.
-- `stdout`: Writable stream which can be used for piping.
-- `stderr`: Writable stream which can be used for piping.
-- `getLevel()`: Function which returns the current log level (eg. `{ name: 'info', value: 40 }`).
-
-Any logged messages may be modified in the following ways:
-
-- ANSI escape sequences are stripped.
-- Workspace name prefixes may be added.
-- Blank lines may be removed.
-- Message may be omitted based on log level.
-
-No hard wrapping is ever added.
+```ts
+await context.workspace.writePackageJson((packageJson) => {
+  return {
+    dependencies: {
+      cowsay: packageJson.dependencies?.cowsay ?? '^1.5.0',
+    },
+  };
+});
+```
 
 ## Publishing Commands
 
