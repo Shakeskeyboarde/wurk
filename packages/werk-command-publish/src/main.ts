@@ -11,7 +11,7 @@ export default createCommand({
   init: ({ commander, command }) => {
     return commander
       .description(command.packageJson.description ?? '')
-      .description('Only versions that do not exist in the registry are published.')
+      .description('Only unpublished versions of public workspaces are published.')
       .option('--to-archive', 'Pack each workspace into an archive.')
       .addOption(
         commander.createOption('--from-archive', 'Publish pre-packed workspace archives.').conflicts('toArchive'),
