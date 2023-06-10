@@ -174,4 +174,4 @@ By default, workspaces are processed serially. This is generally the slowest opt
 - `--no-prefix`
   - Do not add prefixes to command output.
 
-Log level can also be set using the `LOG_LEVEL` environment variable. The command line option takes precedence over the environment variable.
+The log level can also be set using the `WERK_LOG_LEVEL` environment variable. The command line option takes precedence over the environment variable.

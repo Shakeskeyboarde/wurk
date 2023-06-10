@@ -12,7 +12,7 @@ import { onError } from './error.js';
 import { type GlobalOptions } from './options.js';
 import { LOG_LEVEL, type LogLevel } from './utils/log.js';
 
-process.env.LOG_LEVEL = process.env.LOG_LEVEL ?? 'info';
+process.env.WERK_LOG_LEVEL = process.env.WERK_LOG_LEVEL ?? 'info';
 process.on('uncaughtException', onError);
 process.on('unhandledRejection', (error) => {
   throw error;
@@ -78,7 +78,7 @@ const asyncMain = async (): Promise<void> => {
     .version(version)
     .passThroughOptions()
     .action(async (cmd, cmdArgs, options) => {
-      process.env.LOG_LEVEL = commander.opts().logLevel ?? process.env.LOG_LEVEL;
+      process.env.WERK_LOG_LEVEL = commander.opts().logLevel ?? process.env.WERK_LOG_LEVEL;
       const globalOpts: GlobalOptions = {
         log: { level: options.logLevel ?? 'info', prefix: options.prefix },
         select: {

@@ -40,7 +40,9 @@ export class Log implements LogOptions {
 
   readonly getLevel = (): { name: LogLevel; value: number } => {
     const name: LogLevel =
-      process.env.LOG_LEVEL && process.env.LOG_LEVEL in LOG_LEVEL ? (process.env.LOG_LEVEL as LogLevel) : 'info';
+      process.env.WERK_LOG_LEVEL && process.env.WERK_LOG_LEVEL in LOG_LEVEL
+        ? (process.env.WERK_LOG_LEVEL as LogLevel)
+        : 'info';
     const value = LOG_LEVEL[name];
 
     return { name, value };
