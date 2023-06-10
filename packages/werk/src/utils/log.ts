@@ -1,5 +1,4 @@
 import { type Writable } from 'node:stream';
-import util from 'node:util';
 
 import getAnsiRegex from 'ansi-regex';
 import chalk from 'chalk';
@@ -53,6 +52,10 @@ export class Log implements LogOptions {
   readonly silly = (message?: unknown): void => {
     if (LOG_LEVEL.silly <= this.getLevel().value) this.#write(process.stderr, message, chalk.dim);
   };
+  /**
+   * Alias for `silly`.
+   */
+  readonly trace = this.silly;
 
   /**
    * Print a dimmed message to stderr.
@@ -60,6 +63,10 @@ export class Log implements LogOptions {
   readonly verbose = (message?: unknown): void => {
     if (LOG_LEVEL.verbose <= this.getLevel().value) this.#write(process.stderr, message, chalk.dim);
   };
+  /**
+   * Alias for `verbose`.
+   */
+  readonly debug = this.verbose;
 
   /**
    * Print an undecorated message to stdout.
@@ -113,23 +120,3 @@ export class Log implements LogOptions {
 }
 
 export const log = new Log();
-
-let consoleWarning = (): void => {
-  consoleWarning = () => undefined;
-  log.warn('A Werk command is using the global console object. This is not recommended.');
-};
-
-Object.assign(console, {
-  log: (...args: any[]): void => {
-    consoleWarning();
-    log.info(util.format(...args));
-  },
-  warn: (...args: any[]): void => {
-    consoleWarning();
-    log.warn(util.format(...args));
-  },
-  error: (...args: any[]): void => {
-    consoleWarning();
-    log.error(util.format(...args));
-  },
-});
