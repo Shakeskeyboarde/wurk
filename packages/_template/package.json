@@ -1,10 +1,11 @@
 {
-  "name": "@werk/command-<command>",
+  "private": true,
+  "name": "@werk/command-untitled",
   "description": "",
   "version": "1.0.0",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
-  "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-<command>/README.md",
+  "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-untitled/README.md",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Shakeskeyboarde/werk.git"

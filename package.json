@@ -12,7 +12,6 @@
     "start": "( npm --quiet run build &>/dev/null || ( echo 'build failed' && exit 1 ) ) && npx @werk/cli"
   },
   "workspaces": [
-    "packages/_template",
     "packages/werk",
     "packages/*"
   ],
