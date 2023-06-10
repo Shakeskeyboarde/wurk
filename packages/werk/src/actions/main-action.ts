@@ -23,7 +23,9 @@ export const mainAction = async ({ commander, cmd, cmdArgs, globalOpts }: MainAc
 
   const subCommander = commander.command(cmd);
 
-  command.init({ command: commandInfo, rootDir, commander: subCommander });
+  if (command.init({ command: commandInfo, rootDir, commander: subCommander }) !== subCommander) {
+    throw new Error(`Command "${cmd}" did not return the correct commander instance. Did it return a sub-command?`);
+  }
 
   process.on('exit', (exitCode) => {
     const context = new CleanupContext({

@@ -33,7 +33,7 @@ export interface CommandHooks<A extends CommanderArgs, O extends CommanderOption
 }
 
 export interface CommandType<A extends CommanderArgs, O extends CommanderOptions> {
-  readonly init: (options: InitContextOptions) => void;
+  readonly init: (options: InitContextOptions) => Commander<any, any>;
   readonly before: (options: Omit<RootContextOptions<A, O>, 'startWorker'>) => Promise<void>;
   readonly each: (options: Omit<WorkspaceContextOptions<A, O>, 'startWorker'>) => Promise<void>;
   readonly after: (options: Omit<RootContextOptions<A, O>, 'startWorker'>) => Promise<void>;
@@ -58,19 +58,21 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
     this.#cleanup = cleanup;
   }
 
-  readonly init = (options: InitContextOptions): void => {
-    if (!this.#init) return;
+  readonly init = (options: InitContextOptions): Commander<any, any> => {
+    if (!this.#init) return options.commander;
 
     const context = new InitContext(options);
 
     try {
-      this.#init(context);
+      return this.#init(context) as Commander<any, any>;
     } catch (error) {
       context.log.error(error instanceof Error ? error.message : `${error}`);
       process.exitCode = process.exitCode || 1;
     } finally {
       context.destroy();
     }
+
+    return options.commander;
   };
 
   readonly before = async (options: Omit<RootContextOptions<A, O>, 'startWorker'>): Promise<void> => {
