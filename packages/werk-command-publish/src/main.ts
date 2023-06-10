@@ -42,6 +42,11 @@ const each = async (
 ): Promise<{ isPublished: boolean }> => {
   const { log, opts, workspace } = context;
 
+  if (workspace.private) {
+    log.verbose(`Skipping workspace "${workspace.name}" because it is private.`);
+    return { isPublished: false };
+  }
+
   if (!workspace.selected) {
     log.verbose(`Skipping workspace "${workspace.name}" because it is not selected.`);
     return { isPublished: false };
