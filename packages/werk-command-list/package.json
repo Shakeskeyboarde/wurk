@@ -1,0 +1,41 @@
+{
+  "private": true,
+  "name": "@werk/command-list",
+  "description": "List workspaces as JSON with filtering applied.",
+  "version": "1.0.0",
+  "author": "Chris Ackerman <chris@topher.land>",
+  "license": "ISC",
+  "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-list/README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shakeskeyboarde/werk.git"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "type": "module",
+  "exports": {
+    "types": "./lib/main.d.ts",
+    "default": "./lib/main.js"
+  },
+  "files": [
+    "lib/**"
+  ],
+  "keywords": [
+    "werk",
+    "werk-command",
+    "monorepo",
+    "workspaces",
+    "npm",
+    "command",
+    "list",
+    "json",
+    "filter"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@werk/cli": "^1.0.0"
+  }
+}
