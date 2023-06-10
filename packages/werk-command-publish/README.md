@@ -2,7 +2,7 @@
 
 Publish workspaces.
 
-Only versions that do not exist in the registry are published.
+**Note:** Only unpublished versions of public workspaces are published!
 
 ## Install
 
