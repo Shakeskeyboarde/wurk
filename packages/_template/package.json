@@ -1,35 +1,37 @@
 {
-  "private": true,
-  "name": "@werk/template",
+  "name": "@werk/command-<command>",
   "description": "",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
+  "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-<command>/README.md",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Shakeskeyboarde/werk.git"
   },
-  "files": [
-    "lib/**"
-  ],
-  "directories": {
-    "lib": "lib"
-  },
-  "type": "module",
-  "types": "lib/main.d.ts",
-  "main": "lib/main.js",
-  "exports": {
-    ".": {
-      "types": "./lib/main.d.ts",
-      "default": "./lib/main.js"
-    }
-  },
-  "sideEffects": false,
   "scripts": {
     "build": "tsc -p tsconfig.build.json"
   },
+  "type": "module",
+  "exports": {
+    "types": "./lib/main.d.ts",
+    "default": "./lib/main.js"
+  },
+  "files": [
+    "lib/**"
+  ],
+  "keywords": [
+    "werk",
+    "werk-command",
+    "monorepo",
+    "workspaces",
+    "npm",
+    "command"
+  ],
   "publishConfig": {
     "access": "public"
   },
-  "gitHead": "d836d1e105ad9af4af3a20e48ff388005933b16b"
+  "dependencies": {
+    "@werk/cli": "^1.0.0"
+  }
 }
