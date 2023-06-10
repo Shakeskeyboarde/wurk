@@ -7,7 +7,8 @@
   "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-run/README.md",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Shakeskeyboarde/werk.git"
+    "url": "git+https://github.com/Shakeskeyboarde/werk.git",
+    "directory": "packages/werk-command-run"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json"
