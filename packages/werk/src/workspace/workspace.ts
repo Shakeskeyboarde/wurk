@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-import { type RootContext } from '../context/root-context.js';
+import { type Context } from '../context/context.js';
 import { type PackageJson } from '../exports.js';
 import { getGitHead } from '../git/get-git-head.js';
 import { getGitIsClean } from '../git/get-git-is-clean.js';
@@ -13,7 +13,7 @@ import { getWorkspaceDependencyNames } from './get-workspace-dependency-names.js
 import { getWorkspaceIsModified } from './get-workspace-is-modified.js';
 import { getWorkspaceLocalDependencies } from './get-workspace-local-dependencies.js';
 
-type Context = Pick<RootContext<[], {}>, 'workspaces' | 'spawn'>;
+type PartialContext = Pick<Context, 'workspaces' | 'spawn'>;
 
 export type WorkspaceOptions = {
   readonly name: string;
@@ -29,7 +29,7 @@ export type WorkspaceOptions = {
 };
 
 export class Workspace implements WorkspaceOptions {
-  readonly #context: Context;
+  readonly #context: PartialContext;
 
   /**
    * Absolute path of the workspace directory.
@@ -77,7 +77,7 @@ export class Workspace implements WorkspaceOptions {
    */
   readonly dependencyNames: readonly string[];
 
-  constructor(options: WorkspaceOptions & { context: Context }) {
+  constructor(options: WorkspaceOptions & { context: PartialContext }) {
     this.#context = options.context;
     this.dir = options.dir;
     this.name = options.name;

@@ -9,7 +9,7 @@ import { type SpawnOptions, type SpawnResult } from './spawn.js';
 
 export type SpawnSyncOptions = Pick<
   SpawnOptions,
-  'cwd' | 'env' | 'echo' | 'capture' | 'errorThrow' | 'errorMessage' | 'log'
+  'cwd' | 'env' | 'echo' | 'capture' | 'errorReturn' | 'errorMessage' | 'log'
 >;
 
 export type SpawnSyncResult = Omit<SpawnResult, 'output'>;
@@ -22,7 +22,7 @@ export const spawnSync = (
     env = process.env,
     echo,
     capture,
-    errorThrow,
+    errorReturn,
     errorMessage,
     log = defaultLog,
     ...options
@@ -52,7 +52,7 @@ export const spawnSync = (
   }
 
   if (errorMessage && error != null) log.error(errorMessage(error, exitCode));
-  if (errorThrow && error != null) throw error;
+  if (!errorReturn && error != null) throw error;
 
   const result: SpawnSyncResult = {
     stdout: spawnResult?.stdout ?? Buffer.alloc(0),

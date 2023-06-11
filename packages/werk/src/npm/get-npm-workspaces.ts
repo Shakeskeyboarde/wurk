@@ -20,11 +20,7 @@ export const getNpmWorkspaces = memoize(
    * Memoized.
    */
   async (dir?: string): Promise<readonly WorkspaceOptions[]> => {
-    return await spawn('npm', ['query', '.workspace', '--quiet', '--json'], {
-      cwd: dir,
-      capture: true,
-      errorThrow: true,
-    })
+    return await spawn('npm', ['query', '.workspace', '--quiet', '--json'], { cwd: dir, capture: true })
       .getJson<NpmWorkspace[]>()
       .then((npmWorkspaces) => {
         return npmWorkspaces.map(({ path, realpath, ...workspace }) => ({

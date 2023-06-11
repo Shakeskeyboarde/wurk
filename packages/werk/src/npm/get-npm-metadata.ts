@@ -11,7 +11,10 @@ export const getNpmMetadata = memoize(
    * Memoized.
    */
   async (name: string, version: string): Promise<NpmMetadata | undefined> => {
-    const result = await spawn('npm', ['show', '--silent', '--json', `${name}@${version}`], { capture: true });
+    const result = await spawn('npm', ['show', '--silent', '--json', `${name}@${version}`], {
+      capture: true,
+      errorReturn: true,
+    });
 
     if (result.failed) return undefined;
 

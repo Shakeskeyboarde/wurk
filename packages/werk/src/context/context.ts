@@ -5,7 +5,7 @@ import { type Spawn, spawn } from '../utils/spawn.js';
 import { Workspace, type WorkspaceOptions } from '../workspace/workspace.js';
 import { BaseContext } from './base-context.js';
 
-export interface RootContextOptions<A extends CommanderArgs, O extends CommanderOptions> {
+export interface ContextOptions<A extends CommanderArgs, O extends CommanderOptions> {
   readonly log?: LogOptions;
   readonly command: CommandInfo;
   readonly rootDir: string;
@@ -17,7 +17,10 @@ export interface RootContextOptions<A extends CommanderArgs, O extends Commander
   readonly startWorker: (data?: any) => Promise<boolean>;
 }
 
-export class RootContext<A extends CommanderArgs, O extends CommanderOptions> extends BaseContext {
+export class Context<
+  A extends CommanderArgs = CommanderArgs,
+  O extends CommanderOptions = CommanderOptions,
+> extends BaseContext {
   #startWorker: (data?: any) => Promise<boolean>;
 
   /**
@@ -61,7 +64,7 @@ export class RootContext<A extends CommanderArgs, O extends CommanderOptions> ex
    */
   readonly workerData: any;
 
-  constructor(options: RootContextOptions<A, O>) {
+  constructor(options: ContextOptions<A, O>) {
     super();
     const { log, command, rootDir, args, opts, workspaces, isWorker, workerData, startWorker } = options;
 

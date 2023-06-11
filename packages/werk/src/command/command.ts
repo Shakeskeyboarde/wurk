@@ -2,9 +2,9 @@ import { isMainThread } from 'node:worker_threads';
 
 import { type Commander, type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
 import { CleanupContext, type CleanupContextOptions } from '../context/cleanup-context.js';
+import { Context, type ContextOptions } from '../context/context.js';
+import { EachContext, type EachContextOptions } from '../context/each-context.js';
 import { InitContext, type InitContextOptions } from '../context/init-context.js';
-import { RootContext, type RootContextOptions } from '../context/root-context.js';
-import { WorkspaceContext, type WorkspaceContextOptions } from '../context/workspace-context.js';
 import { startWorker } from '../utils/start-worker.js';
 
 export interface CommandHooks<A extends CommanderArgs, O extends CommanderOptions, AA extends A = A, OO extends O = O> {
@@ -16,15 +16,15 @@ export interface CommandHooks<A extends CommanderArgs, O extends CommanderOption
   /**
    * Run once before handling individual workspaces.
    */
-  readonly before?: (context: RootContext<AA, OO>) => Promise<void>;
+  readonly before?: (context: Context<AA, OO>) => Promise<void>;
   /**
    * Run once for each workspace.
    */
-  readonly each?: (context: WorkspaceContext<AA, OO>) => Promise<void>;
+  readonly each?: (context: EachContext<AA, OO>) => Promise<void>;
   /**
    * Run once after handling individual workspaces.
    */
-  readonly after?: (context: RootContext<AA, OO>) => Promise<void>;
+  readonly after?: (context: Context<AA, OO>) => Promise<void>;
   /**
    * Run once after all other hooks. This is the last chance to perform
    * cleanup, and it must be synchronous.
@@ -34,9 +34,9 @@ export interface CommandHooks<A extends CommanderArgs, O extends CommanderOption
 
 export interface CommandType<A extends CommanderArgs, O extends CommanderOptions> {
   readonly init: (options: InitContextOptions) => Commander<any, any>;
-  readonly before: (options: Omit<RootContextOptions<A, O>, 'startWorker'>) => Promise<void>;
-  readonly each: (options: Omit<WorkspaceContextOptions<A, O>, 'startWorker'>) => Promise<void>;
-  readonly after: (options: Omit<RootContextOptions<A, O>, 'startWorker'>) => Promise<void>;
+  readonly before: (options: Omit<ContextOptions<A, O>, 'startWorker'>) => Promise<void>;
+  readonly each: (options: Omit<EachContextOptions<A, O>, 'startWorker'>) => Promise<void>;
+  readonly after: (options: Omit<ContextOptions<A, O>, 'startWorker'>) => Promise<void>;
   readonly cleanup: (context: CleanupContextOptions<A, O>) => void;
 }
 
@@ -44,9 +44,9 @@ const COMMAND = Symbol('WerkCommand');
 
 export class Command<A extends CommanderArgs, O extends CommanderOptions> implements CommandType<A, O> {
   readonly #init: ((context: InitContext) => Commander<A, O>) | undefined;
-  readonly #before: ((context: RootContext<A, O>) => Promise<void>) | undefined;
-  readonly #each: ((context: WorkspaceContext<A, O>) => Promise<void>) | undefined;
-  readonly #after: ((context: RootContext<A, O>) => Promise<void>) | undefined;
+  readonly #before: ((context: Context<A, O>) => Promise<void>) | undefined;
+  readonly #each: ((context: EachContext<A, O>) => Promise<void>) | undefined;
+  readonly #after: ((context: Context<A, O>) => Promise<void>) | undefined;
   readonly #cleanup: ((context: CleanupContext<A, O>) => void) | undefined;
 
   constructor({ init, before, each, after, cleanup }: CommandHooks<A, O>) {
@@ -75,10 +75,10 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
     return options.commander;
   };
 
-  readonly before = async (options: Omit<RootContextOptions<A, O>, 'startWorker'>): Promise<void> => {
+  readonly before = async (options: Omit<ContextOptions<A, O>, 'startWorker'>): Promise<void> => {
     if (!this.#before) return;
 
-    const context = new RootContext({
+    const context = new Context({
       ...options,
       isWorker: !isMainThread,
       workerData: undefined,
@@ -93,10 +93,10 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
       .finally(() => context.destroy());
   };
 
-  readonly each = async (options: Omit<WorkspaceContextOptions<A, O>, 'startWorker'>): Promise<void> => {
+  readonly each = async (options: Omit<EachContextOptions<A, O>, 'startWorker'>): Promise<void> => {
     if (!this.#each) return;
 
-    const context = new WorkspaceContext({
+    const context = new EachContext({
       ...options,
       isWorker: !isMainThread,
       workerData: undefined,
@@ -111,10 +111,10 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
       .finally(() => context.destroy());
   };
 
-  readonly after = async (options: Omit<RootContextOptions<A, O>, 'startWorker'>): Promise<void> => {
+  readonly after = async (options: Omit<ContextOptions<A, O>, 'startWorker'>): Promise<void> => {
     if (!this.#after) return;
 
-    const context = new RootContext({
+    const context = new Context({
       ...options,
       isWorker: !isMainThread,
       workerData: undefined,

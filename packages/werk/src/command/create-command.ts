@@ -1,20 +1,20 @@
 import { isMainThread, workerData } from 'node:worker_threads';
 
 import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
-import { type RootContextOptions } from '../context/root-context.js';
-import { type WorkspaceContextOptions } from '../context/workspace-context.js';
+import { type ContextOptions } from '../context/context.js';
+import { type EachContextOptions } from '../context/each-context.js';
 import { log } from '../utils/log.js';
 import { Command, type CommandHooks } from './command.js';
 
 type CommandWorkerData<A extends CommanderArgs, O extends CommanderOptions> =
   | {
       readonly stage: 'before' | 'after';
-      readonly options: Omit<RootContextOptions<A, O>, 'startWorker' | 'workerData' | 'isWorker'>;
+      readonly options: Omit<ContextOptions<A, O>, 'startWorker' | 'workerData' | 'isWorker'>;
       readonly data: any;
     }
   | {
       readonly stage: 'each';
-      readonly options: Omit<WorkspaceContextOptions<A, O>, 'startWorker' | 'workerData' | 'isWorker'>;
+      readonly options: Omit<EachContextOptions<A, O>, 'startWorker' | 'workerData' | 'isWorker'>;
       readonly data: any;
     };
 

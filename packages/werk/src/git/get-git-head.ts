@@ -4,7 +4,6 @@ export const getGitHead = async (dir: string): Promise<string | undefined> => {
   return await spawn('git', ['rev-parse', 'HEAD'], {
     cwd: dir,
     capture: true,
-    errorThrow: true,
     errorMessage: () => `Not a Git repository: ${dir}`,
   }).getOutput('utf-8');
 };

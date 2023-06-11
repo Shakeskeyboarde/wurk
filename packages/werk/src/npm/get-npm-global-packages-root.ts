@@ -8,7 +8,6 @@ export const getNpmGlobalPackagesRoot = memoize(
   async (): Promise<string> => {
     return await spawn('npm', ['root', '-g'], {
       capture: true,
-      errorThrow: true,
       errorMessage: () => 'No global NPM packages root found.',
     }).getStdout('utf-8');
   },

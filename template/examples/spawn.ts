@@ -10,7 +10,6 @@ export default createCommand({
     const status = await spawn('git', ['status', '--porcelain', '--', '.'], {
       echo: true,
       capture: true,
-      errorThrow: true,
     }).getStdout('utf-8');
 
     if (status.length !== 0) {

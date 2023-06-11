@@ -4,7 +4,6 @@ export const getGitIsClean = async (dir: string): Promise<boolean> => {
   return await spawn('git', ['status', '--porcelain', dir], {
     cwd: dir,
     capture: true,
-    errorThrow: true,
     errorMessage: () => `Not a Git repository: ${dir}`,
   })
     .getOutput('utf-8')

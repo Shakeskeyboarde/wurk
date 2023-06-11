@@ -11,7 +11,7 @@ export default createCommand({
   each: async ({ args, workspace, spawn }) => {
     if (!workspace.selected) return;
 
-    const exitCode = await spawn(...args, { echo: true }).getExitCode();
+    const exitCode = await spawn(...args, { echo: true, errorReturn: true }).getExitCode();
 
     if (exitCode !== 0) process.exitCode = exitCode;
   },

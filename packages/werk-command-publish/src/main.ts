@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import { stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { createCommand, type MutablePackageJson, type WorkspaceContext } from '@werk/cli';
+import { createCommand, type EachContext, type MutablePackageJson } from '@werk/cli';
 
 const resultPromises = new Map<string, Promise<{ isPublished: boolean }>>();
 const workspacesToRestore: { name: string; dir: string }[] = [];
@@ -30,7 +30,12 @@ export default createCommand({
   },
   cleanup: ({ log, spawn }) => {
     workspacesToRestore.forEach(({ name, dir }) => {
-      if (spawn('git', ['restore', '--source=HEAD', '--staged', '--worktree', '--', dir], { echo: true }).failed) {
+      const isRestored = spawn('git', ['restore', '--source=HEAD', '--staged', '--worktree', '--', dir], {
+        echo: true,
+        errorReturn: true,
+      }).succeeded;
+
+      if (!isRestored) {
         log.warn(`Failed to restore workspace "${name}".`);
       }
     });
@@ -38,7 +43,7 @@ export default createCommand({
 });
 
 const each = async (
-  context: WorkspaceContext<[], { toArchive?: true; fromArchive?: true; dryRun?: true }>,
+  context: EachContext<[], { toArchive?: true; fromArchive?: true; dryRun?: true }>,
 ): Promise<{ isPublished: boolean }> => {
   const { log, opts, workspace } = context;
 
@@ -59,9 +64,7 @@ const each = async (
   }
 };
 
-const publishFromArchive = async (
-  context: WorkspaceContext<[], { dryRun?: true }>,
-): Promise<{ isPublished: boolean }> => {
+const publishFromArchive = async (context: EachContext<[], { dryRun?: true }>): Promise<{ isPublished: boolean }> => {
   const { log, opts, workspace, spawn } = context;
   const { dryRun = false } = opts;
   const filename = join(workspace.dir, `${workspace.name.replace(/^@/u, '').replace(/\//gu, '-')}.tgz`);
@@ -76,14 +79,13 @@ const publishFromArchive = async (
 
   await spawn('npm', [`--loglevel=${log.getLevel().name}`, 'publish', ...(dryRun ? ['--dry-run'] : []), filename], {
     echo: true,
-    errorThrow: true,
   });
 
   return { isPublished: true };
 };
 
 const publishFromFilesystem = async (
-  context: WorkspaceContext<[], { toArchive?: true; dryRun?: true }>,
+  context: EachContext<[], { toArchive?: true; dryRun?: true }>,
 ): Promise<{ isPublished: boolean }> => {
   const { log, opts, workspace, spawn } = context;
 
@@ -155,12 +157,10 @@ const publishFromFilesystem = async (
   if (toArchive) {
     await spawn('npm', [`--loglevel=${log.getLevel().name}`, 'pack', ...(dryRun ? ['--dry-run'] : [])], {
       echo: true,
-      errorThrow: true,
     });
   } else {
     await spawn('npm', [`--loglevel=${log.getLevel().name}`, 'publish', ...(dryRun ? ['--dry-run'] : [])], {
       echo: true,
-      errorThrow: true,
     });
   }
 

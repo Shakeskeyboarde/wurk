@@ -19,7 +19,7 @@ export interface SpawnOptions {
   readonly capture?: boolean;
   readonly stream?: boolean;
   readonly input?: boolean;
-  readonly errorThrow?: boolean;
+  readonly errorReturn?: boolean;
   readonly errorEcho?: boolean;
   readonly errorMessage?: (error: unknown, exitCode: number) => string;
   readonly log?: Log;
@@ -68,7 +68,7 @@ export const spawn = (
     capture = false,
     stream = false,
     input = false,
-    errorThrow = false,
+    errorReturn = false,
     errorEcho = false,
     errorMessage,
     log = defaultLog,
@@ -136,29 +136,30 @@ export const spawn = (
       if (errorEcho && error != null) log.verbose(Buffer.concat(stdio).toString('utf-8').trim());
       if (errorMessage && error != null) log.error(errorMessage(error, exitCode));
 
-      if (errorThrow && error != null) {
+      if (!errorReturn && error != null) {
         reject(error);
-      } else {
-        const result: SpawnResult = {
-          stdout: Buffer.concat(stdout),
-          stderr: Buffer.concat(stderr),
-          output: Buffer.concat(stdio),
-          exitCode,
-          error,
-          succeeded: exitCode === 0,
-          failed: exitCode !== 0,
-          getJson: <T>(): T => JSON.parse(result.stdout.toString('utf-8')),
-          tryGetJson: <T>(): T | undefined => {
-            try {
-              return result.getJson();
-            } catch {
-              return undefined;
-            }
-          },
-        };
-
-        resolve(result);
+        return;
       }
+
+      const result: SpawnResult = {
+        stdout: Buffer.concat(stdout),
+        stderr: Buffer.concat(stderr),
+        output: Buffer.concat(stdio),
+        exitCode,
+        error,
+        succeeded: exitCode === 0,
+        failed: exitCode !== 0,
+        getJson: <T>(): T => JSON.parse(result.stdout.toString('utf-8')),
+        tryGetJson: <T>(): T | undefined => {
+          try {
+            return result.getJson();
+          } catch {
+            return undefined;
+          }
+        },
+      };
+
+      resolve(result);
     }),
   );
 

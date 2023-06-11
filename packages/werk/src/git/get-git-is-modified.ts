@@ -4,7 +4,6 @@ export const getGitIsModified = async (dir: string, commit: string): Promise<boo
   return await spawn('git', ['diff', '--name-only', `${commit}..HEAD`, '--', dir], {
     cwd: dir,
     capture: true,
-    errorThrow: true,
     errorMessage: () => `Not a Git repository: ${dir}`,
   })
     .getOutput('utf-8')
