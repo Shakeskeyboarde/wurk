@@ -103,7 +103,7 @@ const publishFromFilesystem = async (
   // Ensure local production dependencies have been published, and there are no local modifications.
   await Promise.all(
     workspace
-      .getLocalDependencies(['dependencies', 'peerDependencies', 'optionalDependencies'])
+      .getLocalDependencies({ scopes: ['dependencies', 'peerDependencies', 'optionalDependencies'] })
       .map(async (dependency) => {
         // Dependency published successfully during this command invocation.
         if (await getResult(dependency.name).then((result) => result.isPublished)) return;
@@ -137,7 +137,7 @@ const publishFromFilesystem = async (
   // (file:) and wildcard versions should not be published to the
   // registry.
   for (const scope of ['dependencies', 'peerDependencies', 'optionalDependencies'] as const) {
-    const dependencies = workspace.getLocalDependencies([scope]);
+    const dependencies = workspace.getLocalDependencies({ scopes: [scope] });
 
     for (const dependency of dependencies) {
       // Try to match the existing version range prefix, or default to "^".
