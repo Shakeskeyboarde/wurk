@@ -117,7 +117,7 @@ The `context.workspaces` and `context.workspace` properties contain instances of
 
 **Metadata methods:**
 
-- `getLocalDependencies(scopes?)`: Gets the workspaces which are local dependencies of this workspace. If scopes is not specified, dependencies from all scopes are returned.
+- `getLocalDependencies({ scopes?, ignoreVersions? }?)`: Gets the workspaces which are local dependencies of this workspace. If `scopes` is not specified, dependencies from all scopes are returned. If `ignoreVersions` is true, the dependency versions are ignored.
 - `getNpmMetadata()`: Gets the registry metadata for the workspace. This method is memoized.
 - `getNpmIsPublished()`: Returns true if the current workspace name and version are published to the registry.
 - `getGitIsRepo()`: Returns true if the workspace root directory is part of a git repository.

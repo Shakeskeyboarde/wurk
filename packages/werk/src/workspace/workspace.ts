@@ -125,7 +125,7 @@ export class Workspace implements WorkspaceOptions {
   /**
    * Get the local dependencies of the workspace.
    */
-  readonly getLocalDependencies = (options: WorkspaceLocalDependenciesOptions): Workspace[] => {
+  readonly getLocalDependencies = (options?: WorkspaceLocalDependenciesOptions): Workspace[] => {
     return getWorkspaceLocalDependencies(this, this.#context.workspaces.values(), options);
   };
 
