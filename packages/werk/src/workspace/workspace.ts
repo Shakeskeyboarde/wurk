@@ -11,7 +11,10 @@ import { readJsonFile } from '../utils/read-json-file.js';
 import { writeJsonFile } from '../utils/write-json-file.js';
 import { getWorkspaceDependencyNames } from './get-workspace-dependency-names.js';
 import { getWorkspaceIsModified } from './get-workspace-is-modified.js';
-import { getWorkspaceLocalDependencies } from './get-workspace-local-dependencies.js';
+import {
+  getWorkspaceLocalDependencies,
+  type WorkspaceLocalDependenciesOptions,
+} from './get-workspace-local-dependencies.js';
 
 type PartialContext = Pick<Context, 'workspaces' | 'spawn'>;
 
@@ -110,7 +113,7 @@ export class Workspace implements WorkspaceOptions {
    * Apply a deeply merged patch to the `package.json` file in the
    * workspace directory.
    *
-   * **Note:** Changes to the `package.json` file do not change the
+   * **NOTE:** Changes to the `package.json` file do not change the
    * properties of this `Workspace` instance. The `Workspace` instance
    * always represents the initial state of the workspace when the
    * command was started.
@@ -122,10 +125,8 @@ export class Workspace implements WorkspaceOptions {
   /**
    * Get the local dependencies of the workspace.
    */
-  readonly getLocalDependencies = (
-    scopes?: ('dependencies' | 'peerDependencies' | 'optionalDependencies' | 'devDependencies')[],
-  ): Workspace[] => {
-    return getWorkspaceLocalDependencies(this, this.#context.workspaces.values(), { scopes });
+  readonly getLocalDependencies = (options: WorkspaceLocalDependenciesOptions): Workspace[] => {
+    return getWorkspaceLocalDependencies(this, this.#context.workspaces.values(), options);
   };
 
   /**

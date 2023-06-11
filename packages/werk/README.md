@@ -50,7 +50,7 @@ All [commands](#official-commands) are modular and must be installed separately.
 npm i -D @werk/command-list
 ```
 
-**Note:** Because Werk command packages should depend on the `@work/cli` package, you have effectively pinned your project to a specific version of Werk (it's a feature)!
+**NOTE:** Because Werk command packages should depend on the `@work/cli` package, you have effectively pinned your project to a specific version of Werk (it's a feature)!
 
 Now, the `list` command is available.
 
@@ -154,7 +154,7 @@ From the included workspaces, any matching a `--not-*` options will be excluded.
 
 And finally, if the `--with-dependencies` option is used, any dependencies of the remaining workspaces will be forcibly included, even if they were removed by a `--not-*` option.
 
-**Note:** It is entirely up to each command to honor the "selected" workspaces. They are strongly encouraged to do so, but may choose not to if it doesn't make sense to the command.
+**NOTE:** It is entirely up to each command to honor the "selected" workspaces. They are strongly encouraged to do so, but may choose not to if it doesn't make sense to the command.
 
 ### Parallelization Options
 

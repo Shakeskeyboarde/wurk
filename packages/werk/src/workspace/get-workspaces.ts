@@ -1,5 +1,6 @@
 import { getNpmMetadata } from '../npm/get-npm-metadata.js';
 import { memoize } from '../utils/memoize.js';
+import { getWorkspaceDependencyNames } from './get-workspace-dependency-names.js';
 import { getWorkspaceIsModified } from './get-workspace-is-modified.js';
 import { getWorkspaceLocalDependencies } from './get-workspace-local-dependencies.js';
 import { type WorkspaceOptions } from './workspace.js';
@@ -28,11 +29,9 @@ const getSorted = (workspaces: readonly WorkspaceOptions[]): readonly WorkspaceO
     let count = 0;
 
     unresolved.forEach((workspace) => {
-      const isBlocked = getWorkspaceLocalDependencies(workspace, workspaces).some(
-        ({ name }) => localNames.has(name) && !resolvedNames.has(name),
-      );
-
-      if (isBlocked) return;
+      if (getWorkspaceDependencyNames(workspace).some((name) => localNames.has(name) && !resolvedNames.has(name))) {
+        return;
+      }
 
       count++;
       unresolved.delete(workspace.name);

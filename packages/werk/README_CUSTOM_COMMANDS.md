@@ -125,7 +125,7 @@ The `context.workspaces` and `context.workspace` properties contain instances of
 - `getGitIsClean()`: Returns true if the workspace's git working tree is clean.
 - `getGitIsModified()`: Returns true the workspace is not published, the published `gitHead` metadata is missing, or if there is a difference between the `gitHead` commit and the current HEAD.
 
-**Note:** All Git methods except `getGitIsRepo()` will throw if the workspace is not part of a git repository.
+**NOTE:** All Git methods except `getGitIsRepo()` will throw if the workspace is not part of a git repository.
 
 ## Command Line Parsing
 
