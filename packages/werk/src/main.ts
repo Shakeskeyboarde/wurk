@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 import { Option } from '@commander-js/extra-typings';
 
-import { mainAction } from './actions/main-action.js';
+import { mainAction } from './main-action.js';
 import { Commander } from './commander/commander.js';
 import { onError } from './error.js';
 import { type GlobalOptions } from './options.js';
