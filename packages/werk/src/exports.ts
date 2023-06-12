@@ -6,7 +6,6 @@ export { type CleanupContext } from './context/cleanup-context.js';
 export { type Context } from './context/context.js';
 export { type EachContext } from './context/each-context.js';
 export { type InitContext } from './context/init-context.js';
-export { type NpmMetadata } from './npm/get-npm-metadata.js';
 export { Log } from './utils/log.js';
 export { type MutablePackageJson, type PackageJson } from './utils/package-json.js';
 export { type Spawn, type SpawnOptions, type SpawnPromise } from './utils/spawn.js';

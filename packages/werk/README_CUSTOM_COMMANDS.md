@@ -118,18 +118,20 @@ The `context.workspaces` and `context.workspace` properties contain instances of
 **Metadata methods:**
 
 - `getLocalDependencies({ scopes?, ignoreVersions? }?)`: Gets the workspaces which are local dependencies of this workspace. If `scopes` is not specified, dependencies from all scopes are returned. If `ignoreVersions` is true, the dependency versions are ignored.
-- `getNpmMetadata()`: Gets the registry metadata for the workspace. This method is memoized.
 - `getNpmIsPublished()`: Returns true if the current workspace name and version are published to the registry.
 - `getGitIsRepo()`: Returns true if the workspace root directory is part of a git repository.
-- `getGitHead()`: Gets the commit hash of the workspace's git HEAD.
 - `getGitIsClean()`: Returns true if the workspace's git working tree is clean.
-- `getGitIsModified()`: Returns true the workspace is not published, the published `gitHead` metadata is missing, or if there is a difference between the `gitHead` commit and the current HEAD.
+- `getGitHead()`: Gets the commit hash of the workspace's git HEAD.
+- `getGitFromRevision()`: Gets the "from" revision which should be used for detecting changes.
+- `getGitIsModified()`: Returns true the workspace is not published, the published Git revision cannot be detected, or if there is a difference between the published revision and the current HEAD.
 
 **NOTE:** All Git methods except `getGitIsRepo()` will throw if the workspace is not part of a git repository.
 
 ## Command Line Parsing
 
-The `init` hook `context.commander` property is just a [Commander](https://www.npmjs.com/package/commander) command. You may configure it in any way you want. The configured command must be returned so that Typescript can infer the `context.args` and `context.opts` types for the other hooks.
+The `init` hook `context.commander` property is just a [Commander](https://www.npmjs.com/package/commander) command. You may configure it almost any way you want. However, sub-commands are not officially supported, because they cannot be wired into the Werk command lifecycle.
+
+The configured command must be returned so that Typescript can infer the `context.args` and `context.opts` types for the other hooks.
 
 ```ts
 export default createCommand({
