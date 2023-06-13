@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { createCommand, type EachContext, type MutablePackageJson } from '@werk/cli';
 
-const resultPromises = new Map<string, Promise<{ isPublished: boolean }>>();
+const isPublished = new Map<string, boolean>();
 const workspacesToRestore: { name: string; dir: string }[] = [];
 
 export default createCommand({
@@ -18,15 +18,26 @@ export default createCommand({
       )
       .option('--dry-run', 'Perform a dry run for validation.');
   },
+  before: async ({ workspaces, forceWait }) => {
+    forceWait();
+    workspaces.forEach(({ name }) => isPublished.set(name, false));
+  },
   each: async (context) => {
-    const promise = each(context);
+    const { log, opts, workspace } = context;
 
-    resultPromises.set(
-      context.workspace.name,
-      promise.catch(() => ({ isPublished: false })),
-    );
+    if (workspace.private) {
+      log.verbose(`Skipping workspace "${workspace.name}" because it is private.`);
+      return;
+    }
 
-    await promise;
+    if (!workspace.selected) {
+      log.verbose(`Skipping workspace "${workspace.name}" because it is not selected.`);
+      return;
+    }
+
+    const result = opts.fromArchive ? await publishFromArchive(context) : await publishFromFilesystem(context);
+
+    isPublished.set(workspace.name, result);
   },
   cleanup: ({ log, spawn }) => {
     workspacesToRestore.forEach(({ name, dir }) => {
@@ -42,29 +53,7 @@ export default createCommand({
   },
 });
 
-const each = async (
-  context: EachContext<[], { toArchive?: true; fromArchive?: true; dryRun?: true }>,
-): Promise<{ isPublished: boolean }> => {
-  const { log, opts, workspace } = context;
-
-  if (workspace.private) {
-    log.verbose(`Skipping workspace "${workspace.name}" because it is private.`);
-    return { isPublished: false };
-  }
-
-  if (!workspace.selected) {
-    log.verbose(`Skipping workspace "${workspace.name}" because it is not selected.`);
-    return { isPublished: false };
-  }
-
-  if (opts.fromArchive) {
-    return await publishFromArchive(context);
-  } else {
-    return await publishFromFilesystem(context);
-  }
-};
-
-const publishFromArchive = async (context: EachContext<[], { dryRun?: true }>): Promise<{ isPublished: boolean }> => {
+const publishFromArchive = async (context: EachContext<[], { dryRun?: true }>): Promise<boolean> => {
   const { log, opts, workspace, spawn } = context;
   const { dryRun = false } = opts;
   const filename = join(workspace.dir, `${workspace.name.replace(/^@/u, '').replace(/\//gu, '-')}.tgz`);
@@ -74,24 +63,24 @@ const publishFromArchive = async (context: EachContext<[], { dryRun?: true }>): 
 
   if (!filenameExists) {
     log.verbose(`Skipping workspace "${workspace.name}@${workspace.version}" because the archive file is missing.`);
-    return { isPublished: false };
+    return false;
   }
 
   await spawn('npm', [`--loglevel=${log.getLevel().name}`, 'publish', ...(dryRun ? ['--dry-run'] : []), filename], {
     echo: true,
   });
 
-  return { isPublished: true };
+  return true;
 };
 
 const publishFromFilesystem = async (
   context: EachContext<[], { toArchive?: true; dryRun?: true }>,
-): Promise<{ isPublished: boolean }> => {
+): Promise<boolean> => {
   const { log, opts, workspace, spawn } = context;
 
   if (await workspace.getNpmIsPublished()) {
     log.verbose(`Skipping workspace "${workspace.name}@${workspace.version}" because it is already published.`);
-    return { isPublished: false };
+    return false;
   }
 
   const isGitRepo = await workspace.getGitIsRepo();
@@ -106,7 +95,7 @@ const publishFromFilesystem = async (
       .getLocalDependencies({ scopes: ['dependencies', 'peerDependencies', 'optionalDependencies'] })
       .map(async (dependency) => {
         // Dependency published successfully during this command invocation.
-        if (await getResult(dependency.name).then((result) => result.isPublished)) return;
+        if (isPublished.get(dependency.name)) return;
 
         if (isGitRepo) {
           // Dependency was already published and is unmodified.
@@ -164,13 +153,5 @@ const publishFromFilesystem = async (
     });
   }
 
-  return { isPublished: true };
-};
-
-const getResult = async (name: string): Promise<{ isPublished: boolean }> => {
-  const eachPromise = resultPromises.get(name);
-
-  assert(eachPromise, `Workspace order is broken. The "each" hook for "${name}" has not been invoked.`);
-
-  return await eachPromise;
+  return true;
 };
