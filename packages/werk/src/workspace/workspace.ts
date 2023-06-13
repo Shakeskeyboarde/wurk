@@ -110,16 +110,16 @@ export class Workspace implements WorkspaceOptions {
   };
 
   /**
-   * Apply a deeply merged patch to the `package.json` file in the
-   * workspace directory.
+   * Apply zero or more deeply merged patches to the `package.json` file
+   * in the workspace directory.
    *
    * **Note:** Changes to the `package.json` file do not change the
    * properties of this `Workspace` instance. The `Workspace` instance
    * always represents the initial state of the workspace when the
    * command was started.
    */
-  readonly patchPackageJson = async <T extends Record<string, unknown>>(json: T): Promise<void> => {
-    await patchJsonFile(join(this.dir, 'package.json'), json);
+  readonly patchPackageJson = async <T extends Record<string, unknown>[]>(...jsonPatches: T[]): Promise<void> => {
+    await patchJsonFile(join(this.dir, 'package.json'), ...jsonPatches);
   };
 
   /**
