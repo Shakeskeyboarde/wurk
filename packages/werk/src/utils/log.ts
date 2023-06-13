@@ -23,7 +23,7 @@ export const LOG_LEVEL = {
   silly: 60,
 } as const;
 
-export class Log implements LogOptions {
+export class Log {
   #isDestroyed = false;
 
   readonly #trim;

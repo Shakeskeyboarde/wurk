@@ -153,17 +153,21 @@ export class Workspace implements WorkspaceOptions {
 
   /**
    * Get the current Git HEAD commit hash.
+   *
+   * Can be overridden by the `--git-head` command line option.
    */
   readonly getGitHead = async (): Promise<string | undefined> => {
-    return await getGitHead(this.dir);
+    return this.#gitHead ?? (await getGitHead(this.dir));
   };
 
   /**
    * Get the "from" revision which should be used for detecting changes
    * in the workspace as compared to the current head (`this.getGitHead`).
+   *
+   * Can be overridden by the `--git-from-revision` command line option.
    */
   readonly getGitFromRevision = async (): Promise<string | undefined> => {
-    return await getNpmMetadata(this.name, this.version).then((meta) => meta?.gitHead);
+    return this.#gitFromRevision ?? (await getNpmMetadata(this.name, this.version).then((meta) => meta?.gitHead));
   };
 
   /**

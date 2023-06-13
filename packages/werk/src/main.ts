@@ -75,6 +75,8 @@ const asyncMain = async (): Promise<void> => {
     .addOption(new Option('--not-unmodified', 'Exclude unmodified workspaces.').conflicts('notModified'))
     .option('--no-wait', 'No waiting for dependency processing to complete.')
     .option('--no-prefix', 'No output prefixes.')
+    .option('--git-head <sha>', 'Set the commit hash used as the current Git head.')
+    .option('--git-from-revision <rev>', 'Set the revision used for detecting modifications.')
     .version(version)
     .passThroughOptions()
     .action(async (cmd, cmdArgs, options) => {
@@ -98,6 +100,10 @@ const asyncMain = async (): Promise<void> => {
           parallel: options.parallel ?? false,
           concurrency: options.concurrency,
           wait: options.wait,
+        },
+        git: {
+          gitHead: options.gitHead,
+          gitFromRevision: options.gitFromRevision,
         },
       };
 

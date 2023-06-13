@@ -60,14 +60,18 @@ export const mainAction = async ({ commander, cmd, cmdArgs, globalOpts }: MainAc
     .action(async () => {
       const args = subCommander.processedArgs;
       const opts = subCommander.opts();
+      const { gitHead, gitFromRevision } = globalOpts.git;
       let forceWait = false;
 
       await command.before({
+        log: undefined,
         command: commandInfo,
         rootDir,
         args,
         opts,
         workspaces,
+        gitHead,
+        gitFromRevision,
         isWorker: false,
         workerData: null,
         forceWait: () => {
@@ -103,6 +107,8 @@ export const mainAction = async ({ commander, cmd, cmdArgs, globalOpts }: MainAc
               opts,
               workspaces,
               workspace,
+              gitHead,
+              gitFromRevision,
               isWorker: false,
               workerData: null,
             });
@@ -119,11 +125,14 @@ export const mainAction = async ({ commander, cmd, cmdArgs, globalOpts }: MainAc
       if (process.exitCode != null) return;
 
       await command.after({
+        log: undefined,
         command: commandInfo,
         rootDir,
         args,
         opts,
         workspaces,
+        gitHead,
+        gitFromRevision,
         isWorker: false,
         workerData: null,
       });

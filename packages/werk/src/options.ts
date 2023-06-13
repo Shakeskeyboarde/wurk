@@ -12,8 +12,14 @@ export interface RunOptions {
   readonly wait: boolean;
 }
 
+export interface GitOptions {
+  readonly gitHead?: string;
+  readonly gitFromRevision?: string;
+}
+
 export interface GlobalOptions {
   readonly log: LogOptions;
   readonly select: SelectOptions;
   readonly run: RunOptions;
+  readonly git: GitOptions;
 }

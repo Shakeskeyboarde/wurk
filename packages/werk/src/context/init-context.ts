@@ -10,7 +10,7 @@ export interface InitContextOptions {
   readonly commander: Commander;
 }
 
-export class InitContext extends BaseContext implements InitContextOptions {
+export class InitContext extends BaseContext {
   /**
    * Contextual logger.
    */

@@ -6,12 +6,14 @@ import { Workspace, type WorkspaceOptions } from '../workspace/workspace.js';
 import { BaseContext } from './base-context.js';
 
 export interface BaseAsyncContextOptions<A extends CommanderArgs, O extends CommanderOptions> {
-  readonly log?: LogOptions;
+  readonly log: LogOptions | undefined;
   readonly command: CommandInfo;
   readonly rootDir: string;
   readonly args: A;
   readonly opts: O;
   readonly workspaces: readonly WorkspaceOptions[];
+  readonly gitHead: string | undefined;
+  readonly gitFromRevision: string | undefined;
   readonly isWorker: boolean;
   readonly workerData: any;
   readonly startWorker: (data?: any) => Promise<boolean>;
@@ -66,7 +68,19 @@ export abstract class BaseAsyncContext<
 
   constructor(options: BaseAsyncContextOptions<A, O>) {
     super();
-    const { log, command, rootDir, args, opts, workspaces, isWorker, workerData, startWorker } = options;
+    const {
+      log,
+      command,
+      rootDir,
+      args,
+      opts,
+      workspaces,
+      gitHead,
+      gitFromRevision,
+      isWorker,
+      workerData,
+      startWorker,
+    } = options;
 
     this.log = new Log(log);
     this.command = command;
@@ -74,7 +88,10 @@ export abstract class BaseAsyncContext<
     this.args = args;
     this.opts = opts;
     this.workspaces = new Map(
-      workspaces.map((workspace) => [workspace.name, new Workspace({ ...workspace, context: this })]),
+      workspaces.map((workspace) => [
+        workspace.name,
+        new Workspace({ ...workspace, context: this, gitHead, gitFromRevision }),
+      ]),
     );
     this.isWorker = isWorker;
     this.workerData = workerData;

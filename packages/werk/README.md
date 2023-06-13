@@ -12,6 +12,7 @@ An open-minded monorepo tool, with opinionated plugins.
   - [Filtering Options](#filtering-options)
   - [Parallelization Options](#parallelization-options)
   - [Logging Options](#logging-options)
+  - [Git Options](#git-options)
 
 ## Features
 
@@ -175,3 +176,10 @@ By default, workspaces are processed serially. This is generally the slowest opt
   - Do not add prefixes to command output.
 
 The log level can also be set using the `WERK_LOG_LEVEL` environment variable. The command line option takes precedence over the environment variable.
+
+### Git Options
+
+- `--git-head <sha>`
+  - Use a specific Git commit as the "HEAD" commit. If not specified, the current commit will be used.
+- `--git-from-revision <rev>`
+  - Use a specific Git revision when detecting modifications. If not specified, the `gitHead` registry metadata value for the current version will be used.
