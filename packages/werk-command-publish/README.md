@@ -2,7 +2,7 @@
 
 Publish workspaces.
 
-**NOTE:** Only unpublished versions of public workspaces are published!
+**Note:** Only unpublished versions of public workspaces are published!
 
 ## Install
 

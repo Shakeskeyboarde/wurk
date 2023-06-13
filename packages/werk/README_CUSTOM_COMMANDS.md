@@ -126,7 +126,7 @@ The `context.workspaces` and `context.workspace` properties contain instances of
 - `getGitFromRevision()`: Gets the "from" revision which should be used for detecting changes.
 - `getGitIsModified()`: Returns true the workspace is not published, the published Git revision cannot be detected, or if there is a difference between the published revision and the current HEAD.
 
-**NOTE:** All Git methods except `getGitIsRepo()` will throw if the workspace is not part of a git repository.
+**Note:** All Git methods except `getGitIsRepo()` will throw if the workspace is not part of a git repository.
 
 ## Command Line Parsing
 
@@ -156,7 +156,7 @@ The `context.spawn(cmd, args?, options?)` function is a promise based helper for
 - Based on [cross-spawn](https://www.npmjs.com/package/cross-spawn), so spawning should be fairly consistent on Windows, Mac, and Linux.
 - Adds `node_modules/.bin` directories to the environment `PATH`, so locally installed binaries can be executed.
 
-**NOTE:** Using this helper is optional. However, please consider piping output from alternatively spawned processes to `log.stdout` and `log.stderr`.
+**Note:** Using this helper is optional. However, please consider piping output from alternatively spawned processes to `log.stdout` and `log.stderr`.
 
 ```ts
 const spawnPromise = spawn('git', ['status', '--porcelain'], {
@@ -271,7 +271,7 @@ The synchronous result doesn't include the `childProcess` or `stdin`.
 
 The `before`, `each`, and `after` hooks can spawn a copies of themselves in worker threads by calling the `context.startWorker(workerData?)` function.
 
-**NOTE:** Using this helper is optional. However, please consider creating and using a new `Log` instance in alternatively created threads.
+**Note:** Using this helper is optional. However, please consider creating and using a new `Log` instance in alternatively created threads.
 
 The simplest case is to always run a hook in a separate thread.
 

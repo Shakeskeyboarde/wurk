@@ -113,7 +113,7 @@ export class Workspace implements WorkspaceOptions {
    * Apply a deeply merged patch to the `package.json` file in the
    * workspace directory.
    *
-   * **NOTE:** Changes to the `package.json` file do not change the
+   * **Note:** Changes to the `package.json` file do not change the
    * properties of this `Workspace` instance. The `Workspace` instance
    * always represents the initial state of the workspace when the
    * command was started.
