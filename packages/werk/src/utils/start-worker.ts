@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { isMainThread, Worker } from 'node:worker_threads';
 
-interface WorkerOptions {
+export interface WorkerOptions {
   /**
    * Worker data.
    */

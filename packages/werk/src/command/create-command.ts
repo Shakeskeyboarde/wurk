@@ -1,26 +1,25 @@
-import { isMainThread, parentPort, workerData } from 'node:worker_threads';
+import { isMainThread, workerData } from 'node:worker_threads';
 
 import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
-import { type AfterContextOptions } from '../context/after-context.js';
-import { type BeforeContextOptions } from '../context/before-context.js';
-import { type EachContextOptions } from '../context/each-context.js';
 import { log } from '../utils/log.js';
-import { Command, type CommandHooks } from './command.js';
+import { type AfterOptions, type BeforeOptions, Command, type CommandHooks, type EachOptions } from './command.js';
+
+type WorkerOptions = 'workerData' | 'isWorker';
 
 type CommandWorkerData<A extends CommanderArgs, O extends CommanderOptions> =
   | {
       readonly stage: 'before';
-      readonly options: Omit<BeforeContextOptions<A, O>, 'startWorker' | 'workerData' | 'isWorker' | 'forceWait'>;
+      readonly options: Omit<BeforeOptions<A, O>, WorkerOptions>;
       readonly data: any;
     }
   | {
       readonly stage: 'each';
-      readonly options: Omit<EachContextOptions<A, O>, 'startWorker' | 'workerData' | 'isWorker'>;
+      readonly options: Omit<EachOptions<A, O>, WorkerOptions>;
       readonly data: any;
     }
   | {
       readonly stage: 'after';
-      readonly options: Omit<AfterContextOptions<A, O>, 'startWorker' | 'workerData' | 'isWorker'>;
+      readonly options: Omit<AfterOptions<A, O>, WorkerOptions>;
       readonly data: any;
     };
 
@@ -37,22 +36,17 @@ export const createCommand = <A extends CommanderArgs, O extends CommanderOption
   if (!isMainThread) {
     Promise.resolve()
       .then(async () => {
-        const data: CommandWorkerData<A, O> = workerData;
+        const { stage, data, options }: CommandWorkerData<A, O> = workerData;
 
-        switch (data.stage) {
+        switch (stage) {
           case 'before':
-            await command[data.stage]({
-              isWorker: true,
-              workerData: data.data,
-              forceWait: () => parentPort?.postMessage({ type: 'forceWait' }),
-              ...data.options,
-            });
+            await command.before({ isWorker: true, workerData: data, ...options });
             break;
           case 'each':
-            await command.each({ isWorker: true, workerData: data.data, ...data.options });
+            await command.each({ isWorker: true, workerData: data, ...options });
             break;
           case 'after':
-            await command[data.stage]({ isWorker: true, workerData: data.data, ...data.options });
+            await command.after({ isWorker: true, workerData: data, ...options });
             break;
         }
       })

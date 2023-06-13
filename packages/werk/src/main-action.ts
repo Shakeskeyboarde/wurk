@@ -61,7 +61,6 @@ export const mainAction = async ({ commander, cmd, cmdArgs, globalOpts }: MainAc
       const args = subCommander.processedArgs;
       const opts = subCommander.opts();
       const { gitHead, gitFromRevision } = globalOpts.git;
-      let forceWait = false;
 
       await command.before({
         log: undefined,
@@ -74,9 +73,6 @@ export const mainAction = async ({ commander, cmd, cmdArgs, globalOpts }: MainAc
         gitFromRevision,
         isWorker: false,
         workerData: null,
-        forceWait: () => {
-          forceWait = true;
-        },
       });
 
       if (process.exitCode != null) return;
@@ -93,7 +89,7 @@ export const mainAction = async ({ commander, cmd, cmdArgs, globalOpts }: MainAc
         const dependencyNames = getWorkspaceDependencyNames(workspace);
         const prerequisites = Promise.allSettled(dependencyNames.map((name) => promises.get(name)));
         const promise = Promise.resolve().then(async () => {
-          if (wait || forceWait) await prerequisites;
+          if (wait || command.isWaitForced) await prerequisites;
           await semaphore?.acquire();
 
           try {

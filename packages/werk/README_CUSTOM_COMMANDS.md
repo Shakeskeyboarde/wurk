@@ -60,6 +60,7 @@ A context object is passed to each hook callback. The properties attached to tho
 - `workspaces` (**before**, **each**, **after**): A map (by name) of all [workspaces](#workspaces).
 - `workspace` (**each**): The current [workspace](#workspaces).
 - `forceWait()` (**before**): Force dependent workspaces to wait for their dependencies (ie. ignore the CLI `--no-wait` option).
+- `backupFile(filename)` (**before**, **each**, **after**): Save the contents of a file and restore it after the command completes.
 - `spawn(cmd, args?, options?)` (**before**, **each**, **after**, **cleanup**): Spawn a process. The working directory will be the root of the current workspace if available (`each` hook), or the workspaces root otherwise.
 - `startWorker(data?)` (**before**, **each**, **after**): Re-runs the current hook in a [worker thread](https://nodejs.org/api/worker_threads.html).
 - `isWorker` (**before**, **each**, **after**): True if the hook is running in a worker thread.

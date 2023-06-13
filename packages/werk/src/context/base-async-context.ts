@@ -15,7 +15,8 @@ export interface BaseAsyncContextOptions<A extends CommanderArgs, O extends Comm
   readonly gitHead: string | undefined;
   readonly gitFromRevision: string | undefined;
   readonly isWorker: boolean;
-  readonly workerData: any;
+  readonly workerData: unknown;
+  readonly backupFile: (filename: string) => Promise<void>;
   readonly startWorker: (data?: any) => Promise<boolean>;
 }
 
@@ -79,6 +80,7 @@ export abstract class BaseAsyncContext<
       gitFromRevision,
       isWorker,
       workerData,
+      backupFile,
       startWorker,
     } = options;
 
@@ -90,7 +92,7 @@ export abstract class BaseAsyncContext<
     this.workspaces = new Map(
       workspaces.map((workspace) => [
         workspace.name,
-        new Workspace({ ...workspace, context: this, gitHead, gitFromRevision }),
+        new Workspace({ ...workspace, context: this, gitHead, gitFromRevision, backupFile }),
       ]),
     );
     this.isWorker = isWorker;

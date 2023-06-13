@@ -1,4 +1,6 @@
-import { isMainThread } from 'node:worker_threads';
+import { randomUUID } from 'node:crypto';
+import { readFile, unlink, writeFile } from 'node:fs/promises';
+import { isMainThread, parentPort } from 'node:worker_threads';
 
 import { type Commander, type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
 import { AfterContext, type AfterContextOptions } from '../context/after-context.js';
@@ -6,7 +8,23 @@ import { BeforeContext, type BeforeContextOptions } from '../context/before-cont
 import { CleanupContext, type CleanupContextOptions } from '../context/cleanup-context.js';
 import { EachContext, type EachContextOptions } from '../context/each-context.js';
 import { InitContext, type InitContextOptions } from '../context/init-context.js';
-import { startWorker } from '../utils/start-worker.js';
+import { type Log } from '../utils/log.js';
+import { startWorker, type WorkerOptions, type WorkerPromise } from '../utils/start-worker.js';
+
+type FunctionKeys<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T];
+
+export type BeforeOptions<A extends CommanderArgs, O extends CommanderOptions> = Omit<
+  BeforeContextOptions<A, O>,
+  FunctionKeys<BeforeContextOptions<CommanderArgs, CommanderOptions>>
+>;
+export type EachOptions<A extends CommanderArgs, O extends CommanderOptions> = Omit<
+  EachContextOptions<A, O>,
+  FunctionKeys<EachContextOptions<CommanderArgs, CommanderOptions>>
+>;
+export type AfterOptions<A extends CommanderArgs, O extends CommanderOptions> = Omit<
+  AfterContextOptions<A, O>,
+  FunctionKeys<AfterContextOptions<CommanderArgs, CommanderOptions>>
+>;
 
 export interface CommandHooks<A extends CommanderArgs, O extends CommanderOptions, AA extends A = A, OO extends O = O> {
   /**
@@ -34,10 +52,11 @@ export interface CommandHooks<A extends CommanderArgs, O extends CommanderOption
 }
 
 export interface CommandType<A extends CommanderArgs, O extends CommanderOptions> {
+  isWaitForced: boolean;
   readonly init: (options: InitContextOptions) => Commander<any, any>;
-  readonly before: (options: Omit<BeforeContextOptions<A, O>, 'startWorker'>) => Promise<void>;
-  readonly each: (options: Omit<EachContextOptions<A, O>, 'startWorker'>) => Promise<void>;
-  readonly after: (options: Omit<AfterContextOptions<A, O>, 'startWorker'>) => Promise<void>;
+  readonly before: (options: BeforeOptions<A, O>) => Promise<void>;
+  readonly each: (options: EachOptions<A, O>) => Promise<void>;
+  readonly after: (options: AfterOptions<A, O>) => Promise<void>;
   readonly cleanup: (context: CleanupContextOptions<A, O>) => void;
 }
 
@@ -49,6 +68,9 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
   readonly #each: ((context: EachContext<A, O>) => Promise<void>) | undefined;
   readonly #after: ((context: AfterContext<A, O>) => Promise<void>) | undefined;
   readonly #cleanup: ((context: CleanupContext<A, O>) => void) | undefined;
+  readonly #fileBackups: { filename: string; content: Buffer | null }[] = [];
+
+  isWaitForced = false;
 
   constructor({ init, before, each, after, cleanup }: CommandHooks<A, O>) {
     Object.assign(this, { [COMMAND]: true });
@@ -76,26 +98,17 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
     return options.commander;
   };
 
-  readonly before = async (options: Omit<BeforeContextOptions<A, O>, 'startWorker'>): Promise<void> => {
+  readonly before = async (options: BeforeOptions<A, O>): Promise<void> => {
     if (!this.#before) return;
 
     const context = new BeforeContext({
       ...options,
       isWorker: !isMainThread,
       workerData: undefined,
-      startWorker: (data) => {
-        const workerPromise = startWorker(options.command.main, { workerData: { stage: 'before', options, data } });
-
-        workerPromise.worker?.on('message', (message) => {
-          switch (message?.type) {
-            case 'forceWait':
-              context.forceWait();
-              break;
-          }
-        });
-
-        return workerPromise;
-      },
+      forceWait: this.#forceWait,
+      backupFile: this.#backupFile,
+      startWorker: (data) =>
+        this.#startWorker(options.command.main, { workerData: { stage: 'before', options, data } }),
     });
 
     await this.#before(context)
@@ -106,14 +119,15 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
       .finally(() => context.destroy());
   };
 
-  readonly each = async (options: Omit<EachContextOptions<A, O>, 'startWorker'>): Promise<void> => {
+  readonly each = async (options: EachOptions<A, O>): Promise<void> => {
     if (!this.#each) return;
 
     const context = new EachContext({
       ...options,
       isWorker: !isMainThread,
       workerData: undefined,
-      startWorker: (data) => startWorker(options.command.main, { workerData: { stage: 'each', options, data } }),
+      backupFile: this.#backupFile,
+      startWorker: (data) => this.#startWorker(options.command.main, { workerData: { stage: 'each', options, data } }),
     });
 
     await this.#each(context)
@@ -121,17 +135,19 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
         context.log.error(error instanceof Error ? error.message : `${error}`);
         process.exitCode = process.exitCode || 1;
       })
+      .then(() => this.#restoreBackupFiles(context.log))
       .finally(() => context.destroy());
   };
 
-  readonly after = async (options: Omit<AfterContextOptions<A, O>, 'startWorker'>): Promise<void> => {
+  readonly after = async (options: AfterOptions<A, O>): Promise<void> => {
     if (!this.#after) return;
 
     const context = new AfterContext({
       ...options,
       isWorker: !isMainThread,
       workerData: undefined,
-      startWorker: (data) => startWorker(options.command.main, { workerData: { stage: 'after', options, data } }),
+      backupFile: this.#backupFile,
+      startWorker: (data) => this.#startWorker(options.command.main, { workerData: { stage: 'after', options, data } }),
     });
 
     await this.#after(context)
@@ -155,6 +171,81 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
     } finally {
       context.destroy();
     }
+  };
+
+  #forceWait = (): void => {
+    this.isWaitForced = true;
+
+    if (parentPort) {
+      parentPort.postMessage({ type: 'forceWait' });
+    }
+  };
+
+  #backupFile = async (filename: string): Promise<void> => {
+    if (parentPort) {
+      const port = parentPort;
+
+      return await new Promise((resolve, reject) => {
+        const id = randomUUID();
+        const onResponse = (message: any): void => {
+          if (message?.type === id) {
+            port.off('message', onResponse);
+
+            if (message?.error != null) {
+              reject(new Error(message?.error?.message ?? String(message?.error)));
+            }
+
+            resolve();
+          }
+        };
+
+        port.on('message', onResponse);
+        port.postMessage({ type: 'backupFile', filename, id });
+      });
+    }
+
+    const content = await readFile(filename).catch((error) => {
+      if (error.code === 'ENOENT') return null;
+      throw error;
+    });
+
+    this.#fileBackups.push({ filename, content });
+  };
+
+  #restoreBackupFiles = async (log: Log): Promise<void> => {
+    for (const fileBackup of this.#fileBackups) {
+      try {
+        if (fileBackup.content == null) {
+          await unlink(fileBackup.filename).catch((error) => {
+            if (error?.code !== 'ENOENT') throw error;
+          });
+        } else {
+          await writeFile(fileBackup.filename, fileBackup.content);
+        }
+      } catch (error) {
+        log.error(error);
+        log.warn(`Failed to restore "${fileBackup.filename}".`);
+      }
+    }
+  };
+
+  #startWorker = (filename: string, options?: WorkerOptions): WorkerPromise => {
+    const workerPromise = startWorker(filename, options);
+
+    workerPromise.worker?.on('message', (message) => {
+      switch (message?.type) {
+        case 'forceWait':
+          this.isWaitForced = true;
+          break;
+        case 'backupFile':
+          this.#backupFile(message.filename)
+            .then(() => workerPromise.worker.postMessage({ type: message.id }))
+            .catch((error) => workerPromise.worker.postMessage({ type: message.id, error }));
+          break;
+      }
+    });
+
+    return workerPromise;
   };
 }
 

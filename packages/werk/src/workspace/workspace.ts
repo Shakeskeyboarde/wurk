@@ -1,4 +1,4 @@
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 
 import { type BaseAsyncContext } from '../context/base-async-context.js';
 import { type PackageJson } from '../exports.js';
@@ -35,6 +35,7 @@ export class Workspace {
   readonly #context: PartialContext;
   readonly #gitHead: string | undefined;
   readonly #gitFromRevision: string | undefined;
+  readonly #backupFile: (filename: string) => Promise<void>;
 
   /**
    * Absolute path of the workspace directory.
@@ -87,11 +88,13 @@ export class Workspace {
       readonly context: PartialContext;
       readonly gitHead: string | undefined;
       readonly gitFromRevision: string | undefined;
+      readonly backupFile: (filename: string) => Promise<void>;
     },
   ) {
     this.#context = options.context;
     this.#gitHead = options.gitHead;
     this.#gitFromRevision = options.gitFromRevision;
+    this.#backupFile = options.backupFile;
     this.dir = options.dir;
     this.name = options.name;
     this.version = options.version;
@@ -104,6 +107,14 @@ export class Workspace {
     this.selected = options.selected ?? false;
     this.dependencyNames = getWorkspaceDependencyNames(this);
   }
+
+  /**
+   * Backup a file and automatically restore it after the command
+   * finishes.
+   */
+  readonly backupFile = async (filename: string): Promise<void> => {
+    await this.#backupFile(resolve(this.dir, filename));
+  };
 
   /**
    * Read the `package.json` file from the workspace directory.
