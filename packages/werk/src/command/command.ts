@@ -106,7 +106,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
       isWorker: !isMainThread,
       workerData: undefined,
       forceWait: this.#forceWait,
-      backupFile: this.#backupFile,
+      saveAndRestoreFile: this.#saveAndRestoreFile,
       startWorker: (data) =>
         this.#startWorker(options.command.main, { workerData: { stage: 'before', options, data } }),
     });
@@ -126,7 +126,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
       ...options,
       isWorker: !isMainThread,
       workerData: undefined,
-      backupFile: this.#backupFile,
+      saveAndRestoreFile: this.#saveAndRestoreFile,
       startWorker: (data) => this.#startWorker(options.command.main, { workerData: { stage: 'each', options, data } }),
     });
 
@@ -146,7 +146,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
       ...options,
       isWorker: !isMainThread,
       workerData: undefined,
-      backupFile: this.#backupFile,
+      saveAndRestoreFile: this.#saveAndRestoreFile,
       startWorker: (data) => this.#startWorker(options.command.main, { workerData: { stage: 'after', options, data } }),
     });
 
@@ -181,7 +181,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
     }
   };
 
-  #backupFile = async (filename: string): Promise<void> => {
+  #saveAndRestoreFile = async (filename: string): Promise<void> => {
     if (parentPort) {
       const port = parentPort;
 
@@ -200,7 +200,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
         };
 
         port.on('message', onResponse);
-        port.postMessage({ type: 'backupFile', filename, id });
+        port.postMessage({ type: 'saveAndRestoreFile', filename, id });
       });
     }
 
@@ -237,8 +237,8 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
         case 'forceWait':
           this.isWaitForced = true;
           break;
-        case 'backupFile':
-          this.#backupFile(message.filename)
+        case 'saveAndRestoreFile':
+          this.#saveAndRestoreFile(message.filename)
             .then(() => workerPromise.worker.postMessage({ type: message.id }))
             .catch((error) => workerPromise.worker.postMessage({ type: message.id, error }));
           break;

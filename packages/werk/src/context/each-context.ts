@@ -17,10 +17,10 @@ export class EachContext<
    */
   readonly workspace: Workspace;
 
-  constructor({ workspace, gitHead, gitFromRevision, backupFile, ...superOptions }: EachContextOptions<A, O>) {
-    super({ ...superOptions, gitHead, gitFromRevision, backupFile });
+  constructor({ workspace, gitHead, gitFromRevision, saveAndRestoreFile, ...superOptions }: EachContextOptions<A, O>) {
+    super({ ...superOptions, gitHead, gitFromRevision, saveAndRestoreFile });
 
-    this.workspace = new Workspace({ ...workspace, context: this, gitHead, gitFromRevision, backupFile });
+    this.workspace = new Workspace({ ...workspace, context: this, gitHead, gitFromRevision, saveAndRestoreFile });
   }
 
   /**

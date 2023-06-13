@@ -35,7 +35,7 @@ export class Workspace {
   readonly #context: PartialContext;
   readonly #gitHead: string | undefined;
   readonly #gitFromRevision: string | undefined;
-  readonly #backupFile: (filename: string) => Promise<void>;
+  readonly #saveAndRestoreFile: (filename: string) => Promise<void>;
 
   /**
    * Absolute path of the workspace directory.
@@ -88,13 +88,13 @@ export class Workspace {
       readonly context: PartialContext;
       readonly gitHead: string | undefined;
       readonly gitFromRevision: string | undefined;
-      readonly backupFile: (filename: string) => Promise<void>;
+      readonly saveAndRestoreFile: (filename: string) => Promise<void>;
     },
   ) {
     this.#context = options.context;
     this.#gitHead = options.gitHead;
     this.#gitFromRevision = options.gitFromRevision;
-    this.#backupFile = options.backupFile;
+    this.#saveAndRestoreFile = options.saveAndRestoreFile;
     this.dir = options.dir;
     this.name = options.name;
     this.version = options.version;
@@ -112,8 +112,8 @@ export class Workspace {
    * Backup a file and automatically restore it after the command
    * finishes.
    */
-  readonly backupFile = async (filename: string): Promise<void> => {
-    await this.#backupFile(resolve(this.dir, filename));
+  readonly saveAndRestoreFile = async (filename: string): Promise<void> => {
+    await this.#saveAndRestoreFile(resolve(this.dir, filename));
   };
 
   /**

@@ -5,7 +5,6 @@ import { join } from 'node:path';
 import { createCommand, type EachContext, type MutablePackageJson } from '@werk/cli';
 
 const isPublished = new Map<string, boolean>();
-const workspacesToRestore: { name: string; dir: string }[] = [];
 
 export default createCommand({
   init: ({ commander, command }) => {
@@ -39,18 +38,6 @@ export default createCommand({
 
     isPublished.set(workspace.name, result);
   },
-  cleanup: ({ log, spawn }) => {
-    workspacesToRestore.forEach(({ name, dir }) => {
-      const isRestored = spawn('git', ['restore', '--source=HEAD', '--staged', '--worktree', '--', dir], {
-        echo: true,
-        errorReturn: true,
-      }).succeeded;
-
-      if (!isRestored) {
-        log.warn(`Failed to restore workspace "${name}".`);
-      }
-    });
-  },
 });
 
 const publishFromArchive = async (context: EachContext<[], { dryRun?: true }>): Promise<boolean> => {
@@ -83,11 +70,7 @@ const publishFromFilesystem = async (
     return false;
   }
 
-  const isGitRepo = await workspace.getGitIsRepo();
-
-  if (isGitRepo) {
-    assert(await workspace.getGitIsClean(), `Workspace "${workspace.name}" has uncommitted changes.`);
-  }
+  assert(await workspace.getGitIsClean(), `Workspace "${workspace.name}" has uncommitted changes.`);
 
   // Ensure local production dependencies have been published, and there are no local modifications.
   await Promise.all(
@@ -97,30 +80,20 @@ const publishFromFilesystem = async (
         // Dependency published successfully during this command invocation.
         if (isPublished.get(dependency.name)) return;
 
-        if (isGitRepo) {
-          // Dependency was already published and is unmodified.
-          if (!(await dependency.getGitIsModified())) return;
-        } else {
-          // Dependency was already published.
-          if (!(await dependency.getNpmIsPublished())) return;
-        }
+        // Dependency was already published and is unmodified.
+        if (!(await dependency.getIsModified())) return;
 
         throw new Error(`Local dependency "${dependency.name}@${dependency.version}" has unpublished modifications.`);
       }),
   );
 
-  const patch: MutablePackageJson = {};
-
-  if (isGitRepo) {
-    // Register cleanup of temporary changes to the package.json file.
-    workspacesToRestore.push({ name: workspace.name, dir: workspace.dir });
-
+  const patch: MutablePackageJson = {
     // Temporarily set "gitHead" in the package.json file. NPM publish
     // should do this automatically. But, it doesn't do it for packing.
     // It's also not documented well even though it is definitely added
     // intentionally in v7.
-    patch.gitHead = await workspace.getGitHead();
-  }
+    gitHead: await workspace.getGitHead(),
+  };
 
   // Temporarily update local dependency versions to real versions. File
   // (file:) and wildcard versions should not be published to the
@@ -139,16 +112,16 @@ const publishFromFilesystem = async (
     }
   }
 
-  await workspace.patchPackageJson(patch);
-
   const { toArchive = false, dryRun = false } = opts;
 
-  if (toArchive) {
-    await spawn('npm', [`--loglevel=${log.getLevel().name}`, 'pack', ...(dryRun ? ['--dry-run'] : [])], {
+  if (dryRun) {
+    await spawn('npm', [`--loglevel=${log.getLevel().name}`, toArchive ? 'pack' : 'publish', '--dry-run'], {
       echo: true,
     });
   } else {
-    await spawn('npm', [`--loglevel=${log.getLevel().name}`, 'publish', ...(dryRun ? ['--dry-run'] : [])], {
+    await workspace.saveAndRestoreFile('package.json');
+    await workspace.patchPackageJson(patch);
+    await spawn('npm', [`--loglevel=${log.getLevel().name}`, toArchive ? 'pack' : 'publish'], {
       echo: true,
     });
   }
