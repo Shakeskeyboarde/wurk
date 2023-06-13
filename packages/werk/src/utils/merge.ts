@@ -6,13 +6,18 @@ type Merge<A, B> = A | B extends Record<string, unknown>
     } & Omit<A, keyof B> &
       Omit<B, keyof A>
   : B;
-type Merged<A, B> = Simplify<Merge<A, B>>;
+type MergeRecursive<A, B extends any[]> = B extends [infer B0, ...infer BN] ? Merge<A, MergeRecursive<B0, BN>> : A;
+type Merged<A, B extends any[]> = Simplify<MergeRecursive<A, B>>;
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
-export function merge<A, B>(a: A, b: B): Merged<A, B>;
-export function merge(a: any, b: any): any {
+export function merge<A, B extends any[]>(a: A, ...b: B): Merged<A, B>;
+export function merge(a: any, ...bn: any[]): any {
+  if (bn.length === 0) return a;
+
+  const b = merge(...(bn as [any, ...any[]]));
+
   if (a !== b && isObject(a) && isObject(b)) {
     let result: Record<string, any> = { ...a };
 
