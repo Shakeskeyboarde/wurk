@@ -120,7 +120,7 @@ export class Log implements LogOptions {
     if (this.#isDestroyed) return;
 
     const string = String(
-      message instanceof Error ? (process.env.DEBUG ? message.stack ?? message : message.message) : message ?? '',
+      message instanceof Error ? (process.env.DEBUG ? message.stack ?? message : message.message) : message,
     );
     const lines = string.split(/\r?\n|\r/gu);
 
