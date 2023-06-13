@@ -11,11 +11,8 @@ export class BeforeContext<
   O extends CommanderOptions = CommanderOptions,
 > extends BaseAsyncContext<A, O> {
   /**
-   * Force the command line `--wait` option. Dependent workspace
-   * processing will wait for dependency workspaces to complete
-   * successfully before starting.
-   *
-   * **NOTE:** This method is only supported in the main thread.
+   * Force dependent workspaces to wait for their dependencies (ie. ignore
+   * the CLI `--no-wait` option).
    */
   readonly forceWait: () => void;
 
