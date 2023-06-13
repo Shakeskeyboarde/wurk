@@ -1,23 +1,10 @@
 import { getNpmMetadata } from '../npm/get-npm-metadata.js';
+import { type GitOptions, type SelectOptions } from '../options.js';
 import { memoize } from '../utils/memoize.js';
 import { getWorkspaceDependencyNames } from './get-workspace-dependency-names.js';
 import { getWorkspaceIsModified } from './get-workspace-is-modified.js';
 import { getWorkspaceLocalDependencies } from './get-workspace-local-dependencies.js';
 import { type WorkspaceOptions } from './workspace.js';
-
-export interface SelectOptions {
-  readonly withDependencies: boolean;
-  readonly includeWorkspaces: readonly string[];
-  readonly includeKeywords: readonly string[];
-  readonly excludeWorkspaces: readonly string[];
-  readonly excludeKeywords: readonly string[];
-  readonly excludePrivate: boolean;
-  readonly excludePublic: boolean;
-  readonly excludePublished: boolean;
-  readonly excludeUnpublished: boolean;
-  readonly excludeModified: boolean;
-  readonly excludeUnmodified: boolean;
-}
 
 const getSorted = (workspaces: readonly WorkspaceOptions[]): readonly WorkspaceOptions[] => {
   const unresolved = new Map(workspaces.map((workspace) => [workspace.name, workspace]));
@@ -59,16 +46,15 @@ const getSelected = async (
     excludeUnpublished,
     excludeModified,
     excludeUnmodified,
-  }: SelectOptions,
+    gitFromRevision,
+    gitHead,
+  }: SelectOptions & GitOptions,
 ): Promise<readonly WorkspaceOptions[]> => {
   const getIsPublished = async (name: string, version: string): Promise<boolean> => {
     return Boolean(await getNpmMetadata(name, version));
   };
 
-  const getIsModified = memoize(async (dir: string, name: string, version: string): Promise<boolean> => {
-    const meta = await getNpmMetadata(name, version);
-    return await getWorkspaceIsModified(dir, meta?.gitHead);
-  });
+  const getIsModified = memoize(getWorkspaceIsModified, (...args) => JSON.stringify(args));
 
   workspaces = await Promise.all(
     Array.from(workspaces).map(async (workspace) => {
@@ -88,11 +74,11 @@ const getSelected = async (
       }
 
       if (!isExcluded && excludeModified) {
-        isExcluded = await getIsModified(workspace.dir, workspace.name, workspace.version);
+        isExcluded = await getIsModified(workspace.dir, workspace.name, workspace.version, gitFromRevision, gitHead);
       }
 
       if (!isExcluded && excludeUnmodified) {
-        isExcluded = !(await getIsModified(workspace.dir, workspace.name, workspace.version));
+        isExcluded = !(await getIsModified(workspace.dir, workspace.name, workspace.version, gitFromRevision, gitHead));
       }
 
       if (isExcluded) {
@@ -125,7 +111,7 @@ const getSelected = async (
 
 export const getWorkspaces = async (
   workspaces: readonly WorkspaceOptions[],
-  options: SelectOptions,
+  options: SelectOptions & GitOptions,
 ): Promise<readonly WorkspaceOptions[]> => {
   workspaces = getSorted(workspaces);
   workspaces = await getSelected(workspaces, options);

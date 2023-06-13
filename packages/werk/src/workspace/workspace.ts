@@ -4,13 +4,13 @@ import { type BaseAsyncContext } from '../context/base-async-context.js';
 import { type PackageJson } from '../exports.js';
 import { getGitHead } from '../git/get-git-head.js';
 import { getGitIsClean } from '../git/get-git-is-clean.js';
-import { getGitIsModified } from '../git/get-git-is-modified.js';
 import { getGitIsRepo } from '../git/get-git-is-repo.js';
 import { getNpmMetadata } from '../npm/get-npm-metadata.js';
 import { patchJsonFile } from '../utils/patch-json-file.js';
 import { readJsonFile } from '../utils/read-json-file.js';
 import { writeJsonFile } from '../utils/write-json-file.js';
 import { getWorkspaceDependencyNames } from './get-workspace-dependency-names.js';
+import { getWorkspaceIsModified } from './get-workspace-is-modified.js';
 import {
   getWorkspaceLocalDependencies,
   type WorkspaceLocalDependenciesOptions,
@@ -201,9 +201,7 @@ export class Workspace {
    *
    * Uncommitted changes (ie. a dirty working tree) are not considered.
    */
-  readonly getGitIsModified = async (): Promise<boolean | null> => {
-    const fromRevision = await this.getGitFromRevision();
-    const head = await this.getGitHead();
-    return !!fromRevision && !!head && (await getGitIsModified(this.dir, fromRevision, head).catch(() => null));
+  readonly getIsModified = async (): Promise<boolean> => {
+    return await getWorkspaceIsModified(this.dir, this.name, this.version, this.#gitFromRevision, this.#gitHead);
   };
 }

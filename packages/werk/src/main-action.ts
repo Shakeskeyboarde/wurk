@@ -25,7 +25,7 @@ export const mainAction = async ({ commander, cmd, cmdArgs, globalOpts }: MainAc
   const commandPlugin = await loadCommandPlugin(cmd);
   const { command, ...commandInfo } = commandPlugin;
   const [rootDir, npmWorkspaces] = await Promise.all([await getNpmWorkspacesRoot(), await getNpmWorkspaces()]);
-  const workspaces = await getWorkspaces(npmWorkspaces, globalOpts.select);
+  const workspaces = await getWorkspaces(npmWorkspaces, { ...globalOpts.select, ...globalOpts.git });
   const subCommander = commander.command(cmd);
 
   process.chdir(rootDir);

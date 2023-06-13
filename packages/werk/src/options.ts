@@ -1,20 +1,33 @@
 import { type LogLevel } from './utils/log.js';
-import { type SelectOptions } from './workspace/get-workspaces.js';
 
 export interface LogOptions {
   readonly level: LogLevel;
   readonly prefix: boolean;
 }
 
+export interface SelectOptions {
+  readonly withDependencies: boolean;
+  readonly includeWorkspaces: readonly string[];
+  readonly includeKeywords: readonly string[];
+  readonly excludeWorkspaces: readonly string[];
+  readonly excludeKeywords: readonly string[];
+  readonly excludePrivate: boolean;
+  readonly excludePublic: boolean;
+  readonly excludePublished: boolean;
+  readonly excludeUnpublished: boolean;
+  readonly excludeModified: boolean;
+  readonly excludeUnmodified: boolean;
+}
+
 export interface RunOptions {
   readonly parallel: boolean;
-  readonly concurrency?: number;
+  readonly concurrency: number | undefined;
   readonly wait: boolean;
 }
 
 export interface GitOptions {
-  readonly gitHead?: string;
-  readonly gitFromRevision?: string;
+  readonly gitFromRevision: string | undefined;
+  readonly gitHead: string | undefined;
 }
 
 export interface GlobalOptions {
