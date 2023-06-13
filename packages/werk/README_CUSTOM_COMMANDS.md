@@ -121,12 +121,12 @@ The `context.workspaces` and `context.workspace` properties contain instances of
 - `getLocalDependencies({ scopes?, ignoreVersions? }?)`: Gets the workspaces which are local dependencies of this workspace. If `scopes` is not specified, dependencies from all scopes are returned. If `ignoreVersions` is true, the dependency versions are ignored.
 - `getNpmIsPublished()`: Returns true if the current workspace name and version are published to the registry.
 - `getGitIsRepo()`: Returns true if the workspace root directory is part of a git repository.
-- `getGitIsClean()`: Returns true if the workspace's git working tree is clean.
-- `getGitHead()`: Gets the commit hash of the workspace's git HEAD.
-- `getGitFromRevision()`: Gets the "from" revision which should be used for detecting changes.
-- `getGitIsModified()`: Returns true the workspace is not published, the published Git revision cannot be detected, or if there is a difference between the published revision and the current HEAD.
+- `getGitIsClean()`: Returns true if the workspace's git working tree is clean. Returns true outside of a Git repo.
+- `getGitHead()`: Gets the Git head commit hash. Returns undefined outside of a Git repo, if the `--git-head` global option is not set.
+- `getGitFromRevision()`: Gets the "from" revision which should be used for detecting changes. Returns undefined outside of a Git repo, if the `--git-from-revision` options is not set.
+- `getGitIsModified()`: Returns true if the workspace is not published. Otherwise, it returns true if the workspace is part of a Git repo, and the diff of the "from" revision and the head commit is not empty.
 
-**Note:** All Git methods except `getGitIsRepo()` will throw if the workspace is not part of a git repository.
+**Note:** If the workspace is not part of a Git repository, the workspace will read as clean and unmodified.
 
 ## Command Line Parsing
 

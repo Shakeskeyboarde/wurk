@@ -4,13 +4,13 @@ import { type BaseAsyncContext } from '../context/base-async-context.js';
 import { type PackageJson } from '../exports.js';
 import { getGitHead } from '../git/get-git-head.js';
 import { getGitIsClean } from '../git/get-git-is-clean.js';
+import { getGitIsModified } from '../git/get-git-is-modified.js';
 import { getGitIsRepo } from '../git/get-git-is-repo.js';
 import { getNpmMetadata } from '../npm/get-npm-metadata.js';
 import { patchJsonFile } from '../utils/patch-json-file.js';
 import { readJsonFile } from '../utils/read-json-file.js';
 import { writeJsonFile } from '../utils/write-json-file.js';
 import { getWorkspaceDependencyNames } from './get-workspace-dependency-names.js';
-import { getWorkspaceIsModified } from './get-workspace-is-modified.js';
 import {
   getWorkspaceLocalDependencies,
   type WorkspaceLocalDependenciesOptions,
@@ -31,8 +31,10 @@ export type WorkspaceOptions = {
   readonly selected?: boolean;
 };
 
-export class Workspace implements WorkspaceOptions {
+export class Workspace {
   readonly #context: PartialContext;
+  readonly #gitHead: string | undefined;
+  readonly #gitFromRevision: string | undefined;
 
   /**
    * Absolute path of the workspace directory.
@@ -80,8 +82,16 @@ export class Workspace implements WorkspaceOptions {
    */
   readonly dependencyNames: readonly string[];
 
-  constructor(options: WorkspaceOptions & { context: PartialContext }) {
+  constructor(
+    options: WorkspaceOptions & {
+      readonly context: PartialContext;
+      readonly gitHead: string | undefined;
+      readonly gitFromRevision: string | undefined;
+    },
+  ) {
     this.#context = options.context;
+    this.#gitHead = options.gitHead;
+    this.#gitFromRevision = options.gitFromRevision;
     this.dir = options.dir;
     this.name = options.name;
     this.version = options.version;
@@ -144,8 +154,13 @@ export class Workspace implements WorkspaceOptions {
   };
 
   /**
-   * Return true if the Git working tree is clean (ie. there are no
-   * uncommitted changes).
+   * Return true if the Git working tree is clean.
+   *
+   * A workspace is considered clean if _ALL_ of the following
+   * conditions are met.
+   *
+   * - The workspace is not part of a Git repository.
+   * - The workspace directory has no uncommitted or untracked changes.
    */
   readonly getGitIsClean = async (): Promise<boolean> => {
     return await getGitIsClean(this.dir);
@@ -173,9 +188,22 @@ export class Workspace implements WorkspaceOptions {
   /**
    * Return true if the current version is published, and there is no
    * difference between the published and local code.
+   *
+   * A workspace is always considered modified it is not published
+   * (`gitNpmIsPublished`). Otherwise, it is modified if _ALL_ of the
+   * following conditions are met:
+   *
+   * - The workspace is part of a Git repository (`getGitIsRepo`).
+   * - The Git "from" revision and head commit can be determined
+   *   (`getGitHead` and `getGitFromRevision`).
+   * - The Git diff of the "from" revision and the head commit, in the
+   *   workspace directory, returns an empty result
+   *
+   * Uncommitted changes (ie. a dirty working tree) are not considered.
    */
-  readonly getGitIsModified = async (): Promise<boolean> => {
+  readonly getGitIsModified = async (): Promise<boolean | null> => {
     const fromRevision = await this.getGitFromRevision();
-    return await getWorkspaceIsModified(this.dir, fromRevision);
+    const head = await this.getGitHead();
+    return !!fromRevision && !!head && (await getGitIsModified(this.dir, fromRevision, head).catch(() => null));
   };
 }
