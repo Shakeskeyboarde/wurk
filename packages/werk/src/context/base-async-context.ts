@@ -5,7 +5,7 @@ import { type Spawn, spawn } from '../utils/spawn.js';
 import { Workspace, type WorkspaceOptions } from '../workspace/workspace.js';
 import { BaseContext } from './base-context.js';
 
-export interface ContextOptions<A extends CommanderArgs, O extends CommanderOptions> {
+export interface BaseAsyncContextOptions<A extends CommanderArgs, O extends CommanderOptions> {
   readonly log?: LogOptions;
   readonly command: CommandInfo;
   readonly rootDir: string;
@@ -17,7 +17,7 @@ export interface ContextOptions<A extends CommanderArgs, O extends CommanderOpti
   readonly startWorker: (data?: any) => Promise<boolean>;
 }
 
-export class Context<
+export abstract class BaseAsyncContext<
   A extends CommanderArgs = CommanderArgs,
   O extends CommanderOptions = CommanderOptions,
 > extends BaseContext {
@@ -64,7 +64,7 @@ export class Context<
    */
   readonly workerData: any;
 
-  constructor(options: ContextOptions<A, O>) {
+  constructor(options: BaseAsyncContextOptions<A, O>) {
     super();
     const { log, command, rootDir, args, opts, workspaces, isWorker, workerData, startWorker } = options;
 

@@ -1,8 +1,9 @@
 import { isMainThread } from 'node:worker_threads';
 
 import { type Commander, type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
+import { AfterContext, type AfterContextOptions } from '../context/after-context.js';
+import { BeforeContext, type BeforeContextOptions } from '../context/before-context.js';
 import { CleanupContext, type CleanupContextOptions } from '../context/cleanup-context.js';
-import { Context, type ContextOptions } from '../context/context.js';
 import { EachContext, type EachContextOptions } from '../context/each-context.js';
 import { InitContext, type InitContextOptions } from '../context/init-context.js';
 import { startWorker } from '../utils/start-worker.js';
@@ -16,7 +17,7 @@ export interface CommandHooks<A extends CommanderArgs, O extends CommanderOption
   /**
    * Run once before handling individual workspaces.
    */
-  readonly before?: (context: Context<AA, OO>) => Promise<void>;
+  readonly before?: (context: BeforeContext<AA, OO>) => Promise<void>;
   /**
    * Run once for each workspace.
    */
@@ -24,7 +25,7 @@ export interface CommandHooks<A extends CommanderArgs, O extends CommanderOption
   /**
    * Run once after handling individual workspaces.
    */
-  readonly after?: (context: Context<AA, OO>) => Promise<void>;
+  readonly after?: (context: AfterContext<AA, OO>) => Promise<void>;
   /**
    * Run once after all other hooks. This is the last chance to perform
    * cleanup, and it must be synchronous.
@@ -34,9 +35,9 @@ export interface CommandHooks<A extends CommanderArgs, O extends CommanderOption
 
 export interface CommandType<A extends CommanderArgs, O extends CommanderOptions> {
   readonly init: (options: InitContextOptions) => Commander<any, any>;
-  readonly before: (options: Omit<ContextOptions<A, O>, 'startWorker'>) => Promise<void>;
+  readonly before: (options: Omit<BeforeContextOptions<A, O>, 'startWorker'>) => Promise<void>;
   readonly each: (options: Omit<EachContextOptions<A, O>, 'startWorker'>) => Promise<void>;
-  readonly after: (options: Omit<ContextOptions<A, O>, 'startWorker'>) => Promise<void>;
+  readonly after: (options: Omit<AfterContextOptions<A, O>, 'startWorker'>) => Promise<void>;
   readonly cleanup: (context: CleanupContextOptions<A, O>) => void;
 }
 
@@ -44,9 +45,9 @@ const COMMAND = Symbol('WerkCommand');
 
 export class Command<A extends CommanderArgs, O extends CommanderOptions> implements CommandType<A, O> {
   readonly #init: ((context: InitContext) => Commander<A, O>) | undefined;
-  readonly #before: ((context: Context<A, O>) => Promise<void>) | undefined;
+  readonly #before: ((context: BeforeContext<A, O>) => Promise<void>) | undefined;
   readonly #each: ((context: EachContext<A, O>) => Promise<void>) | undefined;
-  readonly #after: ((context: Context<A, O>) => Promise<void>) | undefined;
+  readonly #after: ((context: AfterContext<A, O>) => Promise<void>) | undefined;
   readonly #cleanup: ((context: CleanupContext<A, O>) => void) | undefined;
 
   constructor({ init, before, each, after, cleanup }: CommandHooks<A, O>) {
@@ -75,14 +76,26 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
     return options.commander;
   };
 
-  readonly before = async (options: Omit<ContextOptions<A, O>, 'startWorker'>): Promise<void> => {
+  readonly before = async (options: Omit<BeforeContextOptions<A, O>, 'startWorker'>): Promise<void> => {
     if (!this.#before) return;
 
-    const context = new Context({
+    const context = new BeforeContext({
       ...options,
       isWorker: !isMainThread,
       workerData: undefined,
-      startWorker: (data) => startWorker(options.command.main, { workerData: { stage: 'before', options, data } }),
+      startWorker: (data) => {
+        const workerPromise = startWorker(options.command.main, { workerData: { stage: 'before', options, data } });
+
+        workerPromise.worker?.on('message', (message) => {
+          switch (message?.type) {
+            case 'forceWait':
+              context.forceWait();
+              break;
+          }
+        });
+
+        return workerPromise;
+      },
     });
 
     await this.#before(context)
@@ -111,10 +124,10 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> implem
       .finally(() => context.destroy());
   };
 
-  readonly after = async (options: Omit<ContextOptions<A, O>, 'startWorker'>): Promise<void> => {
+  readonly after = async (options: Omit<AfterContextOptions<A, O>, 'startWorker'>): Promise<void> => {
     if (!this.#after) return;
 
-    const context = new Context({
+    const context = new AfterContext({
       ...options,
       isWorker: !isMainThread,
       workerData: undefined,

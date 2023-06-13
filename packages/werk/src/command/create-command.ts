@@ -1,20 +1,26 @@
-import { isMainThread, workerData } from 'node:worker_threads';
+import { isMainThread, parentPort, workerData } from 'node:worker_threads';
 
 import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
-import { type ContextOptions } from '../context/context.js';
+import { type AfterContextOptions } from '../context/after-context.js';
+import { type BeforeContextOptions } from '../context/before-context.js';
 import { type EachContextOptions } from '../context/each-context.js';
 import { log } from '../utils/log.js';
 import { Command, type CommandHooks } from './command.js';
 
 type CommandWorkerData<A extends CommanderArgs, O extends CommanderOptions> =
   | {
-      readonly stage: 'before' | 'after';
-      readonly options: Omit<ContextOptions<A, O>, 'startWorker' | 'workerData' | 'isWorker'>;
+      readonly stage: 'before';
+      readonly options: Omit<BeforeContextOptions<A, O>, 'startWorker' | 'workerData' | 'isWorker' | 'forceWait'>;
       readonly data: any;
     }
   | {
       readonly stage: 'each';
       readonly options: Omit<EachContextOptions<A, O>, 'startWorker' | 'workerData' | 'isWorker'>;
+      readonly data: any;
+    }
+  | {
+      readonly stage: 'after';
+      readonly options: Omit<AfterContextOptions<A, O>, 'startWorker' | 'workerData' | 'isWorker'>;
       readonly data: any;
     };
 
@@ -35,11 +41,18 @@ export const createCommand = <A extends CommanderArgs, O extends CommanderOption
 
         switch (data.stage) {
           case 'before':
-          case 'after':
-            await command[data.stage]({ isWorker: true, workerData: data.data, ...data.options });
+            await command[data.stage]({
+              isWorker: true,
+              workerData: data.data,
+              forceWait: () => parentPort?.postMessage({ type: 'forceWait' }),
+              ...data.options,
+            });
             break;
           case 'each':
             await command.each({ isWorker: true, workerData: data.data, ...data.options });
+            break;
+          case 'after':
+            await command[data.stage]({ isWorker: true, workerData: data.data, ...data.options });
             break;
         }
       })

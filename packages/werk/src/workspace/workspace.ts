@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 
-import { type Context } from '../context/context.js';
+import { type BaseAsyncContext } from '../context/base-async-context.js';
 import { type PackageJson } from '../exports.js';
 import { getGitHead } from '../git/get-git-head.js';
 import { getGitIsClean } from '../git/get-git-is-clean.js';
@@ -16,7 +16,7 @@ import {
   type WorkspaceLocalDependenciesOptions,
 } from './get-workspace-local-dependencies.js';
 
-type PartialContext = Pick<Context, 'workspaces' | 'spawn'>;
+type PartialContext = Pick<BaseAsyncContext, 'workspaces' | 'spawn'>;
 
 export type WorkspaceOptions = {
   readonly name: string;

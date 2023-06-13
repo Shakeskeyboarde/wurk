@@ -6,9 +6,9 @@ import { fileURLToPath } from 'node:url';
 
 import { Option } from '@commander-js/extra-typings';
 
-import { mainAction } from './main-action.js';
 import { Commander } from './commander/commander.js';
 import { onError } from './error.js';
+import { mainAction } from './main-action.js';
 import { type GlobalOptions } from './options.js';
 import { LOG_LEVEL, type LogLevel } from './utils/log.js';
 
