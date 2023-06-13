@@ -52,7 +52,9 @@ export class Log implements LogOptions {
    * Print a dimmed message to stderr.
    */
   readonly silly = (message?: unknown): void => {
-    if (LOG_LEVEL.silly <= this.getLevel().value) this.#write(process.stderr, message, chalk.dim);
+    if (LOG_LEVEL.silly <= this.getLevel().value) {
+      this.#write(process.stderr, message, chalk.dim);
+    }
   };
   /**
    * Alias for `silly`.
@@ -63,7 +65,9 @@ export class Log implements LogOptions {
    * Print a dimmed message to stderr.
    */
   readonly verbose = (message?: unknown): void => {
-    if (LOG_LEVEL.verbose <= this.getLevel().value) this.#write(process.stderr, message, chalk.dim);
+    if (LOG_LEVEL.verbose <= this.getLevel().value) {
+      this.#write(process.stderr, message, chalk.dim);
+    }
   };
   /**
    * Alias for `verbose`.
@@ -74,28 +78,36 @@ export class Log implements LogOptions {
    * Print an undecorated message to stdout.
    */
   readonly info = (message?: unknown): void => {
-    if (LOG_LEVEL.info <= this.getLevel().value) this.#write(process.stdout, message);
+    if (LOG_LEVEL.info <= this.getLevel().value) {
+      this.#write(process.stdout, message);
+    }
   };
 
   /**
    * Print a bold message to stderr.
    */
   readonly notice = (message?: unknown): void => {
-    if (LOG_LEVEL.notice <= this.getLevel().value) this.#write(process.stderr, message, chalk.bold);
+    if (LOG_LEVEL.notice <= this.getLevel().value) {
+      this.#write(process.stderr, message, chalk.bold);
+    }
   };
 
   /**
    * Print a yellow message to stderr.
    */
   readonly warn = (message?: unknown): void => {
-    if (LOG_LEVEL.warn <= this.getLevel().value) this.#write(process.stderr, message, chalk.yellowBright);
+    if (LOG_LEVEL.warn <= this.getLevel().value) {
+      this.#write(process.stderr, message, chalk.yellowBright);
+    }
   };
 
   /**
    * Print a red message to stderr.
    */
   readonly error = (message?: unknown): void => {
-    if (LOG_LEVEL.error <= this.getLevel().value) this.#write(process.stderr, message, chalk.redBright);
+    if (LOG_LEVEL.error <= this.getLevel().value) {
+      this.#write(process.stderr, message, chalk.redBright);
+    }
   };
 
   readonly destroy = (): void => {
@@ -106,8 +118,16 @@ export class Log implements LogOptions {
 
   readonly #write = (stream: Writable, message: unknown, formatLine?: (message: string) => string): void => {
     if (this.#isDestroyed) return;
-    const lines = String(message ?? '').split(/\r?\n|\r/gu);
-    if (lines[lines.length - 1] === '') lines.pop();
+
+    const string = String(
+      message instanceof Error ? (process.env.DEBUG ? message.stack ?? message : message.message) : message ?? '',
+    );
+    const lines = string.split(/\r?\n|\r/gu);
+
+    if (lines[lines.length - 1] === '') {
+      lines.pop();
+    }
+
     lines.forEach((line) => this.#writeLine(stream, line, formatLine));
   };
 
@@ -117,7 +137,10 @@ export class Log implements LogOptions {
     formatLine: (message: string) => string = (value) => value,
   ): void => {
     line = line.trimEnd().replace(ansiRegex, '');
-    if (!this.#trim || line) stream.write(this.prefix + formatLine(line) + '\n');
+
+    if (!this.#trim || line) {
+      stream.write(this.prefix + formatLine(line) + '\n');
+    }
   };
 }
 
