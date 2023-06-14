@@ -11,16 +11,18 @@ export default createCommand({
     return commander
       .description(command.packageJson.description ?? '')
       .description('Only unpublished versions of public workspaces are published.')
+      .option('--otp <password>', 'One-time password for two-factor authentication.')
       .option('--to-archive', 'Pack each workspace into an archive.')
       .addOption(
         commander.createOption('--from-archive', 'Publish pre-packed workspace archives.').conflicts('toArchive'),
       )
       .option('--dry-run', 'Perform a dry run for validation.');
   },
-  before: async ({ workspaces, forceWait }) => {
+
+  before: async ({ forceWait }) => {
     forceWait();
-    workspaces.forEach(({ name }) => isPublished.set(name, false));
   },
+
   each: async (context) => {
     const { log, opts, workspace } = context;
 
@@ -40,9 +42,9 @@ export default createCommand({
   },
 });
 
-const publishFromArchive = async (context: EachContext<[], { dryRun?: true }>): Promise<boolean> => {
+const publishFromArchive = async (context: EachContext<[], { otp?: string; dryRun?: true }>): Promise<boolean> => {
   const { log, opts, workspace, spawn } = context;
-  const { dryRun = false } = opts;
+  const { otp, dryRun = false } = opts;
   const filename = join(workspace.dir, `${workspace.name.replace(/^@/u, '').replace(/\//gu, '-')}.tgz`);
   const filenameExists = await stat(filename)
     .then((stats) => stats.isFile())
@@ -53,15 +55,19 @@ const publishFromArchive = async (context: EachContext<[], { dryRun?: true }>): 
     return false;
   }
 
-  await spawn('npm', [`--loglevel=${log.getLevel().name}`, 'publish', ...(dryRun ? ['--dry-run'] : []), filename], {
-    echo: true,
-  });
+  await spawn(
+    'npm',
+    [`--loglevel=${log.getLevel().name}`, 'publish', Boolean(otp) && `--otp=${otp}`, dryRun && '--dry-run', filename],
+    {
+      echo: true,
+    },
+  );
 
   return true;
 };
 
 const publishFromFilesystem = async (
-  context: EachContext<[], { toArchive?: true; dryRun?: true }>,
+  context: EachContext<[], { otp?: string; toArchive?: true; dryRun?: true }>,
 ): Promise<boolean> => {
   const { log, opts, workspace, spawn } = context;
 
@@ -112,19 +118,25 @@ const publishFromFilesystem = async (
     }
   }
 
-  const { toArchive = false, dryRun = false } = opts;
+  const { otp, toArchive = false, dryRun = false } = opts;
 
-  if (dryRun) {
-    await spawn('npm', [`--loglevel=${log.getLevel().name}`, toArchive ? 'pack' : 'publish', '--dry-run'], {
-      echo: true,
-    });
-  } else {
+  if (!dryRun) {
     await workspace.saveAndRestoreFile('package.json');
     await workspace.patchPackageJson(patch);
-    await spawn('npm', [`--loglevel=${log.getLevel().name}`, toArchive ? 'pack' : 'publish'], {
-      echo: true,
-    });
   }
+
+  await spawn(
+    'npm',
+    [
+      `--loglevel=${log.getLevel().name}`,
+      toArchive ? 'pack' : 'publish',
+      Boolean(otp) && `--otp=${otp}`,
+      dryRun && '--dry-run',
+    ],
+    {
+      echo: true,
+    },
+  );
 
   return true;
 };
