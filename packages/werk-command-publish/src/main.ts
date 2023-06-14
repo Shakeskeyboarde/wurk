@@ -11,11 +11,16 @@ export default createCommand({
     return commander
       .description(command.packageJson.description ?? '')
       .description('Only unpublished versions of public workspaces are published.')
-      .option('--otp <password>', 'One-time password for two-factor authentication.')
       .option('--to-archive', 'Pack each workspace into an archive.')
       .addOption(
         commander.createOption('--from-archive', 'Publish pre-packed workspace archives.').conflicts('toArchive'),
       )
+      .addOption(
+        commander
+          .createOption('--remove-package-fields <fields...>', 'Remove fields from the package.json file.')
+          .conflicts('fromArchive'),
+      )
+      .option('--otp <password>', 'One-time password for two-factor authentication.')
       .option('--dry-run', 'Perform a dry run for validation.');
   },
 
@@ -42,7 +47,9 @@ export default createCommand({
   },
 });
 
-const publishFromArchive = async (context: EachContext<[], { otp?: string; dryRun?: true }>): Promise<boolean> => {
+const publishFromArchive = async (
+  context: EachContext<[], { readonly otp?: string; readonly dryRun?: true }>,
+): Promise<boolean> => {
   const { log, opts, workspace, spawn } = context;
   const { otp, dryRun = false } = opts;
   const filename = join(workspace.dir, `${workspace.name.replace(/^@/u, '').replace(/\//gu, '-')}.tgz`);
@@ -67,7 +74,15 @@ const publishFromArchive = async (context: EachContext<[], { otp?: string; dryRu
 };
 
 const publishFromFilesystem = async (
-  context: EachContext<[], { otp?: string; toArchive?: true; dryRun?: true }>,
+  context: EachContext<
+    [],
+    {
+      readonly otp?: string;
+      readonly toArchive?: true;
+      readonly removePackageFields?: readonly string[];
+      readonly dryRun?: true;
+    }
+  >,
 ): Promise<boolean> => {
   const { log, opts, workspace, spawn } = context;
 
@@ -93,13 +108,8 @@ const publishFromFilesystem = async (
       }),
   );
 
-  const patch: MutablePackageJson = {
-    // Temporarily set "gitHead" in the package.json file. NPM publish
-    // should do this automatically. But, it doesn't do it for packing.
-    // It's also not documented well even though it is definitely added
-    // intentionally in v7.
-    gitHead: await workspace.getGitHead(),
-  };
+  const { otp, toArchive = false, removePackageFields = [], dryRun = false } = opts;
+  const dependenciesPatch: MutablePackageJson = {};
 
   // Temporarily update local dependency versions to real versions. File
   // (file:) and wildcard versions should not be published to the
@@ -111,18 +121,32 @@ const publishFromFilesystem = async (
       // Try to match the existing version range prefix, or default to "^".
       const rangePrefix = workspace[scope][dependency.name]?.match(/^(|~|^|>=?)[a-zA-Z0-9.-]+$/u)?.[1] ?? '^';
 
-      patch[scope] = {
-        ...patch[scope],
+      dependenciesPatch[scope] = {
+        ...dependenciesPatch[scope],
         [dependency.name]: `${rangePrefix}${dependency.version}`,
       };
     }
   }
 
-  const { otp, toArchive = false, dryRun = false } = opts;
+  const removeFieldPatches: Record<string, unknown>[] = removePackageFields.map((field) => {
+    const parts = field.split('.').reverse();
+
+    return (
+      parts.reduce<Record<string, unknown> | undefined>((acc, part) => {
+        return { [part]: acc };
+      }, undefined) ?? {}
+    );
+  });
+
+  // Temporarily set "gitHead" in the package.json file. NPM publish
+  // should do this automatically. But, it doesn't do it for packing.
+  // It's also not documented well even though it is definitely added
+  // intentionally in v7.
+  const gitHeadPatch = { gitHead: await workspace.getGitHead() };
 
   if (!dryRun) {
     await workspace.saveAndRestoreFile('package.json');
-    await workspace.patchPackageJson(patch);
+    await workspace.patchPackageJson(dependenciesPatch, ...removeFieldPatches, gitHeadPatch);
   }
 
   await spawn(

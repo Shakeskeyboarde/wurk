@@ -44,6 +44,20 @@ Use the `--otp` option to set a one-time password for publishing.
 werk publish --otp=123456
 ```
 
+## Remove Package Fields
+
+Use the `--remove-package-fields` option to remove fields from the `package.json` file before publishing. This is useful for removing fields that are only used for local development, such as `devDependencies` and `scripts`.
+
+```sh
+werk publish --remove-package-fields devDependencies scripts
+```
+
+The fields can be dot notated to remove nested fields.
+
+```sh
+werk publish --remove-package-fields scripts.test
+```
+
 ## Dry run
 
 Use the `--dry-run` option to validate without making any permanent changes on disk (temporary only) or pushing to the registry. The `--dry-run` option will be passed through to the `npm publish` or `npm pack` command.
