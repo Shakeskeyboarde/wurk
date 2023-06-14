@@ -58,6 +58,14 @@ The fields can be dot notated to remove nested fields.
 werk publish --remove-package-fields scripts.test
 ```
 
+## Publish Tag
+
+Use the `--tag` option to set the tag for the published package. The default tag is `latest`.
+
+```sh
+werk publish --tag=next
+```
+
 ## Dry run
 
 Use the `--dry-run` option to validate without making any permanent changes on disk (temporary only) or pushing to the registry. The `--dry-run` option will be passed through to the `npm publish` or `npm pack` command.

@@ -15,12 +15,13 @@ export default createCommand({
       .addOption(
         commander.createOption('--from-archive', 'Publish pre-packed workspace archives.').conflicts('toArchive'),
       )
+      .option('--tag <tag>', 'Publish with a dist-tag.')
+      .option('--otp <password>', 'One-time password for two-factor authentication.')
       .addOption(
         commander
           .createOption('--remove-package-fields <fields...>', 'Remove fields from the package.json file.')
           .conflicts('fromArchive'),
       )
-      .option('--otp <password>', 'One-time password for two-factor authentication.')
       .option('--dry-run', 'Perform a dry run for validation.');
   },
 
@@ -48,10 +49,10 @@ export default createCommand({
 });
 
 const publishFromArchive = async (
-  context: EachContext<[], { readonly otp?: string; readonly dryRun?: true }>,
+  context: EachContext<[], { readonly otp?: string; readonly tag?: string; readonly dryRun?: true }>,
 ): Promise<boolean> => {
   const { log, opts, workspace, spawn } = context;
-  const { otp, dryRun = false } = opts;
+  const { tag, otp, dryRun = false } = opts;
   const filename = join(
     workspace.dir,
     `${workspace.name.replace(/^@/u, '').replace(/\//gu, '-')}-${workspace.version}.tgz`,
@@ -69,7 +70,14 @@ const publishFromArchive = async (
 
   await spawn(
     'npm',
-    [`--loglevel=${log.level.name}`, 'publish', Boolean(otp) && `--otp=${otp}`, dryRun && '--dry-run', filename],
+    [
+      `--loglevel=${log.level.name}`,
+      'publish',
+      Boolean(tag) && `--tag=${tag}`,
+      Boolean(otp) && `--otp=${otp}`,
+      dryRun && '--dry-run',
+      filename,
+    ],
     {
       echo: true,
     },
@@ -82,8 +90,9 @@ const publishFromFilesystem = async (
   context: EachContext<
     [],
     {
-      readonly otp?: string;
       readonly toArchive?: true;
+      readonly tag?: string;
+      readonly otp?: string;
       readonly removePackageFields?: readonly string[];
       readonly dryRun?: true;
     }
@@ -113,7 +122,7 @@ const publishFromFilesystem = async (
       }),
   );
 
-  const { otp, toArchive = false, removePackageFields = [], dryRun = false } = opts;
+  const { toArchive = false, tag, otp, removePackageFields = [], dryRun = false } = opts;
   const dependenciesPatch: MutablePackageJson = {};
 
   // Temporarily update local dependency versions to real versions. File
@@ -159,6 +168,7 @@ const publishFromFilesystem = async (
     [
       `--loglevel=${log.level.name}`,
       toArchive ? 'pack' : 'publish',
+      Boolean(tag) && `--tag=${tag}`,
       Boolean(otp) && `--otp=${otp}`,
       dryRun && '--dry-run',
     ],
