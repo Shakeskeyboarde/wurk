@@ -1,5 +1,4 @@
 {
-  "private": true,
   "name": "@werk/command-version",
   "description": "Update versions.",
   "version": "1.0.0",

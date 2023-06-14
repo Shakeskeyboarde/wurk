@@ -1,5 +1,4 @@
 {
-  "private": true,
   "name": "@werk/command-list",
   "description": "List workspaces as JSON with filtering applied.",
   "version": "1.0.0",
