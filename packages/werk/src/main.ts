@@ -98,7 +98,14 @@ const asyncMain = async (): Promise<void> => {
   const opts = commander.opts();
 
   const globalOpts: GlobalOptions = {
-    log: { level: opts.logLevel ?? 'info', prefix: opts.prefix },
+    log: {
+      level: opts.logLevel
+        ? opts.logLevel
+        : process.env.WERK_LOG_LEVEL && process.env.WERK_LOG_LEVEL in LOG_LEVEL
+        ? (process.env.WERK_LOG_LEVEL as LogLevel)
+        : 'info',
+      prefix: opts.prefix,
+    },
     select: {
       withDependencies: opts.withDependencies ?? false,
       includeWorkspaces: opts.workspace ?? [],
@@ -122,6 +129,8 @@ const asyncMain = async (): Promise<void> => {
       gitFromRevision: opts.gitFromRevision,
     },
   };
+
+  process.env.WERK_LOG_LEVEL = globalOpts.log.level;
 
   await mainAction({ config, commander, cmd, cmdArgs, globalOpts });
 };

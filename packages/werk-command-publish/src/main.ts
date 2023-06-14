@@ -66,7 +66,7 @@ const publishFromArchive = async (
 
   await spawn(
     'npm',
-    [`--loglevel=${log.getLevel().name}`, 'publish', Boolean(otp) && `--otp=${otp}`, dryRun && '--dry-run', filename],
+    [`--loglevel=${log.level.name}`, 'publish', Boolean(otp) && `--otp=${otp}`, dryRun && '--dry-run', filename],
     {
       echo: true,
     },
@@ -154,7 +154,7 @@ const publishFromFilesystem = async (
   await spawn(
     'npm',
     [
-      `--loglevel=${log.getLevel().name}`,
+      `--loglevel=${log.level.name}`,
       toArchive ? 'pack' : 'publish',
       Boolean(otp) && `--otp=${otp}`,
       dryRun && '--dry-run',

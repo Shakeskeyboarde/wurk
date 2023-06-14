@@ -79,7 +79,7 @@ The `context.log` should be used for all logging. Please don't use the global `c
 - `error`: Print a red log message to stderr. This is intended for things that are definitely wrong, and are probably immediate failures.
 - `stdout`: Writable stream which can be used for piping.
 - `stderr`: Writable stream which can be used for piping.
-- `getLevel()`: Function which returns the current log level (eg. `{ name: 'info', value: 40 }`).
+- `level`: The current log level (eg. `info`).
 
 Any logged messages may be modified in the following ways:
 

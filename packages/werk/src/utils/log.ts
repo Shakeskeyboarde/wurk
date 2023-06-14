@@ -25,6 +25,7 @@ export const LOG_LEVEL = {
 
 export class Log {
   #isDestroyed = false;
+  #level: { readonly name: LogLevel; readonly value: number } | undefined;
 
   readonly #trim;
   readonly prefix: string;
@@ -38,21 +39,25 @@ export class Log {
     this.stderr.on('data', (line: string) => this.#writeLine(process.stderr, line));
   }
 
-  readonly getLevel = (): { name: LogLevel; value: number } => {
-    const name: LogLevel =
-      process.env.WERK_LOG_LEVEL && process.env.WERK_LOG_LEVEL in LOG_LEVEL
-        ? (process.env.WERK_LOG_LEVEL as LogLevel)
-        : 'info';
-    const value = LOG_LEVEL[name];
+  get level(): { readonly name: LogLevel; readonly value: number } {
+    if (!this.#level) {
+      const name: LogLevel =
+        process.env.WERK_LOG_LEVEL && process.env.WERK_LOG_LEVEL in LOG_LEVEL
+          ? (process.env.WERK_LOG_LEVEL as LogLevel)
+          : 'info';
+      const value = LOG_LEVEL[name];
 
-    return { name, value };
-  };
+      this.#level = { name, value };
+    }
+
+    return this.#level;
+  }
 
   /**
    * Print a dimmed message to stderr.
    */
   readonly silly = (message?: unknown): void => {
-    if (LOG_LEVEL.silly <= this.getLevel().value) {
+    if (LOG_LEVEL.silly <= this.level.value) {
       this.#write(process.stderr, message, chalk.dim);
     }
   };
@@ -65,7 +70,7 @@ export class Log {
    * Print a dimmed message to stderr.
    */
   readonly verbose = (message?: unknown): void => {
-    if (LOG_LEVEL.verbose <= this.getLevel().value) {
+    if (LOG_LEVEL.verbose <= this.level.value) {
       this.#write(process.stderr, message, chalk.dim);
     }
   };
@@ -78,7 +83,7 @@ export class Log {
    * Print an undecorated message to stdout.
    */
   readonly info = (message?: unknown): void => {
-    if (LOG_LEVEL.info <= this.getLevel().value) {
+    if (LOG_LEVEL.info <= this.level.value) {
       this.#write(process.stdout, message);
     }
   };
@@ -87,7 +92,7 @@ export class Log {
    * Print a bold message to stderr.
    */
   readonly notice = (message?: unknown): void => {
-    if (LOG_LEVEL.notice <= this.getLevel().value) {
+    if (LOG_LEVEL.notice <= this.level.value) {
       this.#write(process.stderr, message, chalk.bold);
     }
   };
@@ -96,7 +101,7 @@ export class Log {
    * Print a yellow message to stderr.
    */
   readonly warn = (message?: unknown): void => {
-    if (LOG_LEVEL.warn <= this.getLevel().value) {
+    if (LOG_LEVEL.warn <= this.level.value) {
       this.#write(process.stderr, message, chalk.yellowBright);
     }
   };
@@ -105,7 +110,7 @@ export class Log {
    * Print a red message to stderr.
    */
   readonly error = (message?: unknown): void => {
-    if (LOG_LEVEL.error <= this.getLevel().value) {
+    if (LOG_LEVEL.error <= this.level.value) {
       this.#write(process.stderr, message, chalk.redBright);
     }
   };
