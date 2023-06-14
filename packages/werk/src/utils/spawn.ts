@@ -13,15 +13,45 @@ type GetOutput = {
 };
 
 export interface SpawnOptions {
+  /**
+   * Current working directory of the child process.
+   */
   readonly cwd?: string | URL;
+  /**
+   * Child process environment.
+   */
   readonly env?: NodeJS.ProcessEnv;
+  /**
+   * Print child process stdout and stderr to the parent process stdout and stderr.
+   */
   readonly echo?: boolean;
+  /**
+   * Capture child process stdout and stderr.
+   */
   readonly capture?: boolean;
+  /**
+   * Provide readable stream access to the child process stdout and stderr.
+   */
   readonly stream?: boolean;
+  /**
+   * Provide writable stream access to the child process stdin.
+   */
   readonly input?: boolean;
+  /**
+   * Return error instead of throwing.
+   */
   readonly errorReturn?: boolean;
+  /**
+   * Print the child process output if it fails.
+   */
   readonly errorEcho?: boolean;
+  /**
+   * Log an error message if the child process fails.
+   */
   readonly errorMessage?: (error: unknown, exitCode: number) => string;
+  /**
+   * Logger to use for logging.
+   */
   readonly log?: Log;
 }
 
