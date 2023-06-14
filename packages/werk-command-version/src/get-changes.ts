@@ -7,6 +7,8 @@ export interface Change {
   message: string;
 }
 
+const MARKDOWN_ESCAPE = /[#`_*~[\]{}\\]/gu;
+
 export const getChanges = async (spawn: Spawn, commit: string, dir: string): Promise<readonly Change[]> => {
   const log = await spawn('git', ['log', '--pretty=format:«¦%h¦%B¦»', `${commit}..HEAD`, '--', dir], {
     capture: true,
@@ -15,22 +17,30 @@ export const getChanges = async (spawn: Spawn, commit: string, dir: string): Pro
     ([, hash = '', subject = '', body = '']) => ({ hash, subject, body }),
   );
 
-  return entries.flatMap(({ hash, subject, body }): Change[] => {
-    const subjectMatch = subject.match(
-      /^\s*([a-zA-Z]+|BREAKING[ -]CHANGE)\s*(?:\(\s*(.*?)\s*\))?\s*(!)?\s*:\s*(.*?)\s*$/u,
-    );
+  return entries
+    .flatMap(({ hash, subject, body }): Change[] => {
+      const subjectMatch = subject.match(
+        /^\s*([a-zA-Z]+|BREAKING[ -]CHANGE)\s*(?:\(\s*(.*?)\s*\))?\s*(!)?\s*:\s*(.*?)\s*$/u,
+      );
 
-    if (!subjectMatch) return [];
+      if (!subjectMatch) return [];
 
-    const [, type = '', scope, breaking, message = ''] = subjectMatch;
-    const bodyLines = body.split(/\r?\n/gu);
+      const [, type = '', scope, breaking, message = ''] = subjectMatch;
+      const bodyLines = body.split(/\r?\n/gu);
 
-    return [
-      { hash, type: breaking ? 'BREAKING CHANGE' : type, scope, message },
-      ...bodyLines.flatMap((line) => {
-        const lineMatch = line.match(/^\s*BREAKING[ -]CHANGES?\s*!?\s*:\s*(.*?)\s*$/mu);
-        return lineMatch ? [{ hash, type: 'BREAKING CHANGE', message: lineMatch[1] ?? '' }] : [];
-      }),
-    ];
-  });
+      return [
+        { hash, type: breaking ? 'BREAKING CHANGE' : type, scope, message },
+        ...bodyLines.flatMap((line) => {
+          const lineMatch = line.match(/^\s*BREAKING[ -]CHANGES?\s*!?\s*:\s*(.*?)\s*$/mu);
+          return lineMatch ? [{ hash, type: 'BREAKING CHANGE', message: lineMatch[1] ?? '' }] : [];
+        }),
+      ];
+    })
+    .map((change) => {
+      return {
+        ...change,
+        scope: change.scope?.replace(MARKDOWN_ESCAPE, (char) => `&#${char.charCodeAt(0)};`),
+        message: change.message?.replace(MARKDOWN_ESCAPE, (char) => `&#${char.charCodeAt(0)};`),
+      };
+    });
 };
