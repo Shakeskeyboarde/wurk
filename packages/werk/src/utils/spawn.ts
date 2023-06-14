@@ -62,7 +62,7 @@ export interface SpawnPromise extends Promise<SpawnResult> {
 
 export const spawn = (
   cmd: string,
-  args: readonly (string | null | undefined)[] = [],
+  args: readonly (string | number | false | null | undefined)[] = [],
   {
     echo = false,
     capture = false,
@@ -75,7 +75,9 @@ export const spawn = (
     ...options
   }: SpawnOptions = {},
 ): SpawnPromise => {
-  const args_ = args.filter((value): value is string => value != null);
+  const args_ = args.flatMap((value) =>
+    typeof value === 'string' ? value : typeof value === 'number' ? value.toString(10) : [],
+  );
   const env = options.env ?? process.env;
   const childProcess = crossSpawn(cmd, args_, {
     ...options,
