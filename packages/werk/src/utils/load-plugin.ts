@@ -38,20 +38,30 @@ export const loadPlugin = memoize(
     ]);
 
     const paths = [join(workspacesRoot, 'node_modules'), globalPackagesRoot, __dirname];
-    const resolved = await packageNames
-      .reduce<Promise<{ exports: Record<string, unknown>; main: string }>>(
-        (promise, name) =>
-          promise.catch(async () => {
-            const main = require.resolve(name, { paths });
-            const exports = await import(main);
-            assert(typeof exports === 'object' && exports !== null, 'Plugin import() did not return an object.');
-            return { exports, main };
-          }),
-        Promise.reject(),
-      )
-      .catch(() => undefined);
+    let resolved: { exports: Record<string, unknown>; main: string } | undefined;
+
+    for (const packageName of packageNames) {
+      try {
+        const main = require.resolve(packageName, { paths });
+        const exports = await import(main);
+        resolved = { exports, main };
+        break;
+      } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 'ERR_MODULE_NOT_FOUND') continue;
+
+        throw new Error(
+          `Failed loading plugin "${packageName}".${error instanceof Error ? `\n${error.message}` : ''}`,
+          { cause: error },
+        );
+      }
+    }
 
     if (!resolved) return;
+
+    assert(
+      typeof resolved.exports === 'object' && resolved.exports !== null,
+      'Plugin import() did not return an object.',
+    );
 
     const packageInfo = await readPackageInfo(dirname(resolved.main));
 
