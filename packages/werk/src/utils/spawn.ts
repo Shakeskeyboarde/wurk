@@ -38,7 +38,7 @@ export interface SpawnOptions {
    */
   readonly input?: boolean;
   /**
-   * Return error instead of throwing.
+   * Return on error instead of throwing.
    */
   readonly errorReturn?: boolean;
   /**
