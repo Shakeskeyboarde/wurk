@@ -13,6 +13,7 @@ An open-minded monorepo tool, with opinionated plugins.
   - [Parallelization Options](#parallelization-options)
   - [Logging Options](#logging-options)
   - [Git Options](#git-options)
+  - [Pre-Configured Commands](#pre-configured-commands)
 
 ## Features
 
@@ -183,3 +184,27 @@ The log level can also be set using the `WERK_LOG_LEVEL` environment variable. T
   - Use a specific Git commit as the "HEAD" commit. If not specified, the current commit will be used.
 - `--git-from-revision <rev>`
   - Use a specific Git revision when detecting modifications. If not specified, the `gitHead` registry metadata value for the current version will be used.
+
+### Pre-Configured Commands
+
+You can configure Werk to automatically inject command-line arguments. This configuration must be in the workspaces root `package.json` file.
+
+```json
+{
+  "werk": {
+    "globalArgs": ["--with-dependencies"],
+    "commandConfigs": {
+      "publish": {
+        "globalArgs": ["--log-level=warn"],
+        "args": ["--remove-package-fields=devDependencies"]
+      }
+    }
+  }
+}
+```
+
+Given the above configuration, if the `werk publish` command is run, it will be as if the following command is run.
+
+```sh
+werk --with-dependencies --log-level=warn publish --remove-package-fields=devDependencies
+```

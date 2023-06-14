@@ -1,5 +1,6 @@
+import { type Command as Commander } from '@commander-js/extra-typings';
+
 import { type CommandInfo } from '../command/load-command-plugin.js';
-import { type Commander } from '../commander/commander.js';
 import { Log, type LogOptions } from '../utils/log.js';
 import { BaseContext } from './base-context.js';
 

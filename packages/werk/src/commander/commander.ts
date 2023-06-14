@@ -48,8 +48,8 @@ class CommanderImplementation<A extends CommanderArgs = [], O extends CommanderO
       .enablePositionalOptions();
   }
 
-  createCommand(name: string): CommanderImplementation {
-    return new CommanderImplementation(name);
+  createCommand(): CommanderImplementation {
+    throw new Error(`Werk does not support CommanderJS sub-commands.`);
   }
 
   createHelp(): Help {
@@ -68,16 +68,8 @@ class CommanderImplementation<A extends CommanderArgs = [], O extends CommanderO
     return this;
   }
 
-  action(fn: (...args: [...A, O, this]) => void | Promise<void>): this {
-    const prev = this.#actionHandler;
-
-    this.#actionHandler = (...args) => {
-      const result = prev?.(...args);
-      return typeof result?.then === 'function' ? result.then(() => fn(...args)) : fn(...args);
-    };
-
-    super.action(this.#actionHandler);
-    return this;
+  action(): this {
+    throw new Error(`Werk does not support CommanderJS action callbacks.`);
   }
 
   version(str: string, flags?: string, description?: string): this {
@@ -146,8 +138,6 @@ export const getCommanderMetadata = (command: Command): Metadata => {
   );
 };
 
-export type Commander<A extends CommanderArgs = [], O extends CommanderOptions = {}> = Command<A, O>;
-export const Commander: new <A extends CommanderArgs = [], O extends CommanderOptions = {}>(name?: string) => Commander<
-  A,
-  O
-> = CommanderImplementation;
+export const Commander = CommanderImplementation as new <A extends CommanderArgs = [], O extends CommanderOptions = {}>(
+  name?: string,
+) => Command<A, O>;

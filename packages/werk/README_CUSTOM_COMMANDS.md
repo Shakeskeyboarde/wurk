@@ -131,7 +131,7 @@ The `context.workspaces` and `context.workspace` properties contain instances of
 
 ## Command Line Parsing
 
-The `init` hook `context.commander` property is just a [Commander](https://www.npmjs.com/package/commander) command. You may configure it almost any way you want. However, sub-commands are not officially supported, because they cannot be wired into the Werk command lifecycle.
+The `init` hook `context.commander` property is just a [Commander](https://www.npmjs.com/package/commander) instance. You may configure it in almost any way you want, _EXCEPT_ for adding adding action callbacks or sub-commands. Calling the `action()` or `command()` methods will throw an error.
 
 The configured command must be returned so that Typescript can infer the `context.args` and `context.opts` types for the other hooks.
 

@@ -1,34 +1,31 @@
-import { join } from 'node:path';
-
-import { getNpmWorkspacesRoot } from '../npm/get-npm-workspaces-root.js';
+import { type Config } from '../config.js';
 import { loadPlugin, type Plugin } from '../utils/load-plugin.js';
-import { type PackageJson } from '../utils/package-json.js';
-import { readJsonFile } from '../utils/read-json-file.js';
-import { type CommandType, isCommand } from './command.js';
+import { type Command, isCommand } from './command.js';
 
 export type CommandInfo = Omit<Plugin, 'exports'>;
 
 export interface CommandPlugin extends CommandInfo {
-  readonly command: CommandType<any, any>;
+  readonly command: Command<any, any>;
 }
 
-export const loadCommandPlugin = async (name: string): Promise<CommandPlugin> => {
-  const workspacesRoot = await getNpmWorkspacesRoot();
-  const packageJson = await readJsonFile<PackageJson>(join(workspacesRoot, 'package.json'));
-  const packageNames = await readJsonFile(`${workspacesRoot}/package.json`).then((json: any) => {
-    const customPackageName: string | undefined = json?.werk?.commandPackages?.[name];
-    if (typeof customPackageName === 'string') return [customPackageName];
-    const customPrefixes: readonly string[] = packageJson?.werk?.commandPackagePrefixes ?? [];
-    return [...customPrefixes, `@werk/command-`, `werk-command-`].map((prefix) => `${prefix}${name}`);
-  });
+export const loadCommandPlugin = async (
+  cmd: string,
+  config: Pick<Config, 'commandPackages' | 'commandPackagePrefixes'>,
+): Promise<CommandPlugin> => {
+  const packageNames = [
+    ...(config.commandPackages[cmd] != null ? [config.commandPackages[cmd] as string] : []),
+    ...config.commandPackagePrefixes.map((prefix) => `${prefix}${cmd}`),
+    `@werk/command-${cmd}`,
+    `werk-command-${cmd}`,
+  ];
   const plugin = await loadPlugin(packageNames);
 
-  if (!plugin) throw new Error(`Command "${name}" not found. Do you need to install the command plugin package?`);
+  if (!plugin) throw new Error(`Command "${cmd}" not found. Do you need to install the command plugin package?`);
 
   const { exports, ...rest } = plugin;
   const command = exports?.default;
 
-  if (!isCommand(command)) throw new Error(`Command "${name}" does not have a valid command default export.`);
+  if (!isCommand(command)) throw new Error(`Command "${cmd}" does not have a valid command default export.`);
 
   return { command, ...rest };
 };

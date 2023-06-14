@@ -1,17 +1,18 @@
+import { type Command, type CommandUnknownOpts } from '@commander-js/extra-typings';
 import { Sema as Semaphore } from 'async-sema';
 import chalk from 'chalk';
 
 import { loadCommandPlugin } from './command/load-command-plugin.js';
-import { type Commander, getCommanderMetadata } from './commander/commander.js';
+import { Commander, getCommanderMetadata } from './commander/commander.js';
+import { type Config } from './config.js';
 import { CleanupContext } from './context/cleanup-context.js';
-import { getNpmWorkspaces } from './npm/get-npm-workspaces.js';
-import { getNpmWorkspacesRoot } from './npm/get-npm-workspaces-root.js';
 import { type GlobalOptions } from './options.js';
 import { getWorkspaceDependencyNames } from './workspace/get-workspace-dependency-names.js';
 import { getWorkspaces } from './workspace/get-workspaces.js';
 
 interface MainActionOptions {
-  readonly commander: Commander<any, any>;
+  readonly config: Config;
+  readonly commander: Command<any, any>;
   readonly cmd: string;
   readonly cmdArgs: readonly string[];
   readonly globalOpts: GlobalOptions;
@@ -21,23 +22,24 @@ type PrefixColor = (typeof PREFIX_COLORS)[number];
 
 const PREFIX_COLORS = ['cyan', 'magenta', 'yellow', 'blue', 'green', 'red'] as const;
 
-export const mainAction = async ({ commander, cmd, cmdArgs, globalOpts }: MainActionOptions): Promise<void> => {
-  const commandPlugin = await loadCommandPlugin(cmd);
+export const mainAction = async ({ config, commander, cmd, cmdArgs, globalOpts }: MainActionOptions): Promise<void> => {
+  const commandPlugin = await loadCommandPlugin(cmd, config);
   const { command, ...commandInfo } = commandPlugin;
-  const [rootDir, npmWorkspaces] = await Promise.all([await getNpmWorkspacesRoot(), await getNpmWorkspaces()]);
-  const workspaces = await getWorkspaces(npmWorkspaces, { ...globalOpts.select, ...globalOpts.git });
-  const subCommander = commander.command(cmd);
+  const workspaces = await getWorkspaces(config.workspaces, { ...globalOpts.select, ...globalOpts.git });
+  const subCommander = new Commander(`${commander.name()} ${cmd}`).copyInheritedSettings(
+    commander as CommandUnknownOpts,
+  );
 
-  process.chdir(rootDir);
+  process.chdir(config.rootDir);
 
-  if (command.init({ command: commandInfo, rootDir, commander: subCommander }) !== subCommander) {
+  if (command.init({ command: commandInfo, rootDir: config.rootDir, commander: subCommander }) !== subCommander) {
     throw new Error(`Command "${cmd}" did not return the correct commander instance. Did it return a sub-command?`);
   }
 
   process.on('exit', (exitCode) => {
     const context = new CleanupContext({
       command: commandInfo,
-      rootDir,
+      rootDir: config.rootDir,
       args: commander.processedArgs,
       opts: commander.opts(),
       exitCode,
@@ -55,83 +57,80 @@ export const mainAction = async ({ commander, cmd, cmdArgs, globalOpts }: MainAc
   if (!isDescriptionSet && packageJson.description) subCommander.description(packageJson.description);
   if (!isVersionSet && packageJson.version) subCommander.version(packageJson.version);
 
-  await subCommander
-    .name(cmd)
-    .action(async () => {
-      const args = subCommander.processedArgs;
-      const opts = subCommander.opts();
-      const { gitHead, gitFromRevision } = globalOpts.git;
+  subCommander.name(cmd).parse(cmdArgs, { from: 'user' });
 
-      await command.before({
-        log: undefined,
-        command: commandInfo,
-        rootDir,
-        args,
-        opts,
-        workspaces,
-        gitHead,
-        gitFromRevision,
-        isWorker: false,
-        workerData: null,
-      });
+  const args = subCommander.processedArgs;
+  const opts = subCommander.opts();
+  const { gitHead, gitFromRevision } = globalOpts.git;
 
-      if (process.exitCode != null) return;
+  await command.before({
+    log: undefined,
+    command: commandInfo,
+    rootDir: config.rootDir,
+    args,
+    opts,
+    workspaces,
+    gitHead,
+    gitFromRevision,
+    isWorker: false,
+    workerData: null,
+  });
 
-      const { parallel, concurrency, wait } = globalOpts.run;
-      const { prefix } = globalOpts.log;
-      const semaphore = concurrency || !parallel ? new Semaphore(concurrency ?? 1) : null;
-      const promises = new Map<string, Promise<void>>();
-      let prefixColorIndex = 0;
+  if (process.exitCode != null) return;
 
-      for (const workspace of workspaces.values()) {
-        const logPrefixColor = PREFIX_COLORS[prefixColorIndex++ % PREFIX_COLORS.length] as PrefixColor;
-        const logPrefix = prefix ? chalk.bold(chalk[`${logPrefixColor}Bright`](workspace.name) + ': ') : '';
-        const dependencyNames = getWorkspaceDependencyNames(workspace);
-        const prerequisites = Promise.allSettled(dependencyNames.map((name) => promises.get(name)));
-        const promise = Promise.resolve().then(async () => {
-          if (wait || command.isWaitForced) await prerequisites;
-          await semaphore?.acquire();
+  const { parallel, concurrency, wait } = globalOpts.run;
+  const { prefix } = globalOpts.log;
+  const semaphore = concurrency || !parallel ? new Semaphore(concurrency ?? 1) : null;
+  const promises = new Map<string, Promise<void>>();
+  let prefixColorIndex = 0;
 
-          try {
-            if (process.exitCode != null) return;
+  for (const workspace of workspaces.values()) {
+    const logPrefixColor = PREFIX_COLORS[prefixColorIndex++ % PREFIX_COLORS.length] as PrefixColor;
+    const logPrefix = prefix ? chalk.bold(chalk[`${logPrefixColor}Bright`](workspace.name) + ': ') : '';
+    const dependencyNames = getWorkspaceDependencyNames(workspace);
+    const prerequisites = Promise.allSettled(dependencyNames.map((name) => promises.get(name)));
+    const promise = Promise.resolve().then(async () => {
+      if (wait || command.isWaitForced) await prerequisites;
+      await semaphore?.acquire();
 
-            await command.each({
-              log: { prefix: logPrefix },
-              command: commandInfo,
-              rootDir,
-              args,
-              opts,
-              workspaces,
-              workspace,
-              gitHead,
-              gitFromRevision,
-              isWorker: false,
-              workerData: null,
-            });
-          } finally {
-            semaphore?.release();
-          }
+      try {
+        if (process.exitCode != null) return;
+
+        await command.each({
+          log: { prefix: logPrefix },
+          command: commandInfo,
+          rootDir: config.rootDir,
+          args,
+          opts,
+          workspaces,
+          workspace,
+          gitHead,
+          gitFromRevision,
+          isWorker: false,
+          workerData: null,
         });
-
-        promises.set(workspace.name, promise);
+      } finally {
+        semaphore?.release();
       }
+    });
 
-      await Promise.all(promises.values());
+    promises.set(workspace.name, promise);
+  }
 
-      if (process.exitCode != null) return;
+  await Promise.all(promises.values());
 
-      await command.after({
-        log: undefined,
-        command: commandInfo,
-        rootDir,
-        args,
-        opts,
-        workspaces,
-        gitHead,
-        gitFromRevision,
-        isWorker: false,
-        workerData: null,
-      });
-    })
-    .parseAsync(cmdArgs, { from: 'user' });
+  if (process.exitCode != null) return;
+
+  await command.after({
+    log: undefined,
+    command: commandInfo,
+    rootDir: config.rootDir,
+    args,
+    opts,
+    workspaces,
+    gitHead,
+    gitFromRevision,
+    isWorker: false,
+    workerData: null,
+  });
 };

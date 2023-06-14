@@ -1,18 +1,15 @@
 import assert from 'node:assert';
-import { readFile } from 'node:fs/promises';
 import { cpus } from 'node:os';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { Option } from '@commander-js/extra-typings';
 
 import { Commander } from './commander/commander.js';
+import { loadConfig } from './config.js';
 import { onError } from './error.js';
 import { mainAction } from './main-action.js';
 import { type GlobalOptions } from './options.js';
 import { LOG_LEVEL, type LogLevel } from './utils/log.js';
 
-process.env.WERK_LOG_LEVEL = process.env.WERK_LOG_LEVEL ?? 'info';
 process.on('uncaughtException', onError);
 process.on('unhandledRejection', (error) => {
   throw error;
@@ -23,13 +20,13 @@ export const main = (): void => {
 };
 
 const asyncMain = async (): Promise<void> => {
-  const __dirname = dirname(fileURLToPath(import.meta.url));
-  const version = await readFile(join(__dirname, '../package.json'), 'utf-8').then((json) => JSON.parse(json).version);
+  const config = await loadConfig();
+
   const commander = new Commander('werk')
     .description('Modular and extensible monorepo command framework.')
     .addHelpText('after', 'To get help for a specific command, run `werk <command> --help`.')
     .argument('<command>', 'Command to run.')
-    .argument('[options...]', 'Options to pass to the command.')
+    .argument('[args...]', 'Arguments to pass to the command.')
     .option(
       '-l, --log-level <level>',
       'Set the log level (silent, error, warn, notice, info, verbose, silly).',
@@ -77,38 +74,54 @@ const asyncMain = async (): Promise<void> => {
     .option('--no-prefix', 'No output prefixes.')
     .option('--git-head <sha>', 'Set the commit hash used as the current Git head.')
     .option('--git-from-revision <rev>', 'Set the revision used for detecting modifications.')
-    .version(version)
-    .passThroughOptions()
-    .action(async (cmd, cmdArgs, options) => {
-      process.env.WERK_LOG_LEVEL = commander.opts().logLevel ?? process.env.WERK_LOG_LEVEL;
-      const globalOpts: GlobalOptions = {
-        log: { level: options.logLevel ?? 'info', prefix: options.prefix },
-        select: {
-          withDependencies: options.withDependencies ?? false,
-          includeWorkspaces: options.workspace ?? [],
-          includeKeywords: options.keyword ?? [],
-          excludeWorkspaces: options.notWorkspace ?? [],
-          excludeKeywords: options.notKeyword ?? [],
-          excludePrivate: options.notPrivate ?? false,
-          excludePublic: options.notPublic ?? false,
-          excludePublished: options.notPublished ?? false,
-          excludeUnpublished: options.notUnpublished ?? false,
-          excludeModified: options.notModified ?? false,
-          excludeUnmodified: options.notUnmodified ?? false,
-        },
-        run: {
-          parallel: options.parallel ?? false,
-          concurrency: options.concurrency,
-          wait: options.wait,
-        },
-        git: {
-          gitHead: options.gitHead,
-          gitFromRevision: options.gitFromRevision,
-        },
-      };
+    .version(config.version)
+    .passThroughOptions();
 
-      await mainAction({ commander, cmd, cmdArgs, globalOpts: globalOpts });
-    });
+  commander.parse([...config.globalArgs, ...process.argv.slice(2)], { from: 'user' });
 
-  await commander.parseAsync().catch(onError);
+  let [cmd, cmdArgs] = commander.processedArgs;
+
+  commander.parse(
+    [
+      ...config.globalArgs,
+      ...(config.commandConfig[cmd]?.globalArgs ?? []),
+      ...process.argv.slice(2, -cmdArgs.length - 1),
+      cmd,
+      ...(config.commandConfig[cmd]?.args ?? []),
+      ...cmdArgs,
+    ],
+    { from: 'user' },
+  );
+
+  [cmd, cmdArgs] = commander.processedArgs;
+
+  const opts = commander.opts();
+
+  const globalOpts: GlobalOptions = {
+    log: { level: opts.logLevel ?? 'info', prefix: opts.prefix },
+    select: {
+      withDependencies: opts.withDependencies ?? false,
+      includeWorkspaces: opts.workspace ?? [],
+      includeKeywords: opts.keyword ?? [],
+      excludeWorkspaces: opts.notWorkspace ?? [],
+      excludeKeywords: opts.notKeyword ?? [],
+      excludePrivate: opts.notPrivate ?? false,
+      excludePublic: opts.notPublic ?? false,
+      excludePublished: opts.notPublished ?? false,
+      excludeUnpublished: opts.notUnpublished ?? false,
+      excludeModified: opts.notModified ?? false,
+      excludeUnmodified: opts.notUnmodified ?? false,
+    },
+    run: {
+      parallel: opts.parallel ?? false,
+      concurrency: opts.concurrency,
+      wait: opts.wait,
+    },
+    git: {
+      gitHead: opts.gitHead,
+      gitFromRevision: opts.gitFromRevision,
+    },
+  };
+
+  await mainAction({ config, commander, cmd, cmdArgs, globalOpts });
 };

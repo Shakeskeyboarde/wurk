@@ -1,7 +1,7 @@
 export { type CommandHooks } from './command/command.js';
 export { createCommand } from './command/create-command.js';
 export { type CommandInfo } from './command/load-command-plugin.js';
-export { type Commander, type CommanderArgs, type CommanderOptions } from './commander/commander.js';
+export { type CommanderArgs, type CommanderOptions } from './commander/commander.js';
 export { type AfterContext } from './context/after-context.js';
 export { type BeforeContext } from './context/before-context.js';
 export { type CleanupContext } from './context/cleanup-context.js';
@@ -14,3 +14,4 @@ export { type SpawnSync, type SpawnSyncOptions, type SpawnSyncResult } from './u
 export { type WorkerPromise } from './utils/start-worker.js';
 export type { WorkspaceLocalDependenciesOptions } from './workspace/get-workspace-local-dependencies.js';
 export { type Workspace } from './workspace/workspace.js';
+export { type Command as Commander } from '@commander-js/extra-typings';

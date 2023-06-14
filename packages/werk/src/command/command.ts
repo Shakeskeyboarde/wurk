@@ -2,7 +2,9 @@ import { randomUUID } from 'node:crypto';
 import { readFile, unlink, writeFile } from 'node:fs/promises';
 import { isMainThread, parentPort } from 'node:worker_threads';
 
-import { type Commander, type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
+import { type Command as Commander } from '@commander-js/extra-typings';
+
+import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
 import { AfterContext, type AfterContextOptions } from '../context/after-context.js';
 import { BeforeContext, type BeforeContextOptions } from '../context/before-context.js';
 import { CleanupContext, type CleanupContextOptions } from '../context/cleanup-context.js';
@@ -51,18 +53,9 @@ export interface CommandHooks<A extends CommanderArgs, O extends CommanderOption
   readonly cleanup?: (context: CleanupContext<AA, OO>) => void | undefined;
 }
 
-export interface CommandType<A extends CommanderArgs, O extends CommanderOptions> {
-  isWaitForced: boolean;
-  readonly init: (options: InitContextOptions) => Commander<any, any>;
-  readonly before: (options: BeforeOptions<A, O>) => Promise<void>;
-  readonly each: (options: EachOptions<A, O>) => Promise<void>;
-  readonly after: (options: AfterOptions<A, O>) => Promise<void>;
-  readonly cleanup: (context: CleanupContextOptions<A, O>) => void;
-}
-
 const COMMAND = Symbol('WerkCommand');
 
-export class Command<A extends CommanderArgs, O extends CommanderOptions> implements CommandType<A, O> {
+export class Command<A extends CommanderArgs, O extends CommanderOptions> {
   readonly #init: ((context: InitContext) => Commander<A, O>) | undefined;
   readonly #before: ((context: BeforeContext<A, O>) => Promise<void>) | undefined;
   readonly #each: ((context: EachContext<A, O>) => Promise<void>) | undefined;
