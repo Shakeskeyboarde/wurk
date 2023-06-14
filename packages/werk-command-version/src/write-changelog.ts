@@ -85,7 +85,7 @@ export const writeChangelog = async (
     .sort((a, b) => rcompare(a.version, b.version));
   const index = entries.findIndex((entry) => lte(entry.version, version));
 
-  if (eq(entries[index]?.version as string, version)) {
+  if (index >= 0 && eq(entries[index]?.version as string, version)) {
     // The version already exists in the change log.
     return false;
   }
