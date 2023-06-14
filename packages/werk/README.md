@@ -97,7 +97,7 @@ map the command name to an arbitrary package name in your workspaces root `packa
 ```json
 {
   "werk": {
-    "commands": {
+    "commandPackages": {
       "run": "some-package-name"
     }
   }

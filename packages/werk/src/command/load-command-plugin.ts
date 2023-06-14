@@ -16,7 +16,7 @@ export const loadCommandPlugin = async (name: string): Promise<CommandPlugin> =>
   const workspacesRoot = await getNpmWorkspacesRoot();
   const packageJson = await readJsonFile<PackageJson>(join(workspacesRoot, 'package.json'));
   const packageNames = await readJsonFile(`${workspacesRoot}/package.json`).then((json: any) => {
-    const customPackageName: string | undefined = json?.werk?.commands?.[name];
+    const customPackageName: string | undefined = json?.werk?.commandPackages?.[name];
     if (typeof customPackageName === 'string') return [customPackageName];
     const customPrefixes: readonly string[] = packageJson?.werk?.commandPackagePrefixes ?? [];
     return [...customPrefixes, `@werk/command-`, `werk-command-`].map((prefix) => `${prefix}${name}`);
