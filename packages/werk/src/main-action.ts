@@ -26,9 +26,7 @@ export const mainAction = async ({ config, commander, cmd, cmdArgs, globalOpts }
   const commandPlugin = await loadCommandPlugin(cmd, config);
   const { command, ...commandInfo } = commandPlugin;
   const workspaces = await getWorkspaces(config.workspaces, { ...globalOpts.select, ...globalOpts.git });
-  const subCommander = new Commander(`${commander.name()} ${cmd}`).copyInheritedSettings(
-    commander as CommandUnknownOpts,
-  );
+  const subCommander = new Commander().copyInheritedSettings(commander as CommandUnknownOpts);
 
   process.chdir(config.rootDir);
 
@@ -57,7 +55,7 @@ export const mainAction = async ({ config, commander, cmd, cmdArgs, globalOpts }
   if (!isDescriptionSet && packageJson.description) subCommander.description(packageJson.description);
   if (!isVersionSet && packageJson.version) subCommander.version(packageJson.version);
 
-  subCommander.name(cmd).parse(cmdArgs, { from: 'user' });
+  subCommander.name(`${commander.name()} ${cmd}`).parse(cmdArgs, { from: 'user' });
 
   const args = subCommander.processedArgs;
   const opts = subCommander.opts();
