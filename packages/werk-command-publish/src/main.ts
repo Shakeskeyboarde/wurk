@@ -52,7 +52,10 @@ const publishFromArchive = async (
 ): Promise<boolean> => {
   const { log, opts, workspace, spawn } = context;
   const { otp, dryRun = false } = opts;
-  const filename = join(workspace.dir, `${workspace.name.replace(/^@/u, '').replace(/\//gu, '-')}.tgz`);
+  const filename = join(
+    workspace.dir,
+    `${workspace.name.replace(/^@/u, '').replace(/\//gu, '-')}-${workspace.version}.tgz`,
+  );
   const filenameExists = await stat(filename)
     .then((stats) => stats.isFile())
     .catch(() => false);
