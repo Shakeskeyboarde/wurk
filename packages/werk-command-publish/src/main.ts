@@ -58,7 +58,9 @@ const publishFromArchive = async (
     .catch(() => false);
 
   if (!filenameExists) {
-    log.verbose(`Skipping workspace "${workspace.name}@${workspace.version}" because the archive file is missing.`);
+    log.verbose(
+      `Skipping workspace "${workspace.name}@${workspace.version}" because the archive file "${filename}" is missing.`,
+    );
     return false;
   }
 
