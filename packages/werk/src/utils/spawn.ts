@@ -73,8 +73,8 @@ export interface SpawnResult {
 export interface SpawnPromise extends Promise<SpawnResult> {
   readonly childProcess: ChildProcess;
   readonly stdin: NodeJS.WritableStream | null;
-  readonly stdout: NodeJS.ReadableStream;
-  readonly stderr: NodeJS.ReadableStream;
+  readonly stdout: NodeJS.ReadableStream | null;
+  readonly stderr: NodeJS.ReadableStream | null;
 
   readonly getStdout: GetOutput;
   readonly getStderr: GetOutput;
@@ -197,9 +197,9 @@ export const spawn = (
 
   return Object.assign(promise, {
     childProcess,
-    stdin: childProcess.stdin,
-    stdout: childProcess.stdout as NodeJS.ReadableStream,
-    stderr: childProcess.stderr as NodeJS.ReadableStream,
+    stdin: input ? childProcess.stdin : null,
+    stdout: stream ? (childProcess.stdout as NodeJS.ReadableStream) : null,
+    stderr: stream ? (childProcess.stderr as NodeJS.ReadableStream) : null,
     getStdout: (encoding?: BufferEncoding): Promise<any> =>
       promise.then((result) => (encoding ? result.stdout.toString(encoding).trim() : result.stdout)),
     getStderr: (encoding?: BufferEncoding): Promise<any> =>
