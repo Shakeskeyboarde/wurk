@@ -1,8 +1,12 @@
 import assert from 'node:assert';
-import { stat } from 'node:fs/promises';
-import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
+import { createReadStream, createWriteStream } from 'node:fs';
+import { copyFile, mkdir, rm, stat } from 'node:fs/promises';
+import { basename, join } from 'node:path';
+import { createGunzip } from 'node:zlib';
 
 import { createCommand, type EachContext, type MutablePackageJson } from '@werk/cli';
+import { extract } from 'tar-stream';
 
 const isPublished = new Map<string, boolean>();
 
@@ -68,20 +72,30 @@ const publishFromArchive = async (
     return false;
   }
 
-  await spawn(
-    'npm',
-    [
-      `--loglevel=${log.level.name}`,
-      'publish',
-      Boolean(tag) && `--tag=${tag}`,
-      Boolean(otp) && `--otp=${otp}`,
-      dryRun && '--dry-run',
-      filename,
-    ],
-    {
-      echo: true,
-    },
-  );
+  const tmpDir = join(workspace.dir, `.${randomUUID()}.tmp`);
+
+  try {
+    if (!dryRun) {
+      await mkdir(tmpDir, { recursive: true });
+      await copyFile(filename, join(tmpDir, basename(filename)));
+      await extractPackageJson(filename, tmpDir);
+    }
+
+    await spawn(
+      'npm',
+      [
+        `--loglevel=${log.level.name}`,
+        'publish',
+        Boolean(tag) && `--tag=${tag}`,
+        Boolean(otp) && `--otp=${otp}`,
+        dryRun && '--dry-run',
+        filename,
+      ],
+      { cwd: tmpDir, echo: true },
+    );
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true });
+  }
 
   return true;
 };
@@ -173,10 +187,31 @@ const publishFromFilesystem = async (
       Boolean(otp) && `--otp=${otp}`,
       dryRun && '--dry-run',
     ],
-    {
-      echo: true,
-    },
+    { echo: true },
   );
 
   return true;
+};
+
+export const extractPackageJson = async (tgz: string, tmpDir: string): Promise<void> => {
+  await new Promise<void>((resolve, reject) => {
+    const extractor = extract()
+      .on('entry', (header, stream, next) => {
+        if (header.name !== 'package/package.json') {
+          stream.resume();
+          next();
+          return;
+        }
+
+        stream.pipe(createWriteStream(join(tmpDir, 'package.json')).on('error', reject)).on('finish', () => {
+          extractor.destroy();
+          resolve();
+        });
+      })
+      .on('finish', () => {
+        reject(new Error('The archive does not contain a package.json file.'));
+      });
+
+    createReadStream(tgz).pipe(createGunzip()).pipe(extractor);
+  });
 };
