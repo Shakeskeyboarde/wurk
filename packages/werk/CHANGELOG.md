@@ -1,3 +1,17 @@
+## 1.0.4 (2023-06-14)
+
+### Bug Fixes
+
+- cli description (a9c0040)
+
+### Code Refactoring
+
+- removed package.json &#96;werk.gitHead&#96; metadata (b13da72)
+
+### Documentation
+
+- fix work->werk typo (cc53fac)
+
 ## 1.0.3 (2023-06-14)
 
 ### Code Refactoring

@@ -1,3 +1,9 @@
+## 1.0.5 (2023-06-14)
+
+### Code Refactoring
+
+- removed package.json &#96;werk.gitHead&#96; metadata (b13da72)
+
 ## 1.0.4 (2023-06-14)
 
 ### Bug Fixes
