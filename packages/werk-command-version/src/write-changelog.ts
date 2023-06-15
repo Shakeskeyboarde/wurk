@@ -112,7 +112,9 @@ export const writeChangelog = async (
       text += `\n### ${SECTION_HEADINGS[section]}\n\n`;
     }
 
-    text += `- ${change.scope ? `**${change.scope}:** ` : ''}${change.message} ${change.hash && `(${change.hash})`}\n`;
+    text += `- ${change.scope ? `**${change.scope}:** ` : ''}${change.message}${
+      change.hash ? ` (${change.hash})` : ''
+    }\n`;
   });
 
   sortedChanges
