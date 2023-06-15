@@ -59,7 +59,7 @@ werk version auto
 
 This will also update the `CHANGELOG.md` file, unless the `--no-changelog` flag is set.
 
-**Note:** The `auto` bump type is intended for _releases_, so the `--pre` and `--preid` options are not supported. While working with prereleases, use the [basic bump command](#bump-versions) instead.
+**Note:** The `auto` bump type is intended for _releases_, so the `--preid` option is not supported. While working with prereleases, use the [basic bump command](#bump-versions) instead.
 
 **Note:** The `auto` bump type requires a Git repository with a clean working tree.
 
