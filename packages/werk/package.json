@@ -11,7 +11,7 @@
     "directory": "packages/werk"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && chmod +x lib/bin.js",
+    "build": "rm -rf lib && tsc -p tsconfig.build.json && chmod +x lib/bin.js",
     "prepack": "npm run build"
   },
   "type": "module",

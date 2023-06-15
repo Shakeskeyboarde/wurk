@@ -11,7 +11,7 @@
     "directory": "packages/werk-command-publish"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "rm -rf lib && tsc -p tsconfig.build.json",
     "prepack": "npm run build"
   },
   "type": "module",
