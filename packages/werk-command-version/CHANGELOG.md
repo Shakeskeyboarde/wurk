@@ -1,3 +1,9 @@
+## 1.0.2 (2023-06-14)
+
+### Bug Fixes
+
+- version range prefix not being applied by versioning (ef03cf2)
+
 ## 1.0.1 (2023-06-14)
 
 ### Bug Fixes
