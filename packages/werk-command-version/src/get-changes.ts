@@ -44,9 +44,5 @@ export const getChanges = async (spawn: Spawn, commit: string, dir: string): Pro
       };
     });
 
-  if (changes.length === 0 && log.length > 0) {
-    changes.push({ type: 'note', message: 'No significant changes.' });
-  }
-
   return changes;
 };
