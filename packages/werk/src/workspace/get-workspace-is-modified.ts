@@ -9,8 +9,7 @@ export const getWorkspaceIsModified = async (
   fromRevision: string | undefined,
   head: string | undefined,
 ): Promise<boolean> => {
-  if (fromRevision == null)
-    fromRevision = await getNpmMetadata(name, version).then((meta) => meta?.work?.gitHead ?? meta?.gitHead);
+  if (fromRevision == null) fromRevision = await getNpmMetadata(name, version).then((meta) => meta?.gitHead);
   if (head == null) head = await getGitHead(dir);
   return !!fromRevision && !!head && (await getGitIsModified(dir, fromRevision, head));
 };

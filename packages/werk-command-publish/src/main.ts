@@ -170,7 +170,7 @@ const publishFromFilesystem = async (
   // It's also not documented well even though it is definitely added
   // intentionally in v7.
   const gitHead = await workspace.getGitHead();
-  const gitHeadPatch = { gitHead, werk: { gitHead } };
+  const gitHeadPatch = { gitHead };
 
   if (!dryRun) {
     await workspace.saveAndRestoreFile('package.json');
