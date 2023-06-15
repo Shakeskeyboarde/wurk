@@ -1,3 +1,9 @@
+## 1.0.1 (2023-06-14)
+
+### Bug Fixes
+
+- npm seems to remove gitHead from the archive package.json (ffea09e)
+
 # 1.0.0
 
 Initial release
