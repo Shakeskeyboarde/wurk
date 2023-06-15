@@ -16,6 +16,7 @@ interface CommandConfig {
 
 export interface Config {
   readonly version: string;
+  readonly description: string;
   readonly rootDir: string;
   readonly workspaces: readonly WorkspaceOptions[];
   readonly commandPackagePrefixes: string[];
@@ -26,14 +27,15 @@ export interface Config {
 
 export const loadConfig = memoize(async (): Promise<Config> => {
   const __dirname = dirname(fileURLToPath(import.meta.url));
-  const [version, rootDir, workspaces] = await Promise.all([
-    await readFile(join(__dirname, '../package.json'), 'utf-8').then((json) => JSON.parse(json).version),
+  const [packageJson, rootDir, workspaces] = await Promise.all([
+    await readFile(join(__dirname, '../package.json'), 'utf-8').then((json): PackageJson => JSON.parse(json)),
     await getNpmWorkspacesRoot(),
     await getNpmWorkspaces(),
   ]);
+  const { version = '', description = '' } = packageJson;
   const filename = join(rootDir, 'package.json');
-  const packageJson = filename ? await readJsonFile<PackageJson>(filename) : {};
-  const root = isObject(packageJson?.werk) ? packageJson.werk : {};
+  const rootPackageJson = filename ? await readJsonFile<PackageJson>(filename) : {};
+  const root = isObject(rootPackageJson?.werk) ? rootPackageJson.werk : {};
   const commandPackagePrefixes = Array.isArray(root?.commandPackagePrefixes)
     ? root.commandPackagePrefixes.filter((value) => typeof value === 'string')
     : [];
@@ -61,6 +63,7 @@ export const loadConfig = memoize(async (): Promise<Config> => {
 
   return {
     version,
+    description,
     rootDir,
     workspaces,
     commandPackagePrefixes,

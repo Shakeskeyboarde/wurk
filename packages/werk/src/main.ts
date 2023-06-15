@@ -23,7 +23,7 @@ const asyncMain = async (): Promise<void> => {
   const config = await loadConfig();
 
   const commander = new Commander('werk')
-    .description('Modular and extensible monorepo command framework.')
+    .description(config.description)
     .addHelpText('after', 'To get help for a specific command, run `werk <command> --help`.')
     .argument('<command>', 'Command to run.')
     .argument('[args...]', 'Arguments to pass to the command.')
