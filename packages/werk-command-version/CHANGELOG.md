@@ -1,3 +1,14 @@
+## 1.0.3 (2023-06-14)
+
+### Bug Fixes
+
+- don't auto version if no conventional commit messages are present. (29056ca)
+- run npm update after versioning to sync the package lock. (c6a7ace)
+
+### Code Refactoring
+
+- add a placeholder changelog on non-auto version updates. (636aa27)
+
 ## 1.0.2 (2023-06-14)
 
 ### Bug Fixes

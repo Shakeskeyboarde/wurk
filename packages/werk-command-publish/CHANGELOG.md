@@ -1,3 +1,9 @@
+## 1.0.3 (2023-06-14)
+
+### Bug Fixes
+
+- use temp directory when publishing archives (fcbc8cc)
+
 ## 1.0.2 (2023-06-14)
 
 **Note:** No significant changes.
