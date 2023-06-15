@@ -50,6 +50,8 @@ export default createCommand({
   },
 
   each: async ({ log, args, opts, workspace, spawn }) => {
+    if (workspace.private) return;
+
     const [update] = args;
     const { preid, changelog, dryRun = false } = opts;
 
@@ -100,7 +102,7 @@ export default createCommand({
         // Not an updatable range.
         if (depRange === '*' || depRange === 'x' || depRange.startsWith('file:')) continue;
 
-        const prefix = depVersion.match(/^(|=|>=?|\^|~)\d+(?:\.\d+(?:\.\d+(?:-[^\s|=<>^~]*)?)?)?$/u)?.[1];
+        const prefix = depRange.match(/^(|=|>=?|\^|~)\d+(?:\.\d+(?:\.\d+(?:-[^\s|=<>^~]*)?)?)?$/u)?.[1];
 
         if (prefix == null) {
           log.warn(`Dependency "${depName}@${depRange}" in workspace "${workspace.name}" is too complex to update.`);
