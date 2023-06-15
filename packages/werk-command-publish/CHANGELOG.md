@@ -1,3 +1,10 @@
+## 1.0.6 (2023-06-14)
+
+### Build System
+
+- include change log in packages (1e237ea)
+- clean lib before build (5ef2b5f)
+
 ## 1.0.5 (2023-06-14)
 
 ### Code Refactoring
