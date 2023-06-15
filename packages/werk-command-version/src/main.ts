@@ -100,7 +100,7 @@ export default createCommand({
         // Not an updatable range.
         if (depRange === '*' || depRange === 'x' || depRange.startsWith('file:')) continue;
 
-        const prefix = depVersion.match(/^(|=|>=?|^|~)\d+(?:\.\d+(?:\.\d+(?:-[^\s|=<>^~]*)?)?)?$/u)?.[1];
+        const prefix = depVersion.match(/^(|=|>=?|\^|~)\d+(?:\.\d+(?:\.\d+(?:-[^\s|=<>^~]*)?)?)?$/u)?.[1];
 
         if (prefix == null) {
           log.warn(`Dependency "${depName}@${depRange}" in workspace "${workspace.name}" is too complex to update.`);
