@@ -26,6 +26,7 @@
   },
   "engineStrict": true,
   "files": [
+    "CHANGELOG.md",
     "lib/**"
   ],
   "keywords": [

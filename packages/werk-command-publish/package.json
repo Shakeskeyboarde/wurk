@@ -20,6 +20,7 @@
     "default": "./lib/main.js"
   },
   "files": [
+    "CHANGELOG.md",
     "lib/**"
   ],
   "keywords": [
