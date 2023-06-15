@@ -68,7 +68,7 @@ All commands are modular and must be installed individually. By itself, Werk can
 
 The following "official" commands are provided to get you started.
 
-- list: [@werk/command-list](https://www.npmjs.com/package/@werk/command-publish)
+- list: [@werk/command-list](https://www.npmjs.com/package/@werk/command-list)
   - List workspaces as JSON with filtering applied.
 - run: [@werk/command-run](https://www.npmjs.com/package/@werk/command-run)
   - Run package scripts.
