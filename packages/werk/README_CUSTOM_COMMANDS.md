@@ -194,7 +194,7 @@ const spawnPromise = spawn('git', ['status', '--porcelain'], {
   //  Default: context.workspace.dir or context.rootDir
   cwd: '/current/working/directory',
 
-  // Set the process environment variables (replaces process.env).
+  // Set the process environment variables (merged with process.env).
   //  Default: process.env
   env: {},
 });

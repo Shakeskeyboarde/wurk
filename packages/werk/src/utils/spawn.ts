@@ -102,13 +102,16 @@ export const spawn = (
     errorEcho = false,
     errorMessage,
     log = defaultLog,
+    env,
     ...options
   }: SpawnOptions = {},
 ): SpawnPromise => {
   const args_ = args.flatMap((value) =>
     typeof value === 'string' ? value : typeof value === 'number' ? value.toString(10) : [],
   );
-  const env = options.env ?? process.env;
+
+  log.debug(`$ ${quote([cmd, ...args_])}`);
+
   const childProcess = crossSpawn(cmd, args_, {
     ...options,
     stdio: [
@@ -117,8 +120,9 @@ export const spawn = (
       echo || capture || errorEcho || stream ? 'pipe' : 'ignore',
     ],
     env: {
+      ...process.env,
       ...env,
-      PATH: npmRunPath({ cwd: options.cwd, path: env.PATH }),
+      PATH: npmRunPath({ cwd: options.cwd, path: env?.PATH ?? process.env.PATH }),
     },
   });
   const stdout: Buffer[] = [];
