@@ -52,7 +52,7 @@ All [commands](#official-commands) are modular and must be installed separately.
 npm i -D @werk/command-list
 ```
 
-**Note:** Because Werk command packages should depend on the `@work/cli` package, you have effectively pinned your project to a specific version of Werk (it's a feature)!
+**Note:** Because Werk command packages should depend on the `@werk/cli` package, you have effectively pinned your project to a specific version of Werk (it's a feature)!
 
 Now, the `list` command is available.
 

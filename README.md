@@ -4,12 +4,12 @@ An open-minded monorepo tool, with opinionated plugins.
 
 ## Packages
 
-- [@work/cli](packages/werk/README.md)
-- [@work/command-list](packages/werk-command-list/README.md)
-- [@work/command-run](packages/werk-command-run/README.md)
-- [@work/command-exec](packages/werk-command-exec/README.md)
-- [@work/command-version](packages/werk-command-version/README.md)
-- [@work/command-publish](packages/werk-command-publish/README.md)
+- [@werk/cli](packages/werk/README.md)
+- [@werk/command-list](packages/werk-command-list/README.md)
+- [@werk/command-run](packages/werk-command-run/README.md)
+- [@werk/command-exec](packages/werk-command-exec/README.md)
+- [@werk/command-version](packages/werk-command-version/README.md)
+- [@werk/command-publish](packages/werk-command-publish/README.md)
 
 ## Developing Custom Commands
 
