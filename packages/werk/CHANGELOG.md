@@ -1,3 +1,13 @@
+## 1.0.6 (2023-06-14)
+
+### Bug Fixes
+
+- **cli:** --git-head should only provide a default, not an override. (d92247e)
+
+### Documentation
+
+- **cli:** readme correction (11faa97)
+
 ## 1.0.5 (2023-06-14)
 
 ### Build System
