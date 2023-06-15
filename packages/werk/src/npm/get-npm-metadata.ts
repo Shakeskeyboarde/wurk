@@ -4,6 +4,7 @@ import { spawn } from '../utils/spawn.js';
 
 export type NpmMetadata = PackageJson & {
   gitHead?: string;
+  werk?: { gitHead?: string };
 };
 
 export const getNpmMetadata = memoize(
@@ -21,6 +22,8 @@ export const getNpmMetadata = memoize(
     const meta = result.getJson<NpmMetadata>();
 
     if (typeof meta.gitHead !== 'string') delete meta.gitHead;
+    if (typeof meta.werk !== 'object' || meta.work === null) delete meta.werk;
+    if (typeof meta.werk?.gitHead !== 'string') delete meta.werk?.gitHead;
 
     return meta;
   },

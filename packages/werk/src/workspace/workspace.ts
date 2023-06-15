@@ -193,7 +193,10 @@ export class Workspace {
    * Can be overridden by the `--git-from-revision` command line option.
    */
   readonly getGitFromRevision = async (): Promise<string | undefined> => {
-    return this.#gitFromRevision ?? (await getNpmMetadata(this.name, this.version).then((meta) => meta?.gitHead));
+    return (
+      this.#gitFromRevision ??
+      (await getNpmMetadata(this.name, this.version).then((meta) => meta?.werk?.gitHead ?? meta?.gitHead))
+    );
   };
 
   /**

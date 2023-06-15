@@ -156,7 +156,8 @@ const publishFromFilesystem = async (
   // should do this automatically. But, it doesn't do it for packing.
   // It's also not documented well even though it is definitely added
   // intentionally in v7.
-  const gitHeadPatch = { gitHead: await workspace.getGitHead() };
+  const gitHead = await workspace.getGitHead();
+  const gitHeadPatch = { gitHead, werk: { gitHead } };
 
   if (!dryRun) {
     await workspace.saveAndRestoreFile('package.json');

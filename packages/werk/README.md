@@ -183,7 +183,7 @@ The log level can also be set using the `WERK_LOG_LEVEL` environment variable. T
 - `--git-head <sha>`
   - Use a specific Git commit as the "HEAD" commit. If not specified, the current commit will be used.
 - `--git-from-revision <rev>`
-  - Use a specific Git revision when detecting modifications. If not specified, the `gitHead` registry metadata value for the current version will be used.
+  - Use a specific Git revision when detecting modifications. If not specified, it will be detected from the registry metadata of the current version.
 
 ### Pre-Configured Commands
 
