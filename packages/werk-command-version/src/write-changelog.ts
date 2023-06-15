@@ -98,7 +98,7 @@ export const writeChangelog = async (
     date.getDate().toString(10).padStart(2, '0'),
   ].join('-');
   const sortedChanges = changes
-    .map((change) => ({ ...change, section: CHANGE_SECTIONS[change.type] ?? Section.chore }))
+    .map((change) => ({ ...change, section: CHANGE_SECTIONS[change.type.toUpperCase()] ?? Section.chore }))
     .sort((a, b) => a.section - b.section);
 
   let text = `${isMajorUpdate ? '#' : '##'} ${version} (${dateString})\n`;
