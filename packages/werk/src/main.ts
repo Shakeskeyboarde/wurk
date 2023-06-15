@@ -72,7 +72,7 @@ const asyncMain = async (): Promise<void> => {
     .addOption(new Option('--not-unmodified', 'Exclude unmodified workspaces.').conflicts('notModified'))
     .option('--no-wait', 'No waiting for dependency processing to complete.')
     .option('--no-prefix', 'No output prefixes.')
-    .option('--git-head <sha>', 'Set the commit hash used as the current Git head.')
+    .option('--git-head <sha>', 'Set a default head commit hash for non-Git environments.')
     .option('--git-from-revision <rev>', 'Set the revision used for detecting modifications.')
     .version(config.version)
     .passThroughOptions();

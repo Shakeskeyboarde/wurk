@@ -165,25 +165,13 @@ export class Workspace {
   };
 
   /**
-   * Return true if the Git working tree is clean.
-   *
-   * A workspace is considered clean if _ALL_ of the following
-   * conditions are met.
-   *
-   * - The workspace is not part of a Git repository.
-   * - The workspace directory has no uncommitted or untracked changes.
-   */
-  readonly getGitIsClean = async (): Promise<boolean> => {
-    return await getGitIsClean(this.dir);
-  };
-
-  /**
    * Get the current Git HEAD commit hash.
    *
-   * Can be overridden by the `--git-head` command line option.
+   * A default can be set for non-Git environments using the `--git-head`
+   * command line option.
    */
   readonly getGitHead = async (): Promise<string | undefined> => {
-    return this.#gitHead ?? (await getGitHead(this.dir));
+    return (await getGitHead(this.dir)) ?? this.#gitHead;
   };
 
   /**
@@ -197,12 +185,25 @@ export class Workspace {
   };
 
   /**
+   * Return true if the Git working tree is clean.
+   *
+   * A workspace is considered clean if _ALL_ of the following
+   * conditions are met.
+   *
+   * - The workspace is not part of a Git repository.
+   * - The workspace directory has no uncommitted or untracked changes.
+   */
+  readonly getGitIsClean = async (): Promise<boolean> => {
+    return await getGitIsClean(this.dir);
+  };
+
+  /**
    * Return true if the current version is published, and there is no
    * difference between the published and local code.
    *
-   * A workspace is always considered modified it is not published
-   * (`gitNpmIsPublished`). Otherwise, it is modified if _ALL_ of the
-   * following conditions are met:
+   * A workspace is considered modified if it is not published
+   * (`gitNpmIsPublished`), or if there are uncommitted changes, or if
+   * _ALL_ of the following conditions are met:
    *
    * - The workspace is part of a Git repository (`getGitIsRepo`).
    * - The Git "from" revision and head commit can be determined

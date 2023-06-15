@@ -181,7 +181,7 @@ The log level can also be set using the `WERK_LOG_LEVEL` environment variable. T
 ### Git Options
 
 - `--git-head <sha>`
-  - Use a specific Git commit as the "HEAD" commit. If not specified, the current commit will be used.
+  - Provide a default Git "HEAD" commit in non-Git environments. This has no effect if Git is available.
 - `--git-from-revision <rev>`
   - Use a specific Git revision when detecting modifications. If not specified, it will be detected from the registry metadata of the current version.
 
