@@ -1,3 +1,13 @@
+## 1.0.7 (2023-06-14)
+
+### Bug Fixes
+
+- **version:** shouldn't skip private by default (a06ec71)
+
+### Documentation
+
+- correction to version command readme (ebda41d)
+
 ## 1.0.6 (2023-06-14)
 
 ### Build System
