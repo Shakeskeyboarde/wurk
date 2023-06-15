@@ -137,4 +137,10 @@ export default createCommand({
       log.info(`Updated workspace "${workspace.name}" to version "${updatedVersion}".`);
     }
   },
+
+  after: async ({ spawn }) => {
+    if (versionUpdates.size === 0) return;
+
+    await spawn('npm', ['update', ...versionUpdates.keys()], { errorEcho: true });
+  },
 });
