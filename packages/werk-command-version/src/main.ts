@@ -64,6 +64,7 @@ export default createCommand({
     if (workspace.selected) {
       if (update instanceof SemVer) {
         updatedVersion = update.toString();
+        changes = [{ type: 'note', message: `Updated to version "${updatedVersion}".` }];
       } else if (update === 'auto') {
         assert(await workspace.getGitIsRepo(), 'Auto versioning requires a Git repository.');
         assert(await workspace.getGitIsClean(), 'Auto versioning requires a clean Git working tree.');
@@ -79,6 +80,7 @@ export default createCommand({
         }
       } else {
         updatedVersion = getBumpedVersion(workspace.version, update, preid).toString();
+        changes = [{ type: 'note', message: `Updated to version "${updatedVersion}".` }];
       }
     }
 
