@@ -1,3 +1,9 @@
+## 1.0.4 (2023-06-14)
+
+### Bug Fixes
+
+- publish dry-run ENOENT (9de4600)
+
 ## 1.0.3 (2023-06-14)
 
 ### Bug Fixes
