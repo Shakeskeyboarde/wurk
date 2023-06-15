@@ -73,13 +73,12 @@ const publishFromArchive = async (
   }
 
   const tmpDir = join(workspace.dir, `.${randomUUID()}.tmp`);
+  const tmpFilename = join(tmpDir, basename(filename));
 
   try {
-    if (!dryRun) {
-      await mkdir(tmpDir, { recursive: true });
-      await copyFile(filename, join(tmpDir, basename(filename)));
-      await extractPackageJson(filename, tmpDir);
-    }
+    await mkdir(tmpDir, { recursive: true });
+    await copyFile(filename, tmpFilename);
+    await extractPackageJson(filename, tmpDir);
 
     await spawn(
       'npm',
@@ -89,7 +88,7 @@ const publishFromArchive = async (
         Boolean(tag) && `--tag=${tag}`,
         Boolean(otp) && `--otp=${otp}`,
         dryRun && '--dry-run',
-        filename,
+        tmpFilename,
       ],
       { cwd: tmpDir, echo: true },
     );
