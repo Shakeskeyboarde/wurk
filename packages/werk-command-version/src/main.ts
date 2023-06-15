@@ -50,8 +50,6 @@ export default createCommand({
   },
 
   each: async ({ log, args, opts, workspace, spawn }) => {
-    if (workspace.private) return;
-
     const [update] = args;
     const { preid, changelog, dryRun = false } = opts;
 
@@ -66,17 +64,19 @@ export default createCommand({
         updatedVersion = update.toString();
         changes = [{ type: 'note', message: `Updated to version "${updatedVersion}".` }];
       } else if (update === 'auto') {
-        assert(await workspace.getGitIsRepo(), 'Auto versioning requires a Git repository.');
-        assert(await workspace.getGitIsClean(), 'Auto versioning requires a clean Git working tree.');
+        if (!workspace.private) {
+          assert(await workspace.getGitIsRepo(), 'Auto versioning requires a Git repository.');
+          assert(await workspace.getGitIsClean(), 'Auto versioning requires a clean Git working tree.');
 
-        const fromRevision = await workspace.getGitFromRevision();
+          const fromRevision = await workspace.getGitFromRevision();
 
-        if (!fromRevision) log.warn('Unable to determine a "from" Git revision. Using previous commit only.');
+          if (!fromRevision) log.warn('Unable to determine a "from" Git revision. Using previous commit only.');
 
-        changes = await getChanges(spawn, fromRevision ?? 'HEAD~1', workspace.dir);
+          changes = await getChanges(spawn, fromRevision ?? 'HEAD~1', workspace.dir);
 
-        if (changes.length > 0) {
-          updatedVersion = getChangeVersion(workspace.version, changes).toString();
+          if (changes.length > 0) {
+            updatedVersion = getChangeVersion(workspace.version, changes).toString();
+          }
         }
       } else {
         updatedVersion = getBumpedVersion(workspace.version, update, preid).toString();
@@ -93,7 +93,7 @@ export default createCommand({
 
         // If the workspace version wasn't updated, but a dependency was,
         // then we need to increment the workspace version.
-        if (!updatedVersion) {
+        if (!updatedVersion && !workspace.private) {
           updatedVersion = getIncrementedVersion(workspace.version).toString();
 
           if (update === 'auto') {
@@ -122,20 +122,36 @@ export default createCommand({
       }
     }
 
+    const patches: PackageJson[] = [];
+
     if (updatedVersion) {
       versionUpdates.set(workspace.name, updatedVersion);
+      patches.push({ version: updatedVersion });
+    }
 
-      if (!dryRun) {
-        await workspace.patchPackageJson({
-          version: updatedVersion,
-          ...updatedDependencies,
-        });
+    if (updatedDependencies) {
+      patches.push(updatedDependencies);
+    }
 
-        if (changelog && changes?.length && !(await writeChangelog(workspace.dir, updatedVersion, changes))) {
-          log.warn(`Version "${updatedVersion}" already exists in the workspace "${workspace.name}" change log.`);
-        }
-      }
+    if (dryRun) {
+      await workspace.saveAndRestoreFile('package.json');
+      await workspace.saveAndRestoreFile('CHANGELOG.md');
+    }
 
+    if (patches.length) {
+      await workspace.patchPackageJson(...patches);
+    }
+
+    if (
+      updatedVersion &&
+      changelog &&
+      changes?.length &&
+      !(await writeChangelog(workspace.dir, updatedVersion, changes))
+    ) {
+      log.warn(`Version "${updatedVersion}" already exists in the workspace "${workspace.name}" change log.`);
+    }
+
+    if (updatedVersion) {
       log.info(`Updated workspace "${workspace.name}" to version "${updatedVersion}".`);
     }
   },
