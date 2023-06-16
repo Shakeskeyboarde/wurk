@@ -9,6 +9,7 @@ import { onError } from './error.js';
 import { mainAction } from './main-action.js';
 import { type GlobalOptions } from './options.js';
 import { LOG_LEVEL, type LogLevel } from './utils/log.js';
+import { isWorkspaceMatch } from './workspace/get-workspaces.js';
 
 process.on('uncaughtException', onError);
 process.on('unhandledRejection', (error) => {
@@ -47,7 +48,13 @@ const asyncMain = async (): Promise<void> => {
     .option(
       '-w, --workspace <name>',
       'Include workspaces by name.',
-      (value, previous: string[] | undefined): string[] => [...(previous ?? []), value],
+      (value, previous: string[] | undefined): string[] => {
+        if (!config.workspaces.some((workspace) => isWorkspaceMatch(workspace, config.rootDir, value))) {
+          throw new Error(`Workspace "${value}" does not exist.`);
+        }
+
+        return [...(previous ?? []), value];
+      },
     )
     .option(
       '-k, --keyword <keyword>',
@@ -57,7 +64,13 @@ const asyncMain = async (): Promise<void> => {
     .option(
       '--not-workspace <name>',
       'Exclude workspaces by name.',
-      (value, previous: string[] | undefined): string[] => [...(previous ?? []), value],
+      (value, previous: string[] | undefined): string[] => {
+        if (!config.workspaces.some((workspace) => isWorkspaceMatch(workspace, config.rootDir, value))) {
+          throw new Error(`Workspace "${value}" does not exist.`);
+        }
+
+        return [...(previous ?? []), value];
+      },
     )
     .option(
       '--not-keyword <keyword>',

@@ -25,7 +25,10 @@ const PREFIX_COLORS = ['cyan', 'magenta', 'yellow', 'blue', 'green', 'red'] as c
 export const mainAction = async ({ config, commander, cmd, cmdArgs, globalOpts }: MainActionOptions): Promise<void> => {
   const commandPlugin = await loadCommandPlugin(cmd, config);
   const { command, ...commandInfo } = commandPlugin;
-  const workspaces = await getWorkspaces(config.workspaces, { ...globalOpts.select, ...globalOpts.git });
+  const workspaces = await getWorkspaces(config.workspaces, config.rootDir, {
+    ...globalOpts.select,
+    ...globalOpts.git,
+  });
   const subCommander = new Commander().copyInheritedSettings(commander as CommandUnknownOpts);
 
   process.chdir(config.rootDir);

@@ -1,3 +1,5 @@
+import { isAbsolute, resolve } from 'node:path';
+
 import { getNpmMetadata } from '../npm/get-npm-metadata.js';
 import { type GitOptions, type SelectOptions } from '../options.js';
 import { memoize } from '../utils/memoize.js';
@@ -34,6 +36,7 @@ const getSorted = (workspaces: readonly WorkspaceOptions[]): readonly WorkspaceO
 
 const getSelected = async (
   workspaces: readonly WorkspaceOptions[],
+  rootDir: string,
   {
     withDependencies,
     includeWorkspaces,
@@ -60,7 +63,7 @@ const getSelected = async (
     Array.from(workspaces).map(async (workspace) => {
       let isExcluded =
         workspace.selected === false ||
-        excludeWorkspaces.includes(workspace.name) ||
+        excludeWorkspaces.some((nameOrPath) => isWorkspaceMatch(workspace, rootDir, nameOrPath)) ||
         Boolean(workspace.keywords?.some((keyword) => excludeKeywords.includes(keyword))) ||
         (excludePrivate && workspace.private) ||
         (excludePublic && !workspace.private);
@@ -88,7 +91,7 @@ const getSelected = async (
       const isIncluded =
         workspace.selected ||
         (!includeWorkspaces.length && !includeKeywords.length) ||
-        includeWorkspaces.includes(workspace.name) ||
+        includeWorkspaces.some((nameOrPath) => isWorkspaceMatch(workspace, rootDir, nameOrPath)) ||
         Boolean(workspace.keywords?.some((keyword) => includeKeywords.includes(keyword)));
 
       return { ...workspace, selected: isIncluded };
@@ -109,12 +112,24 @@ const getSelected = async (
   return workspaces;
 };
 
+export const isWorkspaceMatch = (
+  workspace: Pick<WorkspaceOptions, 'name' | 'dir'>,
+  rootDir: string,
+  nameOrPath: string,
+): boolean => {
+  return (
+    nameOrPath === workspace.name ||
+    ((nameOrPath.startsWith('.') || isAbsolute(nameOrPath)) && resolve(rootDir, nameOrPath) === workspace.dir)
+  );
+};
+
 export const getWorkspaces = async (
   workspaces: readonly WorkspaceOptions[],
+  rootDir: string,
   options: SelectOptions & GitOptions,
 ): Promise<readonly WorkspaceOptions[]> => {
   workspaces = getSorted(workspaces);
-  workspaces = await getSelected(workspaces, options);
+  workspaces = await getSelected(workspaces, rootDir, options);
 
   return workspaces;
 };
