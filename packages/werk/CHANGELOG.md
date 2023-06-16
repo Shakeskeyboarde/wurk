@@ -1,3 +1,9 @@
+## 1.0.7 (2023-06-16)
+
+### Bug Fixes
+
+- **cli:** allow workspace paths and throw if a workspace doesn't exist. (2ce9e18)
+
 ## 1.0.6 (2023-06-14)
 
 ### Bug Fixes
