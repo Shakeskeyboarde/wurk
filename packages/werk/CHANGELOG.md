@@ -1,3 +1,14 @@
+## 1.0.8 (2023-06-16)
+
+### Bug Fixes
+
+- log level handling (c69cdb6)
+- restore files should happen after cleanup and on exit (5b1793a)
+
+### Chores
+
+- add logging (783a673)
+
 ## 1.0.7 (2023-06-16)
 
 ### Bug Fixes
