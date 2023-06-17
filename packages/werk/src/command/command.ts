@@ -1,5 +1,7 @@
+/* eslint-disable max-lines */
 import { randomUUID } from 'node:crypto';
-import { readFile, unlink, writeFile } from 'node:fs/promises';
+import { unlinkSync, writeFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { isMainThread, parentPort } from 'node:worker_threads';
 
 import { type Command as Commander } from '@commander-js/extra-typings';
@@ -10,7 +12,7 @@ import { BeforeContext, type BeforeContextOptions } from '../context/before-cont
 import { CleanupContext, type CleanupContextOptions } from '../context/cleanup-context.js';
 import { EachContext, type EachContextOptions } from '../context/each-context.js';
 import { InitContext, type InitContextOptions } from '../context/init-context.js';
-import { type Log } from '../utils/log.js';
+import { type Log, log } from '../utils/log.js';
 import { startWorker, type WorkerOptions, type WorkerPromise } from '../utils/start-worker.js';
 
 type FunctionKeys<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T];
@@ -72,6 +74,9 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> {
     this.#each = each;
     this.#after = after;
     this.#cleanup = cleanup;
+
+    process.setMaxListeners(process.getMaxListeners() + 1);
+    process.on('exit', this.#restoreBackupFiles);
   }
 
   readonly init = (options: InitContextOptions): Commander<any, any> => {
@@ -158,6 +163,9 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> {
 
     try {
       this.#cleanup(context);
+      process.off('exit', this.#restoreBackupFiles);
+      process.setMaxListeners(process.getMaxListeners() - 1);
+      this.#restoreBackupFiles(context.log);
     } catch (error) {
       context.log.error(error instanceof Error ? error.message : `${error}`);
       process.exitCode = process.exitCode || 1;
@@ -202,22 +210,29 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> {
       throw error;
     });
 
-    this.#fileBackups.push({ filename, content });
+    this.#fileBackups.unshift({ filename, content });
   };
 
-  #restoreBackupFiles = async (log: Log): Promise<void> => {
+  #restoreBackupFiles = (log_: Log): void => {
     for (const fileBackup of this.#fileBackups) {
-      try {
+      log.silly(`restore('${fileBackup.filename}')`);
+
         if (fileBackup.content == null) {
-          await unlink(fileBackup.filename).catch((error) => {
-            if (error?.code !== 'ENOENT') throw error;
-          });
-        } else {
-          await writeFile(fileBackup.filename, fileBackup.content);
+        try {
+          unlinkSync(fileBackup.filename);
+        } catch (error) {
+          if (!(error instanceof Error) || !('code' in error) || error.code !== 'ENOENT') {
+            log_.error(error);
+            log_.warn(`Failed to restore "${fileBackup.filename}" (unlink).`);
+          }
         }
+        } else {
+        try {
+          writeFileSync(fileBackup.filename, fileBackup.content);
       } catch (error) {
-        log.error(error);
-        log.warn(`Failed to restore "${fileBackup.filename}".`);
+          log_.error(error);
+          log_.warn(`Failed to restore "${fileBackup.filename}" (write).`);
+        }
       }
     }
   };
