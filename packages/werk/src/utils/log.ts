@@ -23,9 +23,27 @@ export const LOG_LEVEL = {
   silly: 60,
 } as const;
 
+const defaultLevel =
+  process.env.WERK_LOG_LEVEL && process.env.WERK_LOG_LEVEL in LOG_LEVEL
+    ? (process.env.WERK_LOG_LEVEL as LogLevel)
+    : 'info';
+
 export class Log {
+  static #level: { readonly name: LogLevel; readonly value: number } = {
+    name: defaultLevel,
+    value: LOG_LEVEL[defaultLevel],
+  };
+
+  static setLevel(level: LogLevel): void {
+    process.env.WERK_LOG_LEVEL = level;
+    Log.#level = { name: level, value: LOG_LEVEL[level] };
+  }
+
+  static get level(): { readonly name: LogLevel; readonly value: number } {
+    return Log.#level;
+  }
+
   #isDestroyed = false;
-  #level: { readonly name: LogLevel; readonly value: number } | undefined;
 
   readonly #trim;
   readonly prefix: string;
@@ -40,17 +58,7 @@ export class Log {
   }
 
   get level(): { readonly name: LogLevel; readonly value: number } {
-    if (!this.#level) {
-      const name: LogLevel =
-        process.env.WERK_LOG_LEVEL && process.env.WERK_LOG_LEVEL in LOG_LEVEL
-          ? (process.env.WERK_LOG_LEVEL as LogLevel)
-          : 'info';
-      const value = LOG_LEVEL[name];
-
-      this.#level = { name, value };
-    }
-
-    return this.#level;
+    return Log.#level;
   }
 
   /**

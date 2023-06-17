@@ -1,5 +1,6 @@
 import assert from 'node:assert';
 import { cpus } from 'node:os';
+import { inspect } from 'node:util';
 
 import { Option } from '@commander-js/extra-typings';
 
@@ -8,7 +9,7 @@ import { loadConfig } from './config.js';
 import { onError } from './error.js';
 import { mainAction } from './main-action.js';
 import { type GlobalOptions } from './options.js';
-import { LOG_LEVEL, type LogLevel } from './utils/log.js';
+import { Log, log, LOG_LEVEL, type LogLevel } from './utils/log.js';
 import { isWorkspaceMatch } from './workspace/get-workspaces.js';
 
 process.on('uncaughtException', onError);
@@ -110,13 +111,11 @@ const asyncMain = async (): Promise<void> => {
 
   const opts = commander.opts();
 
+  if (opts.logLevel) Log.setLevel(opts.logLevel);
+
   const globalOpts: GlobalOptions = {
     log: {
-      level: opts.logLevel
-        ? opts.logLevel
-        : process.env.WERK_LOG_LEVEL && process.env.WERK_LOG_LEVEL in LOG_LEVEL
-        ? (process.env.WERK_LOG_LEVEL as LogLevel)
-        : 'info',
+      level: Log.level.name,
       prefix: opts.prefix,
     },
     select: {
@@ -143,7 +142,9 @@ const asyncMain = async (): Promise<void> => {
     },
   };
 
-  process.env.WERK_LOG_LEVEL = globalOpts.log.level;
+  log.silly('config = ' + inspect(config));
+  log.silly('args = ' + inspect({ cmd, cmdArgs, globalOpts }));
+  log.silly('env = ' + inspect(process.env));
 
   await mainAction({ config, commander, cmd, cmdArgs, globalOpts });
 };
