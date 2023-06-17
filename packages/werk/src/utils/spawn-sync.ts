@@ -35,6 +35,8 @@ export const spawnSync = (
   let spawnResult: SpawnSyncReturns<Buffer> | undefined;
 
   try {
+    log.debug(`$ ${quote([cmd, ...args_])}`);
+
     spawnResult = crossSpawnSync(cmd, args_, {
       ...options,
       stdio: ['ignore', echo || capture ? 'pipe' : 'ignore', echo || capture ? 'pipe' : 'ignore'],

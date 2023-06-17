@@ -1,5 +1,8 @@
 import { fileURLToPath } from 'node:url';
+import { inspect } from 'node:util';
 import { isMainThread, Worker } from 'node:worker_threads';
+
+import { log } from './log.js';
 
 export interface WorkerOptions {
   /**
@@ -13,6 +16,8 @@ export type WorkerPromise =
   | ({ readonly isStarted: true; readonly worker: Worker } & Promise<true>);
 
 export const startWorker = (filename: string, { workerData }: WorkerOptions = {}): WorkerPromise => {
+  log.silly(`startWorker('${filename}', ${inspect(workerData, { depth: 1 })})`);
+
   if (!isMainThread) return Object.assign(Promise.resolve<false>(false), { isStarted: false } as const);
   if (filename.startsWith('file:')) filename = fileURLToPath(filename);
 

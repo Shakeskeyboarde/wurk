@@ -80,6 +80,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> {
   }
 
   readonly init = (options: InitContextOptions): Commander<any, any> => {
+    log.silly('init()');
     if (!this.#init) return options.commander;
 
     const context = new InitContext(options);
@@ -97,6 +98,8 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> {
   };
 
   readonly before = async (options: BeforeOptions<A, O>): Promise<void> => {
+    log.silly('before()');
+
     if (!this.#before) return;
 
     const context = new BeforeContext({
@@ -118,6 +121,8 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> {
   };
 
   readonly each = async (options: EachOptions<A, O>): Promise<void> => {
+    log.silly(`each('${options.workspace.name}')`);
+
     if (!this.#each) return;
 
     const context = new EachContext({
@@ -133,11 +138,12 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> {
         context.log.error(error instanceof Error ? error.message : `${error}`);
         process.exitCode = process.exitCode || 1;
       })
-      .then(() => this.#restoreBackupFiles(context.log))
       .finally(() => context.destroy());
   };
 
   readonly after = async (options: AfterOptions<A, O>): Promise<void> => {
+    log.silly('after()');
+
     if (!this.#after) return;
 
     const context = new AfterContext({
@@ -157,6 +163,8 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> {
   };
 
   readonly cleanup = (options: CleanupContextOptions<A, O>): void => {
+    log.silly('cleanup()');
+
     if (!this.#cleanup) return;
 
     const context = new CleanupContext(options);
@@ -217,7 +225,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> {
     for (const fileBackup of this.#fileBackups) {
       log.silly(`restore('${fileBackup.filename}')`);
 
-        if (fileBackup.content == null) {
+      if (fileBackup.content == null) {
         try {
           unlinkSync(fileBackup.filename);
         } catch (error) {
@@ -226,10 +234,10 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> {
             log_.warn(`Failed to restore "${fileBackup.filename}" (unlink).`);
           }
         }
-        } else {
+      } else {
         try {
           writeFileSync(fileBackup.filename, fileBackup.content);
-      } catch (error) {
+        } catch (error) {
           log_.error(error);
           log_.warn(`Failed to restore "${fileBackup.filename}" (write).`);
         }

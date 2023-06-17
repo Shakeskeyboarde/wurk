@@ -3,9 +3,11 @@ import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { inspect } from 'node:util';
 
 import { getNpmGlobalPackagesRoot } from '../npm/get-npm-global-packages-root.js';
 import { getNpmWorkspacesRoot } from '../npm/get-npm-workspaces-root.js';
+import { log } from './log.js';
 import { memoize } from './memoize.js';
 import { type PackageJson } from './package-json.js';
 
@@ -30,6 +32,8 @@ const readPackageInfo = async (dir: string): Promise<{ packageJson: PackageJson;
 
 export const loadPlugin = memoize(
   async (packageNames: string | readonly string[]): Promise<Plugin | undefined> => {
+    log.silly(`loadPlugin(${inspect(packageNames)})`);
+
     packageNames = Array.isArray(packageNames) ? packageNames : [packageNames];
 
     const [workspacesRoot, globalPackagesRoot] = await Promise.all([
