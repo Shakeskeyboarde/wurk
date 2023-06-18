@@ -1,3 +1,9 @@
+## 1.0.13 (2023-06-17)
+
+### Chores
+
+- **changelog:** omit scopes that match all or part of the workspace name. (d256af3)
+
 ## 1.0.12 (2023-06-17)
 
 ### Chores
