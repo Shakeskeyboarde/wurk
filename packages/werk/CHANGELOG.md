@@ -1,3 +1,9 @@
+## 1.0.9 (2023-06-17)
+
+### Code Refactoring
+
+- **cli:** default to cpus+1 concurrency when parallel (09c1c62)
+
 ## 1.0.8 (2023-06-16)
 
 ### Bug Fixes
