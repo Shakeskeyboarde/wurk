@@ -16,7 +16,7 @@ export const getChangeVersion = (version: string | SemVer, changes: readonly Cha
   version = new SemVer(version);
 
   const releaseType = changes.reduce<Exclude<ReleaseType, `pre${string}`>>((acc, change) => {
-    const value = RELEASE_TYPES[change.type] ?? 'patch';
+    const value = RELEASE_TYPES[change.type.toUpperCase()] ?? 'patch';
 
     switch (value) {
       case 'major':
