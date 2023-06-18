@@ -1,3 +1,9 @@
+## 1.0.12 (2023-06-17)
+
+### Chores
+
+- warn on auto version with non-conventional commits. (1b84df3)
+
 ## 1.0.11 (2023-06-17)
 
 **Note:** Updated local dependencies.
