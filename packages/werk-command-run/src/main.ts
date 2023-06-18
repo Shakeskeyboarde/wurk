@@ -8,27 +8,54 @@ export default createCommand({
         `If a script is not found in a workspace, a warning will be
         printed, but the command will complete successfully.`,
       )
-      .argument('<script>', 'Script to run in each workspace.')
+      .description(
+        `The script can be a CSV of scripts to run more than one script
+        at a time. Arguments are passed only to the last script. The
+        scripts are run in parallel if global options allow, and the
+        --sequential flag is not set.`,
+      )
+      .argument('<script>', 'Script (or scripts CSV) to run in each workspace.')
       .argument('[args...]', 'Arguments passed to the script.')
+      .option('-s, --sequential', 'Run multiple scripts (CSV) sequentially.')
       .passThroughOptions();
   },
 
-  each: async ({ log, args, workspace, spawn }) => {
-    if (!workspace.selected) return;
+  before: async ({ args, opts }) => {
+    const [scriptsCsv, scriptArgs] = args;
+    const { sequential = false } = opts;
+    const scripts = scriptsCsv.split(',');
 
-    const [script, scriptArgs] = args;
-    const { scripts } = await workspace.readPackageJson();
-
-    if (scripts?.[script] == null) {
-      log.verbose(`Skipping script "${script}" because it is not defined in workspace "${workspace.name}".`);
-      return;
+    if (sequential) {
+      return [{ scripts: scripts.map((script) => script.trim()), scriptArgs }];
     }
 
-    const exitCode = await spawn('npm', ['run', script, ...scriptArgs], {
-      echo: true,
-      errorReturn: true,
-    }).getExitCode();
+    return scripts.map((script, i) => ({
+      scripts: [script.trim()],
+      scriptArgs: i === scripts.length - 1 ? scriptArgs : [],
+    }));
+  },
 
-    if (exitCode !== 0) process.exitCode = exitCode;
+  each: async ({ log, workspace, matrixValue, spawn }) => {
+    if (!workspace.selected) return;
+
+    const { scripts, scriptArgs } = matrixValue;
+    const { scripts: packageScripts } = await workspace.readPackageJson();
+
+    for (const [i, script] of scripts.entries()) {
+      if (packageScripts?.[script] == null) {
+        log.verbose(`Skipping script "${script}" because it is not defined in workspace "${workspace.name}".`);
+        continue;
+      }
+
+      const exitCode = await spawn('npm', ['run', script, ...(i === scripts.length - 1 ? scriptArgs : [])], {
+        echo: true,
+        errorReturn: true,
+      }).getExitCode();
+
+      if (exitCode !== 0) {
+        process.exitCode = exitCode;
+        return;
+      }
+    }
   },
 });
