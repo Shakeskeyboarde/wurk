@@ -20,10 +20,7 @@ export interface BaseAsyncContextOptions<A extends CommanderArgs, O extends Comm
   readonly startWorker: (data?: any) => Promise<boolean>;
 }
 
-export abstract class BaseAsyncContext<
-  A extends CommanderArgs = CommanderArgs,
-  O extends CommanderOptions = CommanderOptions,
-> extends BaseContext {
+export abstract class BaseAsyncContext<A extends CommanderArgs, O extends CommanderOptions> extends BaseContext {
   #startWorker: (data?: any) => Promise<boolean>;
 
   /**

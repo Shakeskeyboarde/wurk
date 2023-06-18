@@ -6,10 +6,7 @@ export interface BeforeContextOptions<A extends CommanderArgs, O extends Command
   readonly forceWait: () => void;
 }
 
-export class BeforeContext<
-  A extends CommanderArgs = CommanderArgs,
-  O extends CommanderOptions = CommanderOptions,
-> extends BaseAsyncContext<A, O> {
+export class BeforeContext<A extends CommanderArgs, O extends CommanderOptions> extends BaseAsyncContext<A, O> {
   /**
    * Force dependent workspaces to wait for their dependencies (ie. ignore
    * the CLI `--no-wait` option).

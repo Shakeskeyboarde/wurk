@@ -5,7 +5,7 @@ import { type Command, isCommand } from './command.js';
 export type CommandInfo = Omit<Plugin, 'exports'>;
 
 export interface CommandPlugin extends CommandInfo {
-  readonly command: Command<any, any>;
+  readonly command: Command<any, any, any>;
 }
 
 export const loadCommandPlugin = async (

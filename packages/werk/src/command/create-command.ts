@@ -6,7 +6,7 @@ import { type AfterOptions, type BeforeOptions, Command, type CommandHooks, type
 
 type WorkerOptions = 'workerData' | 'isWorker';
 
-type CommandWorkerData<A extends CommanderArgs, O extends CommanderOptions> =
+type CommandWorkerData<A extends CommanderArgs, O extends CommanderOptions, M> =
   | {
       readonly stage: 'before';
       readonly options: Omit<BeforeOptions<A, O>, WorkerOptions>;
@@ -14,7 +14,7 @@ type CommandWorkerData<A extends CommanderArgs, O extends CommanderOptions> =
     }
   | {
       readonly stage: 'each';
-      readonly options: Omit<EachOptions<A, O>, WorkerOptions>;
+      readonly options: Omit<EachOptions<A, O, M>, WorkerOptions>;
       readonly data: any;
     }
   | {
@@ -28,15 +28,15 @@ type CommandWorkerData<A extends CommanderArgs, O extends CommanderOptions> =
  *
  * The result of this function should be the default export of the command package.
  */
-export const createCommand = <A extends CommanderArgs, O extends CommanderOptions>(
-  hooks: CommandHooks<A, O>,
+export const createCommand = <A extends CommanderArgs, O extends CommanderOptions, M>(
+  hooks: CommandHooks<A, O, M>,
 ): unknown => {
   const command = new Command(hooks);
 
   if (!isMainThread) {
     Promise.resolve()
       .then(async () => {
-        const { stage, data, options }: CommandWorkerData<A, O> = workerData;
+        const { stage, data, options }: CommandWorkerData<A, O, M> = workerData;
 
         switch (stage) {
           case 'before':

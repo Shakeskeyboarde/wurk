@@ -21,29 +21,39 @@ export type BeforeOptions<A extends CommanderArgs, O extends CommanderOptions> =
   BeforeContextOptions<A, O>,
   FunctionKeys<BeforeContextOptions<CommanderArgs, CommanderOptions>>
 >;
-export type EachOptions<A extends CommanderArgs, O extends CommanderOptions> = Omit<
-  EachContextOptions<A, O>,
-  FunctionKeys<EachContextOptions<CommanderArgs, CommanderOptions>>
+export type EachOptions<A extends CommanderArgs, O extends CommanderOptions, M> = Omit<
+  EachContextOptions<A, O, M>,
+  FunctionKeys<EachContextOptions<CommanderArgs, CommanderOptions, unknown>>
 >;
 export type AfterOptions<A extends CommanderArgs, O extends CommanderOptions> = Omit<
   AfterContextOptions<A, O>,
   FunctionKeys<AfterContextOptions<CommanderArgs, CommanderOptions>>
 >;
 
-export interface CommandHooks<A extends CommanderArgs, O extends CommanderOptions, AA extends A = A, OO extends O = O> {
+export interface CommandHooks<
+  A extends CommanderArgs,
+  O extends CommanderOptions,
+  M,
+  AA extends A = A,
+  OO extends O = O,
+  MM extends M = M,
+> {
   /**
    * Called when the command is loaded. Intended for configuration of
    * command options, arguments, and help text.
    */
   readonly init?: (context: InitContext) => Commander<A, O>;
   /**
-   * Run once before handling individual workspaces.
+   * Run once before handling individual workspaces. This hook can also
+   * return an array of values which will be used as a "matrix" when
+   * running the `each` hook. The `each` hook will run once for every
+   * workspace and matrix value combination.
    */
-  readonly before?: (context: BeforeContext<AA, OO>) => Promise<void>;
+  readonly before?: (context: BeforeContext<AA, OO>) => Promise<void | undefined | M[]>;
   /**
    * Run once for each workspace.
    */
-  readonly each?: (context: EachContext<AA, OO>) => Promise<void>;
+  readonly each?: (context: EachContext<AA, OO, MM>) => Promise<void>;
   /**
    * Run once after handling individual workspaces.
    */
@@ -57,17 +67,17 @@ export interface CommandHooks<A extends CommanderArgs, O extends CommanderOption
 
 const COMMAND = Symbol('WerkCommand');
 
-export class Command<A extends CommanderArgs, O extends CommanderOptions> {
+export class Command<A extends CommanderArgs, O extends CommanderOptions, M> {
   readonly #init: ((context: InitContext) => Commander<A, O>) | undefined;
-  readonly #before: ((context: BeforeContext<A, O>) => Promise<void>) | undefined;
-  readonly #each: ((context: EachContext<A, O>) => Promise<void>) | undefined;
+  readonly #before: ((context: BeforeContext<A, O>) => Promise<void | undefined | M[]>) | undefined;
+  readonly #each: ((context: EachContext<A, O, M>) => Promise<void>) | undefined;
   readonly #after: ((context: AfterContext<A, O>) => Promise<void>) | undefined;
   readonly #cleanup: ((context: CleanupContext<A, O>) => void) | undefined;
   readonly #fileBackups: { filename: string; content: Buffer | null }[] = [];
 
   isWaitForced = false;
 
-  constructor({ init, before, each, after, cleanup }: CommandHooks<A, O>) {
+  constructor({ init, before, each, after, cleanup }: CommandHooks<A, O, M>) {
     Object.assign(this, { [COMMAND]: true });
     this.#init = init;
     this.#before = before;
@@ -97,7 +107,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> {
     return options.commander;
   };
 
-  readonly before = async (options: BeforeOptions<A, O>): Promise<void> => {
+  readonly before = async (options: BeforeOptions<A, O>): Promise<void | undefined | M[]> => {
     log.silly('before()');
 
     if (!this.#before) return;
@@ -112,7 +122,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> {
         this.#startWorker(options.command.main, { workerData: { stage: 'before', options, data } }),
     });
 
-    await this.#before(context)
+    return await this.#before(context)
       .catch((error) => {
         context.log.error(error instanceof Error ? error.message : `${error}`);
         process.exitCode = process.exitCode || 1;
@@ -120,7 +130,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> {
       .finally(() => context.destroy());
   };
 
-  readonly each = async (options: EachOptions<A, O>): Promise<void> => {
+  readonly each = async (options: EachOptions<A, O, M>): Promise<void> => {
     log.silly(`each('${options.workspace.name}')`);
 
     if (!this.#each) return;
@@ -265,6 +275,6 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions> {
   };
 }
 
-export const isCommand = (value: unknown): value is Command<any, any> => {
+export const isCommand = (value: unknown): value is Command<any, any, any> => {
   return (value as any)?.[COMMAND] === true;
 };

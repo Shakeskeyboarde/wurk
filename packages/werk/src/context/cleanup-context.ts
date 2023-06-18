@@ -13,10 +13,7 @@ export interface CleanupContextOptions<A extends CommanderArgs, O extends Comman
   readonly exitCode: number;
 }
 
-export class CleanupContext<
-  A extends CommanderArgs = CommanderArgs,
-  O extends CommanderOptions = CommanderOptions,
-> extends BaseContext {
+export class CleanupContext<A extends CommanderArgs, O extends CommanderOptions> extends BaseContext {
   /**
    * Contextual logger.
    */

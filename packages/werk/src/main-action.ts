@@ -63,8 +63,7 @@ export const mainAction = async ({ config, commander, cmd, cmdArgs, globalOpts }
   const args = subCommander.processedArgs;
   const opts = subCommander.opts();
   const { gitHead, gitFromRevision } = globalOpts.git;
-
-  await command.before({
+  const matrixValues = await command.before({
     log: undefined,
     command: commandInfo,
     rootDir: config.rootDir,
@@ -82,38 +81,43 @@ export const mainAction = async ({ config, commander, cmd, cmdArgs, globalOpts }
   const { concurrency, wait } = globalOpts.run;
   const { prefix } = globalOpts.log;
   const semaphore = concurrency > 0 ? new Semaphore(concurrency) : null;
-  const promises = new Map<string, Promise<void>>();
+  const promises = new Map<string, Promise<any>>();
   let prefixColorIndex = 0;
 
   for (const workspace of workspaces.values()) {
     const logPrefixColor = PREFIX_COLORS[prefixColorIndex++ % PREFIX_COLORS.length] as PrefixColor;
     const logPrefix = prefix ? chalk.bold(chalk[`${logPrefixColor}Bright`](workspace.name) + ': ') : '';
-    const dependencyNames = getWorkspaceDependencyNames(workspace);
-    const prerequisites = Promise.allSettled(dependencyNames.map((name) => promises.get(name)));
-    const promise = Promise.resolve().then(async () => {
-      if (wait || command.isWaitForced) await prerequisites;
-      await semaphore?.acquire();
 
-      try {
-        if (process.exitCode != null) return;
+    if (wait || command.isWaitForced) {
+      await Promise.allSettled(getWorkspaceDependencyNames(workspace).map((name) => promises.get(name)));
+    }
 
-        await command.each({
-          log: { prefix: logPrefix },
-          command: commandInfo,
-          rootDir: config.rootDir,
-          args,
-          opts,
-          workspaces,
-          workspace,
-          gitHead,
-          gitFromRevision,
-          isWorker: false,
-          workerData: null,
-        });
-      } finally {
-        semaphore?.release();
-      }
-    });
+    const promise = Promise.all(
+      (matrixValues ?? [undefined]).map(async (matrixValue): Promise<void> => {
+        await semaphore?.acquire();
+
+        try {
+          if (process.exitCode != null) return;
+
+          await command.each({
+            log: { prefix: logPrefix },
+            command: commandInfo,
+            rootDir: config.rootDir,
+            args,
+            opts,
+            workspaces,
+            workspace,
+            matrixValue,
+            gitHead,
+            gitFromRevision,
+            isWorker: false,
+            workerData: null,
+          });
+        } finally {
+          semaphore?.release();
+        }
+      }),
+    );
 
     promises.set(workspace.name, promise);
   }

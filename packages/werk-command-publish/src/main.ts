@@ -53,7 +53,7 @@ export default createCommand({
 });
 
 const publishFromArchive = async (
-  context: EachContext<[], { readonly otp?: string; readonly tag?: string; readonly dryRun?: true }>,
+  context: EachContext<[], { readonly otp?: string; readonly tag?: string; readonly dryRun?: true }, unknown>,
 ): Promise<boolean> => {
   const { log, opts, workspace, spawn } = context;
   const { tag, otp, dryRun = false } = opts;
@@ -108,7 +108,8 @@ const publishFromFilesystem = async (
       readonly otp?: string;
       readonly removePackageFields?: readonly string[];
       readonly dryRun?: true;
-    }
+    },
+    unknown
   >,
 ): Promise<boolean> => {
   const { log, opts, workspace, spawn } = context;

@@ -1,6 +1,5 @@
 import { join, resolve } from 'node:path';
 
-import { type BaseAsyncContext } from '../context/base-async-context.js';
 import { type PackageJson } from '../exports.js';
 import { getGitHead } from '../git/get-git-head.js';
 import { getGitIsClean } from '../git/get-git-is-clean.js';
@@ -8,6 +7,7 @@ import { getGitIsRepo } from '../git/get-git-is-repo.js';
 import { getNpmMetadata } from '../npm/get-npm-metadata.js';
 import { patchJsonFile } from '../utils/patch-json-file.js';
 import { readJsonFile } from '../utils/read-json-file.js';
+import { type Spawn } from '../utils/spawn.js';
 import { writeJsonFile } from '../utils/write-json-file.js';
 import { getWorkspaceDependencyNames } from './get-workspace-dependency-names.js';
 import { getWorkspaceIsModified } from './get-workspace-is-modified.js';
@@ -16,7 +16,10 @@ import {
   type WorkspaceLocalDependenciesOptions,
 } from './get-workspace-local-dependencies.js';
 
-type PartialContext = Pick<BaseAsyncContext, 'workspaces' | 'spawn'>;
+interface PartialContext {
+  readonly workspaces: ReadonlyMap<string, Workspace>;
+  readonly spawn: Spawn;
+}
 
 export type WorkspaceOptions = {
   readonly name: string;
