@@ -10,8 +10,6 @@ export class LogStream extends Transform {
 
   constructor() {
     super({
-      autoDestroy: false,
-      emitClose: false,
       decodeStrings: true,
       writableObjectMode: false,
       readableObjectMode: true,
@@ -21,8 +19,23 @@ export class LogStream extends Transform {
     process.on('exit', this.#finalize);
   }
 
-  flush(): void {
+  end(...args: [unknown?, (BufferEncoding | (() => void))?, (() => void)?]): this {
+    if (this.#isFinalized) return this;
+    if (args.length > 0) {
+      this.write.call(this, ...(args as Parameters<this['write']>));
+    }
+
     this.#send(true);
+
+    return this;
+  }
+
+  _write(chunk: any, encoding: BufferEncoding, callback: (error?: Error | null | undefined) => void): void {
+    if (this.#isFinalized) {
+      throw new Error('LogStream.write() called after stream was finalized.');
+    }
+
+    super._write(chunk, encoding, callback);
   }
 
   _transform(chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback): void {
