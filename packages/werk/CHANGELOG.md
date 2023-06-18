@@ -1,3 +1,13 @@
+## 1.1.0 (2023-06-18)
+
+### Features
+
+- before hook can return an array of matrix values to run the each hook more than once. (da6952a)
+
+### Bug Fixes
+
+- **log:** calling spawn twice with the same log and the echo option enabled caused the log streams to throw errors. (ed69101)
+
 ## 1.0.9 (2023-06-17)
 
 ### Code Refactoring

@@ -1,3 +1,9 @@
+## 1.1.0 (2023-06-18)
+
+### Features
+
+- support CSV for running multiple scripts (8f20fc0)
+
 ## 1.0.9 (2023-06-17)
 
 **Note:** Updated local dependencies.

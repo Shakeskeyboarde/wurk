@@ -1,3 +1,9 @@
+## 1.0.14 (2023-06-18)
+
+### Bug Fixes
+
+- **auto:** feature and breaking change not bumping the version correctly (e3ad11b)
+
 ## 1.0.13 (2023-06-17)
 
 ### Chores

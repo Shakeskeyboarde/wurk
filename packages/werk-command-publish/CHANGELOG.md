@@ -1,3 +1,9 @@
+## 1.1.0 (2023-06-18)
+
+### Features
+
+- **cli:** before hook can return an array of matrix values to run the each hook more than once. (da6952a)
+
 ## 1.0.10 (2023-06-17)
 
 **Note:** Updated local dependencies.
