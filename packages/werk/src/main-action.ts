@@ -79,9 +79,9 @@ export const mainAction = async ({ config, commander, cmd, cmdArgs, globalOpts }
 
   if (process.exitCode != null) return;
 
-  const { parallel, concurrency, wait } = globalOpts.run;
+  const { concurrency, wait } = globalOpts.run;
   const { prefix } = globalOpts.log;
-  const semaphore = concurrency || !parallel ? new Semaphore(concurrency ?? 1) : null;
+  const semaphore = concurrency > 0 ? new Semaphore(concurrency) : null;
   const promises = new Map<string, Promise<void>>();
   let prefixColorIndex = 0;
 

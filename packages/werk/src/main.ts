@@ -38,13 +38,17 @@ const asyncMain = async (): Promise<void> => {
       },
     )
     .option('-p, --parallel', 'Process workspaces in parallel.')
-    .option('-c, --concurrency <count>', 'Number of concurrent workspaces (number or "auto").', (value) => {
-      if (value === 'auto') return cpus().length + 1;
-      const count = Number(value);
-      assert(!Number.isNaN(count), new Error('Concurrency count must be a number or "auto".'));
-      assert(count > 0, new Error('Concurrency count must be greater than 0.'));
-      return count;
-    })
+    .addOption(
+      new Option('-c, --concurrency <count>', 'Number workspaces to process in parallel (number or "all").')
+        .argParser((value) => {
+          if (value === 'all') return -1;
+          const count = Number(value);
+          assert(!Number.isNaN(count), new Error('Concurrency count must be a number or "all".'));
+          assert(count > 0, new Error('Concurrency count must be greater than 0.'));
+          return count;
+        })
+        .implies({ parallel: true }),
+    )
     .option('-d, --with-dependencies', 'Always include dependencies when selecting workspaces.')
     .option(
       '-w, --workspace <name>',
@@ -132,8 +136,7 @@ const asyncMain = async (): Promise<void> => {
       excludeUnmodified: opts.notUnmodified ?? false,
     },
     run: {
-      parallel: opts.parallel ?? false,
-      concurrency: opts.concurrency,
+      concurrency: opts.parallel ? opts.concurrency ?? cpus().length + 1 : 1,
       wait: opts.wait,
     },
     git: {

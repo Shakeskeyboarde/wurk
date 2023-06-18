@@ -20,8 +20,7 @@ export interface SelectOptions {
 }
 
 export interface RunOptions {
-  readonly parallel: boolean;
-  readonly concurrency: number | undefined;
+  readonly concurrency: number;
   readonly wait: boolean;
 }
 

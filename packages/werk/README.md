@@ -163,7 +163,7 @@ And finally, if the `--with-dependencies` option is used, any dependencies of th
 - `-p, --parallel`
   - Process workspaces in parallel.
 - `-c, --concurrency <count>`
-  - Limit workspace processing concurrency (number or "auto"). If the count is "auto", the number of CPU cores + 1 will be used.
+  - Set the number workspaces to process in parallel (number or "all"). If not set, the number of CPU cores + 1 will be used.
 - `--no-wait`
   - Do not wait for workspace dependencies to finish processing before processing dependents.
 
