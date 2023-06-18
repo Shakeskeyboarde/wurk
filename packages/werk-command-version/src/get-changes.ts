@@ -9,11 +9,18 @@ export interface Change {
 
 const MARKDOWN_ESCAPE = /[#`_*~[\]{}\\]/gu;
 
-export const getChanges = async (spawn: Spawn, commit: string, dir: string): Promise<readonly Change[]> => {
-  const log = await spawn('git', ['log', '--pretty=format:«¦%h¦%B¦»', `${commit}..HEAD`, '--', dir], {
+export const getChanges = async (
+  commit: string,
+  dir: string,
+  spawn: Spawn,
+): Promise<[changes: readonly Change[], isConventional: boolean]> => {
+  let isConventional = true;
+
+  const text = await spawn('git', ['log', '--pretty=format:«¦%h¦%B¦»', `${commit}..HEAD`, '--', dir], {
     capture: true,
   }).getStdout('utf-8');
-  const entries = [...log.matchAll(/«¦(.*?)¦\s*([^\r\n]*)\s*(?:\n\n\s*(.*?)\s*)?¦»$/gmsu)].map(
+
+  const entries = [...text.matchAll(/«¦(.*?)¦\s*([^\r\n]*)\s*(?:\n\n\s*(.*?)\s*)?¦»$/gmsu)].map(
     ([, hash = '', subject = '', body = '']) => ({ hash, subject, body }),
   );
 
@@ -23,7 +30,10 @@ export const getChanges = async (spawn: Spawn, commit: string, dir: string): Pro
         /^\s*([a-zA-Z]+|BREAKING[ -]CHANGE)\s*(?:\(\s*(.*?)\s*\))?\s*(!)?\s*:\s*(.*?)\s*$/u,
       );
 
-      if (!subjectMatch) return [];
+      if (!subjectMatch) {
+        isConventional = false;
+        return [];
+      }
 
       const [, type = '', scope, breaking, message = ''] = subjectMatch;
       const bodyLines = body.split(/\r?\n/gu);
@@ -44,5 +54,5 @@ export const getChanges = async (spawn: Spawn, commit: string, dir: string): Pro
       };
     });
 
-  return changes;
+  return [changes, isConventional];
 };

@@ -72,7 +72,13 @@ export default createCommand({
 
           if (!fromRevision) log.warn('Unable to determine a "from" Git revision. Using previous commit only.');
 
-          changes = await getChanges(spawn, fromRevision ?? 'HEAD~1', workspace.dir);
+          let isConventional: boolean;
+
+          [changes, isConventional] = await getChanges(fromRevision ?? 'HEAD~1', workspace.dir, spawn);
+
+          if (!isConventional) {
+            log.warn(`Workspace "${workspace.name}" has non-conventional commits.`);
+          }
 
           if (changes.length > 0) {
             updatedVersion = getChangeVersion(workspace.version, changes).toString();
