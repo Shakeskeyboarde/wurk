@@ -152,7 +152,7 @@ export default createCommand({
       updatedVersion &&
       changelog &&
       changes?.length &&
-      !(await writeChangelog(workspace.dir, updatedVersion, changes))
+      !(await writeChangelog(workspace.name, workspace.dir, updatedVersion, changes))
     ) {
       log.warn(`Version "${updatedVersion}" already exists in the workspace "${workspace.name}" change log.`);
     }

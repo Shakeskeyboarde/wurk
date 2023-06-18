@@ -68,6 +68,7 @@ const SECTION_HEADINGS: Readonly<Record<Section, string>> = {
 };
 
 export const writeChangelog = async (
+  name: string,
   dir: string,
   version: string | SemVer,
   changes: readonly Change[],
@@ -112,9 +113,18 @@ export const writeChangelog = async (
       text += `\n### ${SECTION_HEADINGS[section]}\n\n`;
     }
 
-    text += `- ${change.scope ? `**${change.scope}:** ` : ''}${change.message}${
-      change.hash ? ` (${change.hash})` : ''
-    }\n`;
+    // Omit parts of the scope that match all or part of the workspace name.
+    const nameParts = name.split('/');
+    const scope = change.scope
+      ?.split('/')
+      .filter(
+        (part) =>
+          !nameParts.includes(part.toLocaleLowerCase()) &&
+          !nameParts[nameParts.length - 1]?.includes(part.toLocaleLowerCase()),
+      )
+      .join('/');
+
+    text += `- ${scope ? `**${scope}:** ` : ''}${change.message}${change.hash ? ` (${change.hash})` : ''}\n`;
   });
 
   sortedChanges
