@@ -19,7 +19,9 @@
     "types": "./lib/exports.d.ts",
     "default": "./lib/exports.js"
   },
-  "bin": "./lib/bin.js",
+  "bin": {
+    "werk": "./lib/bin.js"
+  },
   "engines": {
     "node": ">=18",
     "npm": ">=9"
