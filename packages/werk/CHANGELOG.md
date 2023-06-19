@@ -1,3 +1,9 @@
+## 1.1.1 (2023-06-19)
+
+### Bug Fixes
+
+- incorrect werk bin (db08a3f)
+
 ## 1.1.0 (2023-06-18)
 
 ### Features
