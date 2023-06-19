@@ -157,7 +157,7 @@ export class Workspace {
    * Return true if the current version exists in the registry.
    */
   readonly getNpmIsPublished = async (): Promise<boolean> => {
-    return Boolean(await getNpmMetadata(this.name, this.version));
+    return await getNpmMetadata(this.name, this.version).then((meta) => meta?.version === this.version);
   };
 
   /**

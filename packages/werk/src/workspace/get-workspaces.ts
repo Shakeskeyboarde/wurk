@@ -54,7 +54,7 @@ const getSelected = async (
   }: SelectOptions & GitOptions,
 ): Promise<readonly WorkspaceOptions[]> => {
   const getIsPublished = async (name: string, version: string): Promise<boolean> => {
-    return Boolean(await getNpmMetadata(name, version));
+    return await getNpmMetadata(name, version).then((meta) => meta?.version === version);
   };
 
   const getIsModified = memoize(getWorkspaceIsModified, (...args) => JSON.stringify(args));
