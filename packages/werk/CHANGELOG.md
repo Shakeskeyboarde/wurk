@@ -1,3 +1,9 @@
+## 1.1.3 (2023-06-19)
+
+### Chores
+
+- use the most recent (by version) gitHead if the current version is unpublished or doesn't have a gitHead (17cd5ce)
+
 ## 1.1.2 (2023-06-19)
 
 ### Chores
