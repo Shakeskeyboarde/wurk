@@ -2,6 +2,8 @@
 
 An open-minded monorepo tool, with opinionated plugins.
 
+[![npm version](https://badge.fury.io/js/@werk%2Fcli.svg)](https://badge.fury.io/js/@werk%2Fcli)
+
 - [Features](#features)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
