@@ -193,11 +193,9 @@ You can configure Werk to automatically inject command-line arguments. This conf
 {
   "werk": {
     "globalArgs": ["--with-dependencies"],
-    "commandConfigs": {
-      "publish": {
-        "globalArgs": ["--log-level=warn"],
-        "args": ["--remove-package-fields=devDependencies"]
-      }
+    "publish": {
+      "globalArgs": ["--log-level=warn"],
+      "args": ["--remove-package-fields=devDependencies"]
     }
   }
 }

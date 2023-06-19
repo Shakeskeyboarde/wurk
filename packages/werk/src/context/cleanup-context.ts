@@ -1,11 +1,9 @@
 import { type CommandInfo } from '../command/load-command-plugin.js';
 import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
-import { Log, type LogOptions } from '../utils/log.js';
 import { type SpawnSync, spawnSync } from '../utils/spawn-sync.js';
-import { BaseContext } from './base-context.js';
+import { BaseContext, type BaseContextOptions } from './base-context.js';
 
-export interface CleanupContextOptions<A extends CommanderArgs, O extends CommanderOptions> {
-  readonly log?: LogOptions;
+export interface CleanupContextOptions<A extends CommanderArgs, O extends CommanderOptions> extends BaseContextOptions {
   readonly command: CommandInfo;
   readonly rootDir: string;
   readonly args: A;
@@ -14,11 +12,6 @@ export interface CleanupContextOptions<A extends CommanderArgs, O extends Comman
 }
 
 export class CleanupContext<A extends CommanderArgs, O extends CommanderOptions> extends BaseContext {
-  /**
-   * Contextual logger.
-   */
-  readonly log: Log;
-
   /**
    * Information about the command package.
    */
@@ -44,9 +37,8 @@ export class CleanupContext<A extends CommanderArgs, O extends CommanderOptions>
    */
   readonly exitCode: number;
 
-  constructor({ log, command, rootDir, args, opts, exitCode }: CleanupContextOptions<A, O>) {
-    super();
-    this.log = new Log(log);
+  constructor({ log, config, command, rootDir, args, opts, exitCode }: CleanupContextOptions<A, O>) {
+    super({ log, config });
     this.command = command;
     this.rootDir = rootDir;
     this.args = args;

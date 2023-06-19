@@ -15,6 +15,7 @@ interface MainActionOptions {
   readonly commander: Command<any, any>;
   readonly cmd: string;
   readonly cmdArgs: readonly string[];
+  readonly cmdConfig: unknown;
   readonly globalOpts: GlobalOptions;
 }
 
@@ -22,7 +23,14 @@ type PrefixColor = (typeof PREFIX_COLORS)[number];
 
 const PREFIX_COLORS = ['cyan', 'magenta', 'yellow', 'blue', 'green', 'red'] as const;
 
-export const mainAction = async ({ config, commander, cmd, cmdArgs, globalOpts }: MainActionOptions): Promise<void> => {
+export const mainAction = async ({
+  config,
+  commander,
+  cmd,
+  cmdArgs,
+  cmdConfig,
+  globalOpts,
+}: MainActionOptions): Promise<void> => {
   const commandPlugin = await loadCommandPlugin(cmd, config);
   const { command, ...commandInfo } = commandPlugin;
   const workspaces = await getWorkspaces(config.workspaces, config.rootDir, {
@@ -33,12 +41,22 @@ export const mainAction = async ({ config, commander, cmd, cmdArgs, globalOpts }
 
   process.chdir(config.rootDir);
 
-  if (command.init({ command: commandInfo, rootDir: config.rootDir, commander: subCommander }) !== subCommander) {
+  if (
+    command.init({
+      log: undefined,
+      config: cmdConfig,
+      command: commandInfo,
+      rootDir: config.rootDir,
+      commander: subCommander,
+    }) !== subCommander
+  ) {
     throw new Error(`Command "${cmd}" did not return the correct commander instance. Did it return a sub-command?`);
   }
 
   process.on('exit', (exitCode) => {
     const context = new CleanupContext({
+      log: undefined,
+      config: cmdConfig,
       command: commandInfo,
       rootDir: config.rootDir,
       args: commander.processedArgs,
@@ -65,6 +83,7 @@ export const mainAction = async ({ config, commander, cmd, cmdArgs, globalOpts }
   const { gitHead, gitFromRevision } = globalOpts.git;
   const matrixValues = await command.before({
     log: undefined,
+    config: cmdConfig,
     command: commandInfo,
     rootDir: config.rootDir,
     args,
@@ -101,6 +120,7 @@ export const mainAction = async ({ config, commander, cmd, cmdArgs, globalOpts }
 
           await command.each({
             log: { prefix: logPrefix },
+            config: cmdConfig,
             command: commandInfo,
             rootDir: config.rootDir,
             args,
@@ -128,6 +148,7 @@ export const mainAction = async ({ config, commander, cmd, cmdArgs, globalOpts }
 
   await command.after({
     log: undefined,
+    config: cmdConfig,
     command: commandInfo,
     rootDir: config.rootDir,
     args,

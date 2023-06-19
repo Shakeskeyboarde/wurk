@@ -49,6 +49,7 @@ If you set `process.exitCode` to a number (including zero) in any hook, the comm
 A context object is passed to each hook callback. The properties attached to those contexts are as follows.
 
 - `log`: A logger which should be preferred over `console.*` logging.
+- `config`: The command configuration value from the workspaces root `package.json` file `werk.<command>.config` key.
 - `command`: Package information about the command.
   - `main`: Main filename of the command package.
   - `dir`: Root directory of the command package.

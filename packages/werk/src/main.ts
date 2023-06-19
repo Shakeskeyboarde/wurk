@@ -27,7 +27,7 @@ const asyncMain = async (): Promise<void> => {
   const commander = new Commander('werk')
     .description(config.description)
     .addHelpText('after', 'To get help for a specific command, run `werk <command> --help`.')
-    .argument('<command>', 'Command to run.')
+    .argument('<command>', 'Command to run.', (value) => value.toLocaleLowerCase())
     .argument('[args...]', 'Arguments to pass to the command.')
     .option(
       '-l, --log-level <level>',
@@ -102,10 +102,10 @@ const asyncMain = async (): Promise<void> => {
   commander.parse(
     [
       ...config.globalArgs,
-      ...(config.commandConfig[cmd]?.globalArgs ?? []),
+      ...(config.commandConfigs[cmd]?.globalArgs ?? []),
       ...process.argv.slice(2, -cmdArgs.length - 1),
       cmd,
-      ...(config.commandConfig[cmd]?.args ?? []),
+      ...(config.commandConfigs[cmd]?.args ?? []),
       ...cmdArgs,
     ],
     { from: 'user' },
@@ -149,5 +149,5 @@ const asyncMain = async (): Promise<void> => {
   log.silly('args = ' + inspect({ cmd, cmdArgs, globalOpts }));
   log.silly('env = ' + inspect(process.env));
 
-  await mainAction({ config, commander, cmd, cmdArgs, globalOpts });
+  await mainAction({ config, commander, cmd, cmdArgs, cmdConfig: config.commandConfigs[cmd], globalOpts });
 };

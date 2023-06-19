@@ -15,7 +15,7 @@ import { InitContext, type InitContextOptions } from '../context/init-context.js
 import { type Log, log } from '../utils/log.js';
 import { startWorker, type WorkerOptions, type WorkerPromise } from '../utils/start-worker.js';
 
-type FunctionKeys<T> = { [K in keyof T]: T[K] extends Function ? K : never }[keyof T];
+type FunctionKeys<T> = { [K in keyof T]-?: T[K] extends Function ? K : never }[keyof T];
 
 export type BeforeOptions<A extends CommanderArgs, O extends CommanderOptions> = Omit<
   BeforeContextOptions<A, O>,
@@ -30,14 +30,7 @@ export type AfterOptions<A extends CommanderArgs, O extends CommanderOptions> = 
   FunctionKeys<AfterContextOptions<CommanderArgs, CommanderOptions>>
 >;
 
-export interface CommandHooks<
-  A extends CommanderArgs,
-  O extends CommanderOptions,
-  M,
-  AA extends A = A,
-  OO extends O = O,
-  MM extends M = M,
-> {
+export interface CommandHooks<A extends CommanderArgs, O extends CommanderOptions, M> {
   /**
    * Called when the command is loaded. Intended for configuration of
    * command options, arguments, and help text.
@@ -49,20 +42,20 @@ export interface CommandHooks<
    * running the `each` hook. The `each` hook will run once for every
    * workspace and matrix value combination.
    */
-  readonly before?: (context: BeforeContext<AA, OO>) => Promise<void | undefined | M[]>;
+  readonly before?: (context: BeforeContext<A, O>) => Promise<void | undefined | M[]>;
   /**
    * Run once for each workspace.
    */
-  readonly each?: (context: EachContext<AA, OO, MM>) => Promise<void>;
+  readonly each?: (context: EachContext<A, O, M>) => Promise<void>;
   /**
    * Run once after handling individual workspaces.
    */
-  readonly after?: (context: AfterContext<AA, OO>) => Promise<void>;
+  readonly after?: (context: AfterContext<A, O>) => Promise<void>;
   /**
    * Run once after all other hooks. This is the last chance to perform
    * cleanup, and it must be synchronous.
    */
-  readonly cleanup?: (context: CleanupContext<AA, OO>) => void | undefined;
+  readonly cleanup?: (context: CleanupContext<A, O>) => void | undefined;
 }
 
 const COMMAND = Symbol('WerkCommand');

@@ -1,13 +1,13 @@
 import { type CommandInfo } from '../command/load-command-plugin.js';
 import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
-import { Log, type LogOptions } from '../utils/log.js';
 import { type Spawn, spawn } from '../utils/spawn.js';
 import { Workspace, type WorkspaceOptions } from '../workspace/workspace.js';
-import { BaseContext } from './base-context.js';
+import { BaseContext, type BaseContextOptions } from './base-context.js';
 
-export interface BaseAsyncContextOptions<A extends CommanderArgs, O extends CommanderOptions> {
-  readonly log: LogOptions | undefined;
+export interface BaseAsyncContextOptions<A extends CommanderArgs, O extends CommanderOptions>
+  extends BaseContextOptions {
   readonly command: CommandInfo;
+  readonly config: unknown;
   readonly rootDir: string;
   readonly args: A;
   readonly opts: O;
@@ -22,11 +22,6 @@ export interface BaseAsyncContextOptions<A extends CommanderArgs, O extends Comm
 
 export abstract class BaseAsyncContext<A extends CommanderArgs, O extends CommanderOptions> extends BaseContext {
   #startWorker: (data?: any) => Promise<boolean>;
-
-  /**
-   * Contextual logger.
-   */
-  readonly log: Log;
 
   /**
    * Information about the command package.
@@ -64,24 +59,23 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
    */
   readonly workerData: any;
 
-  constructor(options: BaseAsyncContextOptions<A, O>) {
-    super();
-    const {
-      log,
-      command,
-      rootDir,
-      args,
-      opts,
-      workspaces,
-      gitHead,
-      gitFromRevision,
-      isWorker,
-      workerData,
-      saveAndRestoreFile,
-      startWorker,
-    } = options;
+  constructor({
+    log,
+    config,
+    command,
+    rootDir,
+    args,
+    opts,
+    workspaces,
+    gitHead,
+    gitFromRevision,
+    isWorker,
+    workerData,
+    saveAndRestoreFile,
+    startWorker,
+  }: BaseAsyncContextOptions<A, O>) {
+    super({ log, config });
 
-    this.log = new Log(log);
     this.command = command;
     this.rootDir = rootDir;
     this.args = args;

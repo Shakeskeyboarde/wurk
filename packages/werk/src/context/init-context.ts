@@ -1,22 +1,15 @@
 import { type Command as Commander } from '@commander-js/extra-typings';
 
 import { type CommandInfo } from '../command/load-command-plugin.js';
-import { Log, type LogOptions } from '../utils/log.js';
-import { BaseContext } from './base-context.js';
+import { BaseContext, type BaseContextOptions } from './base-context.js';
 
-export interface InitContextOptions {
-  readonly log?: LogOptions;
+export interface InitContextOptions extends BaseContextOptions {
   readonly command: CommandInfo;
   readonly rootDir: string;
   readonly commander: Commander;
 }
 
 export class InitContext extends BaseContext {
-  /**
-   * Contextual logger.
-   */
-  readonly log: Log;
-
   /**
    * Information about the command package.
    */
@@ -32,9 +25,9 @@ export class InitContext extends BaseContext {
    */
   readonly commander: Commander;
 
-  constructor({ log, command, rootDir, commander }: InitContextOptions) {
-    super();
-    this.log = new Log(log);
+  constructor({ log, config, command, rootDir, commander }: InitContextOptions) {
+    super({ log, config });
+
     this.command = command;
     this.rootDir = rootDir;
     this.commander = commander;
