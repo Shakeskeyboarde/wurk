@@ -1,3 +1,9 @@
+## 1.1.2 (2023-06-19)
+
+### Chores
+
+- add per-command config support (6652a9a)
+
 ## 1.1.1 (2023-06-19)
 
 ### Bug Fixes
