@@ -17,6 +17,7 @@ import {
 } from './get-workspace-local-dependencies.js';
 
 interface PartialContext {
+  readonly command: { readonly name: string };
   readonly workspaces: ReadonlyMap<string, Workspace>;
   readonly spawn: Spawn;
 }
@@ -32,6 +33,7 @@ export type WorkspaceOptions = {
   readonly keywords?: readonly string[];
   readonly dir: string;
   readonly selected?: boolean;
+  readonly werk?: Record<string, unknown>;
 };
 
 export class Workspace {
@@ -44,47 +46,70 @@ export class Workspace {
    * Absolute path of the workspace directory.
    */
   readonly dir: string;
+
   /**
    * Name from the workspace `package.json` file.
    */
   readonly name: string;
+
   /**
    * Version from the workspace `package.json` file.
    */
   readonly version: string;
+
   /**
    * Private from the workspace `package.json` file.
    */
   readonly private: boolean;
+
   /**
    * Dependencies from the workspace `package.json` file.
    */
   readonly dependencies: Readonly<Record<string, string>>;
+
   /**
    * Peer dependencies from the workspace `package.json` file.
    */
   readonly peerDependencies: Readonly<Record<string, string>>;
+
   /**
    * Optional dependencies from the workspace `package.json` file.
    */
   readonly optionalDependencies: Readonly<Record<string, string>>;
+
   /**
    * Dev dependencies from the workspace `package.json` file.
    */
   readonly devDependencies: Readonly<Record<string, string>>;
+
   /**
    * Keywords from the workspace `package.json` file.
    */
   readonly keywords: readonly string[];
+
   /**
    * True if the workspace matches the
    * [Werk global options](https://www.npmjs.com/package/@werk/cli#command-line-options).
    */
   readonly selected: boolean;
+
   /**
    * Names of all dependencies from the workspace `package.json` file.
    */
   readonly dependencyNames: readonly string[];
+
+  /**
+   * Command configuration from the workspace `package.json` file.
+   *
+   * ```json
+   * {
+   *   "werk": {
+   *     <command>: <value>
+   *   }
+   * }
+   * ```
+   */
+  readonly config: unknown;
 
   constructor(
     options: WorkspaceOptions & {
@@ -109,6 +134,7 @@ export class Workspace {
     this.keywords = options.keywords ? [...options.keywords] : [];
     this.selected = options.selected ?? false;
     this.dependencyNames = getWorkspaceDependencyNames(this);
+    this.config = options.werk?.[options.context.command.name];
   }
 
   /**

@@ -1,3 +1,4 @@
+import { isObject } from '../utils/is-object.js';
 import { memoize } from '../utils/memoize.js';
 import { spawn } from '../utils/spawn.js';
 import { type WorkspaceOptions } from '../workspace/workspace.js';
@@ -13,6 +14,7 @@ interface NpmWorkspace {
   readonly keywords?: readonly string[];
   readonly path: string;
   readonly realpath?: string;
+  readonly werk?: Record<string, unknown>;
 }
 
 export const getNpmWorkspaces = memoize(
@@ -23,9 +25,10 @@ export const getNpmWorkspaces = memoize(
     return await spawn('npm', ['query', '.workspace', '--quiet', '--json'], { cwd: dir, capture: true })
       .getJson<NpmWorkspace[]>()
       .then((npmWorkspaces) => {
-        return npmWorkspaces.map(({ path, realpath, ...workspace }) => ({
-          dir: realpath ?? path,
+        return npmWorkspaces.map(({ path, realpath, werk, ...workspace }) => ({
           ...workspace,
+          dir: realpath ?? path,
+          werk: isObject(werk) ? werk : undefined,
         }));
       });
   },

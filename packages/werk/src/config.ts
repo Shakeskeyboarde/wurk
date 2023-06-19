@@ -10,7 +10,7 @@ import { type PackageJson } from './utils/package-json.js';
 import { readJsonFile } from './utils/read-json-file.js';
 import { type WorkspaceOptions } from './workspace/workspace.js';
 
-interface CommandConfig {
+export interface CommandConfig {
   readonly globalArgs: readonly string[];
   readonly args: readonly string[];
   readonly config: unknown;

@@ -49,11 +49,12 @@ If you set `process.exitCode` to a number (including zero) in any hook, the comm
 A context object is passed to each hook callback. The properties attached to those contexts are as follows.
 
 - `log`: A logger which should be preferred over `console.*` logging.
-- `config`: The command configuration value from the workspaces root `package.json` file `werk.<command>.config` key.
-- `command`: Package information about the command.
+- `command`: Information about the command.
+  - `name`: Command name.
   - `main`: Main filename of the command package.
   - `dir`: Root directory of the command package.
   - `packageJson`: Contents of the command package's `package.json` file.
+- `config`: The command configuration value from the workspaces root `package.json` file `werk.<command>.config` key.
 - `rootDir`: Absolute path of the workspaces root.
 - `commander` (**init**): Configurable [Commander](https://www.npmjs.com/package/commander) instance for defining command options, arguments, and help text.
 - `args` (**before**, **each**, **after**, **cleanup**): Positional arguments parsed from command line.
@@ -111,6 +112,7 @@ The `context.workspaces` and `context.workspace` properties contain instances of
 - `dir`: Absolute root directory of the workspace.
 - `selected`: True if the workspace matched the Werk [global options](README.md#command-line-options).
 - `dependencyNames`: A set of the unique (deduplicated) dependency names collected from all of the dependency maps.
+- `config`: The command configuration value from the workspace `package.json` file `werk.<command>` key.
 
 **Package methods:**
 
