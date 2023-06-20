@@ -48,14 +48,14 @@
     "access": "public"
   },
   "dependencies": {
-    "@commander-js/extra-typings": "^10.0.3",
+    "@commander-js/extra-typings": "^11.0.0",
     "@types/cross-spawn": "^6.0.2",
     "@types/semver": "^7.5.0",
     "@types/shell-quote": "^1.7.1",
     "ansi-regex": "^6.0.1",
     "async-sema": "^3.1.1",
     "chalk": "^5.2.0",
-    "commander": "^10.0.1",
+    "commander": "^11.0.0",
     "cross-spawn": "^7.0.3",
     "npm-run-path": "^5.1.0",
     "package-json-type": "^1.0.3",
