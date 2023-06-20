@@ -1,3 +1,9 @@
+## 1.2.1 (2023-06-20)
+
+### Documentation
+
+- update official packages lists (0e5dd2b)
+
 ## 1.2.0 (2023-06-20)
 
 ### Features
