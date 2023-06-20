@@ -36,6 +36,6 @@ jobs:
         continue-on-error: true
         run: |
           npm config --location project set //registry.npmjs.org/:_authToken '${NPM_TOKEN}'
-          npx werk publish --dry-run
+          npx @werk/cli publish --dry-run
         env:
           NPM_TOKEN: ${{secrets.NPM_TOKEN}}

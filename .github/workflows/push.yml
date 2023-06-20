@@ -32,7 +32,7 @@ jobs:
       - name: Build
         run: |
           npm -ws --if-present run build
-          npx werk publish --to-archive
+          npx @werk/cli publish --to-archive
 
       - name: Test
         run: npm test
@@ -50,6 +50,6 @@ jobs:
         continue-on-error: true
         run: |
           npm config --location project set //registry.npmjs.org/:_authToken '${NPM_TOKEN}'
-          npx werk publish --from-archive
+          npx @werk/cli publish --from-archive
         env:
           NPM_TOKEN: ${{secrets.NPM_TOKEN}}
