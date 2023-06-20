@@ -84,6 +84,11 @@ export class Workspace {
   readonly keywords: readonly string[];
 
   /**
+   * Scripts from the workspace `package.json` file.
+   */
+  readonly scripts: Readonly<Record<string, string>>;
+
+  /**
    * True if the workspace matches the
    * [Werk global options](https://www.npmjs.com/package/@werk/cli#command-line-options).
    */
@@ -115,13 +120,14 @@ export class Workspace {
     this.dir = options.dir;
     this.name = options.name;
     this.version = options.version;
-    this.private = options.private ?? false;
-    this.dependencies = { ...options.dependencies } ?? {};
-    this.peerDependencies = { ...options.peerDependencies } ?? {};
-    this.optionalDependencies = { ...options.optionalDependencies } ?? {};
-    this.devDependencies = { ...options.devDependencies } ?? {};
-    this.keywords = options.keywords ? [...options.keywords] : [];
-    this.selected = options.selected ?? false;
+    this.private = options.private;
+    this.dependencies = options.dependencies;
+    this.peerDependencies = options.peerDependencies;
+    this.optionalDependencies = options.optionalDependencies;
+    this.devDependencies = options.devDependencies;
+    this.keywords = options.keywords;
+    this.scripts = options.scripts;
+    this.selected = options.selected;
     this.config = options.config;
     this.dependencyNames = getWorkspaceDependencyNames(options);
   }

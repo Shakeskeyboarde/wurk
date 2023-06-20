@@ -15,6 +15,7 @@ interface NpmWorkspace {
   readonly path: string;
   readonly realpath?: string;
   readonly werk?: Record<string, unknown>;
+  readonly scripts?: Record<string, string>;
 }
 
 export const getNpmWorkspaces = memoize(

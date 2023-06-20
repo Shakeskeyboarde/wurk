@@ -142,6 +142,7 @@ export const getWorkspace = (
     devDependencies = {},
     keywords = [],
     werk = {},
+    scripts = {},
     ...workspace
   }: WorkspacePackage & { selected: boolean },
   commandName: string,
@@ -153,6 +154,7 @@ export const getWorkspace = (
     optionalDependencies,
     devDependencies,
     keywords,
+    scripts,
     config: werk[commandName]?.config,
     ...workspace,
   };

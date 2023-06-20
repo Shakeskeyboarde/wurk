@@ -9,4 +9,5 @@ export type WorkspacePackage = {
   readonly devDependencies?: Readonly<Record<string, string>>;
   readonly keywords?: readonly string[];
   readonly werk?: Record<string, { config?: unknown } | undefined>;
+  readonly scripts?: Record<string, string>;
 };
