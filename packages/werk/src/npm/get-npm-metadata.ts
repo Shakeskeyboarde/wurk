@@ -21,8 +21,8 @@ export const getNpmMetadata = memoize(
 
     if (result.failed) return undefined;
 
-    const metaArray = result
-      .getJson<PackageJson[]>()
+    const data = result.getJson<PackageJson | PackageJson[]>();
+    const metaArray = (Array.isArray(data) ? data : [data])
       .filter((entry): entry is NpmMetadata => typeof entry.version === 'string')
       .map(({ gitHead, ...entry }) => ({ ...entry, gitHead: typeof gitHead === 'string' ? gitHead : undefined }))
       .sort((a, b) => rcompare(a.version, b.version));
