@@ -1,3 +1,9 @@
+## 1.0.14 (2023-06-20)
+
+### Build System
+
+- switch to using tsc command (fbc8e83)
+
 ## 1.0.13 (2023-06-19)
 
 **Note:** Updated local dependencies.

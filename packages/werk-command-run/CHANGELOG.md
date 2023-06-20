@@ -1,3 +1,13 @@
+## 1.1.4 (2023-06-20)
+
+### Code Refactoring
+
+- use npm run --if-present flag (b5f53b1)
+
+### Build System
+
+- switch to using tsc command (fbc8e83)
+
 ## 1.1.3 (2023-06-19)
 
 **Note:** Updated local dependencies.

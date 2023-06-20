@@ -1,3 +1,19 @@
+## 1.0.18 (2023-06-20)
+
+### Bug Fixes
+
+- info log should be notice (911bc34)
+
+### Build System
+
+- switch to using tsc command (fbc8e83)
+
+### Chores
+
+- include from and to version in logs (77b838a)
+- cleanup version usage (5f311d1)
+- add notice messaging (3721bf2)
+
 ## 1.0.17 (2023-06-19)
 
 **Note:** Updated local dependencies.

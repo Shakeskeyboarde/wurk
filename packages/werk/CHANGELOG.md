@@ -1,3 +1,19 @@
+## 1.1.4 (2023-06-20)
+
+### Bug Fixes
+
+- per workspace config from correct package.json path (2dfddbd)
+
+### Documentation
+
+- add NPM badge to readme (cad01d0)
+
+### Chores
+
+- log notice bright instead of bold (e9d550f)
+- flatten config structure (17584a8)
+- add workspace.config (74c0150)
+
 ## 1.1.3 (2023-06-19)
 
 ### Chores

@@ -1,3 +1,17 @@
+## 1.2.0 (2023-06-20)
+
+### Features
+
+- run build before packing or publishing from the filesystem (32486c1)
+
+### Build System
+
+- switch to using tsc command (fbc8e83)
+
+### Chores
+
+- add notice messaging. (4318eb4)
+
 ## 1.1.3 (2023-06-19)
 
 **Note:** Updated local dependencies.

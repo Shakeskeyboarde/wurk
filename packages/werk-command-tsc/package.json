@@ -1,5 +1,4 @@
 {
-  "private": true,
   "name": "@werk/command-tsc",
   "description": "Build using the TypeScript compiler.",
   "version": "1.0.0",
@@ -41,6 +40,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@werk/cli": "^1.1.3"
+    "@werk/cli": "^1.1.4"
   }
 }
