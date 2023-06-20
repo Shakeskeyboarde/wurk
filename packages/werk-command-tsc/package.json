@@ -1,0 +1,46 @@
+{
+  "private": true,
+  "name": "@werk/command-tsc",
+  "description": "Build using the TypeScript compiler.",
+  "version": "1.0.0",
+  "author": "Chris Ackerman <chris@topher.land>",
+  "license": "ISC",
+  "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-tsc/README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shakeskeyboarde/werk.git",
+    "directory": "packages/werk-command-tsc"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "type": "module",
+  "exports": {
+    "types": "./lib/main.d.ts",
+    "default": "./lib/main.js"
+  },
+  "files": [
+    "CHANGELOG.md",
+    "lib/**"
+  ],
+  "keywords": [
+    "werk",
+    "werk-command",
+    "monorepo",
+    "workspaces",
+    "npm",
+    "command",
+    "tsc",
+    "typescript",
+    "build",
+    "compile",
+    "config",
+    "configuration"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@werk/cli": "^1.1.3"
+  }
+}
