@@ -46,6 +46,8 @@ export default createCommand({
       return;
     }
 
+    log.notice(`Publishing workspace "${workspace.name}@${workspace.version}".`);
+
     const result = opts.fromArchive ? await publishFromArchive(context) : await publishFromFilesystem(context);
 
     isPublished.set(workspace.name, result);
