@@ -2,7 +2,7 @@ module.exports = {
   root: true,
   env: { node: true },
   parserOptions: { ecmaVersion: 2022, sourceType: 'module' },
-  extends: ['rational', 'rational/react', 'rational/warn', 'rational/prettier'],
+  extends: ['rational', 'rational/warn', 'rational/prettier'],
   ignorePatterns: ['node_modules', '**/lib/**', 'out', 'dist'],
   overrides: [
     {
@@ -10,7 +10,7 @@ module.exports = {
       parserOptions: { sourceType: 'script' },
     },
     {
-      files: ['*.ts', '*.tsx'],
+      files: ['*.ts'],
       extends: ['rational/typescript', 'rational/prettier'],
       parserOptions: { project: './tsconfig.json' },
     },
