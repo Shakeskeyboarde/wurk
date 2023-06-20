@@ -136,7 +136,7 @@ export default createCommand({
     if (updatedVersion) {
       versionUpdates.set(workspace.name, updatedVersion);
       patches.push({ version: updatedVersion });
-      log.notice(`Updating workspace "${workspace.name}" to version "${updatedVersion}".`);
+      log.notice(`Updating workspace "${workspace.name}" version from "${workspace.version}" to "${updatedVersion}".`);
     }
 
     if (updatedDependencies) {
