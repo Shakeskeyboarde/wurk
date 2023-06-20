@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "lint": "eslint .",
-    "build": "npm -w @werk/cli -w @werk/command-run run build && npm update @werk/cli && npx @werk/cli -p run build",
+    "build": "npm -w @werk/cli -w @werk/command-tsc run build && npm update @werk/cli && npx @werk/cli -p tsc",
     "test": "npm run build && npm run lint",
     "clean": "rm -rf out **/out lib **/lib",
     "modernize": "npx npm-check-updates@latest -i --workspaces --root --format group",

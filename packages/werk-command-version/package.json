@@ -10,10 +10,6 @@
     "url": "git+https://github.com/Shakeskeyboarde/werk.git",
     "directory": "packages/werk-command-version"
   },
-  "scripts": {
-    "build": "rm -rf lib && tsc -p tsconfig.build.json",
-    "prepack": "npm run build"
-  },
   "type": "module",
   "exports": {
     "types": "./lib/main.d.ts",
@@ -38,5 +34,24 @@
     "@types/semver": "^7.5.0",
     "@werk/cli": "^1.1.3",
     "semver": "^7.5.1"
+  },
+  "werk": {
+    "tsc": {
+      "config": [
+        {
+          "compilerOptions": {
+            "rootDir": "src",
+            "outDir": "lib",
+            "noEmit": false
+          },
+          "include": [
+            "src"
+          ],
+          "exclude": [
+            "**/*.test.*"
+          ]
+        }
+      ]
+    }
   }
 }
