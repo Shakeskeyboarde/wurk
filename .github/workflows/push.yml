@@ -1,0 +1,53 @@
+name: Push
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [current]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Restore
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      # - name: Publish (CodeCov)
+      #   if: github.ref == 'refs/heads/main'
+      #   uses: codecov/codecov-action@v3
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     files: ./out/coverage/lcov.info
+      #     fail_ci_if_error: true
+      #     verbose: true
+
+      - name: Publish (NPM)
+        continue-on-error: true
+        run: |
+          npm config --location project set //registry.npmjs.org/:_authToken '${NPM_TOKEN}'
+          npx werk publish
+        env:
+          NPM_TOKEN: ${{secrets.NPM_TOKEN}}

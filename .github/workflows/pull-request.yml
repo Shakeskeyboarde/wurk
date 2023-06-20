@@ -1,0 +1,41 @@
+name: Pull Request
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  pull-request:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [current]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Restore
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Publish (NPM, Dry Run)
+        continue-on-error: true
+        run: |
+          npm config --location project set //registry.npmjs.org/:_authToken '${NPM_TOKEN}'
+          npx werk publish --dry-run
+        env:
+          NPM_TOKEN: ${{secrets.NPM_TOKEN}}
