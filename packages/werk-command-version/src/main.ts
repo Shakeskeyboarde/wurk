@@ -14,28 +14,31 @@ const versionUpdates = new Map<string, string>();
 export default createCommand({
   init: ({ commander }) => {
     return commander
-      .usage('[pre]patch | [pre]minor | [pre]major | prerelease | auto | <version> [options]')
-      .argument('<value>', '', (value): ReleaseType | 'auto' | SemVer => {
-        switch (value) {
-          case 'patch':
-          case 'prepatch':
-          case 'minor':
-          case 'preminor':
-          case 'major':
-          case 'premajor':
-          case 'prerelease':
-          case 'auto':
-            return value;
-        }
+      .argument(
+        '<spec>',
+        'Bump type (patch, minor, major, prepatch, preminor, premajor, prerelease, auto) or version number.',
+        (value): ReleaseType | 'auto' | SemVer => {
+          switch (value) {
+            case 'patch':
+            case 'prepatch':
+            case 'minor':
+            case 'preminor':
+            case 'major':
+            case 'premajor':
+            case 'prerelease':
+            case 'auto':
+              return value;
+          }
 
-        try {
-          return new SemVer(value);
-        } catch {
-          throw new Error(
-            'Invalid bump type or version. Valid bump types are "patch", "prepatch", "minor", "preminor", "major", "premajor", "prerelease", and "auto".',
-          );
-        }
-      })
+          try {
+            return new SemVer(value);
+          } catch {
+            throw new Error(
+              'Invalid bump type or version. Valid bump types are "patch", "prepatch", "minor", "preminor", "major", "premajor", "prerelease", and "auto".',
+            );
+          }
+        },
+      )
       .option('-p, --preid <id>', 'Add an identifier to prerelease bumps.')
       .option('--no-changelog', 'Do not generate a changelog.')
       .option('--dry-run', 'Display proposed version changes without writing files.');
