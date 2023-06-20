@@ -52,8 +52,6 @@ export default createCommand({
       return;
     }
 
-    log.notice(`Publishing workspace "${workspace.name}@${workspace.version}".`);
-
     const result = opts.fromArchive ? await publishFromArchive(context) : await publishFromFilesystem(context);
 
     isPublished.set(workspace.name, result);
@@ -79,6 +77,8 @@ const publishFromArchive = async (
     );
     return false;
   }
+
+  log.notice(`Publishing workspace "${workspace.name}@${workspace.version}" from archive.`);
 
   const tmpDir = join(workspace.dir, `.${randomUUID()}.tmp`);
   const tmpFilename = join(tmpDir, basename(filename));
@@ -128,6 +128,8 @@ const publishFromFilesystem = async (
   }
 
   assert(await workspace.getGitIsClean(), `Workspace "${workspace.name}" has uncommitted changes.`);
+
+  log.notice(`Publishing workspace "${workspace.name}@${workspace.version}"${opts.toArchive ? ' to archive' : ''}.`);
 
   // Ensure local production dependencies have been published, and there are no local modifications.
   await Promise.all(
