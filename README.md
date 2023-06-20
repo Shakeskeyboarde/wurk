@@ -6,12 +6,13 @@ An open-minded monorepo tool, with opinionated plugins.
 
 ## Packages
 
-- [@werk/cli](packages/werk/README.md)
-- [@werk/command-list](packages/werk-command-list/README.md)
-- [@werk/command-run](packages/werk-command-run/README.md)
-- [@werk/command-exec](packages/werk-command-exec/README.md)
-- [@werk/command-version](packages/werk-command-version/README.md)
-- [@werk/command-publish](packages/werk-command-publish/README.md)
+- [@werk/cli](packages/werk/README.md): Werk core package.
+- [@werk/command-list](packages/werk-command-list/README.md): List workspaces as JSON with filtering applied.
+- [@werk/command-run](packages/werk-command-run/README.md): Run package scripts.
+- [@werk/command-exec](packages/werk-command-exec/README.md): Run executables.
+- [@werk/command-version](packages/werk-command-version/README.md): Update versions.
+- [@werk/command-publish](packages/werk-command-publish/README.md): Publish packages to NPM registries.
+- [@werk/command-tsc](packages/werk-command-tsc/README.md): Build using the TypeScript compiler.
 
 ## Developing Custom Commands
 

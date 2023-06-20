@@ -70,16 +70,14 @@ All commands are modular and must be installed individually. By itself, Werk can
 
 The following "official" commands are provided to get you started.
 
-- list: [@werk/command-list](https://www.npmjs.com/package/@werk/command-list)
-  - List workspaces as JSON with filtering applied.
-- run: [@werk/command-run](https://www.npmjs.com/package/@werk/command-run)
-  - Run package scripts.
-- exec: [@werk/command-exec](https://www.npmjs.com/package/@werk/command-exec)
-  - Run executables.
-- version: [@werk/command-version](https://www.npmjs.com/package/@werk/command-version)
-  - Update versions.
-- publish: [@werk/command-publish](https://www.npmjs.com/package/@werk/command-publish)
-  - Publish packages.
+- [list](https://www.npmjs.com/package/@werk/command-list): List workspaces as JSON with filtering applied.
+- [run](https://www.npmjs.com/package/@werk/command-run): Run package scripts.
+- [exec](https://www.npmjs.com/package/@werk/command-exec): Run executables.
+- [version](https://www.npmjs.com/package/@werk/command-version): Update versions.
+- [publish](https://www.npmjs.com/package/@werk/command-publish): Publish packages.
+- [tsc](https://www.npmjs.com/package/@werk/command-tsc): Build using the TypeScript compiler.
+
+Run `npm i -D @werk/command-<name>` in your workspaces root to install these commands.
 
 ### Custom Commands
 
