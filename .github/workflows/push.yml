@@ -32,6 +32,7 @@ jobs:
       - name: Build
         run: |
           npm -ws --if-present run build
+          npm update @werk/cli
           npx @werk/cli publish --to-archive
 
       - name: Test
