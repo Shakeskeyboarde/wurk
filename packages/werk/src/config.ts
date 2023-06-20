@@ -37,45 +37,34 @@ export const loadConfig = memoize(async (): Promise<Config> => {
   const { version = '', description = '' } = packageJson;
   const filename = join(rootDir, 'package.json');
   const rootPackageJson = filename ? await readJsonFile<PackageJson>(filename) : {};
-
-  let globalArgs: string[] | undefined;
-  let commandPackagePrefixes: string[] | undefined;
-  let commandPackages: Record<string, string> | undefined;
-  let rootCommandConfigs: Record<string, unknown>;
-  let commandConfig: Record<string, unknown> | undefined;
-
-  // eslint-disable-next-line prefer-const
-  ({ globalArgs, commandPackagePrefixes, commandPackages, commandConfig, ...rootCommandConfigs } = isObject(
-    rootPackageJson?.werk,
-  )
-    ? (rootPackageJson.werk as Record<string, any>)
-    : {});
-
-  globalArgs = Array.isArray(globalArgs) ? globalArgs.map(String) : [];
-
-  commandPackagePrefixes = Array.isArray(commandPackagePrefixes)
-    ? commandPackagePrefixes.filter((value) => typeof value === 'string')
+  const werk = isObject(rootPackageJson?.werk) ? { ...rootPackageJson.werk } : {};
+  const globalArgs = Array.isArray(werk.globalArgs) ? werk.globalArgs.map(String) : [];
+  const commandPackagePrefixes = Array.isArray(werk.commandPackagePrefixes)
+    ? werk.commandPackagePrefixes.filter((value) => typeof value === 'string')
     : [];
-
-  commandPackages = isObject(commandPackages)
+  const commandPackages = isObject(werk.commandPackages)
     ? Object.fromEntries(
-        Object.entries(commandPackages).filter((entry): entry is [string, string] => typeof entry[1] === 'string'),
+        Object.entries(werk.commandPackages).filter((entry): entry is [string, string] => typeof entry[1] === 'string'),
       )
     : {};
+  const legacyCommandConfigs = werk.commandConfig;
+
+  delete werk.globalArgs;
+  delete werk.commandPackagePrefixes;
+  delete werk.commandPackages;
+  delete werk.commandConfig;
 
   const commandConfigs = Object.fromEntries(
-    Object.entries(merge(commandConfig, rootCommandConfigs))
-      .filter((entry): entry is [string, Record<string, unknown>] => isObject(entry[1]))
-      .map(([key, value]) => {
-        return [
-          key,
-          {
-            globalArgs: Array.isArray(value?.globalArgs) ? value.globalArgs.map(String) : [],
-            args: Array.isArray(value?.args) ? value.args.map(String) : [],
-            config: value?.config,
-          },
-        ];
-      }),
+    Object.entries(merge(legacyCommandConfigs, werk)).map(([key, value]) => {
+      return [
+        key,
+        {
+          globalArgs: isObject(value) && Array.isArray(value?.globalArgs) ? value.globalArgs.map(String) : [],
+          args: isObject(value) && Array.isArray(value?.args) ? value.args.map(String) : [],
+          config: value,
+        },
+      ];
+    }),
   );
 
   return {

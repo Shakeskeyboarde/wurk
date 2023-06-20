@@ -54,7 +54,7 @@ A context object is passed to each hook callback. The properties attached to tho
   - `main`: Main filename of the command package.
   - `dir`: Root directory of the command package.
   - `packageJson`: Contents of the command package's `package.json` file.
-- `config`: The command configuration value from the workspaces root `package.json` file `werk.<command>.config` key.
+- `config`: The command configuration from the workspaces root `package.json` file `werk.<command>` key.
 - `rootDir`: Absolute path of the workspaces root.
 - `commander` (**init**): Configurable [Commander](https://www.npmjs.com/package/commander) instance for defining command options, arguments, and help text.
 - `args` (**before**, **each**, **after**, **cleanup**): Positional arguments parsed from command line.
