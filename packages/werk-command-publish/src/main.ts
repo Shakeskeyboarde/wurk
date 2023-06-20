@@ -26,11 +26,17 @@ export default createCommand({
           .createOption('--remove-package-fields <fields...>', 'Remove fields from the package.json file.')
           .conflicts('fromArchive'),
       )
+      .option('--no-build', 'Skip building workspaces.')
       .option('--dry-run', 'Perform a dry run for validation.');
   },
 
-  before: async ({ forceWait }) => {
+  before: async ({ log, opts, root, spawn, forceWait }) => {
     forceWait();
+
+    if (opts.build && root.scripts.build != null) {
+      log.notice('Building workspaces.');
+      await spawn('npm', [`--loglevel=${log.level.name}`, 'run', '--if-present', 'build'], { errorEcho: true });
+    }
   },
 
   each: async (context) => {
@@ -175,13 +181,8 @@ const publishFromFilesystem = async (
   const gitHead = await workspace.getGitHead();
   const gitHeadPatch = { gitHead };
 
-  if (!dryRun) {
-    await workspace.saveAndRestoreFile('package.json');
-    await workspace.patchPackageJson(dependenciesPatch, ...removeFieldPatches, gitHeadPatch);
-  }
-
-  await spawn('npm', [`--loglevel=${log.level.name}`, 'run', '--if-present', 'build'], { echo: true });
-
+  await workspace.saveAndRestoreFile('package.json');
+  await workspace.patchPackageJson(dependenciesPatch, ...removeFieldPatches, gitHeadPatch);
   await spawn(
     'npm',
     [
