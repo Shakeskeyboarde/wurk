@@ -1,7 +1,7 @@
 {
   "name": "@werk/command-tsc",
   "description": "Build using the TypeScript compiler.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-tsc/README.md",
@@ -40,6 +40,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@werk/cli": "^1.1.4"
+    "@werk/cli": "^1.2.0"
   }
 }

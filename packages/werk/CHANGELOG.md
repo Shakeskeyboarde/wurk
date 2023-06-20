@@ -1,3 +1,14 @@
+## 1.2.0 (2023-06-20)
+
+### Features
+
+- add workspace.scripts field (0411055)
+- add context.root workspace reference (aafecb3)
+
+### Bug Fixes
+
+- npm metadata error when only one version published (e886551)
+
 ## 1.1.4 (2023-06-20)
 
 ### Bug Fixes

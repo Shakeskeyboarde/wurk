@@ -1,3 +1,9 @@
+## 1.2.1 (2023-06-20)
+
+### Bug Fixes
+
+- build root, not individual workspaces (6b5e432)
+
 ## 1.2.0 (2023-06-20)
 
 ### Features

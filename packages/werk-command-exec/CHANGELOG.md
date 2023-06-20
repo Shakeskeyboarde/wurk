@@ -1,3 +1,7 @@
+## 1.0.15 (2023-06-20)
+
+**Note:** Updated local dependencies.
+
 ## 1.0.14 (2023-06-20)
 
 ### Build System
