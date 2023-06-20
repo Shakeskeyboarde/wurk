@@ -133,9 +133,11 @@ export default createCommand({
     if (updatedVersion) {
       versionUpdates.set(workspace.name, updatedVersion);
       patches.push({ version: updatedVersion });
+      log.info(`Updating workspace "${workspace.name}" to version "${updatedVersion}".`);
     }
 
     if (updatedDependencies) {
+      log.notice(`Updating workspace "${workspace.name}" dependencies.`);
       patches.push(updatedDependencies);
     }
 
@@ -148,17 +150,12 @@ export default createCommand({
       await workspace.patchPackageJson(...patches);
     }
 
-    if (
-      updatedVersion &&
-      changelog &&
-      changes?.length &&
-      !(await writeChangelog(workspace.name, workspace.dir, updatedVersion, changes))
-    ) {
-      log.warn(`Version "${updatedVersion}" already exists in the workspace "${workspace.name}" change log.`);
-    }
+    if (updatedVersion && changelog && changes?.length) {
+      log.notice(`Updating workspace "${workspace.name}" change log.`);
 
-    if (updatedVersion) {
-      log.info(`Updated workspace "${workspace.name}" to version "${updatedVersion}".`);
+      if (!(await writeChangelog(workspace.name, workspace.dir, updatedVersion, changes))) {
+        log.warn(`Version "${updatedVersion}" already exists in the workspace "${workspace.name}" change log.`);
+      }
     }
   },
 
