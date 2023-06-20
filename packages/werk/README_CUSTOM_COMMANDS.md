@@ -59,6 +59,7 @@ A context object is passed to each hook callback. The properties attached to tho
 - `commander` (**init**): Configurable [Commander](https://www.npmjs.com/package/commander) instance for defining command options, arguments, and help text.
 - `args` (**before**, **each**, **after**, **cleanup**): Positional arguments parsed from command line.
 - `opts` (**before**, **each**, **after**, **cleanup**): Named options parsed from the command line.
+- `root` (**before**, **each**, **after**): The workspaces root [workspace](#workspaces).
 - `workspaces` (**before**, **each**, **after**): A map (by name) of all [workspaces](#workspaces).
 - `workspace` (**each**): The current [workspace](#workspaces).
 - `forceWait()` (**before**): Force dependent workspaces to wait for their dependencies (ie. ignore the CLI `--no-wait` option).

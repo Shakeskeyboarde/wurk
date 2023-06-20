@@ -133,6 +133,31 @@ export const isWorkspaceMatch = (
   );
 };
 
+export const getWorkspace = (
+  {
+    private: private_ = false,
+    dependencies = {},
+    peerDependencies = {},
+    optionalDependencies = {},
+    devDependencies = {},
+    keywords = [],
+    werk = {},
+    ...workspace
+  }: WorkspacePackage & { selected: boolean },
+  commandName: string,
+): WorkspacePartialOptions => {
+  return {
+    private: private_,
+    dependencies,
+    peerDependencies,
+    optionalDependencies,
+    devDependencies,
+    keywords,
+    config: werk[commandName]?.config,
+    ...workspace,
+  };
+};
+
 export const getWorkspaces = async ({
   workspacePackages,
   rootDir,
@@ -141,27 +166,7 @@ export const getWorkspaces = async ({
 }: WorkspacesOptions): Promise<readonly WorkspacePartialOptions[]> => {
   const sorted = getSorted(workspacePackages);
   const selected = await getSelected(sorted, rootDir, options);
-  const result: WorkspacePartialOptions[] = selected.map(
-    ({
-      private: private_ = false,
-      dependencies = {},
-      peerDependencies = {},
-      optionalDependencies = {},
-      devDependencies = {},
-      keywords = [],
-      werk = {},
-      ...workspace
-    }) => ({
-      private: private_,
-      dependencies,
-      peerDependencies,
-      optionalDependencies,
-      devDependencies,
-      keywords,
-      config: werk[commandName]?.config,
-      ...workspace,
-    }),
-  );
+  const result: WorkspacePartialOptions[] = selected.map((workspace) => getWorkspace(workspace, commandName));
 
   return result;
 };

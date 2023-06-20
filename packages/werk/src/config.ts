@@ -19,7 +19,7 @@ export interface CommandConfig {
 export type Config = {
   readonly version: string;
   readonly description: string;
-  readonly rootDir: string;
+  readonly rootPackage: WorkspacePackage;
   readonly workspacePackages: readonly WorkspacePackage[];
   readonly commandPackagePrefixes: string[];
   readonly commandPackages: Record<string, string>;
@@ -74,7 +74,7 @@ export const loadConfig = memoize(async (): Promise<Config> => {
   return {
     version,
     description,
-    rootDir,
+    rootPackage: { name: ':root', version: '0.0.0', ...rootPackageJson, dir: rootDir },
     workspacePackages,
     commandPackagePrefixes,
     commandPackages,

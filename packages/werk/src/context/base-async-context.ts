@@ -7,9 +7,9 @@ import { BaseContext, type BaseContextOptions } from './base-context.js';
 export interface BaseAsyncContextOptions<A extends CommanderArgs, O extends CommanderOptions>
   extends BaseContextOptions {
   readonly config: unknown;
-  readonly rootDir: string;
   readonly args: A;
   readonly opts: O;
+  readonly root: WorkspacePartialOptions;
   readonly workspaces: readonly WorkspacePartialOptions[];
   readonly gitHead: string | undefined;
   readonly gitFromRevision: string | undefined;
@@ -23,11 +23,6 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
   #startWorker: (data?: any) => Promise<boolean>;
 
   /**
-   * Absolute path of the workspaces root.
-   */
-  readonly rootDir: string;
-
-  /**
    * Arguments parsed from the command line.
    */
   readonly args: A;
@@ -36,6 +31,11 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
    * Options parsed from the command line.
    */
   readonly opts: O;
+
+  /**
+   * The workspaces root workspace.
+   */
+  readonly root: Workspace;
 
   /**
    * Map of all NPM workspaces in order of interdependency (dependencies
@@ -53,13 +53,20 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
    */
   readonly workerData: any;
 
+  /**
+   * Absolute path of the workspaces root.
+   */
+  get rootDir(): string {
+    return this.root.dir;
+  }
+
   constructor({
     log,
     config,
     command,
-    rootDir,
     args,
     opts,
+    root,
     workspaces,
     gitHead,
     gitFromRevision,
@@ -70,9 +77,9 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
   }: BaseAsyncContextOptions<A, O>) {
     super({ log, command, config });
 
-    this.rootDir = rootDir;
     this.args = args;
     this.opts = opts;
+    this.root = new Workspace({ ...root, context: this, gitHead, gitFromRevision, saveAndRestoreFile });
     this.workspaces = new Map(
       workspaces.map((workspace) => [
         workspace.name,
@@ -89,7 +96,7 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
    */
   readonly spawn: Spawn = (cmd, args, options) => {
     this._assertMethodCallsAllowed('spawn');
-    return spawn(cmd, args, { cwd: this.rootDir, log: this.log, ...options });
+    return spawn(cmd, args, { cwd: this.root.dir, log: this.log, ...options });
   };
 
   /**

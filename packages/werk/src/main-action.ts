@@ -8,7 +8,7 @@ import { type Config } from './config.js';
 import { CleanupContext } from './context/cleanup-context.js';
 import { type GlobalOptions } from './options.js';
 import { getWorkspaceDependencyNames } from './workspace/get-workspace-dependency-names.js';
-import { getWorkspaces } from './workspace/get-workspaces.js';
+import { getWorkspace, getWorkspaces } from './workspace/get-workspaces.js';
 
 interface MainActionOptions {
   readonly config: Config;
@@ -33,23 +33,24 @@ export const mainAction = async ({
 }: MainActionOptions): Promise<void> => {
   const commandPlugin = await loadCommandPlugin(cmd, config);
   const { command, ...commandInfo } = commandPlugin;
+  const root = getWorkspace({ ...config.rootPackage, selected: false }, commandInfo.name);
   const workspaces = await getWorkspaces({
     workspacePackages: config.workspacePackages,
-    rootDir: config.rootDir,
+    rootDir: config.rootPackage.dir,
     commandName: commandInfo.name,
     ...globalOpts.select,
     ...globalOpts.git,
   });
   const subCommander = new Commander().copyInheritedSettings(commander as CommandUnknownOpts);
 
-  process.chdir(config.rootDir);
+  process.chdir(config.rootPackage.dir);
 
   if (
     command.init({
       log: undefined,
       config: cmdConfig,
       command: commandInfo,
-      rootDir: config.rootDir,
+      rootDir: config.rootPackage.dir,
       commander: subCommander,
     }) !== subCommander
   ) {
@@ -61,7 +62,7 @@ export const mainAction = async ({
       log: undefined,
       config: cmdConfig,
       command: commandInfo,
-      rootDir: config.rootDir,
+      rootDir: config.rootPackage.dir,
       args: commander.processedArgs,
       opts: commander.opts(),
       exitCode,
@@ -88,9 +89,9 @@ export const mainAction = async ({
     log: undefined,
     config: cmdConfig,
     command: commandInfo,
-    rootDir: config.rootDir,
     args,
     opts,
+    root,
     workspaces,
     gitHead,
     gitFromRevision,
@@ -125,9 +126,9 @@ export const mainAction = async ({
             log: { prefix: logPrefix },
             config: cmdConfig,
             command: commandInfo,
-            rootDir: config.rootDir,
             args,
             opts,
+            root,
             workspaces,
             workspace,
             matrixValue,
@@ -153,9 +154,9 @@ export const mainAction = async ({
     log: undefined,
     config: cmdConfig,
     command: commandInfo,
-    rootDir: config.rootDir,
     args,
     opts,
+    root,
     workspaces,
     gitHead,
     gitFromRevision,
