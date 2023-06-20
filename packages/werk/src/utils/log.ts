@@ -97,11 +97,11 @@ export class Log {
   };
 
   /**
-   * Print a bold message to stderr.
+   * Print a bright message to stderr.
    */
   readonly notice = (message?: unknown): void => {
     if (LOG_LEVEL.notice <= this.level.value) {
-      this.#write(process.stderr, message, chalk.bold);
+      this.#write(process.stderr, message, chalk.whiteBright);
     }
   };
 
