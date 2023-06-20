@@ -8,7 +8,7 @@ import { memoize } from './utils/memoize.js';
 import { merge } from './utils/merge.js';
 import { type PackageJson } from './utils/package-json.js';
 import { readJsonFile } from './utils/read-json-file.js';
-import { type WorkspaceOptions } from './workspace/workspace.js';
+import { type WorkspacePackage } from './workspace/workspace-package.js';
 
 export interface CommandConfig {
   readonly globalArgs: readonly string[];
@@ -20,7 +20,7 @@ export type Config = {
   readonly version: string;
   readonly description: string;
   readonly rootDir: string;
-  readonly workspaces: readonly WorkspaceOptions[];
+  readonly workspacePackages: readonly WorkspacePackage[];
   readonly commandPackagePrefixes: string[];
   readonly commandPackages: Record<string, string>;
   readonly commandConfigs: Record<string, CommandConfig>;
@@ -29,7 +29,7 @@ export type Config = {
 
 export const loadConfig = memoize(async (): Promise<Config> => {
   const __dirname = dirname(fileURLToPath(import.meta.url));
-  const [packageJson, rootDir, workspaces] = await Promise.all([
+  const [packageJson, rootDir, workspacePackages] = await Promise.all([
     await readFile(join(__dirname, '../package.json'), 'utf-8').then((json): PackageJson => JSON.parse(json)),
     await getNpmWorkspacesRoot(),
     await getNpmWorkspaces(),
@@ -55,15 +55,19 @@ export const loadConfig = memoize(async (): Promise<Config> => {
   delete werk.commandConfig;
 
   const commandConfigs = Object.fromEntries(
-    Object.entries(merge(legacyCommandConfigs, werk)).map(([key, value]) => {
-      return [
-        key,
-        {
-          globalArgs: isObject(value) && Array.isArray(value?.globalArgs) ? value.globalArgs.map(String) : [],
-          args: isObject(value) && Array.isArray(value?.args) ? value.args.map(String) : [],
-          config: value,
-        },
-      ];
+    Object.entries(merge(legacyCommandConfigs, werk)).flatMap(([key, value]) => {
+      return isObject(value)
+        ? [
+            [
+              key,
+              {
+                globalArgs: Array.isArray(value?.globalArgs) ? value.globalArgs.map(String) : [],
+                args: Array.isArray(value?.args) ? value.args.map(String) : [],
+                config: value?.config,
+              },
+            ],
+          ]
+        : [];
     }),
   );
 
@@ -71,7 +75,7 @@ export const loadConfig = memoize(async (): Promise<Config> => {
     version,
     description,
     rootDir,
-    workspaces,
+    workspacePackages,
     commandPackagePrefixes,
     commandPackages,
     commandConfigs,

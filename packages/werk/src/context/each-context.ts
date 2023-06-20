@@ -1,11 +1,12 @@
 import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
 import { type Spawn, spawn } from '../utils/spawn.js';
-import { Workspace, type WorkspaceOptions } from '../workspace/workspace.js';
+import { type WorkspacePartialOptions } from '../workspace/get-workspaces.js';
+import { Workspace } from '../workspace/workspace.js';
 import { BaseAsyncContext, type BaseAsyncContextOptions } from './base-async-context.js';
 
 export interface EachContextOptions<A extends CommanderArgs, O extends CommanderOptions, M>
   extends BaseAsyncContextOptions<A, O> {
-  readonly workspace: WorkspaceOptions;
+  readonly workspace: WorkspacePartialOptions;
   readonly matrixValue: M;
 }
 

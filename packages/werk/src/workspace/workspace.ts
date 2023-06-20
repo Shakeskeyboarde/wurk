@@ -15,6 +15,7 @@ import {
   getWorkspaceLocalDependencies,
   type WorkspaceLocalDependenciesOptions,
 } from './get-workspace-local-dependencies.js';
+import { type WorkspacePackage } from './workspace-package.js';
 
 interface PartialContext {
   readonly command: { readonly name: string };
@@ -22,19 +23,14 @@ interface PartialContext {
   readonly spawn: Spawn;
 }
 
-export type WorkspaceOptions = {
-  readonly name: string;
-  readonly version: string;
-  readonly private?: boolean;
-  readonly dependencies?: Readonly<Record<string, string>>;
-  readonly peerDependencies?: Readonly<Record<string, string>>;
-  readonly optionalDependencies?: Readonly<Record<string, string>>;
-  readonly devDependencies?: Readonly<Record<string, string>>;
-  readonly keywords?: readonly string[];
-  readonly dir: string;
-  readonly selected?: boolean;
-  readonly werk?: Record<string, unknown>;
-};
+export interface WorkspaceOptions extends Required<Omit<WorkspacePackage, 'werk'>> {
+  readonly selected: boolean;
+  readonly config: unknown;
+  readonly context: PartialContext;
+  readonly gitHead: string | undefined;
+  readonly gitFromRevision: string | undefined;
+  readonly saveAndRestoreFile: (filename: string) => Promise<void>;
+}
 
 export class Workspace {
   readonly #context: PartialContext;
@@ -111,14 +107,7 @@ export class Workspace {
    */
   readonly config: unknown;
 
-  constructor(
-    options: WorkspaceOptions & {
-      readonly context: PartialContext;
-      readonly gitHead: string | undefined;
-      readonly gitFromRevision: string | undefined;
-      readonly saveAndRestoreFile: (filename: string) => Promise<void>;
-    },
-  ) {
+  constructor(options: WorkspaceOptions) {
     this.#context = options.context;
     this.#gitHead = options.gitHead;
     this.#gitFromRevision = options.gitFromRevision;
@@ -133,8 +122,8 @@ export class Workspace {
     this.devDependencies = { ...options.devDependencies } ?? {};
     this.keywords = options.keywords ? [...options.keywords] : [];
     this.selected = options.selected ?? false;
-    this.dependencyNames = getWorkspaceDependencyNames(this);
-    this.config = options.werk?.[options.context.command.name];
+    this.config = options.config;
+    this.dependencyNames = getWorkspaceDependencyNames(options);
   }
 
   /**

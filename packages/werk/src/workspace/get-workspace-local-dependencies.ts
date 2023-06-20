@@ -1,14 +1,19 @@
 import * as semver from 'semver';
 
 import { getWorkspaceDependencyNames } from './get-workspace-dependency-names.js';
-import { type WorkspaceOptions } from './workspace.js';
+import { type WorkspacePackage } from './workspace-package.js';
 
 export interface WorkspaceLocalDependenciesOptions {
   scopes?: ('dependencies' | 'peerDependencies' | 'optionalDependencies' | 'devDependencies')[];
   ignoreVersions?: boolean;
 }
 
-export const getWorkspaceLocalDependencies = <T extends WorkspaceOptions>(
+export const getWorkspaceLocalDependencies = <
+  T extends Pick<
+    WorkspacePackage,
+    'name' | 'version' | 'dependencies' | 'peerDependencies' | 'optionalDependencies' | 'devDependencies'
+  >,
+>(
   workspace: T,
   workspaces: Iterable<T>,
   options: WorkspaceLocalDependenciesOptions = {},

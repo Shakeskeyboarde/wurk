@@ -33,7 +33,10 @@ export const mainAction = async ({
 }: MainActionOptions): Promise<void> => {
   const commandPlugin = await loadCommandPlugin(cmd, config);
   const { command, ...commandInfo } = commandPlugin;
-  const workspaces = await getWorkspaces(config.workspaces, config.rootDir, {
+  const workspaces = await getWorkspaces({
+    workspacePackages: config.workspacePackages,
+    rootDir: config.rootDir,
+    commandName: commandInfo.name,
     ...globalOpts.select,
     ...globalOpts.git,
   });

@@ -1,6 +1,7 @@
 import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
 import { type Spawn, spawn } from '../utils/spawn.js';
-import { Workspace, type WorkspaceOptions } from '../workspace/workspace.js';
+import { type WorkspacePartialOptions } from '../workspace/get-workspaces.js';
+import { Workspace } from '../workspace/workspace.js';
 import { BaseContext, type BaseContextOptions } from './base-context.js';
 
 export interface BaseAsyncContextOptions<A extends CommanderArgs, O extends CommanderOptions>
@@ -9,7 +10,7 @@ export interface BaseAsyncContextOptions<A extends CommanderArgs, O extends Comm
   readonly rootDir: string;
   readonly args: A;
   readonly opts: O;
-  readonly workspaces: readonly WorkspaceOptions[];
+  readonly workspaces: readonly WorkspacePartialOptions[];
   readonly gitHead: string | undefined;
   readonly gitFromRevision: string | undefined;
   readonly isWorker: boolean;

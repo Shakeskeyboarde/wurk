@@ -7,12 +7,24 @@ import { getWorkspaceDependencyNames } from './get-workspace-dependency-names.js
 import { getWorkspaceIsModified } from './get-workspace-is-modified.js';
 import { getWorkspaceLocalDependencies } from './get-workspace-local-dependencies.js';
 import { type WorkspaceOptions } from './workspace.js';
+import { type WorkspacePackage } from './workspace-package.js';
 
-const getSorted = (workspaces: readonly WorkspaceOptions[]): readonly WorkspaceOptions[] => {
+export type WorkspacePartialOptions = Omit<
+  WorkspaceOptions,
+  'context' | 'gitHead' | 'gitFromRevision' | 'saveAndRestoreFile'
+>;
+
+export interface WorkspacesOptions extends GitOptions, SelectOptions {
+  readonly workspacePackages: readonly WorkspacePackage[];
+  readonly rootDir: string;
+  readonly commandName: string;
+}
+
+const getSorted = (workspaces: readonly WorkspacePackage[]): readonly WorkspacePackage[] => {
   const unresolved = new Map(workspaces.map((workspace) => [workspace.name, workspace]));
   const localNames = new Set(unresolved.keys());
   const resolvedNames = new Set<string>();
-  const result: WorkspaceOptions[] = [];
+  const result: WorkspacePackage[] = [];
 
   while (unresolved.size) {
     let count = 0;
@@ -35,7 +47,7 @@ const getSorted = (workspaces: readonly WorkspaceOptions[]): readonly WorkspaceO
 };
 
 const getSelected = async (
-  workspaces: readonly WorkspaceOptions[],
+  workspaces: readonly WorkspacePackage[],
   rootDir: string,
   {
     withDependencies,
@@ -52,17 +64,16 @@ const getSelected = async (
     gitFromRevision,
     gitHead,
   }: SelectOptions & GitOptions,
-): Promise<readonly WorkspaceOptions[]> => {
+): Promise<readonly (WorkspacePackage & { selected: boolean })[]> => {
   const getIsPublished = async (name: string, version: string): Promise<boolean> => {
     return await getNpmMetadata(name, version).then((meta) => meta?.version === version);
   };
 
   const getIsModified = memoize(getWorkspaceIsModified, (...args) => JSON.stringify(args));
 
-  workspaces = await Promise.all(
+  let result = await Promise.all(
     Array.from(workspaces).map(async (workspace) => {
       let isExcluded =
-        workspace.selected === false ||
         excludeWorkspaces.some((nameOrPath) => isWorkspaceMatch(workspace, rootDir, nameOrPath)) ||
         Boolean(workspace.keywords?.some((keyword) => excludeKeywords.includes(keyword))) ||
         (excludePrivate && workspace.private) ||
@@ -89,7 +100,6 @@ const getSelected = async (
       }
 
       const isIncluded =
-        workspace.selected ||
         (!includeWorkspaces.length && !includeKeywords.length) ||
         includeWorkspaces.some((nameOrPath) => isWorkspaceMatch(workspace, rootDir, nameOrPath)) ||
         Boolean(workspace.keywords?.some((keyword) => includeKeywords.includes(keyword)));
@@ -99,21 +109,21 @@ const getSelected = async (
   );
 
   if (withDependencies) {
-    workspaces = workspaces.map((workspace) => {
+    result = result.map((workspace) => {
       return workspace.selected
         ? workspace
         : {
             ...workspace,
-            selected: getWorkspaceLocalDependencies(workspace, workspaces).some((dependency) => dependency.selected),
+            selected: getWorkspaceLocalDependencies(workspace, result).some((dependency) => dependency.selected),
           };
     });
   }
 
-  return workspaces;
+  return result;
 };
 
 export const isWorkspaceMatch = (
-  workspace: Pick<WorkspaceOptions, 'name' | 'dir'>,
+  workspace: Pick<WorkspacePartialOptions, 'name' | 'dir'>,
   rootDir: string,
   nameOrPath: string,
 ): boolean => {
@@ -123,13 +133,35 @@ export const isWorkspaceMatch = (
   );
 };
 
-export const getWorkspaces = async (
-  workspaces: readonly WorkspaceOptions[],
-  rootDir: string,
-  options: SelectOptions & GitOptions,
-): Promise<readonly WorkspaceOptions[]> => {
-  workspaces = getSorted(workspaces);
-  workspaces = await getSelected(workspaces, rootDir, options);
+export const getWorkspaces = async ({
+  workspacePackages,
+  rootDir,
+  commandName,
+  ...options
+}: WorkspacesOptions): Promise<readonly WorkspacePartialOptions[]> => {
+  const sorted = getSorted(workspacePackages);
+  const selected = await getSelected(sorted, rootDir, options);
+  const result: WorkspacePartialOptions[] = selected.map(
+    ({
+      private: private_ = false,
+      dependencies = {},
+      peerDependencies = {},
+      optionalDependencies = {},
+      devDependencies = {},
+      keywords = [],
+      werk = {},
+      ...workspace
+    }) => ({
+      private: private_,
+      dependencies,
+      peerDependencies,
+      optionalDependencies,
+      devDependencies,
+      keywords,
+      config: werk[commandName]?.config,
+      ...workspace,
+    }),
+  );
 
-  return workspaces;
+  return result;
 };

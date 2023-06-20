@@ -23,17 +23,19 @@ In addition to (or instead of) `tsconfig.*build*.json` files, you can also add p
 ```json
 {
   "werk": {
-    "tsc": [
-      {
-        "compilerOptions": {
-          "target": "es2015",
-          "module": "es2015",
-          "moduleResolution": "node",
-          "declaration": true,
-          "outDir": "dist"
+    "tsc": {
+      "config": [
+        {
+          "compilerOptions": {
+            "target": "es2015",
+            "module": "es2015",
+            "moduleResolution": "node",
+            "declaration": true,
+            "outDir": "dist"
+          }
         }
-      }
-    ]
+      ]
+    }
   }
 }
 ```

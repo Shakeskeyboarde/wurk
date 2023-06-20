@@ -54,7 +54,7 @@ const asyncMain = async (): Promise<void> => {
       '-w, --workspace <name>',
       'Include workspaces by name.',
       (value, previous: string[] | undefined): string[] => {
-        if (!config.workspaces.some((workspace) => isWorkspaceMatch(workspace, config.rootDir, value))) {
+        if (!config.workspacePackages.some((workspace) => isWorkspaceMatch(workspace, config.rootDir, value))) {
           throw new Error(`Workspace "${value}" does not exist.`);
         }
 
@@ -70,7 +70,7 @@ const asyncMain = async (): Promise<void> => {
       '--not-workspace <name>',
       'Exclude workspaces by name.',
       (value, previous: string[] | undefined): string[] => {
-        if (!config.workspaces.some((workspace) => isWorkspaceMatch(workspace, config.rootDir, value))) {
+        if (!config.workspacePackages.some((workspace) => isWorkspaceMatch(workspace, config.rootDir, value))) {
           throw new Error(`Workspace "${value}" does not exist.`);
         }
 
