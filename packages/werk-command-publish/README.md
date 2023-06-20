@@ -14,6 +14,8 @@ npm i -D @werk/command-publish
 
 The state of the monorepo is [validated](#validation) before publishing. Publishing workspaces with local dependencies is always dependent on the local dependency workspaces also being published successfully, even if the Werk `--no-wait` option is set.
 
+The workspaces root `build` script is run before publishing, if it is present.
+
 ```sh
 werk publish
 ```

@@ -180,6 +180,8 @@ const publishFromFilesystem = async (
     await workspace.patchPackageJson(dependenciesPatch, ...removeFieldPatches, gitHeadPatch);
   }
 
+  await spawn('npm', [`--loglevel=${log.level.name}`, 'run', '--if-present', 'build'], { echo: true });
+
   await spawn(
     'npm',
     [
