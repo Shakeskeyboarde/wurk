@@ -33,7 +33,7 @@ export default createCommand({
   before: async ({ log, opts, root, spawn, forceWait }) => {
     forceWait();
 
-    if (opts.build && root.scripts.build != null) {
+    if (!opts.fromArchive && opts.build && root.scripts.build != null) {
       log.notice('Building workspaces.');
       await spawn('npm', [`--loglevel=${log.level.name}`, 'run', '--if-present', 'build'], { errorEcho: true });
     }
