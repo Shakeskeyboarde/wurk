@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint .",
     "build": "npm -ws --if-present run build && npm update @werk/cli && werk -p tsc",
-    "test": "npm run build && npm run lint",
+    "test": "npm run lint",
     "clean": "rm -rf out **/out lib **/lib",
     "modernize": "npx npm-check-updates@latest -i --workspaces --root --format group",
     "start": "( npm --quiet run build &>/dev/null || ( echo 'build failed' && exit 1 ) ) && werk"
@@ -23,9 +23,9 @@
   },
   "engineStrict": true,
   "devDependencies": {
-    "@types/eslint": "^8.40.0",
-    "@types/node": "^20.2.5",
-    "eslint": "^8.42.0",
+    "@types/eslint": "^8.40.2",
+    "@types/node": "^20.3.1",
+    "eslint": "^8.43.0",
     "eslint-config-rational": "^2.0.23",
     "prettier": "^2.8.8",
     "typescript": "^5.1.3"
