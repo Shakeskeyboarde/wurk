@@ -1,3 +1,9 @@
+## 1.0.21 (2023-06-20)
+
+### Chores
+
+- minor dependency updates (ab53f91)
+
 ## 1.0.20 (2023-06-20)
 
 **Note:** Updated local dependencies.

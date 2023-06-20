@@ -1,3 +1,18 @@
+## 1.2.3 (2023-06-20)
+
+### Bug Fixes
+
+- no build when publishing from archive (e1e010e)
+- only print publish message when actually publishing (6f53d5e)
+
+### Build System
+
+- add build config (6a6fa1a)
+
+### Chores
+
+- minor dependency updates (ab53f91)
+
 ## 1.2.2 (2023-06-20)
 
 **Note:** Updated local dependencies.

@@ -1,3 +1,10 @@
+## 1.2.2 (2023-06-20)
+
+### Chores
+
+- major dependency updates (829782a)
+- minor dependency updates (ab53f91)
+
 ## 1.2.1 (2023-06-20)
 
 ### Documentation
