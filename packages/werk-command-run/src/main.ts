@@ -35,22 +35,20 @@ export default createCommand({
     }));
   },
 
-  each: async ({ log, workspace, matrixValue, spawn }) => {
+  each: async ({ workspace, matrixValue, spawn }) => {
     if (!workspace.selected) return;
 
     const { scripts, scriptArgs } = matrixValue;
-    const { scripts: packageScripts } = await workspace.readPackageJson();
 
     for (const [i, script] of scripts.entries()) {
-      if (packageScripts?.[script] == null) {
-        log.verbose(`Skipping script "${script}" because it is not defined in workspace "${workspace.name}".`);
-        continue;
-      }
-
-      const exitCode = await spawn('npm', ['run', script, ...(i === scripts.length - 1 ? scriptArgs : [])], {
-        echo: true,
-        errorReturn: true,
-      }).getExitCode();
+      const exitCode = await spawn(
+        'npm',
+        ['run', '--if-present', script, ...(i === scripts.length - 1 ? scriptArgs : [])],
+        {
+          echo: true,
+          errorReturn: true,
+        },
+      ).getExitCode();
 
       if (exitCode !== 0) {
         process.exitCode = exitCode;
