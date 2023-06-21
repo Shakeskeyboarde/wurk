@@ -163,8 +163,10 @@ export class Workspace {
    * always represents the initial state of the workspace when the
    * command was started.
    */
-  readonly patchPackageJson = async <T extends Record<string, unknown>[]>(...jsonPatches: T): Promise<void> => {
-    await patchJsonFile(join(this.dir, 'package.json'), ...jsonPatches);
+  readonly patchPackageJson = async <T extends (Record<string, unknown> | null | undefined | false | 0 | '')[]>(
+    ...jsonPatches: T
+  ): Promise<void> => {
+    await patchJsonFile(join(this.dir, 'package.json'), ...jsonPatches.filter(Boolean));
   };
 
   /**
