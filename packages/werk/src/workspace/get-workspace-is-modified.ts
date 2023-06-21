@@ -1,3 +1,5 @@
+import assert from 'node:assert';
+
 import { getGitHead } from '../git/get-git-head.js';
 import { getGitIsModified } from '../git/get-git-is-modified.js';
 import { getGitIsShallow } from '../git/get-git-is-shallow.js';
@@ -16,7 +18,7 @@ export const getWorkspaceIsModified = async (
     head ?? getGitHead(dir),
   ]);
 
-  if (isShallow) throw new Error('Cannot determine if workspace is modified because git repository is shallow.');
+  assert(!isShallow, `Cannot detect modifications because the Git repository is shallow.`);
 
   return !!from && !!to && (await getGitIsModified(dir, from, to));
 };
