@@ -1,3 +1,9 @@
+## 1.3.0 (2023-06-21)
+
+### Features
+
+- workspace clean and modified detection methods support recursion. (3fdeed0)
+
 ## 1.2.4 (2023-06-21)
 
 ### Documentation

@@ -1,3 +1,9 @@
+## 1.0.25 (2023-06-21)
+
+### Code Refactoring
+
+- use workspace getGitIsClean recursion feature (949f0b6)
+
 ## 1.0.24 (2023-06-21)
 
 ### Documentation

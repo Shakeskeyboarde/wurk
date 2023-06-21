@@ -1,3 +1,9 @@
+## 1.2.7 (2023-06-21)
+
+### Code Refactoring
+
+- use workspace getGitIsClean and getIsModified recursion feature (1216811)
+
 ## 1.2.6 (2023-06-21)
 
 ### Documentation
