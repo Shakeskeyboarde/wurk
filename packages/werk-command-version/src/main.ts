@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 
-import { createCommand, type PackageJson } from '@werk/cli';
+import { createCommand, type Log, type PackageJson, type Spawn, type Workspace } from '@werk/cli';
 import { type ReleaseType, SemVer } from 'semver';
 
 import { getBumpedVersion } from './get-bumped-version.js';
@@ -10,6 +10,7 @@ import { getIncrementedVersion } from './get-incremented-version.js';
 import { writeChangelog } from './write-changelog.js';
 
 const versionUpdates = new Map<string, string>();
+const isUpdated = new Map<string, boolean>();
 
 export default createCommand({
   init: ({ commander }) => {
@@ -53,91 +54,28 @@ export default createCommand({
   },
 
   each: async ({ log, args, opts, workspace, spawn }) => {
-    const [update] = args;
+    const [spec] = args;
     const { preid, changelog, dryRun = false } = opts;
 
-    let changes: readonly Change[] | undefined;
     let updatedVersion: string | undefined;
-    let updatedDependencies:
-      | Pick<PackageJson, 'dependencies' | 'peerDependencies' | 'optionalDependencies' | 'devDependencies'>
-      | undefined;
+    let changes: readonly Change[] | undefined;
 
     if (workspace.selected) {
-      if (update instanceof SemVer) {
-        updatedVersion = update.toString();
-        changes = [{ type: 'note', message: `Updated to version "${updatedVersion}".` }];
-      } else if (update === 'auto') {
-        if (!workspace.private) {
-          await Promise.all(
-            [
-              workspace,
-              ...workspace.getLocalDependencies({
-                scopes: ['dependencies', 'peerDependencies', 'optionalDependencies'],
-              }),
-            ].map(async ({ getGitIsRepo, getGitIsClean }) => {
-              assert(await getGitIsRepo(), 'Auto versioning requires a Git repository.');
-              assert(await getGitIsClean(), 'Auto versioning requires a clean Git working tree.');
-            }),
-          );
-
-          const fromRevision = await workspace.getGitFromRevision();
-
-          if (!fromRevision) log.warn('Unable to determine a "from" Git revision. Using previous commit only.');
-
-          let isConventional: boolean;
-
-          [changes, isConventional] = await getChanges(fromRevision ?? 'HEAD~1', workspace.dir, spawn);
-
-          if (!isConventional) {
-            log.warn(`Workspace "${workspace.name}" has non-conventional commits.`);
-          }
-
-          if (changes.length > 0) {
-            updatedVersion = getChangeVersion(workspace.version, changes).toString();
-          }
-        }
-      } else {
-        updatedVersion = getBumpedVersion(workspace.version, update, preid).toString();
-        changes = [{ type: 'note', message: `Updated to version "${updatedVersion}".` }];
+      if (spec instanceof SemVer) {
+        [updatedVersion, changes] = setVersion(spec);
+      } else if (spec !== 'auto') {
+        [updatedVersion, changes] = bumpVersion(spec, preid, workspace);
+      } else if (!workspace.private) {
+        [updatedVersion, changes] = await autoVersion(log, workspace, spawn);
       }
     }
 
-    for (const scope of ['dependencies', 'peerDependencies', 'optionalDependencies', 'devDependencies'] as const) {
-      for (const [depName, depRange] of Object.entries(workspace[scope])) {
-        const depVersion = versionUpdates.get(depName);
+    const updatedDependencies = updateDependencies(log, workspace);
 
-        // No update for this dependency.
-        if (!depVersion) continue;
-
-        // If the workspace version wasn't updated, but a dependency was,
-        // then we need to increment the workspace version.
-        if (!updatedVersion && !workspace.private) {
-          updatedVersion = getIncrementedVersion(workspace.version).toString();
-
-          if (update === 'auto') {
-            changes = [...(changes ?? []), { type: 'note', message: 'Updated local dependencies.' }];
-          }
-        }
-
-        // Not an updatable range.
-        if (depRange === '*' || depRange === 'x' || depRange.startsWith('file:')) continue;
-
-        const prefix = depRange.match(/^(|=|>=?|\^|~)\d+(?:\.\d+(?:\.\d+(?:-[^\s|=<>^~]*)?)?)?$/u)?.[1];
-
-        if (prefix == null) {
-          log.warn(`Dependency "${depName}@${depRange}" in workspace "${workspace.name}" is too complex to update.`);
-          continue;
-        }
-
-        const newDepRange = `${prefix}${depVersion}`;
-
-        updatedDependencies = {
-          ...updatedDependencies,
-          [scope]: { ...updatedDependencies?.[scope], [depName]: newDepRange },
-        };
-
-        log.debug(`Updated "${depName}" to "${newDepRange}" in workspace "${workspace.name}".`);
-      }
+    // Non-private workspace versions must be updated if there are local dependency updates.
+    if (!workspace.private && !updatedVersion && updatedDependencies) {
+      updatedVersion = getIncrementedVersion(workspace.version).toString();
+      changes = [...(changes ?? []), { type: 'note', message: 'Updated local dependencies.' }];
     }
 
     const patches: PackageJson[] = [];
@@ -149,8 +87,8 @@ export default createCommand({
     }
 
     if (updatedDependencies) {
-      log.notice(`Updating workspace "${workspace.name}" dependencies.`);
       patches.push(updatedDependencies);
+      log.notice(`Updating workspace "${workspace.name}" dependencies.`);
     }
 
     if (dryRun) {
@@ -159,11 +97,13 @@ export default createCommand({
     }
 
     if (patches.length) {
+      isUpdated.set(workspace.name, true);
       await workspace.patchPackageJson(...patches);
     }
 
     if (updatedVersion && changelog && changes?.length) {
       log.notice(`Updating workspace "${workspace.name}" change log.`);
+      isUpdated.set(workspace.name, true);
 
       if (!(await writeChangelog(workspace.name, workspace.dir, updatedVersion, changes))) {
         log.warn(`Version "${updatedVersion}" already exists in the workspace "${workspace.name}" change log.`);
@@ -174,6 +114,98 @@ export default createCommand({
   after: async ({ spawn }) => {
     if (versionUpdates.size === 0) return;
 
+    // Update the package lock file.
     await spawn('npm', ['update', ...versionUpdates.keys()], { errorEcho: true });
   },
 });
+
+const setVersion = (spec: SemVer): [version: string, changes: readonly Change[]] => {
+  const version = spec.toString();
+  const changes = [{ type: 'note', message: `Updated to version "${version}".` }];
+  return [version, changes];
+};
+
+const bumpVersion = (
+  spec: ReleaseType,
+  preid: string | undefined,
+  workspace: Workspace,
+): [version: string, changes: readonly Change[]] => {
+  const version = getBumpedVersion(workspace.version, spec, preid).toString();
+  const changes = [{ type: 'note', message: `Updated to version "${version}".` }];
+  return [version, changes];
+};
+
+const autoVersion = async (
+  log: Log,
+  workspace: Workspace,
+  spawn: Spawn,
+): Promise<[version: string | undefined, changes: readonly Change[]]> => {
+  await Promise.all(
+    [
+      workspace,
+      ...workspace.getLocalDependencies({
+        scopes: ['dependencies', 'peerDependencies', 'optionalDependencies'],
+      }),
+    ]
+      .filter(({ name }) => !isUpdated.get(name))
+      .map(async ({ getGitIsRepo, getGitIsClean }) => {
+        assert(await getGitIsRepo(), 'Auto versioning requires a Git repository.');
+        assert(await getGitIsClean(), 'Auto versioning requires a clean Git working tree.');
+      }),
+  );
+
+  const fromRevision = await workspace.getGitFromRevision();
+
+  if (!fromRevision) {
+    log.warn('Unable to determine a "from" Git revision. Using previous commit only.');
+  }
+
+  const [changes, isConventional] = await getChanges(fromRevision ?? 'HEAD~1', workspace.dir, spawn);
+
+  if (!isConventional) {
+    log.warn(`Workspace "${workspace.name}" has non-conventional commits.`);
+  }
+
+  const version = changes.length > 0 ? getChangeVersion(workspace.version, changes).toString() : undefined;
+
+  return [version, changes];
+};
+
+const updateDependencies = (
+  log: Log,
+  workspace: Workspace,
+): Pick<PackageJson, 'dependencies' | 'peerDependencies' | 'optionalDependencies' | 'devDependencies'> | undefined => {
+  let updatedDependencies:
+    | Pick<PackageJson, 'dependencies' | 'peerDependencies' | 'optionalDependencies' | 'devDependencies'>
+    | undefined;
+
+  for (const scope of ['dependencies', 'peerDependencies', 'optionalDependencies', 'devDependencies'] as const) {
+    for (const [depName, depRange] of Object.entries(workspace[scope])) {
+      const depVersion = versionUpdates.get(depName);
+
+      // No update for this dependency.
+      if (!depVersion) continue;
+
+      // Not an updatable range.
+      if (depRange === '*' || depRange === 'x' || depRange.startsWith('file:')) continue;
+
+      const prefix = depRange.match(/^(|=|>=?|\^|~)\d+(?:\.\d+(?:\.\d+(?:-[^\s|=<>^~]*)?)?)?$/u)?.[1];
+
+      if (prefix == null) {
+        log.warn(`Dependency "${depName}@${depRange}" in workspace "${workspace.name}" is too complex to update.`);
+        continue;
+      }
+
+      const newDepRange = `${prefix}${depVersion}`;
+
+      updatedDependencies = {
+        ...updatedDependencies,
+        [scope]: { ...updatedDependencies?.[scope], [depName]: newDepRange },
+      };
+
+      log.debug(`Updating "${depName}" to "${newDepRange}" in workspace "${workspace.name}".`);
+    }
+
+    return updatedDependencies;
+  }
+};
