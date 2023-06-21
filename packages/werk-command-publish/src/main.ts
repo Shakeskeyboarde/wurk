@@ -8,7 +8,7 @@ import { createGunzip } from 'node:zlib';
 import { createCommand, type EachContext, type MutablePackageJson } from '@werk/cli';
 import { extract } from 'tar-stream';
 
-const isPublished = new Map<string, boolean>();
+const isPublished = new Set<string>();
 
 export default createCommand({
   init: ({ commander, command }) => {
@@ -52,9 +52,11 @@ export default createCommand({
       return;
     }
 
-    const result = opts.fromArchive ? await publishFromArchive(context) : await publishFromFilesystem(context);
+    const isSuccessful = opts.fromArchive ? await publishFromArchive(context) : await publishFromFilesystem(context);
 
-    isPublished.set(workspace.name, result);
+    if (isSuccessful) {
+      isPublished.add(workspace.name);
+    }
   },
 });
 
@@ -127,20 +129,19 @@ const publishFromFilesystem = async (
     return false;
   }
 
-  // Ensure the Git working tree is clean, and all local production dependencies are unmodified and published.
-  await Promise.all(
-    [
-      workspace,
-      ...workspace.getLocalDependencies({ scopes: ['dependencies', 'peerDependencies', 'optionalDependencies'] }),
-    ]
-      .filter((dependency) => !isPublished.get(dependency.name))
-      .map(async ({ name, getGitIsClean, getIsModified }) => {
-        const [isClean, isModified] = await Promise.all([getGitIsClean(), name !== workspace.name && getIsModified()]);
+  const [isClean, isModified] = await Promise.all([
+    await workspace.getGitIsClean({
+      includeDependencyScopes: ['dependencies', 'peerDependencies', 'optionalDependencies'],
+      excludeDependencyNames: [...isPublished],
+    }),
+    await workspace.getIsModified({
+      includeDependencyScopes: ['dependencies', 'peerDependencies', 'optionalDependencies'],
+      excludeDependencyNames: [workspace.name, ...isPublished],
+    }),
+  ]);
 
-        assert(isClean, 'Publishing requires a clean Git working tree.');
-        assert(!isModified, 'Publishing requires all local dependencies to be unmodified or published.');
-      }),
-  );
+  assert(isClean, 'Publishing requires a clean Git working tree.');
+  assert(!isModified, 'Publishing requires all local dependencies to be unmodified or published.');
 
   log.notice(`Publishing workspace "${workspace.name}@${workspace.version}"${opts.toArchive ? ' to archive' : ''}.`);
 
