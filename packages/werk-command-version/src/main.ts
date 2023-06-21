@@ -10,7 +10,7 @@ import { getIncrementedVersion } from './get-incremented-version.js';
 import { writeChangelog } from './write-changelog.js';
 
 const versionUpdates = new Map<string, string>();
-const isUpdated = new Map<string, boolean>();
+const isUpdated = new Set<string>();
 
 export default createCommand({
   init: ({ commander }) => {
@@ -97,13 +97,13 @@ export default createCommand({
     }
 
     if (patches.length) {
-      isUpdated.set(workspace.name, true);
+      isUpdated.add(workspace.name);
       await workspace.patchPackageJson(...patches);
     }
 
     if (updatedVersion && changelog && changes?.length) {
       log.notice(`Updating workspace "${workspace.name}" change log.`);
-      isUpdated.set(workspace.name, true);
+      isUpdated.add(workspace.name);
 
       if (!(await writeChangelog(workspace.name, workspace.dir, updatedVersion, changes))) {
         log.warn(`Version "${updatedVersion}" already exists in the workspace "${workspace.name}" change log.`);
@@ -140,19 +140,16 @@ const autoVersion = async (
   workspace: Workspace,
   spawn: Spawn,
 ): Promise<[version: string | undefined, changes: readonly Change[]]> => {
-  await Promise.all(
-    [
-      workspace,
-      ...workspace.getLocalDependencies({
-        scopes: ['dependencies', 'peerDependencies', 'optionalDependencies'],
-      }),
-    ]
-      .filter(({ name }) => !isUpdated.get(name))
-      .map(async ({ getGitIsRepo, getGitIsClean }) => {
-        assert(await getGitIsRepo(), 'Auto versioning requires a Git repository.');
-        assert(await getGitIsClean(), 'Auto versioning requires a clean Git working tree.');
-      }),
-  );
+  const [isRepo, isClean] = await Promise.all([
+    await workspace.getGitIsRepo(),
+    await workspace.getGitIsClean({
+      includeDependencyScopes: ['dependencies', 'peerDependencies', 'optionalDependencies'],
+      excludeDependencyNames: [...isUpdated],
+    }),
+  ]);
+
+  assert(isRepo, 'Auto versioning requires a Git repository.');
+  assert(isClean, 'Auto versioning requires a clean Git working tree.');
 
   const fromRevision = await workspace.getGitFromRevision();
 
