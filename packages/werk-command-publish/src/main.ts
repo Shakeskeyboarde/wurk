@@ -127,20 +127,18 @@ const publishFromFilesystem = async (
     return false;
   }
 
-  assert(await workspace.getGitIsClean(), `Workspace "${workspace.name}" has uncommitted changes.`);
-
-  // Ensure local production dependencies have been published, and there are no local modifications.
+  // Ensure the Git working tree is clean, and all local production dependencies are unmodified and published.
   await Promise.all(
-    workspace
-      .getLocalDependencies({ scopes: ['dependencies', 'peerDependencies', 'optionalDependencies'] })
+    [
+      workspace,
+      ...workspace.getLocalDependencies({ scopes: ['dependencies', 'peerDependencies', 'optionalDependencies'] }),
+    ]
       .filter((dependency) => !isPublished.get(dependency.name))
-      .map(async (dependency) => {
-        const [isClean, isModified] = await Promise.all([dependency.getGitIsClean(), dependency.getIsModified()]);
+      .map(async ({ name, getGitIsClean, getIsModified }) => {
+        const [isClean, isModified] = await Promise.all([getGitIsClean(), name !== workspace.name && getIsModified()]);
 
-        assert(
-          isClean && !isModified,
-          `Local dependency "${dependency.name}@${dependency.version}" has unpublished modifications.`,
-        );
+        assert(isClean, 'Publishing requires a clean Git working tree.');
+        assert(!isModified, 'Publishing requires all local dependencies to be unmodified or published.');
       }),
   );
 
