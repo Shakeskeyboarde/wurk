@@ -137,8 +137,8 @@ const publishFromFilesystem = async (
         // Dependency published successfully during this command invocation.
         if (isPublished.get(dependency.name)) return;
 
-        // Dependency was already published and is unmodified.
-        if (!(await dependency.getIsModified())) return;
+        // Dependency working tree is clean and unmodified.
+        if ((await dependency.getGitIsClean()) && !(await dependency.getIsModified())) return;
 
         throw new Error(`Local dependency "${dependency.name}@${dependency.version}" has unpublished modifications.`);
       }),
