@@ -168,7 +168,7 @@ export class Workspace {
   };
 
   /**
-   * Get the local dependencies of the workspace.
+   * Get the local dependencies of the workspace, including transitive.
    */
   readonly getLocalDependencies = (options?: WorkspaceLocalDependenciesOptions): Workspace[] => {
     return getWorkspaceLocalDependencies(this, this.#context.workspaces.values(), options);
@@ -226,14 +226,8 @@ export class Workspace {
    * difference between the published and local code.
    *
    * A workspace is considered modified if it is not published
-   * (`gitNpmIsPublished`), or if there are uncommitted changes, or if
-   * _ALL_ of the following conditions are met:
-   *
-   * - The workspace is part of a Git repository (`getGitIsRepo`).
-   * - The Git "from" revision and head commit can be determined
-   *   (`getGitHead` and `getGitFromRevision`).
-   * - The Git diff of the "from" revision and the head commit, in the
-   *   workspace directory, returns an empty result
+   * (`getNpmIsPublished`), or the Git diff between the published version
+   * and the current head is not empty.
    *
    * Uncommitted changes (ie. a dirty working tree) are not considered.
    */

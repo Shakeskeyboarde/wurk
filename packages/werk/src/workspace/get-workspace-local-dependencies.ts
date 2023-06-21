@@ -41,7 +41,7 @@ export const getWorkspaceLocalDependencies = <
           if (semver.valid(dependency.version) && !semver.satisfies(dependency.version, versionRange)) continue;
 
           // This is a dependency on a local workspace.
-      return [dependency];
+          return [dependency, ...getWorkspaceLocalDependencies(dependency, workspacesArray, options)];
         }
 
         // Not in an applicable dependency scope.
