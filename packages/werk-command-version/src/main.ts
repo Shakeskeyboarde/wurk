@@ -68,8 +68,17 @@ export default createCommand({
         changes = [{ type: 'note', message: `Updated to version "${updatedVersion}".` }];
       } else if (update === 'auto') {
         if (!workspace.private) {
-          assert(await workspace.getGitIsRepo(), 'Auto versioning requires a Git repository.');
-          assert(await workspace.getGitIsClean(), 'Auto versioning requires a clean Git working tree.');
+          await Promise.all(
+            [
+              workspace,
+              ...workspace.getLocalDependencies({
+                scopes: ['dependencies', 'peerDependencies', 'optionalDependencies'],
+              }),
+            ].map(async ({ getGitIsRepo, getGitIsClean }) => {
+              assert(await getGitIsRepo(), 'Auto versioning requires a Git repository.');
+              assert(await getGitIsClean(), 'Auto versioning requires a clean Git working tree.');
+            }),
+          );
 
           const fromRevision = await workspace.getGitFromRevision();
 
