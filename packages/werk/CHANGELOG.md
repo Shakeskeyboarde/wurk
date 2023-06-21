@@ -1,3 +1,13 @@
+## 1.3.1 (2023-06-21)
+
+### Bug Fixes
+
+- don't error when -v or -h options are used with no workspaces (2ca4687)
+
+### Chores
+
+- add "main" and "types" fields to package.json files so NPM shows the typescript badge (998de98)
+
 ## 1.3.0 (2023-06-21)
 
 ### Features

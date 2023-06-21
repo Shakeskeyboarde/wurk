@@ -1,7 +1,7 @@
 {
   "name": "@werk/command-list",
   "description": "List workspaces as JSON with filtering applied.",
-  "version": "1.0.21",
+  "version": "1.0.22",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-list/README.md",
@@ -36,7 +36,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@werk/cli": "^1.3.0"
+    "@werk/cli": "^1.3.1"
   },
   "werk": {
     "tsc": {

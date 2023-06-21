@@ -1,3 +1,9 @@
+## 1.0.8 (2023-06-21)
+
+### Chores
+
+- add "main" and "types" fields to package.json files so NPM shows the typescript badge (998de98)
+
 ## 1.0.7 (2023-06-21)
 
 **Note:** Updated local dependencies.
