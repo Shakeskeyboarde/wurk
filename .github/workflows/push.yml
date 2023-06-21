@@ -48,9 +48,8 @@ jobs:
       #     verbose: true
 
       - name: Publish (NPM)
-        continue-on-error: true
         run: |
           npm config --location project set //registry.npmjs.org/:_authToken '${NPM_TOKEN}'
-          npx @werk/cli publish --from-archive
+          npx @werk/cli -l verbose publish --from-archive
         env:
           NPM_TOKEN: ${{secrets.NPM_TOKEN}}
