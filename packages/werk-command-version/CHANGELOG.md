@@ -1,3 +1,9 @@
+## 1.0.22 (2023-06-20)
+
+### Documentation
+
+- add npm badges (3bdccc6)
+
 ## 1.0.21 (2023-06-20)
 
 ### Chores

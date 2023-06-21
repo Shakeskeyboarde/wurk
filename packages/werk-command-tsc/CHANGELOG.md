@@ -1,3 +1,9 @@
+## 1.0.4 (2023-06-20)
+
+### Documentation
+
+- add npm badges (3bdccc6)
+
 ## 1.0.3 (2023-06-20)
 
 **Note:** Updated local dependencies.
