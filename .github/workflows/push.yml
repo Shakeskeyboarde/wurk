@@ -50,6 +50,6 @@ jobs:
       - name: Publish (NPM)
         run: |
           npm config set //registry.npmjs.org/:_authToken '${NPM_TOKEN}'
-          npx @werk/cli -l silly publish --from-archive
+          npx @werk/cli publish --from-archive
         env:
           NPM_TOKEN: ${{secrets.NPM_TOKEN}}
