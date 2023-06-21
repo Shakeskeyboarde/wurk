@@ -133,14 +133,14 @@ const publishFromFilesystem = async (
   await Promise.all(
     workspace
       .getLocalDependencies({ scopes: ['dependencies', 'peerDependencies', 'optionalDependencies'] })
+      .filter((dependency) => !isPublished.get(dependency.name))
       .map(async (dependency) => {
-        // Dependency published successfully during this command invocation.
-        if (isPublished.get(dependency.name)) return;
+        const [isClean, isModified] = await Promise.all([dependency.getGitIsClean(), dependency.getIsModified()]);
 
-        // Dependency working tree is clean and unmodified.
-        if ((await dependency.getGitIsClean()) && !(await dependency.getIsModified())) return;
-
-        throw new Error(`Local dependency "${dependency.name}@${dependency.version}" has unpublished modifications.`);
+        assert(
+          isClean && !isModified,
+          `Local dependency "${dependency.name}@${dependency.version}" has unpublished modifications.`,
+        );
       }),
   );
 
