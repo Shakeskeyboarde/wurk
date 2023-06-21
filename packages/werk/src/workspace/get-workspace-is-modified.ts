@@ -12,13 +12,19 @@ export const getWorkspaceIsModified = async (
   fromRevision: string | undefined,
   head: string | undefined,
 ): Promise<boolean> => {
-  const [isShallow, from, to] = await Promise.all([
+  const [isShallow, meta, to] = await Promise.all([
     getGitIsShallow(dir),
-    fromRevision ?? getNpmMetadata(name, version).then((meta) => meta?.gitHead),
+    getNpmMetadata(name, version),
     head ?? getGitHead(dir),
   ]);
 
+  const isPublished = meta?.version === version;
+
+  if (!isPublished) return true;
+
   assert(!isShallow, `Cannot detect modifications because the Git repository is shallow.`);
+
+  const from = fromRevision ?? meta?.gitHead;
 
   return !!from && !!to && (await getGitIsModified(dir, from, to));
 };

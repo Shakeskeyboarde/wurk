@@ -128,8 +128,8 @@ The `context.workspaces` and `context.workspace` properties contain instances of
 - `getGitIsRepo()`: Returns true if the workspace root directory is part of a git repository.
 - `getGitHead()`: Gets the Git head commit hash. Returns undefined outside of a Git repo unless the `--git-head` global option is not set.
 - `getGitFromRevision()`: Gets the "from" revision which should be used for detecting changes. Returns undefined outside of a Git repo, if the `--git-from-revision` options is not set.
-- `getGitIsClean()`: Returns true if the workspace's git working tree is clean. Returns true outside of a Git repo.
-- `getIsModified()`: Returns true if the workspace is not published, or there are uncommitted changes. Otherwise, it returns true if the workspace is part of a Git repo, and the diff of the "from" revision and the head commit is not empty.
+- `getGitIsClean(options?)`: Returns true if the workspace's git working tree is clean. Returns true outside of a Git repo.
+- `getIsModified(options?)`: Returns true if the workspace is not published, or there are uncommitted changes. Otherwise, it returns true if the workspace is part of a Git repo, and the diff of the "from" revision and the head commit is not empty.
 
 **Note:** If the workspace is not part of a Git repository, the workspace will read as clean and unmodified.
 

@@ -32,6 +32,24 @@ export interface WorkspaceOptions extends Required<Omit<WorkspacePackage, 'werk'
   readonly saveAndRestoreFile: (filename: string) => Promise<void>;
 }
 
+export interface ChangeDetectionOptions {
+  /**
+   * Include dependencies from the specified scopes. Defaults to no
+   * dependency scopes (`[]`), so no dependencies are checked by default.
+   */
+  readonly includeDependencyScopes?: (
+    | 'dependencies'
+    | 'peerDependencies'
+    | 'optionalDependencies'
+    | 'devDependencies'
+  )[];
+
+  /**
+   * Don't check for changes in the specified dependency names.
+   */
+  readonly excludeDependencyNames?: string[];
+}
+
 export class Workspace {
   readonly #context: PartialContext;
   readonly #gitHead: string | undefined;
@@ -211,29 +229,42 @@ export class Workspace {
   };
 
   /**
-   * Return true if the Git working tree is clean.
+   * Return true if the workspace is not part of a Git repository, or the
+   * Git working tree is clean.
    *
-   * A workspace is considered clean if _ALL_ of the following
-   * conditions are met.
-   *
-   * - The workspace is not part of a Git repository.
-   * - The workspace directory has no uncommitted or untracked changes.
+   * This also checks the workspace local dependencies (recursive) if the
+   * `includeDependencyScopes` option is set.
    */
-  readonly getGitIsClean = async (): Promise<boolean> => {
-    return await getGitIsClean(this.dir);
+  readonly getGitIsClean = async (options: ChangeDetectionOptions = {}): Promise<boolean> => {
+    const { includeDependencyScopes = [], excludeDependencyNames = [] } = options;
+
+    return await Promise.all([
+      ...this.getLocalDependencies({ scopes: includeDependencyScopes })
+        .filter(({ name }) => !excludeDependencyNames.includes(name))
+        .map((dependency) => dependency.getGitIsClean(options)),
+      excludeDependencyNames.includes(this.name) || getGitIsClean(this.dir),
+    ]).then((results) => results.every(Boolean));
   };
 
   /**
-   * Return true if the current version is published, and there is no
-   * difference between the published and local code.
+   * Return true if the current version is not published, or if it is
+   * published and there is no difference between the published and local
+   * code.
    *
-   * A workspace is considered modified if it is not published
-   * (`getNpmIsPublished`), or the Git diff between the published version
-   * and the current head is not empty.
+   * This also checks the workspace local dependencies (recursive) if the
+   * `includeDependencyScopes` option is set.
    *
    * Uncommitted changes (ie. a dirty working tree) are not considered.
    */
-  readonly getIsModified = async (): Promise<boolean> => {
-    return await getWorkspaceIsModified(this.dir, this.name, this.version, this.#gitFromRevision, this.#gitHead);
+  readonly getIsModified = async (options: ChangeDetectionOptions = {}): Promise<boolean> => {
+    const { includeDependencyScopes = [], excludeDependencyNames = [] } = options;
+
+    return await Promise.all([
+      ...this.getLocalDependencies({ scopes: includeDependencyScopes })
+        .filter(({ name }) => excludeDependencyNames.includes(name))
+        .map((dependency) => dependency.getIsModified(options)),
+      !excludeDependencyNames.includes(this.name) &&
+        getWorkspaceIsModified(this.dir, this.name, this.version, this.#gitFromRevision, this.#gitHead),
+    ]).then((results) => results.every(Boolean));
   };
 }
