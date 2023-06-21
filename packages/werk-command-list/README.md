@@ -2,7 +2,7 @@
 
 List workspaces as JSON with filtering applied.
 
-[![npm version](https://badge.fury.io/js/@werk%2Fcommand-list.svg)](https://badge.fury.io/js/@werk%2Fcommand-list)
+[![npm](https://img.shields.io/npm/v/@werk/command-list)](https://www.npmjs.com/package/@werk/command-list)
 
 ## Install
 

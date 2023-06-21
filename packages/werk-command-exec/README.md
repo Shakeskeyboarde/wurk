@@ -2,7 +2,7 @@
 
 Run executables in workspaces.
 
-[![npm version](https://badge.fury.io/js/@werk%2Fcommand-exec.svg)](https://badge.fury.io/js/@werk%2Fcommand-exec)
+[![npm](https://img.shields.io/npm/v/@werk/command-exec)](https://www.npmjs.com/package/@werk/command-exec)
 
 ## Install
 

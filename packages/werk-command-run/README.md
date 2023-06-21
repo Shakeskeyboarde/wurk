@@ -2,7 +2,7 @@
 
 Run package scripts.
 
-[![npm version](https://badge.fury.io/js/@werk%2Fcommand-run.svg)](https://badge.fury.io/js/@werk%2Fcommand-run)
+[![npm](https://img.shields.io/npm/v/@werk/command-run)](https://www.npmjs.com/package/@werk/command-run)
 
 ## Install
 

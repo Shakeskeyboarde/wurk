@@ -2,7 +2,7 @@
 
 An open-minded monorepo tool, with opinionated plugins.
 
-[![npm version](https://badge.fury.io/js/@werk%2Fcli.svg)](https://badge.fury.io/js/@werk%2Fcli)
+[![npm](https://img.shields.io/npm/v/@werk/cli)](https://www.npmjs.com/package/@werk/cli)
 
 ## Packages
 

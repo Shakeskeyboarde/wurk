@@ -2,7 +2,7 @@
 
 Build using the TypeScript compiler.
 
-[![npm version](https://badge.fury.io/js/@werk%2Fcommand-tsc.svg)](https://badge.fury.io/js/@werk%2Fcommand-tsc)
+[![npm](https://img.shields.io/npm/v/@werk/command-tsc)](https://www.npmjs.com/package/@werk/command-tsc)
 
 ## Install
 

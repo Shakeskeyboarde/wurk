@@ -2,7 +2,7 @@
 
 Update versions.
 
-[![npm version](https://badge.fury.io/js/@werk%2Fcommand-version.svg)](https://badge.fury.io/js/@werk%2Fcommand-version)
+[![npm](https://img.shields.io/npm/v/@werk/command-version)](https://www.npmjs.com/package/@werk/command-version)
 
 ## Install
 
