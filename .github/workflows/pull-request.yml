@@ -33,8 +33,4 @@ jobs:
         run: npm test
 
       - name: Publish (NPM, Dry Run)
-        run: |
-          npm config --location project set //registry.npmjs.org/:_authToken '${NPM_TOKEN}'
-          npx @werk/cli publish --dry-run
-        env:
-          NPM_TOKEN: ${{secrets.NPM_TOKEN}}
+        run: npx @werk/cli publish --dry-run
