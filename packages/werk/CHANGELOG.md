@@ -1,3 +1,19 @@
+## 1.2.3 (2023-06-21)
+
+### Bug Fixes
+
+- get local dependencies includes transitive (85f4848)
+- error if git shallow (1b242bd)
+
+### Code Refactoring
+
+- **modified:** use assert instead of throw (4d709d8)
+- get local dependencies always honors versions (d3e2c60)
+
+### Chores
+
+- **workspace:** filter out falsy package.json patches (3f26ac4)
+
 ## 1.2.2 (2023-06-20)
 
 ### Chores

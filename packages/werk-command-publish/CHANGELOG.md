@@ -1,3 +1,15 @@
+## 1.2.5 (2023-06-21)
+
+### Bug Fixes
+
+- validate that dependencies are clean (4548d9a)
+
+### Code Refactoring
+
+- cleanup git validation (1e1b7e5)
+- git status validation (d9b744e)
+- log after validation (85700a4)
+
 ## 1.2.4 (2023-06-20)
 
 ### Documentation

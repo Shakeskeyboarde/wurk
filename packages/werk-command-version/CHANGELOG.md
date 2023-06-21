@@ -1,3 +1,10 @@
+## 1.0.23 (2023-06-21)
+
+### Bug Fixes
+
+- ignore uncommitted changes made by versioning dependencies (ccf0abb)
+- **auto:** assert dependencies clean (30260c9)
+
 ## 1.0.22 (2023-06-20)
 
 ### Documentation
