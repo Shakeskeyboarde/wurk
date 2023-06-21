@@ -1,3 +1,9 @@
+## 1.1.0 (2023-06-21)
+
+### Features
+
+- create module type package.json file in output directory (76443d8)
+
 ## 1.0.8 (2023-06-21)
 
 ### Chores
