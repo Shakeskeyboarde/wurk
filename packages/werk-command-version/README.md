@@ -2,6 +2,8 @@
 
 Update versions.
 
+[![npm version](https://badge.fury.io/js/@werk%2Fcommand-version.svg)](https://badge.fury.io/js/@werk%2Fcommand-version)
+
 ## Install
 
 ```sh

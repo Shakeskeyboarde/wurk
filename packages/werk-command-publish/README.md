@@ -4,6 +4,8 @@ Publish workspaces.
 
 **Note:** Only unpublished versions of public workspaces are published!
 
+[![npm version](https://badge.fury.io/js/@werk%2Fcommand-publish.svg)](https://badge.fury.io/js/@werk%2Fcommand-publish)
+
 ## Install
 
 ```sh

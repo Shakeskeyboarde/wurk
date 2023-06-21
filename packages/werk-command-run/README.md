@@ -2,6 +2,8 @@
 
 Run package scripts.
 
+[![npm version](https://badge.fury.io/js/@werk%2Fcommand-run.svg)](https://badge.fury.io/js/@werk%2Fcommand-run)
+
 ## Install
 
 ```sh

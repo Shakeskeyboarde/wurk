@@ -2,6 +2,8 @@
 
 Build using the TypeScript compiler.
 
+[![npm version](https://badge.fury.io/js/@werk%2Fcommand-tsc.svg)](https://badge.fury.io/js/@werk%2Fcommand-tsc)
+
 ## Install
 
 ```sh

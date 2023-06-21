@@ -2,6 +2,8 @@
 
 Run executables in workspaces.
 
+[![npm version](https://badge.fury.io/js/@werk%2Fcommand-exec.svg)](https://badge.fury.io/js/@werk%2Fcommand-exec)
+
 ## Install
 
 ```sh
