@@ -5,7 +5,6 @@ import { type WorkspacePackage } from './workspace-package.js';
 
 export interface WorkspaceLocalDependenciesOptions {
   scopes?: ('dependencies' | 'peerDependencies' | 'optionalDependencies' | 'devDependencies')[];
-  ignoreVersions?: boolean;
 }
 
 export const getWorkspaceLocalDependencies = <
@@ -20,36 +19,34 @@ export const getWorkspaceLocalDependencies = <
 ): T[] => {
   const workspacesArray = Array.from(workspaces);
   const dependencyNames = getWorkspaceDependencyNames(workspace);
-  const {
-    scopes = ['dependencies', 'peerDependencies', 'optionalDependencies', 'devDependencies'],
-    ignoreVersions = false,
-  } = options;
+  const { scopes = ['dependencies', 'peerDependencies', 'optionalDependencies', 'devDependencies'] } = options;
 
-  return dependencyNames.flatMap((name) => {
-    const dependency = workspacesArray.find((value) => value.name === name);
+  return Array.from(
+    new Set(
+      dependencyNames.flatMap((name) => {
+        const dependency = workspacesArray.find((value) => value.name === name);
 
-    // Not a local dependency (no matching workspace).
-    if (!dependency) return [];
+        // Not a local dependency (no matching workspace).
+        if (!dependency) return [];
 
-    // Not checking versions, so this is a dependency on a local workspace.
-    if (ignoreVersions) return [dependency];
+        for (const scope of scopes) {
+          const versionRange = workspace[scope]?.[name];
 
-    for (const scope of scopes) {
-      const versionRange = workspace[scope]?.[name];
+          // Not in this dependency scope.
+          if (!versionRange) {
+            continue;
+          }
 
-      // Not in this dependency scope.
-      if (!versionRange) {
-        continue;
-      }
+          // Not a local dependency (version doesn't match version range).
+          if (semver.valid(dependency.version) && !semver.satisfies(dependency.version, versionRange)) continue;
 
-      // Not a local dependency (version doesn't match version range).
-      if (semver.valid(dependency.version) && !semver.satisfies(dependency.version, versionRange)) continue;
-
-      // This is a dependency on a local workspace.
+          // This is a dependency on a local workspace.
       return [dependency];
-    }
+        }
 
-    // Not in an applicable dependency scope.
-    return [];
-  });
+        // Not in an applicable dependency scope.
+        return [];
+      }),
+    ),
+  );
 };

@@ -123,7 +123,7 @@ The `context.workspaces` and `context.workspace` properties contain instances of
 
 **Metadata methods:**
 
-- `getLocalDependencies({ scopes?, ignoreVersions? }?)`: Gets the workspaces which are local dependencies of this workspace. If `scopes` is not specified, dependencies from all scopes are returned. If `ignoreVersions` is true, the dependency versions are ignored.
+- `getLocalDependencies({ scopes? }?)`: Gets the workspaces which are local dependencies of this workspace. If `scopes` is not specified, dependencies from all scopes are returned.
 - `getNpmIsPublished()`: Returns true if the current workspace name and version are published to the registry.
 - `getGitIsRepo()`: Returns true if the workspace root directory is part of a git repository.
 - `getGitHead()`: Gets the Git head commit hash. Returns undefined outside of a Git repo unless the `--git-head` global option is not set.
