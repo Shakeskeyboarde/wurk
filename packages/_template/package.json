@@ -32,7 +32,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@werk/cli": "^1.2.3"
+    "@werk/cli": "^1.2.4"
   },
   "werk": {
     "tsc": {

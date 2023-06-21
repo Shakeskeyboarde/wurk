@@ -1,3 +1,9 @@
+## 1.0.24 (2023-06-21)
+
+### Documentation
+
+- fixing npm badges (06fcbce)
+
 ## 1.0.23 (2023-06-21)
 
 ### Bug Fixes

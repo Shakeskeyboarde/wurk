@@ -1,3 +1,9 @@
+## 1.1.10 (2023-06-21)
+
+### Documentation
+
+- fixing npm badges (06fcbce)
+
 ## 1.1.9 (2023-06-21)
 
 **Note:** Updated local dependencies.
