@@ -36,8 +36,8 @@ export const loadConfig = memoize(async (): Promise<Config> => {
   ]);
   const { version = '', description = '' } = packageJson;
   const filename = join(rootDir, 'package.json');
-  const rootPackageJson = filename ? await readJsonFile<PackageJson>(filename) : {};
-  const werk = isObject(rootPackageJson?.werk) ? { ...rootPackageJson.werk } : {};
+  const rootPackageJson: PackageJson | undefined = await readJsonFile<PackageJson>(filename).catch(() => undefined);
+  const werk = isObject(rootPackageJson?.werk) ? { ...rootPackageJson?.werk } : {};
   const globalArgs = Array.isArray(werk.globalArgs) ? werk.globalArgs.map(String) : [];
   const commandPackagePrefixes = Array.isArray(werk.commandPackagePrefixes)
     ? werk.commandPackagePrefixes.filter((value) => typeof value === 'string')

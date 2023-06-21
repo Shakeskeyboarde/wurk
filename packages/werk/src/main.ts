@@ -97,6 +97,8 @@ const asyncMain = async (): Promise<void> => {
 
   commander.parse([...config.globalArgs, ...process.argv.slice(2)], { from: 'user' });
 
+  assert(config.workspacePackages.length, 'No workspaces found.');
+
   let [cmd, cmdArgs] = commander.processedArgs;
 
   commander.parse(
