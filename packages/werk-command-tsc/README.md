@@ -18,6 +18,8 @@ werk tsc
 
 This will run the TypeScript compiler for all build configurations found in each workspace root. Build configurations can be `tsconfig.*build*.json` files, or partial configurations in the workspace [package.json](#package-config) file.
 
+**Note:** A simple `package.json` file will also be written to each output directory, as long as it's not the workspace root. This package file contains only the [type](https://nodejs.org/api/packages.html#type) directive, set to the value which matches the TypeScript configuration (`module` or `commonjs`).
+
 ## Package Config
 
 In addition to (or instead of) `tsconfig.*build*.json` files, you can also add partial TypeScript build configurations to the `package.json` file in each workspace.
