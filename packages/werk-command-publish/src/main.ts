@@ -129,8 +129,6 @@ const publishFromFilesystem = async (
 
   assert(await workspace.getGitIsClean(), `Workspace "${workspace.name}" has uncommitted changes.`);
 
-  log.notice(`Publishing workspace "${workspace.name}@${workspace.version}"${opts.toArchive ? ' to archive' : ''}.`);
-
   // Ensure local production dependencies have been published, and there are no local modifications.
   await Promise.all(
     workspace
@@ -145,6 +143,8 @@ const publishFromFilesystem = async (
         throw new Error(`Local dependency "${dependency.name}@${dependency.version}" has unpublished modifications.`);
       }),
   );
+
+  log.notice(`Publishing workspace "${workspace.name}@${workspace.version}"${opts.toArchive ? ' to archive' : ''}.`);
 
   const { toArchive = false, tag, otp, removePackageFields = [], dryRun = false } = opts;
   const dependenciesPatch: MutablePackageJson = {};
