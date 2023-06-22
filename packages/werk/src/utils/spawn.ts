@@ -43,6 +43,10 @@ export interface SpawnOptions {
    */
   readonly input?: boolean | 'inherit';
   /**
+   * Set `process.exitCode` to the child process exit code on error.
+   */
+  readonly errorSetExitCode?: boolean;
+  /**
    * Return on error instead of throwing.
    */
   readonly errorReturn?: boolean;
@@ -103,6 +107,7 @@ export const spawn = (
     capture = false,
     stream = false,
     input = false,
+    errorSetExitCode = false,
     errorReturn = false,
     errorEcho = false,
     errorMessage,
@@ -181,6 +186,10 @@ export const spawn = (
       if (error && !exitCode) exitCode = 1;
       if (errorEcho && error != null) log.verbose(Buffer.concat(stdio).toString('utf-8').trim());
       if (errorMessage && error != null) log.error(errorMessage(error, exitCode));
+
+      if (errorSetExitCode && exitCode) {
+        process.exitCode = process.exitCode ?? exitCode;
+      }
 
       if (!errorReturn && error != null) {
         reject(error);

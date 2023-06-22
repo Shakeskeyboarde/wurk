@@ -181,16 +181,19 @@ const spawnPromise = spawn('git', ['status', '--porcelain'], {
   //  Default: false
   input: true,
 
-  // Throw an error on non-zero exit codes.
+  // Set `process.exitCode` on error.
   //  Default: false
-  errorThrow: true,
+  errorSetExitCode: true,
 
-  // Echo all output to stderr (if echo is not set) on non-zero
-  // exit codes.
+  // Return on error instead of throwing.
+  //  Default: false
+  errorReturn: true,
+
+  // Echo all output to stderr (if echo is not set) on error.
   //  Default: false
   errorEcho: true,
 
-  // Log an error message on non-zero exit codes.
+  // Log an error message on error.
   //  Default: undefined
   errorMessage: (error, exitCode) => `Something went wrong`,
 
