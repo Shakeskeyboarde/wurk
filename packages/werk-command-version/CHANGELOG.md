@@ -1,3 +1,20 @@
+## 1.2.0 (2023-06-22)
+
+### Features
+
+- add --note option (95a5f63)
+
+### Bug Fixes
+
+- **changelog:** change log entry deduplication not matching correctly (1a8fc2b)
+- **changelog:** skip versioning if all changes are omitted as duplicates (831e2a7)
+
+### Code Refactoring
+
+- update change hash handling (c6f1cf5)
+
+**Note**: You can add notes now.
+
 ## 1.1.0 (2023-06-22)
 
 ### Features
