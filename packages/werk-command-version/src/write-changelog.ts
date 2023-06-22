@@ -108,10 +108,6 @@ export const writeChangelog = async (
   sortedChanges.forEach((change) => {
     // Skip notes. They go at the end.
     if (change.section === Section.note) return;
-    if (section !== change.section) {
-      section = change.section;
-      text += `\n### ${SECTION_HEADINGS[section]}\n\n`;
-    }
 
     // Omit parts of the scope that match all or part of the workspace name.
     const nameParts = name.split('/');
@@ -124,14 +120,30 @@ export const writeChangelog = async (
       )
       .join('/');
 
-    text += `- ${scope ? `**${scope}:** ` : ''}${change.message}${change.hash ? ` (${change.hash})` : ''}\n`;
+    const changeText = `- ${scope ? `**${scope}:** ` : ''}${change.message}${change.hash ? ` (${change.hash})` : ''}`;
+
+    // Skip duplicate entries.
+    if (change.hash && content.includes(`\n${changeText}\n`)) return;
+
+    if (section !== change.section) {
+      section = change.section;
+      text += `\n### ${SECTION_HEADINGS[section]}\n\n`;
+    }
+
+    text += `${changeText}\n`;
   });
 
   sortedChanges
     .filter((change) => change.section === Section.note)
     .forEach((change) => {
-      if (change.section !== Section.note) return;
-      text += `\n**Note${change.scope ? ` (${change.scope})` : ''}:** ${change.message}\n`;
+      const changeText = `\n**Note${change.scope ? ` (${change.scope})` : ''}:** ${change.message}${
+        change.hash ? ` (${change.hash})` : ''
+      }\n`;
+
+      // Skip duplicate entries.
+      if (change.hash && content.includes(changeText)) return;
+
+      text += changeText;
     });
 
   const newEntry: Entry = { version: version.toString(), text };
