@@ -27,7 +27,7 @@ export const getChanges = async (
   );
 
   let changes: Change[] = entries
-    .flatMap(({ hash, subject, body }): (Change & { hash?: string })[] => {
+    .flatMap(({ hash, subject, body }): Change[] => {
       const subjectMatch = subject.match(
         /^\s*([a-zA-Z]+|BREAKING[ -]CHANGE)\s*(?:\(\s*(.*?)\s*\))?\s*(!)?\s*:\s*(.*?)\s*$/u,
       );
@@ -37,25 +37,26 @@ export const getChanges = async (
         return [];
       }
 
-      const [, type = '', scope, breaking, message = ''] = subjectMatch;
+      const [, type = '', scope, breaking, summary = ''] = subjectMatch;
+      const message = `${summary} (${hash})`;
 
       if (type === 'internal') return [];
 
       const bodyLines = body.split(/\r?\n/gu);
 
       return [
-        { hash, type: breaking ? 'BREAKING CHANGE' : type, scope, message },
+        { type: breaking ? 'BREAKING CHANGE' : type, scope, message },
         ...bodyLines.flatMap((line) => {
           const lineMatch = line.match(/^\s*BREAKING[ -]CHANGES?\s*!?\s*:\s*(.*?)\s*$/mu);
-          return lineMatch ? [{ hash, type: 'BREAKING CHANGE', message: lineMatch[1] ?? '' }] : [];
+          return lineMatch ? [{ type: 'BREAKING CHANGE', message: `${lineMatch[1]} (${hash})` }] : [];
         }),
       ];
     })
-    .map(({ hash, type, scope, message }) => {
+    .map(({ type, scope, message }) => {
       return {
         type,
         scope: scope?.replace(MARKDOWN_ESCAPE, (char) => `&#${char.charCodeAt(0)};`),
-        message: message?.replace(MARKDOWN_ESCAPE, (char) => `&#${char.charCodeAt(0)};`) + (hash ? ` (${hash})` : ''),
+        message: message?.replace(MARKDOWN_ESCAPE, (char) => `&#${char.charCodeAt(0)};`),
       };
     });
 
