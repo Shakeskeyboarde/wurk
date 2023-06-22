@@ -1,3 +1,4 @@
+import assert from 'node:assert';
 import { type ChildProcess } from 'node:child_process';
 
 import { spawn as crossSpawn } from 'cross-spawn';
@@ -24,7 +25,7 @@ export interface SpawnOptions {
   /**
    * Print child process stdout and stderr to the parent process stdout and stderr.
    */
-  readonly echo?: boolean;
+  readonly echo?: boolean | 'inherit';
   /**
    * Capture child process stdout and stderr.
    */
@@ -35,8 +36,12 @@ export interface SpawnOptions {
   readonly stream?: boolean;
   /**
    * Provide writable stream access to the child process stdin.
+   *
+   * **Note:** Setting this to `true` or `"inherit"` may cause the child
+   * process to hang if it continues to listen for input until `stdin` is
+   * ended.
    */
-  readonly input?: boolean;
+  readonly input?: boolean | 'inherit';
   /**
    * Return on error instead of throwing.
    */
@@ -110,14 +115,19 @@ export const spawn = (
     typeof value === 'string' ? value : typeof value === 'number' ? value.toString(10) : [],
   );
 
+  assert(
+    echo !== 'inherit' || (!capture && !stream),
+    'Cannot inherit output streams when "capture" or "stream" are set.',
+  );
+
   log.debug(`$ ${quote([cmd, ...args_])}`);
 
   const childProcess = crossSpawn(cmd, args_, {
     ...options,
     stdio: [
-      input ? 'pipe' : 'ignore',
-      echo || capture || errorEcho || stream ? 'pipe' : 'ignore',
-      echo || capture || errorEcho || stream ? 'pipe' : 'ignore',
+      input === 'inherit' ? 'inherit' : input ? 'pipe' : 'ignore',
+      echo === 'inherit' ? 'inherit' : echo || capture || errorEcho || stream ? 'pipe' : 'ignore',
+      echo === 'inherit' ? 'inherit' : echo || capture || errorEcho || stream ? 'pipe' : 'ignore',
     ],
     env: {
       ...process.env,
@@ -132,7 +142,7 @@ export const spawn = (
   let exitCode = 0;
   let error: unknown = undefined;
 
-  if (echo) {
+  if (echo === true) {
     childProcess.stdout?.pipe(log.stdout);
     childProcess.stderr?.pipe(log.stderr);
   }
@@ -163,7 +173,7 @@ export const spawn = (
     })
     .catch(() => undefined);
 
-  const promise = new Promise<SpawnResult>((resolve, reject) =>
+  const promise = new Promise<SpawnResult>((resolve, reject) => {
     childProcess.on('close', () => {
       exitCode = childProcess.exitCode ?? 1;
 
@@ -196,8 +206,8 @@ export const spawn = (
       };
 
       resolve(result);
-    }),
-  );
+    });
+  });
 
   return Object.assign(promise, {
     childProcess,
