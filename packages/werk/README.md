@@ -76,6 +76,7 @@ The following "official" commands are provided to get you started.
 - [version](https://www.npmjs.com/package/@werk/command-version): Update versions.
 - [publish](https://www.npmjs.com/package/@werk/command-publish): Publish packages.
 - [tsc](https://www.npmjs.com/package/@werk/command-tsc): Build using the TypeScript compiler.
+- [vitest](https://www.npmjs.com/package/@werk/command-vitest): Run Vitest using its built-in workspaces support.
 
 Run `npm i -D @werk/command-<name>` in your workspaces root to install these commands.
 

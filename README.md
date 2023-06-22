@@ -13,6 +13,7 @@ An open-minded monorepo tool, with opinionated plugins.
 - [@werk/command-version](packages/werk-command-version/README.md): Update versions.
 - [@werk/command-publish](packages/werk-command-publish/README.md): Publish packages to NPM registries.
 - [@werk/command-tsc](packages/werk-command-tsc/README.md): Build using the TypeScript compiler.
+- [@werk/command-vitest](packages/werk-command-vitest/README.md): Run Vitest using its built-in workspaces support.
 
 ## Developing Custom Commands
 

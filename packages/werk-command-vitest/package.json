@@ -1,0 +1,58 @@
+{
+  "private": true,
+  "name": "@werk/command-vitest",
+  "description": "Run Vitest using its built-in workspaces support",
+  "version": "1.0.0",
+  "author": "Chris Ackerman <chris@topher.land>",
+  "license": "ISC",
+  "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-vitest/README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shakeskeyboarde/werk.git",
+    "directory": "packages/werk-command-vitest"
+  },
+  "type": "module",
+  "types": "./lib/main.d.ts",
+  "main": "./lib/main.js",
+  "exports": {
+    "types": "./lib/main.d.ts",
+    "default": "./lib/main.js"
+  },
+  "files": [
+    "CHANGELOG.md",
+    "lib/**"
+  ],
+  "keywords": [
+    "werk",
+    "werk-command",
+    "monorepo",
+    "workspaces",
+    "npm",
+    "command"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@werk/cli": "^1.3.1"
+  },
+  "werk": {
+    "tsc": {
+      "config": [
+        {
+          "compilerOptions": {
+            "rootDir": "src",
+            "outDir": "lib",
+            "noEmit": false
+          },
+          "include": [
+            "src"
+          ],
+          "exclude": [
+            "**/*.test.*"
+          ]
+        }
+      ]
+    }
+  }
+}
