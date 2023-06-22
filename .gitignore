@@ -10,6 +10,7 @@ node_modules
 lib
 out
 dist
+coverage
 
 *.log
 *.tar
