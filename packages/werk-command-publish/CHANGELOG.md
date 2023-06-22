@@ -1,3 +1,9 @@
+## 1.2.9 (2023-06-22)
+
+### Chores
+
+- minor update to dependencies (637b2ee)
+
 ## 1.2.8 (2023-06-21)
 
 ### Chores

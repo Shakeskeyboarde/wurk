@@ -1,3 +1,9 @@
+## 1.1.0 (2023-06-22)
+
+### Features
+
+- **changelog:** skip duplicate change log entries when the previous version is unpublished (b7fefe9)
+
 ## 1.0.26 (2023-06-21)
 
 ### Chores
