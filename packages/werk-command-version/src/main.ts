@@ -40,8 +40,14 @@ export default createCommand({
           }
         },
       )
+      .option(
+        '-n, --note <message>',
+        'Add a note to changelogs.',
+        (value, previous: string[] | undefined): string[] | undefined =>
+          value ? [...(previous ?? []), value] : previous,
+      )
       .option('-p, --preid <id>', 'Add an identifier to prerelease bumps.')
-      .option('--no-changelog', 'Do not generate a changelog.')
+      .option('--no-changelog', 'Do not generate changelogs.')
       .option('--dry-run', 'Display proposed version changes without writing files.');
   },
 
@@ -55,7 +61,7 @@ export default createCommand({
 
   each: async ({ log, args, opts, workspace, spawn }) => {
     const [spec] = args;
-    const { preid, changelog, dryRun = false } = opts;
+    const { note = [], preid, changelog, dryRun = false } = opts;
 
     let updatedVersion: string | undefined;
     let changes: readonly Change[] | undefined;
@@ -76,6 +82,10 @@ export default createCommand({
     if (!workspace.private && !updatedVersion && updatedDependencies) {
       updatedVersion = getIncrementedVersion(workspace.version).toString();
       changes = [...(changes ?? []), { type: 'note', message: 'Updated local dependencies.' }];
+    }
+
+    if (note.length) {
+      changes = [...(changes ?? []), ...note.map((message) => ({ type: 'note', message }))];
     }
 
     const patches: PackageJson[] = [];
@@ -157,12 +167,13 @@ const autoVersion = async (
     log.warn('Unable to determine a "from" Git revision. Using previous commit only.');
   }
 
-  const [changes, isConventional] = await getChanges(fromRevision ?? 'HEAD~1', workspace.dir, spawn);
+  const [allChanges, isConventional] = await getChanges(fromRevision ?? 'HEAD~1', workspace.dir, spawn);
 
   if (!isConventional) {
     log.warn(`Workspace "${workspace.name}" has non-conventional commits.`);
   }
 
+  const changes = allChanges.filter((change) => change.type !== 'internal');
   const version = changes.length > 0 ? getChangeVersion(workspace.version, changes).toString() : undefined;
 
   return [version, changes];
