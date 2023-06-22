@@ -1,7 +1,9 @@
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 import { type Spawn } from '@werk/cli';
 
 export interface Change {
-  readonly hash?: string;
   readonly type: string;
   readonly scope?: string;
   readonly message: string;
@@ -24,8 +26,8 @@ export const getChanges = async (
     ([, hash = '', subject = '', body = '']) => ({ hash, subject, body }),
   );
 
-  const changes: Change[] = entries
-    .flatMap(({ hash, subject, body }): Change[] => {
+  let changes: Change[] = entries
+    .flatMap(({ hash, subject, body }): (Change & { hash?: string })[] => {
       const subjectMatch = subject.match(
         /^\s*([a-zA-Z]+|BREAKING[ -]CHANGE)\s*(?:\(\s*(.*?)\s*\))?\s*(!)?\s*:\s*(.*?)\s*$/u,
       );
@@ -36,6 +38,9 @@ export const getChanges = async (
       }
 
       const [, type = '', scope, breaking, message = ''] = subjectMatch;
+
+      if (type === 'internal') return [];
+
       const bodyLines = body.split(/\r?\n/gu);
 
       return [
@@ -46,13 +51,19 @@ export const getChanges = async (
         }),
       ];
     })
-    .map((change) => {
+    .map(({ hash, type, scope, message }) => {
       return {
-        ...change,
-        scope: change.scope?.replace(MARKDOWN_ESCAPE, (char) => `&#${char.charCodeAt(0)};`),
-        message: change.message?.replace(MARKDOWN_ESCAPE, (char) => `&#${char.charCodeAt(0)};`),
+        type,
+        scope: scope?.replace(MARKDOWN_ESCAPE, (char) => `&#${char.charCodeAt(0)};`),
+        message: message?.replace(MARKDOWN_ESCAPE, (char) => `&#${char.charCodeAt(0)};`) + (hash ? ` (${hash})` : ''),
       };
     });
+
+  if (changes.length) {
+    // Remove duplicate change log entries.
+    const changeLogText = await readFile(join(dir, 'CHANGELOG.md'), 'utf-8').catch(() => '');
+    changes = changes.filter((change) => !changeLogText.includes(`: ${change.message}\n`));
+  }
 
   return [changes, isConventional];
 };

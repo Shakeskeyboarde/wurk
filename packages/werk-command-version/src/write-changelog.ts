@@ -120,30 +120,18 @@ export const writeChangelog = async (
       )
       .join('/');
 
-    const changeText = `- ${scope ? `**${scope}:** ` : ''}${change.message}${change.hash ? ` (${change.hash})` : ''}`;
-
-    // Skip duplicate entries.
-    if (change.hash && content.includes(`\n${changeText}\n`)) return;
-
     if (section !== change.section) {
       section = change.section;
       text += `\n### ${SECTION_HEADINGS[section]}\n\n`;
     }
 
-    text += `${changeText}\n`;
+    text += `- ${scope ? `**${scope}:** ` : ''}${change.message}\n`;
   });
 
   sortedChanges
     .filter((change) => change.section === Section.note)
     .forEach((change) => {
-      const changeText = `\n**Note${change.scope ? ` (${change.scope})` : ''}:** ${change.message}${
-        change.hash ? ` (${change.hash})` : ''
-      }\n`;
-
-      // Skip duplicate entries.
-      if (change.hash && content.includes(changeText)) return;
-
-      text += changeText;
+      text += `\n**Note${change.scope ? ` (${change.scope})` : ''}**: ${change.message}\n`;
     });
 
   const newEntry: Entry = { version: version.toString(), text };

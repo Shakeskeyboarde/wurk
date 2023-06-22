@@ -167,13 +167,12 @@ const autoVersion = async (
     log.warn('Unable to determine a "from" Git revision. Using previous commit only.');
   }
 
-  const [allChanges, isConventional] = await getChanges(fromRevision ?? 'HEAD~1', workspace.dir, spawn);
+  const [changes, isConventional] = await getChanges(fromRevision ?? 'HEAD~1', workspace.dir, spawn);
 
   if (!isConventional) {
     log.warn(`Workspace "${workspace.name}" has non-conventional commits.`);
   }
 
-  const changes = allChanges.filter((change) => change.type !== 'internal');
   const version = changes.length > 0 ? getChangeVersion(workspace.version, changes).toString() : undefined;
 
   return [version, changes];
