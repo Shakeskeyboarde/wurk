@@ -17,7 +17,7 @@ export default createCommand({
       readdir(workspace.dir, { withFileTypes: true }).then((entries) => {
         return entries.flatMap((entry) =>
           (entry.isFile() || entry.isSymbolicLink()) && /^tsconfig\..*build.*\.json$/u.test(entry.name)
-            ? { name: basename(entry.name), filename: resolve(workspace.dir, entry.name) }
+            ? { name: `"${basename(entry.name)}"`, filename: resolve(workspace.dir, entry.name) }
             : [],
         );
       }),
@@ -36,14 +36,14 @@ export default createCommand({
         await workspace.saveAndRestoreFile(filename);
         await writeFile(filename, JSON.stringify({ extends: extendsFilename, ...config }, null, 2));
 
-        return { name: `package.json[${i}]`, filename };
+        return { name: `${i}`, filename };
       }),
     ]);
 
     const isRootEsm = packageJson.type === 'module';
 
     for (const { name, filename } of [...fromFiles, ...fromPackage]) {
-      log.notice(`Building workspace "${workspace.name}" configuration "${name}".`);
+      log.notice(`Building workspace "${workspace.name}" configuration ${name}.`);
       await spawn('tsc', ['-p', filename], { cwd: workspace.dir, echo: true });
 
       const config = await spawn('tsc', ['-p', filename, '--showConfig'], {
