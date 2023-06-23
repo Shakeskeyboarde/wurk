@@ -1,3 +1,9 @@
+## 1.0.5 (2023-06-23)
+
+### Bug Fixes
+
+- respect filter options (ab9b348)
+
 ## 1.0.4 (2023-06-22)
 
 ### Chores
