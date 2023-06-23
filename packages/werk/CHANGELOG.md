@@ -1,3 +1,11 @@
+## 1.4.0 (2023-06-22)
+
+### Features
+
+- add @werk/command-vitest (a88b196)
+- **spawn:** add errorSetExitCode option. (3f3f602)
+- **spawn:** add support for inheriting stdio streams (29e65af)
+
 ## 1.3.1 (2023-06-21)
 
 ### Bug Fixes
