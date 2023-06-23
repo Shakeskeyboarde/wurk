@@ -51,7 +51,14 @@ export const loadPlugin = memoize(
         resolved = { exports, main };
         break;
       } catch (error) {
-        if (error instanceof Error && 'code' in error && error.code === 'ERR_MODULE_NOT_FOUND') continue;
+        if (
+          error instanceof Error &&
+          'code' in error &&
+          typeof error.code === 'string' &&
+          error.code?.includes('MODULE_NOT_FOUND')
+        ) {
+          continue;
+        }
 
         throw new Error(
           `Failed loading plugin "${packageName}".${error instanceof Error ? `\n${error.message}` : ''}`,
