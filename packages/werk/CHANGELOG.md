@@ -1,3 +1,9 @@
+## 1.4.2 (2023-06-23)
+
+### Bug Fixes
+
+- wrong error message for commands that aren't installed (31b876b)
+
 ## 1.4.1 (2023-06-22)
 
 ### Documentation
