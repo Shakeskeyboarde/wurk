@@ -2,7 +2,7 @@
 
 An open-minded monorepo tool, with opinionated plugins.
 
-[![npm](https://img.shields.io/npm/v/@werk/cli)](https://www.npmjs.com/package/@werk/cli)
+[![npm](https://img.shields.io/npm/v/@werk/cli?label=NPM)](https://www.npmjs.com/package/@werk/cli)
 
 - [Features](#features)
 - [Prerequisites](#prerequisites)
