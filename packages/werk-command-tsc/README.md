@@ -45,4 +45,4 @@ In addition to (or instead of) `tsconfig.*build*.json` files, you can also add p
 }
 ```
 
-These configurations implicitly extend the `tsconfig.json` file in the workspace root, unless they explicitly extend another configuration. The command will generate temporary `tsconfig.build-*.json` files for each configuration, and then delete them when the command is finished.
+These configurations implicitly extend the `tsconfig.json` file in their individual workspace root, or at the workspaces root, unless they explicitly extend another configuration. The command will generate temporary `tsconfig.build-*.json` files for each configuration, and then delete them when the command is finished.

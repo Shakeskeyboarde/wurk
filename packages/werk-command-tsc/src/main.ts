@@ -1,11 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { readdir, writeFile } from 'node:fs/promises';
+import { readdir, stat, writeFile } from 'node:fs/promises';
 import { basename, join, relative, resolve } from 'node:path';
 
 import { createCommand } from '@werk/cli';
 
 export default createCommand({
-  each: async ({ log, workspace, spawn }) => {
+  each: async ({ log, root, workspace, spawn }) => {
     if (!workspace.selected) return;
 
     const configs = (Array.isArray(workspace.config) ? workspace.config : [workspace.config]).filter(
@@ -23,8 +23,19 @@ export default createCommand({
       }),
       ...configs.map(async (config, i) => {
         const filename = resolve(workspace.dir, `tsconfig.build-${randomUUID()}.json`);
+        const extendsFilename = await Promise.all(
+          [workspace.dir, root.dir]
+            .map((dir) => join(dir, 'tsconfig.json'))
+            .map((extendFilename) =>
+              stat(extendFilename)
+                .then((stats): false | string => stats.isFile() && extendFilename)
+                .catch((): false => false),
+            ),
+        ).then((values) => values.find((value): value is string => Boolean(value)));
+
         await workspace.saveAndRestoreFile(filename);
-        await writeFile(filename, JSON.stringify({ extends: './tsconfig.json', ...config }, null, 2));
+        await writeFile(filename, JSON.stringify({ extends: extendsFilename, ...config }, null, 2));
+
         return { name: `package.json[${i}]`, filename };
       }),
     ]);
