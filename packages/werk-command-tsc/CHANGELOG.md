@@ -1,3 +1,14 @@
+## 1.1.3 (2023-06-22)
+
+### Bug Fixes
+
+- tsc build config in package.json auto extends tsconfig.json in workspace, workspaces root, or does not extend if neither exists (793b308)
+
+### Chores
+
+- number package.json configurations in log messages (2f2a323)
+- remove unnecessary tsconfig.json files (f9f9a7d)
+
 ## 1.1.2 (2023-06-22)
 
 ### Documentation

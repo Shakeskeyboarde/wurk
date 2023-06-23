@@ -1,3 +1,13 @@
+## 1.4.1 (2023-06-22)
+
+### Documentation
+
+- **readme:** fixed NPM badge label (e9e9cc8)
+
+### Chores
+
+- remove unnecessary tsconfig.json files (f9f9a7d)
+
 ## 1.4.0 (2023-06-22)
 
 ### Features

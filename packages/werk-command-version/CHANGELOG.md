@@ -1,3 +1,9 @@
+## 1.2.3 (2023-06-22)
+
+### Chores
+
+- remove unnecessary tsconfig.json files (f9f9a7d)
+
 ## 1.2.2 (2023-06-22)
 
 ### Documentation
