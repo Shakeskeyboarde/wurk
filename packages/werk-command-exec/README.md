@@ -2,7 +2,8 @@
 
 Run executables in workspaces.
 
-[![npm](https://img.shields.io/npm/v/@werk/command-exec)](https://www.npmjs.com/package/@werk/command-exec)
+[![npm](https://img.shields.io/npm/v/@werk/command-exec?label=NPM)](https://www.npmjs.com/package/@werk/command-exec)
+[![werk](https://img.shields.io/npm/v/@werk/cli?label=Werk&color=purple)](https://www.npmjs.com/package/@werk/cli)
 
 ## Install
 

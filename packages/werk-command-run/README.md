@@ -2,7 +2,8 @@
 
 Run package scripts.
 
-[![npm](https://img.shields.io/npm/v/@werk/command-run)](https://www.npmjs.com/package/@werk/command-run)
+[![npm](https://img.shields.io/npm/v/@werk/command-run?label=NPM)](https://www.npmjs.com/package/@werk/command-run)
+[![werk](https://img.shields.io/npm/v/@werk/cli?label=Werk&color=purple)](https://www.npmjs.com/package/@werk/cli)
 
 ## Install
 

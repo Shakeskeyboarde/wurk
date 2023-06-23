@@ -4,7 +4,8 @@ Publish workspaces.
 
 **Note:** Only unpublished versions of public workspaces are published!
 
-[![npm](https://img.shields.io/npm/v/@werk/command-publish)](https://www.npmjs.com/package/@werk/command-publish)
+[![npm](https://img.shields.io/npm/v/@werk/command-publish?label=NPM)](https://www.npmjs.com/package/@werk/command-publish)
+[![werk](https://img.shields.io/npm/v/@werk/cli?label=Werk&color=purple)](https://www.npmjs.com/package/@werk/cli)
 
 ## Install
 

@@ -2,7 +2,8 @@
 
 Build using the TypeScript compiler.
 
-[![npm](https://img.shields.io/npm/v/@werk/command-tsc)](https://www.npmjs.com/package/@werk/command-tsc)
+[![npm](https://img.shields.io/npm/v/@werk/command-tsc?label=NPM)](https://www.npmjs.com/package/@werk/command-tsc)
+[![werk](https://img.shields.io/npm/v/@werk/cli?label=Werk&color=purple)](https://www.npmjs.com/package/@werk/cli)
 
 ## Install
 

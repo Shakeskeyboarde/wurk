@@ -2,7 +2,8 @@
 
 Update versions.
 
-[![npm](https://img.shields.io/npm/v/@werk/command-version)](https://www.npmjs.com/package/@werk/command-version)
+[![npm](https://img.shields.io/npm/v/@werk/command-version?label=NPM)](https://www.npmjs.com/package/@werk/command-version)
+[![werk](https://img.shields.io/npm/v/@werk/cli?label=Werk&color=purple)](https://www.npmjs.com/package/@werk/cli)
 
 ## Install
 
