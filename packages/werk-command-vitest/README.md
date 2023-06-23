@@ -7,6 +7,8 @@ Run Vitest using its built-in [workspaces support](https://vitest.dev/guide/work
 
 If there is no `vitest.workspace` or `vitest.projects` file (with `.js`, `.ts`, or `.json` extension) at the workspaces root, a temporary one will be created by compiling all workspaces with a `vite.config` or `vitest.config` file.
 
+If Vitest workspaces are configured, then this command acts as a simple passthrough for `vitest`.
+
 ## Install
 
 ```sh
