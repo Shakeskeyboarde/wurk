@@ -27,12 +27,14 @@ export default createCommand({
       return;
     }
 
-    if (!(await isVitestWorkspaceConfigFound(root.dir))) {
+    if (await isVitestWorkspaceConfigFound(root.dir)) {
+      log.warn('Preexisting Vitest workspace configuration found. Filter options will not apply.');
+    } else {
       const filename = join(root.dir, 'vitest.workspace.json');
       const workspaceNames = await Promise.all(
-        Array.from(workspaces.values()).map(({ dir }) =>
-          isVitestConfigFound(dir).then((isConfigured) => (isConfigured ? dir : undefined)),
-        ),
+        Array.from(workspaces.values())
+          .filter(({ selected }) => selected)
+          .map(({ dir }) => isVitestConfigFound(dir).then((isConfigured) => (isConfigured ? dir : undefined))),
       ).then((results) => results.filter((result): result is string => Boolean(result)));
 
       assert(workspaceNames.length, 'No workspaces found with Vitest configuration.');
