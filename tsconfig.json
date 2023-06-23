@@ -1,18 +1,13 @@
 {
   "compilerOptions": {
-    "moduleResolution": "NodeNext",
     "module": "NodeNext",
     "target": "ES2022",
-    "lib": ["ES2022"],
     "types": ["node"],
     "strict": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true,
     "esModuleInterop": true,
     "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
-    "downlevelIteration": true,
-    "useDefineForClassFields": true,
     "noUncheckedIndexedAccess": true,
     "declaration": true,
     "sourceMap": true,
