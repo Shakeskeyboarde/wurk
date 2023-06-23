@@ -1,7 +1,7 @@
 module.exports = {
   root: true,
   env: { node: true },
-  parserOptions: { ecmaVersion: 2022, sourceType: 'module' },
+  parserOptions: { warnOnUnsupportedTypeScriptVersion: false, ecmaVersion: 2022, sourceType: 'module' },
   extends: ['rational', 'rational/warn', 'rational/prettier'],
   ignorePatterns: ['node_modules', '**/lib/**', 'out', 'dist'],
   overrides: [
