@@ -12,7 +12,6 @@
   },
   "type": "module",
   "types": "./lib/main.d.ts",
-  "main": "./lib/main.js",
   "exports": {
     "types": "./lib/main.d.ts",
     "default": "./lib/main.js"
