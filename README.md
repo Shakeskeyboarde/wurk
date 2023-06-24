@@ -4,6 +4,10 @@ An open-minded monorepo tool, with opinionated plugins.
 
 [![npm](https://img.shields.io/npm/v/@werk/cli?label=NPM)](https://www.npmjs.com/package/@werk/cli)
 
+Werk is a framework for writing custom commands. It provides consistency and a helpful foundation for handling the boilerplate necessary to achieve command goals.
+
+Read the [usage documentation](packages/werk/README.md) or learn how to build your own [custom commands](packages/werk/README_CUSTOM_COMMANDS.md).
+
 ## Packages
 
 - [@werk/cli](packages/werk/README.md): Werk core package.
@@ -14,7 +18,3 @@ An open-minded monorepo tool, with opinionated plugins.
 - [@werk/command-publish](packages/werk-command-publish/README.md): Publish packages to NPM registries.
 - [@werk/command-tsc](packages/werk-command-tsc/README.md): Build using the TypeScript compiler.
 - [@werk/command-vitest](packages/werk-command-vitest/README.md): Run Vitest using its built-in workspaces support.
-
-## Developing Custom Commands
-
-[Learn how to create your own custom command plugins!](packages/werk/README_CUSTOM_COMMANDS.md)
