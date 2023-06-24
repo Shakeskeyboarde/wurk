@@ -27,7 +27,10 @@
     "monorepo",
     "workspaces",
     "npm",
-    "command"
+    "command",
+    "test",
+    "vitest",
+    "vite"
   ],
   "publishConfig": {
     "access": "public"
