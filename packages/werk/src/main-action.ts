@@ -108,8 +108,8 @@ export const mainAction = async ({
   let prefixColorIndex = 0;
 
   for (const workspace of workspaces.values()) {
-    const logPrefixColor = PREFIX_COLORS[prefixColorIndex++ % PREFIX_COLORS.length] as PrefixColor;
-    const logPrefix = prefix ? chalk.bold(chalk[`${logPrefixColor}Bright`](workspace.name) + ': ') : '';
+    const prefixColor = PREFIX_COLORS[prefixColorIndex++ % PREFIX_COLORS.length] as PrefixColor;
+    const formatPrefix = (value: string): string => chalk.bold(chalk[`${prefixColor}Bright`](value));
 
     if (wait || command.isWaitForced) {
       await Promise.allSettled(getWorkspaceDependencyNames(workspace).map((name) => promises.get(name)));
@@ -123,7 +123,7 @@ export const mainAction = async ({
           if (process.exitCode != null) return;
 
           await command.each({
-            log: { prefix: logPrefix },
+            log: { prefix: prefix ? workspace.name : undefined, formatPrefix },
             config: cmdConfig,
             command: commandInfo,
             args,

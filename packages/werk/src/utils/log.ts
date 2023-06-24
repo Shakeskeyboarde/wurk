@@ -7,6 +7,7 @@ import { LogStream } from './log-stream.js';
 
 export interface LogOptions {
   prefix?: string;
+  formatPrefix?: (prefix: string) => string;
 }
 
 export type LogLevel = keyof typeof LOG_LEVEL;
@@ -47,11 +48,13 @@ export class Log {
 
   readonly #trim;
   readonly prefix: string;
+  readonly formatPrefix: (prefix: string) => string;
   readonly stdout: Writable = new LogStream();
   readonly stderr: Writable = new LogStream();
 
-  constructor({ prefix = '' }: LogOptions = {}) {
+  constructor({ prefix = '', formatPrefix = identity }: LogOptions = {}) {
     this.prefix = prefix;
+    this.formatPrefix = formatPrefix;
     this.#trim = Boolean(prefix);
     this.stdout.on('data', (line: string) => this.#writeLine(process.stdout, line));
     this.stderr.on('data', (line: string) => this.#writeLine(process.stderr, line));
@@ -144,17 +147,21 @@ export class Log {
     lines.forEach((line) => this.#writeLine(stream, line, formatLine));
   };
 
-  readonly #writeLine = (
-    stream: Writable,
-    line: string,
-    formatLine: (message: string) => string = (value) => value,
-  ): void => {
+  readonly #writeLine = (stream: Writable, line: string, formatLine: (message: string) => string = identity): void => {
     line = line.trimEnd().replace(ansiRegex, '');
 
-    if (!this.#trim || line) {
-      stream.write(this.prefix + formatLine(line) + '\n');
+    if (this.#trim && !line) return;
+
+    line = formatLine(line) + '\n';
+
+    if (this.prefix) {
+      line = `${this.formatPrefix(this.prefix)}: ${line}`;
     }
+
+    stream.write(line);
   };
 }
+
+const identity = <T>(value: T): T => value;
 
 export const log = new Log();
