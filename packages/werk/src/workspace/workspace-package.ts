@@ -3,6 +3,7 @@ export type WorkspacePackage = {
   readonly name: string;
   readonly version: string;
   readonly private?: boolean;
+  readonly type?: string;
   readonly dependencies?: Readonly<Record<string, string>>;
   readonly peerDependencies?: Readonly<Record<string, string>>;
   readonly optionalDependencies?: Readonly<Record<string, string>>;

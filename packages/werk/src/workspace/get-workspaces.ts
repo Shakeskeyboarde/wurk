@@ -136,6 +136,7 @@ export const isWorkspaceMatch = (
 export const getWorkspace = (
   {
     private: private_ = false,
+    type = 'commonjs',
     dependencies = {},
     peerDependencies = {},
     optionalDependencies = {},
@@ -149,6 +150,7 @@ export const getWorkspace = (
 ): WorkspacePartialOptions => {
   return {
     private: private_,
+    type,
     dependencies,
     peerDependencies,
     optionalDependencies,

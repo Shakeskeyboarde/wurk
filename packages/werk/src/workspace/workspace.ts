@@ -77,6 +77,11 @@ export class Workspace {
   readonly private: boolean;
 
   /**
+   * Type from the workspace `package.json` file.
+   */
+  readonly type: 'module' | 'commonjs';
+
+  /**
    * Dependencies from the workspace `package.json` file.
    */
   readonly dependencies: Readonly<Record<string, string>>;
@@ -139,6 +144,7 @@ export class Workspace {
     this.name = options.name;
     this.version = options.version;
     this.private = options.private;
+    this.type = options.type === 'module' ? 'module' : 'commonjs';
     this.dependencies = options.dependencies;
     this.peerDependencies = options.peerDependencies;
     this.optionalDependencies = options.optionalDependencies;
