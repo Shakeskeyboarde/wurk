@@ -34,24 +34,5 @@
   },
   "dependencies": {
     "@werk/cli": "^1.4.2"
-  },
-  "werk": {
-    "tsc": {
-      "config": [
-        {
-          "compilerOptions": {
-            "rootDir": "src",
-            "outDir": "lib",
-            "noEmit": false
-          },
-          "include": [
-            "src"
-          ],
-          "exclude": [
-            "**/*.test.*"
-          ]
-        }
-      ]
-    }
   }
 }

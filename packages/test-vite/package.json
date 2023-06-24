@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "name": "test-vite",
+  "description": "Testing the build command vite mode",
+  "type": "module",
+  "dependencies": {
+    "@werk/cli": "^1.4.2"
+  }
+}

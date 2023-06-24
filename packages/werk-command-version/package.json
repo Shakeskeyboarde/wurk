@@ -35,24 +35,5 @@
     "@types/semver": "^7.5.0",
     "@werk/cli": "^1.4.2",
     "semver": "^7.5.2"
-  },
-  "werk": {
-    "tsc": {
-      "config": [
-        {
-          "compilerOptions": {
-            "rootDir": "src",
-            "outDir": "lib",
-            "noEmit": false
-          },
-          "include": [
-            "src"
-          ],
-          "exclude": [
-            "**/*.test.*"
-          ]
-        }
-      ]
-    }
   }
 }
