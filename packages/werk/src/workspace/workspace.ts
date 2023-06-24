@@ -128,7 +128,9 @@ export class Workspace {
    * ```json
    * {
    *   "werk": {
-   *     <command>: <value>
+   *     <command>: {
+   *       "config": <value>
+   *     }
    *   }
    * }
    * ```
