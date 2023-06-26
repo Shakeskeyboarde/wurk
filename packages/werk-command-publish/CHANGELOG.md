@@ -1,3 +1,9 @@
+## 1.2.14 (2023-06-26)
+
+### Chores
+
+- remove unnecessary &#96;main&#96; fields from package.json files (a65b2a1)
+
 ## 1.2.13 (2023-06-23)
 
 **Note**: Updated local dependencies.

@@ -1,5 +1,4 @@
 {
-  "private": true,
   "name": "@werk/command-build",
   "description": "Quick near-zero-configuration builds using common tools and opinionated configurations.",
   "version": "1.0.0",
@@ -43,6 +42,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@werk/cli": "^1.4.2"
+    "@werk/cli": "^1.5.0"
   }
 }

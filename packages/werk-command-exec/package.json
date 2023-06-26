@@ -1,7 +1,7 @@
 {
   "name": "@werk/command-exec",
   "description": "Run executables.",
-  "version": "1.0.26",
+  "version": "1.0.27",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-exec/README.md",
@@ -35,6 +35,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@werk/cli": "^1.4.2"
+    "@werk/cli": "^1.5.0"
   }
 }

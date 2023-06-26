@@ -1,3 +1,11 @@
+## 1.0.7 (2023-06-26)
+
+### Chores
+
+- remove unnecessary werk.tsc.config from package.json files (80f02f1)
+- remove unnecessary &#96;main&#96; fields from package.json files (a65b2a1)
+- add keywords to package.json (268e71a)
+
 ## 1.0.6 (2023-06-23)
 
 **Note**: Updated local dependencies.

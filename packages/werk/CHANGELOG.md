@@ -1,3 +1,20 @@
+## 1.5.0 (2023-06-26)
+
+### Features
+
+- **workspace:** Add package entry point properties and helper methods. (291054e)
+
+### Code Refactoring
+
+- Context and Log no longer support destruction (a74ed2f)
+- **workspace:** Add entry point fields from each workspace package.json (eedd10d)
+- **log:** separate log prefix from prefix formatting (9ffaa0d)
+- **workspace:** add &#96;type&#96; from package.json (acc80e5)
+
+### Documentation
+
+- **workspace:** fix incorrect doc comment on the workspace.config property (80788e1)
+
 ## 1.4.2 (2023-06-23)
 
 ### Bug Fixes
