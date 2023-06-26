@@ -1,3 +1,9 @@
+## 1.5.1 (2023-06-26)
+
+### Documentation
+
+- Replace tsc with build command in readme files. (172ebfa)
+
 ## 1.5.0 (2023-06-26)
 
 ### Features
