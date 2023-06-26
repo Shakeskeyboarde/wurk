@@ -1,3 +1,9 @@
+## 1.5.2 (2023-06-26)
+
+### Code Refactoring
+
+- **workspace:** getIsBuilt shouldn't treat all entry points as globs (only files). (df95c48)
+
 ## 1.5.1 (2023-06-26)
 
 ### Documentation
