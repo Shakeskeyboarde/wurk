@@ -73,10 +73,10 @@ The following "official" commands are provided to get you started.
 - [list](https://www.npmjs.com/package/@werk/command-list): List workspaces as JSON with filtering applied.
 - [run](https://www.npmjs.com/package/@werk/command-run): Run package scripts.
 - [exec](https://www.npmjs.com/package/@werk/command-exec): Run executables.
+- [build](https://www.npmjs.com/package/@werk/command-build): Build using auto-detected tools.
+- [vitest](https://www.npmjs.com/package/@werk/command-vitest): Run Vitest using its built-in workspaces support.
 - [version](https://www.npmjs.com/package/@werk/command-version): Update versions.
 - [publish](https://www.npmjs.com/package/@werk/command-publish): Publish packages.
-- [tsc](https://www.npmjs.com/package/@werk/command-tsc): Build using the TypeScript compiler.
-- [vitest](https://www.npmjs.com/package/@werk/command-vitest): Run Vitest using its built-in workspaces support.
 
 Run `npm i -D @werk/command-<name>` in your workspaces root to install these commands.
 

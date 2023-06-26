@@ -14,7 +14,7 @@ Read the [usage documentation](packages/werk/README.md) or learn how to build yo
 - [@werk/command-list](packages/werk-command-list/README.md): List workspaces as JSON with filtering applied.
 - [@werk/command-run](packages/werk-command-run/README.md): Run package scripts.
 - [@werk/command-exec](packages/werk-command-exec/README.md): Run executables.
+- [@werk/command-build](packages/werk-command-build/README.md): Build using auto-detected tools.
+- [@werk/command-vitest](packages/werk-command-vitest/README.md): Run Vitest using its built-in workspaces support.
 - [@werk/command-version](packages/werk-command-version/README.md): Update versions.
 - [@werk/command-publish](packages/werk-command-publish/README.md): Publish packages to NPM registries.
-- [@werk/command-tsc](packages/werk-command-tsc/README.md): Build using the TypeScript compiler.
-- [@werk/command-vitest](packages/werk-command-vitest/README.md): Run Vitest using its built-in workspaces support.
