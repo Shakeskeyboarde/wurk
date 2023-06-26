@@ -1,14 +1,15 @@
 {
-  "name": "@werk/command-tsc",
-  "description": "Build using the TypeScript compiler.",
-  "version": "1.1.4",
+  "private": true,
+  "name": "@werk/command-build",
+  "description": "Quick near-zero-configuration builds using common tools and opinionated configurations.",
+  "version": "1.0.0",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
-  "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-tsc/README.md",
+  "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-build/README.md",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Shakeskeyboarde/werk.git",
-    "directory": "packages/werk-command-tsc"
+    "directory": "packages/werk-command-build"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json"
@@ -30,12 +31,13 @@
     "workspaces",
     "npm",
     "command",
-    "tsc",
-    "typescript",
     "build",
     "compile",
-    "config",
-    "configuration"
+    "bundle",
+    "vite",
+    "typescript",
+    "tsc",
+    "rollup"
   ],
   "publishConfig": {
     "access": "public"

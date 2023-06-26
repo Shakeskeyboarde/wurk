@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "name": "test-rollup",
+  "description": "Testing the build command rollup mode",
+  "type": "module",
+  "dependencies": {
+    "@werk/cli": "^1.4.2"
+  }
+}
