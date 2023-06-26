@@ -1,5 +1,7 @@
 import { join, resolve } from 'node:path';
 
+import { glob } from 'glob';
+
 import { type PackageJson } from '../exports.js';
 import { getGitHead } from '../git/get-git-head.js';
 import { getGitIsClean } from '../git/get-git-is-clean.js';
@@ -50,6 +52,11 @@ export interface ChangeDetectionOptions {
    * Don't check for changes in the specified dependency names.
    */
   readonly excludeDependencyNames?: string[];
+}
+
+export interface EntryPoint {
+  readonly type: 'types' | 'bin' | 'main' | 'module' | 'exports' | 'man' | 'files';
+  readonly pattern: string;
 }
 
 export class Workspace {
@@ -324,5 +331,44 @@ export class Workspace {
       !excludeDependencyNames.includes(this.name) &&
         getWorkspaceIsModified(this.dir, this.name, this.version, this.#gitFromRevision, this.#gitHead),
     ]).then((results) => results.every(Boolean));
+  };
+
+  /**
+   * Return a list of all of the entry points in the workspace
+   * `package.json` file. These are the files that should be built and
+   * published with the package.
+   */
+  readonly getEntryPoints = (): readonly EntryPoint[] => {
+    const entryPoints: EntryPoint[] = [];
+    const addEntryPoints = (type: EntryPoint['type'], value: unknown): void => {
+      if (typeof value === 'string') {
+        entryPoints.push({ type, pattern: value });
+      } else if (Array.isArray(value)) {
+        value.forEach((subValue) => addEntryPoints(type, subValue));
+      } else if (typeof value === 'object' && value !== null) {
+        Object.values(value).forEach((subValue) => addEntryPoints(type, subValue));
+      }
+    };
+
+    addEntryPoints('types', this.types);
+    addEntryPoints('bin', [this.bin, this.directories.bin]);
+    addEntryPoints('main', this.main);
+    addEntryPoints('module', this.module);
+    addEntryPoints('exports', this.exports);
+    addEntryPoints('man', [this.man, this.directories.man]);
+    addEntryPoints('files', this.files);
+
+    return entryPoints;
+  };
+
+  /**
+   * Return true if all of the workspace entry points exist.
+   */
+  readonly getIsBuilt = async (): Promise<boolean> => {
+    return await Promise.all(
+      this.getEntryPoints().map(async ({ pattern }) => {
+        return await glob(pattern, { cwd: this.dir, nodir: true }).then((matches) => matches.length > 0);
+      }),
+    ).then((results) => results.every(Boolean));
   };
 }

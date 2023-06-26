@@ -59,6 +59,7 @@
     "chalk": "^5.2.0",
     "commander": "^11.0.0",
     "cross-spawn": "^7.0.3",
+    "glob": "^10.3.0",
     "npm-run-path": "^5.1.0",
     "package-json-type": "^1.0.3",
     "semver": "^7.5.2",
