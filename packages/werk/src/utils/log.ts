@@ -30,34 +30,33 @@ const defaultLevel =
     : 'info';
 
 export class Log {
+  readonly #trim: boolean;
+
   static #level: { readonly name: LogLevel; readonly value: number } = {
     name: defaultLevel,
     value: LOG_LEVEL[defaultLevel],
   };
+
+  static get level(): { readonly name: LogLevel; readonly value: number } {
+    return Log.#level;
+  }
 
   static setLevel(level: LogLevel): void {
     process.env.WERK_LOG_LEVEL = level;
     Log.#level = { name: level, value: LOG_LEVEL[level] };
   }
 
-  static get level(): { readonly name: LogLevel; readonly value: number } {
-    return Log.#level;
-  }
-
-  #isDestroyed = false;
-
-  readonly #trim;
-  readonly prefix: string;
-  readonly formatPrefix: (prefix: string) => string;
   readonly stdout: Writable = new LogStream();
   readonly stderr: Writable = new LogStream();
+  readonly prefix: string;
+  readonly formatPrefix: (prefix: string) => string;
 
   constructor({ prefix = '', formatPrefix = identity }: LogOptions = {}) {
-    this.prefix = prefix;
-    this.formatPrefix = formatPrefix;
     this.#trim = Boolean(prefix);
     this.stdout.on('data', (line: string) => this.#writeLine(process.stdout, line));
     this.stderr.on('data', (line: string) => this.#writeLine(process.stderr, line));
+    this.prefix = prefix;
+    this.formatPrefix = formatPrefix;
   }
 
   get level(): { readonly name: LogLevel; readonly value: number } {
@@ -126,15 +125,7 @@ export class Log {
     }
   };
 
-  readonly destroy = (): void => {
-    this.#isDestroyed = true;
-    this.stdout.destroy();
-    this.stderr.destroy();
-  };
-
   readonly #write = (stream: Writable, message: unknown, formatLine?: (message: string) => string): void => {
-    if (this.#isDestroyed) return;
-
     const string = String(
       message instanceof Error ? (process.env.DEBUG ? message.stack ?? message : message.message) : message,
     );

@@ -40,7 +40,6 @@ export class EachContext<A extends CommanderArgs, O extends CommanderOptions, M>
    * Spawn a child process at the current workspace root.
    */
   readonly spawn: Spawn = (cmd, args, options) => {
-    this._assertMethodCallsAllowed('spawn');
     return spawn(cmd, args, { cwd: this.workspace.dir, log: this.log, ...options });
   };
 }

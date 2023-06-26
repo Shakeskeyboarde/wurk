@@ -93,8 +93,6 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions, M> {
     } catch (error) {
       context.log.error(error instanceof Error ? error.message : `${error}`);
       process.exitCode = process.exitCode || 1;
-    } finally {
-      context.destroy();
     }
 
     return options.commander;
@@ -115,12 +113,10 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions, M> {
         this.#startWorker(options.command.main, { workerData: { stage: 'before', options, data } }),
     });
 
-    return await this.#before(context)
-      .catch((error) => {
-        context.log.error(error instanceof Error ? error.message : `${error}`);
-        process.exitCode = process.exitCode || 1;
-      })
-      .finally(() => context.destroy());
+    return await this.#before(context).catch((error) => {
+      context.log.error(error instanceof Error ? error.message : `${error}`);
+      process.exitCode = process.exitCode || 1;
+    });
   };
 
   readonly each = async (options: EachOptions<A, O, M>): Promise<void> => {
@@ -136,12 +132,10 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions, M> {
       startWorker: (data) => this.#startWorker(options.command.main, { workerData: { stage: 'each', options, data } }),
     });
 
-    await this.#each(context)
-      .catch((error) => {
-        context.log.error(error instanceof Error ? error.message : `${error}`);
-        process.exitCode = process.exitCode || 1;
-      })
-      .finally(() => context.destroy());
+    await this.#each(context).catch((error) => {
+      context.log.error(error instanceof Error ? error.message : `${error}`);
+      process.exitCode = process.exitCode || 1;
+    });
   };
 
   readonly after = async (options: AfterOptions<A, O>): Promise<void> => {
@@ -157,12 +151,10 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions, M> {
       startWorker: (data) => this.#startWorker(options.command.main, { workerData: { stage: 'after', options, data } }),
     });
 
-    await this.#after(context)
-      .catch((error) => {
-        context.log.error(error instanceof Error ? error.message : `${error}`);
-        process.exitCode = process.exitCode || 1;
-      })
-      .finally(() => context.destroy());
+    await this.#after(context).catch((error) => {
+      context.log.error(error instanceof Error ? error.message : `${error}`);
+      process.exitCode = process.exitCode || 1;
+    });
   };
 
   readonly cleanup = (options: CleanupContextOptions<A, O>): void => {
@@ -180,8 +172,6 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions, M> {
     } catch (error) {
       context.log.error(error instanceof Error ? error.message : `${error}`);
       process.exitCode = process.exitCode || 1;
-    } finally {
-      context.destroy();
     }
   };
 

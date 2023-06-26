@@ -6,7 +6,6 @@ export class LogStream extends Transform {
 
   #buffer = '';
   #timeout?: NodeJS.Timeout;
-  #isFinalized = false;
 
   constructor() {
     super({
@@ -16,45 +15,24 @@ export class LogStream extends Transform {
     });
 
     process.setMaxListeners(process.getMaxListeners() + 1);
-    process.on('exit', this.#finalize);
+    process.on('exit', this.#onExit);
   }
 
   end(...args: [unknown?, (BufferEncoding | (() => void))?, (() => void)?]): this {
-    if (this.#isFinalized) return this;
     if (args.length > 0) {
       this.write.call(this, ...(args as Parameters<this['write']>));
     }
 
     this.#send(true);
 
+    // We don't want to call super.end() because log streams may be
+    // re-piped, and therefore should never really end.
+
     return this;
   }
 
-  _write(chunk: any, encoding: BufferEncoding, callback: (error?: Error | null | undefined) => void): void {
-    if (this.#isFinalized) {
-      throw new Error('LogStream.write() called after stream was finalized.');
-    }
-
-    super._write(chunk, encoding, callback);
-  }
-
   _transform(chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback): void {
-    this.#append(chunk);
-    callback();
-  }
-
-  _flush(callback: TransformCallback): void {
-    this.#send(true);
-    callback();
-  }
-
-  _destroy(error: Error | null, callback: (error: Error | null) => void): void {
-    this.#finalize();
-    super._destroy(error, callback);
-  }
-
-  readonly #append = (chunk: Buffer): void => {
-    if (this.#isFinalized || chunk.length === 0) return;
+    if (chunk.length === 0) return;
 
     this.#buffer += this.#decoder.write(chunk);
 
@@ -65,11 +43,23 @@ export class LogStream extends Transform {
     // related lines stay together.
     clearTimeout(this.#timeout);
     this.#timeout = setTimeout(() => this.#send(true), 10);
-  };
+
+    callback();
+  }
+
+  _flush(callback: TransformCallback): void {
+    this.#send(true);
+    callback();
+  }
+
+  _destroy(error: Error | null, callback: (error: Error | null) => void): void {
+    this.#send(true);
+    process.removeListener('exit', this.#onExit);
+    process.setMaxListeners(process.getMaxListeners() - 1);
+    super._destroy(error, callback);
+  }
 
   readonly #send = (flush: boolean): void => {
-    if (this.#isFinalized) return;
-
     const value = this.#buffer + this.#decoder.end();
     this.#buffer = '';
 
@@ -94,21 +84,13 @@ export class LogStream extends Transform {
     if (flush) {
       // If we're flushing, write the last unterminated line.
       this.push(value.slice(lastIndex));
+      clearTimeout(this.#timeout);
     } else {
       this.#buffer = value.slice(lastIndex);
     }
   };
 
-  readonly #finalize = (): void => {
-    if (this.#isFinalized) return;
-
-    try {
-      this.#send(true);
-      clearTimeout(this.#timeout);
-      process.removeListener('exit', this.#finalize);
-      process.setMaxListeners(process.getMaxListeners() - 1);
-    } finally {
-      this.#isFinalized = true;
-    }
+  readonly #onExit = (): void => {
+    this.destroy();
   };
 }

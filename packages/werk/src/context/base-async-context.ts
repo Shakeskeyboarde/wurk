@@ -95,7 +95,6 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
    * Spawn a child process at the workspaces root.
    */
   readonly spawn: Spawn = (cmd, args, options) => {
-    this._assertMethodCallsAllowed('spawn');
     return spawn(cmd, args, { cwd: this.root.dir, log: this.log, ...options });
   };
 
@@ -104,7 +103,6 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
    * worker threads is not supported.
    */
   readonly startWorker = async (data?: any): Promise<boolean> => {
-    this._assertMethodCallsAllowed('startWorker');
     return await this.#startWorker(data);
   };
 }

@@ -47,7 +47,6 @@ export class CleanupContext<A extends CommanderArgs, O extends CommanderOptions>
    * and stdio (combined stdout and stderr) is not available.
    */
   readonly spawn: SpawnSync = (cmd, args, options) => {
-    this._assertMethodCallsAllowed('spawn');
     return spawnSync(cmd, args, { cwd: this.rootDir, log: this.log, ...options });
   };
 }
