@@ -1,3 +1,4 @@
+import { stat } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
 import { glob } from 'glob';
@@ -366,8 +367,14 @@ export class Workspace {
    */
   readonly getIsBuilt = async (): Promise<boolean> => {
     return await Promise.all(
-      this.getEntryPoints().map(async ({ pattern }) => {
-        return await glob(pattern, { cwd: this.dir, nodir: true }).then((matches) => matches.length > 0);
+      this.getEntryPoints().map(async ({ type, pattern }) => {
+        if (type === 'files') {
+          return await glob(pattern, { cwd: this.dir, nodir: true }).then((matches) => matches.length > 0);
+        }
+
+        return await stat(resolve(this.dir, pattern))
+          .then((stats) => stats.isFile())
+          .catch(() => false);
       }),
     ).then((results) => results.every(Boolean));
   };
