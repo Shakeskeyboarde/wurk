@@ -23,7 +23,9 @@ interface PartialContext {
   readonly spawn: Spawn;
 }
 
-export interface WorkspaceOptions extends Required<Omit<WorkspacePackage, 'werk'>> {
+export interface WorkspaceOptions
+  extends Required<Omit<WorkspacePackage, 'werk' | 'types' | 'bin' | 'main' | 'module' | 'exports'>>,
+    Pick<WorkspacePackage, 'types' | 'bin' | 'main' | 'module' | 'exports'> {
   readonly selected: boolean;
   readonly config: unknown;
   readonly context: PartialContext;
@@ -80,6 +82,46 @@ export class Workspace {
    * Type from the workspace `package.json` file.
    */
   readonly type: 'module' | 'commonjs';
+
+  /**
+   * Types from the workspace `package.json` file.
+   */
+  readonly types: string | undefined;
+
+  /**
+   * Bin from the workspace `package.json` file.
+   */
+  readonly bin: string | Readonly<Record<string, string>> | undefined;
+
+  /**
+   * Main from the workspace `package.json` file.
+   */
+  readonly main: string | undefined;
+
+  /**
+   * Module from the workspace `package.json` file.
+   */
+  readonly module: string | undefined;
+
+  /**
+   * Exports from the workspace `package.json` file.
+   */
+  readonly exports: string | Readonly<Record<string, string | Readonly<Record<string, string>>>> | undefined;
+
+  /**
+   * Files from the workspace `package.json` file.
+   */
+  readonly files: readonly string[];
+
+  /**
+   * Directories from the workspace `package.json` file.
+   */
+  readonly directories: { readonly bin?: string; readonly man?: string };
+
+  /**
+   * Man from the workspace `package.json` file.
+   */
+  readonly man: readonly string[];
 
   /**
    * Dependencies from the workspace `package.json` file.
@@ -147,6 +189,14 @@ export class Workspace {
     this.version = options.version;
     this.private = options.private;
     this.type = options.type === 'module' ? 'module' : 'commonjs';
+    this.types = options.types;
+    this.bin = options.bin;
+    this.main = options.main;
+    this.module = options.module;
+    this.exports = options.exports;
+    this.files = options.files;
+    this.directories = options.directories;
+    this.man = Array.isArray(options.man) ? options.man : [options.man];
     this.dependencies = options.dependencies;
     this.peerDependencies = options.peerDependencies;
     this.optionalDependencies = options.optionalDependencies;
