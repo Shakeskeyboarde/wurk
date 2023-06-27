@@ -1,3 +1,14 @@
+## 1.5.3 (2023-06-26)
+
+### Bug Fixes
+
+- **workspace:** Entry point filenames should be absolute. (8f7f785)
+
+### Code Refactoring
+
+- **workspace:** Rename workspace entry point &#96;pattern&#96; field to &#96;filename&#96;. (fe7e6fa)
+- **workspace:** Remove &#96;files&#96; from the workspace class and &#96;getIsBuilt&#96; check. (6f05def)
+
 ## 1.5.2 (2023-06-26)
 
 ### Code Refactoring

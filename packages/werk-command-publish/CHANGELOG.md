@@ -1,3 +1,9 @@
+## 1.3.0 (2023-06-26)
+
+### Features
+
+- Add package file list validation step. (b9567f8)
+
 ## 1.2.16 (2023-06-26)
 
 **Note**: Updated local dependencies.
