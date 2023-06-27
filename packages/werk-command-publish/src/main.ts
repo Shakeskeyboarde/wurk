@@ -30,8 +30,13 @@ export default createCommand({
       .option('--dry-run', 'Perform a dry run for validation.');
   },
 
-  before: async ({ forceWait }) => {
+  before: async ({ log, opts, root, spawn, forceWait }) => {
     forceWait();
+
+    if (!opts.fromArchive && opts.build && root.scripts.build != null) {
+      log.notice('Building workspaces.');
+      await spawn('npm', [`--loglevel=${log.level.name}`, 'run', '--if-present', 'build'], { errorEcho: true });
+    }
   },
 
   each: async (context) => {
