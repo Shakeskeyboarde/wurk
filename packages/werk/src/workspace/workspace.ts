@@ -1,11 +1,12 @@
 import { stat } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
-import { type PackageJson } from '../exports.js';
 import { getGitHead } from '../git/get-git-head.js';
 import { getGitIsClean } from '../git/get-git-is-clean.js';
 import { getGitIsRepo } from '../git/get-git-is-repo.js';
 import { getNpmMetadata } from '../npm/get-npm-metadata.js';
+import { type Log } from '../utils/log.js';
+import { type PackageJson } from '../utils/package-json.js';
 import { patchJsonFile } from '../utils/patch-json-file.js';
 import { readJsonFile } from '../utils/read-json-file.js';
 import { type Spawn } from '../utils/spawn.js';
@@ -19,6 +20,7 @@ import {
 import { type WorkspacePackage } from './workspace-package.js';
 
 interface PartialContext {
+  readonly log: Log;
   readonly command: { readonly name: string };
   readonly workspaces: ReadonlyMap<string, Workspace>;
   readonly spawn: Spawn;
@@ -295,13 +297,16 @@ export class Workspace {
    */
   readonly getGitIsClean = async (options: ChangeDetectionOptions = {}): Promise<boolean> => {
     const { includeDependencyScopes = [], excludeDependencyNames = [] } = options;
-
-    return await Promise.all([
+    const isClean = await Promise.all([
       ...this.getLocalDependencies({ scopes: includeDependencyScopes })
         .filter(({ name }) => !excludeDependencyNames.includes(name))
         .map((dependency) => dependency.getGitIsClean(options)),
       excludeDependencyNames.includes(this.name) || getGitIsClean(this.dir),
     ]).then((results) => results.every(Boolean));
+
+    this.#context.log.debug(`Workspace "${this.name}" clean=${isClean}`);
+
+    return isClean;
   };
 
   /**
@@ -316,14 +321,22 @@ export class Workspace {
    */
   readonly getIsModified = async (options: ChangeDetectionOptions = {}): Promise<boolean> => {
     const { includeDependencyScopes = [], excludeDependencyNames = [] } = options;
+    const localDependencies = this.getLocalDependencies({ scopes: includeDependencyScopes }).filter(
+      ({ name }) => !excludeDependencyNames.includes(name),
+    );
 
-    return await Promise.all([
-      ...this.getLocalDependencies({ scopes: includeDependencyScopes })
-        .filter(({ name }) => excludeDependencyNames.includes(name))
-        .map((dependency) => dependency.getIsModified(options)),
+    const [isModified, ...isDependencyModifiedArray] = await Promise.all([
       !excludeDependencyNames.includes(this.name) &&
         getWorkspaceIsModified(this.dir, this.name, this.version, this.#gitFromRevision, this.#gitHead),
-    ]).then((results) => results.every(Boolean));
+      ...localDependencies.map((dependency) => dependency.getIsModified(options)),
+    ]);
+
+    const isDependencyModified = isDependencyModifiedArray.some(Boolean);
+
+    this.#context.log.debug(`Workspace "${this.name}" modified=${isModified}`);
+    this.#context.log.debug(`Workspace "${this.name}" dependencyModified=${isDependencyModified}`);
+
+    return isModified || isDependencyModified;
   };
 
   /**
@@ -357,12 +370,16 @@ export class Workspace {
    * Return true if all of the workspace entry points exist.
    */
   readonly getIsBuilt = async (): Promise<boolean> => {
-    return await Promise.all(
+    const isBuilt = await Promise.all(
       this.getEntryPoints().map(async ({ filename }) => {
         return await stat(filename)
           .then((stats) => stats.isFile())
           .catch(() => false);
       }),
     ).then((results) => results.every(Boolean));
+
+    this.#context.log.debug(`Workspace "${this.name}" built=${isBuilt}`);
+
+    return isBuilt;
   };
 }
