@@ -1,3 +1,15 @@
+## 1.4.0 (2023-06-27)
+
+### Features
+
+- **cli:** Add command &#96;packageManager&#96; requirement. (e8517c3)
+
+### Code Refactoring
+
+- **cli:** Make command &#96;packageManager&#96; property optional. (bde8365)
+- Skip publishing if change log is not updated or local dependencies are outdated. (09ecaba)
+- Re-add automatic building. (6bdccdb)
+
 ## 1.3.0 (2023-06-26)
 
 ### Features

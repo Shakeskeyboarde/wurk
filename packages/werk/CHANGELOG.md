@@ -1,3 +1,14 @@
+## 1.6.0 (2023-06-27)
+
+### Features
+
+- Add command &#96;packageManager&#96; requirement. (e8517c3)
+
+### Code Refactoring
+
+- Make command &#96;packageManager&#96; property optional. (bde8365)
+- **publish:** Skip publishing if change log is not updated or local dependencies are outdated. (09ecaba)
+
 ## 1.5.3 (2023-06-26)
 
 ### Bug Fixes

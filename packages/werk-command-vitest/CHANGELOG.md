@@ -1,3 +1,9 @@
+## 1.1.0 (2023-06-27)
+
+### Features
+
+- **cli:** Add command &#96;packageManager&#96; requirement. (e8517c3)
+
 ## 1.0.10 (2023-06-26)
 
 **Note**: Updated local dependencies.
