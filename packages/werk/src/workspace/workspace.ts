@@ -1,8 +1,6 @@
 import { stat } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 
-import { glob } from 'glob';
-
 import { type PackageJson } from '../exports.js';
 import { getGitHead } from '../git/get-git-head.js';
 import { getGitIsClean } from '../git/get-git-is-clean.js';
@@ -56,7 +54,7 @@ export interface ChangeDetectionOptions {
 }
 
 export interface EntryPoint {
-  readonly type: 'types' | 'bin' | 'main' | 'module' | 'exports' | 'man' | 'files';
+  readonly type: 'types' | 'bin' | 'main' | 'module' | 'exports' | 'man';
   readonly pattern: string;
 }
 
@@ -115,11 +113,6 @@ export class Workspace {
    * Exports from the workspace `package.json` file.
    */
   readonly exports: string | Readonly<Record<string, string | Readonly<Record<string, string>>>> | undefined;
-
-  /**
-   * Files from the workspace `package.json` file.
-   */
-  readonly files: readonly string[];
 
   /**
    * Directories from the workspace `package.json` file.
@@ -202,7 +195,6 @@ export class Workspace {
     this.main = options.main;
     this.module = options.module;
     this.exports = options.exports;
-    this.files = options.files;
     this.directories = options.directories;
     this.man = Array.isArray(options.man) ? options.man : [options.man];
     this.dependencies = options.dependencies;
@@ -357,7 +349,6 @@ export class Workspace {
     addEntryPoints('module', this.module);
     addEntryPoints('exports', this.exports);
     addEntryPoints('man', [this.man, this.directories.man]);
-    addEntryPoints('files', this.files);
 
     return entryPoints;
   };
@@ -367,11 +358,7 @@ export class Workspace {
    */
   readonly getIsBuilt = async (): Promise<boolean> => {
     return await Promise.all(
-      this.getEntryPoints().map(async ({ type, pattern }) => {
-        if (type === 'files') {
-          return await glob(pattern, { cwd: this.dir, nodir: true }).then((matches) => matches.length > 0);
-        }
-
+      this.getEntryPoints().map(async ({ pattern }) => {
         return await stat(resolve(this.dir, pattern))
           .then((stats) => stats.isFile())
           .catch(() => false);

@@ -9,7 +9,6 @@ export type WorkspacePackage = {
   readonly main?: string;
   readonly module?: string;
   readonly exports?: string | Readonly<Record<string, string | Readonly<Record<string, string>>>>;
-  readonly files?: readonly string[];
   readonly directories?: { readonly bin?: string; readonly man?: string };
   readonly man?: string | readonly string[];
   readonly dependencies?: Readonly<Record<string, string>>;

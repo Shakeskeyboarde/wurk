@@ -108,7 +108,6 @@ The `context.workspaces` and `context.workspace` properties contain instances of
 - `main`
 - `module`
 - `exports`
-- `files`
 - `directories`
 - `man`
 - `dependencies`
