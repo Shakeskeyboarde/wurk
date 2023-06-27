@@ -1,8 +1,6 @@
 import { createCommand } from '@werk/cli';
 
 export default createCommand({
-  packageManager: false,
-
   each: async ({ log, workspace, spawn }) => {
     // Honor the Werk global options for filtering.
     if (!workspace.selected) return;

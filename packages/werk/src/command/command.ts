@@ -34,10 +34,9 @@ export type AfterOptions<A extends CommanderArgs, O extends CommanderOptions> = 
 export interface CommandHooks<A extends CommanderArgs, O extends CommanderOptions, M> {
   /**
    * The package managers supported by the command, or false if the
-   * command does not depend on any package manager.
+   * command does not depend on any package manager. Defaults to `['npm']`.
    **/
-  readonly packageManager: readonly [PackageManager, ...PackageManager[]] | false;
-
+  readonly packageManager?: readonly [PackageManager, ...PackageManager[]] | false;
   /**
    * Called when the command is loaded. Intended for configuration of
    * command options, arguments, and help text.
@@ -81,7 +80,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions, M> {
 
   constructor({ packageManager, init, before, each, after, cleanup }: CommandHooks<A, O, M>) {
     Object.assign(this, { [COMMAND]: true });
-    this.packageManager = packageManager;
+    this.packageManager = packageManager ?? ['npm'];
     this.#init = init;
     this.#before = before;
     this.#each = each;

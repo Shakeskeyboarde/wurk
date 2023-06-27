@@ -35,9 +35,9 @@ You can also copy the [template](https://github.com/Shakeskeyboarde/werk/blob/ma
 
 ### Command Requirements
 
-The following properties define requirements for the command (all required).
+The following properties define requirements for the command (all optional).
 
-- `packageManager`: Package managers supported by the command, or false if the command does not depend on any package manager.
+- `packageManager`: Package managers supported by the command, or false if the command does not depend on any package manager. Defaults to `['npm']`.
 
 ### Command Hooks
 
@@ -159,7 +159,6 @@ The configured command must be returned so that Typescript can infer the `contex
 
 ```ts
 export default createCommand({
-  packageManager: false,
   init: (context) => {
     return context.commander
       .description('My awesome Werk command.')
@@ -304,7 +303,6 @@ The simplest case is to always run a hook in a separate thread.
 
 ```ts
 export default createCommand({
-  packageManager: false,
   each: async (context): Promise<void> => {
     if (await context.startWorker()) return;
 

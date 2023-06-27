@@ -13,8 +13,6 @@ const versionUpdates = new Map<string, string>();
 const isUpdated = new Set<string>();
 
 export default createCommand({
-  packageManager: ['npm'],
-
   init: ({ commander }) => {
     return commander
       .argument(

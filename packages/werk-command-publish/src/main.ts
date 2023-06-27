@@ -4,8 +4,6 @@ import { publishFromArchive } from './publish-from-archive.js';
 import { publishFromFilesystem } from './publish-from-filesystem.js';
 
 export default createCommand({
-  packageManager: ['npm'],
-
   init: ({ commander, command }) => {
     return commander
       .description(command.packageJson.description ?? '')

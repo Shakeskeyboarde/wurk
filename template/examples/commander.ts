@@ -1,8 +1,6 @@
 import { createCommand } from '@werk/cli';
 
 export default createCommand({
-  packageManager: false,
-
   init: ({ commander }) => {
     // See the CommanderJS documentation for more information.
     return commander.argument('<foo>', 'An argument.').option('-b, --bar <value>', 'An option.');
