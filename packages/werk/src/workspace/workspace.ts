@@ -335,7 +335,7 @@ export class Workspace {
     const entryPoints: EntryPoint[] = [];
     const addEntryPoints = (type: EntryPoint['type'], value: unknown): void => {
       if (typeof value === 'string') {
-        entryPoints.push({ type, filename: value });
+        entryPoints.push({ type, filename: resolve(this.dir, value) });
       } else if (Array.isArray(value)) {
         value.forEach((subValue) => addEntryPoints(type, subValue));
       } else if (typeof value === 'object' && value !== null) {
@@ -359,7 +359,7 @@ export class Workspace {
   readonly getIsBuilt = async (): Promise<boolean> => {
     return await Promise.all(
       this.getEntryPoints().map(async ({ filename }) => {
-        return await stat(resolve(this.dir, filename))
+        return await stat(filename)
           .then((stats) => stats.isFile())
           .catch(() => false);
       }),
