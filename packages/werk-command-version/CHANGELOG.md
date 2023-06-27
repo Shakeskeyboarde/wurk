@@ -1,3 +1,9 @@
+## 1.3.1 (2023-06-27)
+
+### Bug Fixes
+
+- Prevent bump to non-prerelease version. (c2f8f6c)
+
 ## 1.3.0 (2023-06-27)
 
 ### Features
