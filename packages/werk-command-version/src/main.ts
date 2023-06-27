@@ -1,7 +1,7 @@
 import assert from 'node:assert';
 
 import { createCommand, type Log, type PackageJson, type Spawn, type Workspace } from '@werk/cli';
-import { type ReleaseType, SemVer } from 'semver';
+import { parse, type ReleaseType, SemVer } from 'semver';
 
 import { getBumpedVersion } from './get-bumped-version.js';
 import { getChangeVersion } from './get-change-version.js';
@@ -54,14 +54,20 @@ export default createCommand({
   before: async ({ log, args, opts, forceWait }) => {
     forceWait();
 
-    if (opts.preid && (args[0] instanceof SemVer || args[0] === 'auto')) {
-      log.warn('Using --preid with "auto" or a version number has no effect.');
+    if (opts.preid && (args[0] instanceof SemVer || !args[0].startsWith('pre'))) {
+      log.warn('Using --preid only has an effect with "pre*" bump types');
     }
   },
 
   each: async ({ log, args, opts, workspace, spawn }) => {
     const [spec] = args;
     const { note = [], preid, changelog, dryRun = false } = opts;
+    const isCurrentVersionPrerelease = Boolean(parse(workspace.version)?.prerelease?.length);
+
+    assert(
+      !isCurrentVersionPrerelease || (typeof spec === 'string' && spec.startsWith('pre')),
+      `Workspace "${workspace.name}" cannot be bumped to a non-prerelease version.`,
+    );
 
     let updatedVersion: string | undefined;
     let changes: readonly Change[] | undefined;
