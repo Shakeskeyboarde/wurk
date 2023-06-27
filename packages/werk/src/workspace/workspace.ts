@@ -55,7 +55,7 @@ export interface ChangeDetectionOptions {
 
 export interface EntryPoint {
   readonly type: 'types' | 'bin' | 'main' | 'module' | 'exports' | 'man';
-  readonly pattern: string;
+  readonly filename: string;
 }
 
 export class Workspace {
@@ -335,7 +335,7 @@ export class Workspace {
     const entryPoints: EntryPoint[] = [];
     const addEntryPoints = (type: EntryPoint['type'], value: unknown): void => {
       if (typeof value === 'string') {
-        entryPoints.push({ type, pattern: value });
+        entryPoints.push({ type, filename: value });
       } else if (Array.isArray(value)) {
         value.forEach((subValue) => addEntryPoints(type, subValue));
       } else if (typeof value === 'object' && value !== null) {
@@ -358,8 +358,8 @@ export class Workspace {
    */
   readonly getIsBuilt = async (): Promise<boolean> => {
     return await Promise.all(
-      this.getEntryPoints().map(async ({ pattern }) => {
-        return await stat(resolve(this.dir, pattern))
+      this.getEntryPoints().map(async ({ filename }) => {
+        return await stat(resolve(this.dir, filename))
           .then((stats) => stats.isFile())
           .catch(() => false);
       }),
