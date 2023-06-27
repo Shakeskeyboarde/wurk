@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import { randomUUID } from 'node:crypto';
 import { createReadStream, createWriteStream } from 'node:fs';
 import { copyFile, mkdir, rm, stat } from 'node:fs/promises';
-import { basename, join } from 'node:path';
+import { basename, join, relative, resolve } from 'node:path';
 import { createGunzip } from 'node:zlib';
 
 import { createCommand, type EachContext, type MutablePackageJson } from '@werk/cli';
@@ -30,13 +30,8 @@ export default createCommand({
       .option('--dry-run', 'Perform a dry run for validation.');
   },
 
-  before: async ({ log, opts, root, spawn, forceWait }) => {
+  before: async ({ forceWait }) => {
     forceWait();
-
-    if (!opts.fromArchive && opts.build && root.scripts.build != null) {
-      log.notice('Building workspaces.');
-      await spawn('npm', [`--loglevel=${log.level.name}`, 'run', '--if-present', 'build'], { errorEcho: true });
-    }
   },
 
   each: async (context) => {
@@ -129,19 +124,35 @@ const publishFromFilesystem = async (
     return false;
   }
 
-  const [isClean, isModified] = await Promise.all([
-    await workspace.getGitIsClean({
+  const [isClean, isModified, isBuilt, isPackComplete] = await Promise.all([
+    workspace.getGitIsClean({
       includeDependencyScopes: ['dependencies', 'peerDependencies', 'optionalDependencies'],
       excludeDependencyNames: [...isPublished],
     }),
-    await workspace.getIsModified({
+    workspace.getIsModified({
       includeDependencyScopes: ['dependencies', 'peerDependencies', 'optionalDependencies'],
       excludeDependencyNames: [workspace.name, ...isPublished],
     }),
+    workspace.getIsBuilt(),
+    (async () => {
+      const packJson = await spawn('npm', ['pack', '--dry-run', '--json'], { capture: true }).getJson<
+        readonly { readonly files: readonly { readonly path: string }[] }[]
+      >();
+      const packFiles = (packJson?.[0]?.files ?? []).map(({ path }) => resolve(workspace.dir, path));
+
+      return workspace
+        .getEntryPoints()
+        .every(({ filename }) => packFiles.some((packFile) => relative(packFile, filename) === ''));
+    })(),
   ]);
 
   assert(isClean, 'Publishing requires a clean Git working tree.');
   assert(!isModified, 'Publishing requires all local dependencies to be unmodified or published.');
+  assert(isBuilt, `Workspace "${workspace.name}" is not built. Some package entry points do not exist.`);
+  assert(
+    isPackComplete,
+    `Workspace "${workspace.name}" packed archive is incomplete. Some package entry points do not exist.`,
+  );
 
   log.notice(`Publishing workspace "${workspace.name}@${workspace.version}"${opts.toArchive ? ' to archive' : ''}.`);
 
@@ -200,7 +211,7 @@ const publishFromFilesystem = async (
 };
 
 export const extractPackageJson = async (tgz: string, tmpDir: string): Promise<void> => {
-  await new Promise<void>((resolve, reject) => {
+  await new Promise<void>((resolve_, reject) => {
     const extractor = extract()
       .on('entry', (header, stream, next) => {
         if (header.name !== 'package/package.json') {
@@ -211,7 +222,7 @@ export const extractPackageJson = async (tgz: string, tmpDir: string): Promise<v
 
         stream.pipe(createWriteStream(join(tmpDir, 'package.json')).on('error', reject)).on('finish', () => {
           extractor.destroy();
-          resolve();
+          resolve_();
         });
       })
       .on('finish', () => {

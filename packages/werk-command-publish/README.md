@@ -91,6 +91,10 @@ Validation is always performed before publishing. This provides reasonable certa
 
    - If there are local modifications that are not already published or going to be published (no version change or filtered out), then local building and testing may not reflect the published behavior of a package.
 
+3. **Ensure package.json entry points exist and will be included in the published package.**
+
+   - If the entry points do not exist or are not included in the published package, then the package may not be usable.
+
 ## Temporary `package.json` changes
 
 The following changes are made before publishing, and will be rolled back after publishing finishes (successfully or not). Change are only made in publishable workspaces.
