@@ -72,10 +72,11 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
     gitFromRevision,
     isWorker,
     workerData,
+    packageManager,
     saveAndRestoreFile,
     startWorker,
   }: BaseAsyncContextOptions<A, O>) {
-    super({ log, command, config });
+    super({ log, command, config, packageManager });
 
     this.args = args;
     this.opts = opts;

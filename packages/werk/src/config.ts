@@ -10,6 +10,8 @@ import { type PackageJson } from './utils/package-json.js';
 import { readJsonFile } from './utils/read-json-file.js';
 import { type WorkspacePackage } from './workspace/workspace-package.js';
 
+export type PackageManager = 'npm';
+
 export interface CommandConfig {
   readonly globalArgs: readonly string[];
   readonly args: readonly string[];
@@ -25,6 +27,7 @@ export type Config = {
   readonly commandPackages: Record<string, string>;
   readonly commandConfigs: Record<string, CommandConfig>;
   readonly globalArgs: readonly string[];
+  readonly packageManager: PackageManager;
 };
 
 export const loadConfig = memoize(async (): Promise<Config> => {
@@ -80,6 +83,7 @@ export const loadConfig = memoize(async (): Promise<Config> => {
     commandPackages,
     commandConfigs,
     globalArgs,
+    packageManager: 'npm',
   };
 });
 

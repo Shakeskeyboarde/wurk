@@ -4,6 +4,8 @@ import { publishFromArchive } from './publish-from-archive.js';
 import { publishFromFilesystem } from './publish-from-filesystem.js';
 
 export default createCommand({
+  packageManager: ['npm'],
+
   init: ({ commander, command }) => {
     return commander
       .description(command.packageJson.description ?? '')
@@ -29,9 +31,16 @@ export default createCommand({
 
     if (!opts.fromArchive && opts.build && root.scripts.build != null) {
       log.notice('Building workspaces.');
-      await spawn('npm', [`--loglevel=${log.level.name}`, 'run', '--if-present', 'build'], { errorEcho: true });
-      await new Promise((resolve) => setTimeout(resolve, 5000));
+
+      const succeeded = await spawn('npm', [`--loglevel=${log.level.name}`, 'run', '--if-present', 'build'], {
+        echo: 'inherit',
+        errorSetExitCode: true,
+      }).succeeded();
+
+      if (!succeeded) return;
     }
+
+    log.notice('Publishing workspaces.');
   },
 
   each: async (context) => {

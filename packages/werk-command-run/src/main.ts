@@ -1,6 +1,8 @@
 import { createCommand } from '@werk/cli';
 
 export default createCommand({
+  packageManager: ['npm'],
+
   init: ({ commander, command }) => {
     return commander
       .description(command.packageJson.description ?? '')

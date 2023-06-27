@@ -18,8 +18,8 @@ export class InitContext extends BaseContext {
    */
   readonly commander: Commander;
 
-  constructor({ log, command, config, rootDir, commander }: InitContextOptions) {
-    super({ log, command, config });
+  constructor({ log, command, config, rootDir, commander, packageManager }: InitContextOptions) {
+    super({ log, command, config, packageManager });
 
     this.rootDir = rootDir;
     this.commander = commander;

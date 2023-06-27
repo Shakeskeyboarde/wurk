@@ -1,6 +1,7 @@
 # Werk Custom Commands
 
 - [Implementing Commands](#implementing-commands)
+  - [Command Requirements](#command-requirements)
   - [Command Hooks](#command-hooks)
   - [Hook Contexts](#hook-contexts)
   - [Log](#log)
@@ -21,6 +22,7 @@ Import the `@werk/cli` package and use the `createCommand` function to define yo
 import { createCommand } from '@werk/cli';
 
 export default createCommand({
+  packageManager: ['npm'],
   init: (context) => {},
   before: async (context) => {},
   each: async (context) => {},
@@ -30,6 +32,12 @@ export default createCommand({
 ```
 
 You can also copy the [template](https://github.com/Shakeskeyboarde/werk/blob/main/template) into your own repo to get started.
+
+### Command Requirements
+
+The following properties define requirements for the command (all required).
+
+- `packageManager`: Package managers supported by the command, or false if the command does not depend on any package manager.
 
 ### Command Hooks
 
@@ -151,6 +159,7 @@ The configured command must be returned so that Typescript can infer the `contex
 
 ```ts
 export default createCommand({
+  packageManager: false,
   init: (context) => {
     return context.commander
       .description('My awesome Werk command.')
@@ -295,6 +304,7 @@ The simplest case is to always run a hook in a separate thread.
 
 ```ts
 export default createCommand({
+  packageManager: false,
   each: async (context): Promise<void> => {
     if (await context.startWorker()) return;
 

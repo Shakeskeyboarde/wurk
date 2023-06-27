@@ -1,6 +1,8 @@
 import { createCommand } from '@werk/cli';
 
 export default createCommand({
+  packageManager: false,
+
   init: (context) => {
     // TODO: Add command options.
     return context.commander;

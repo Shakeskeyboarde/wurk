@@ -1,6 +1,8 @@
 import { createCommand } from '@werk/cli';
 
 export default createCommand({
+  packageManager: ['npm'],
+
   init: ({ commander }) => {
     return commander
       .argument('<executable>', 'An executable to run in each workspace.')

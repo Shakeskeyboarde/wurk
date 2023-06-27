@@ -5,6 +5,8 @@ import { join } from 'node:path';
 import { createCommand } from '@werk/cli';
 
 export default createCommand({
+  packageManager: false,
+
   init: ({ commander }) => {
     return commander
       .argument('[args...]', 'Arguments to pass to Vitest.')

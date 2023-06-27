@@ -1,13 +1,15 @@
+import { type PackageManager } from '../config.js';
 import { type Plugin } from '../utils/load-plugin.js';
 import { Log, type LogOptions } from '../utils/log.js';
 
 export interface CommandInfo extends Omit<Plugin, 'exports'> {
-  name: string;
+  readonly name: string;
 }
 
 export interface BaseContextOptions {
   readonly log: LogOptions | undefined;
   readonly command: CommandInfo;
+  readonly packageManager: PackageManager;
   readonly config: unknown;
 }
 
@@ -21,6 +23,12 @@ export abstract class BaseContext {
    * Information about the command package.
    */
   readonly command: CommandInfo;
+
+  /**
+   * The package manager used by the monorepo. Currently only `npm` is
+   * supported.
+   */
+  readonly packageManager: PackageManager;
 
   /**
    * Command configuration from the workspaces root `package.json` file.
@@ -37,9 +45,10 @@ export abstract class BaseContext {
    */
   readonly config: unknown;
 
-  constructor({ log, command, config }: BaseContextOptions) {
+  constructor({ log, command, packageManager, config }: BaseContextOptions) {
     this.log = new Log(log);
     this.command = command;
+    this.packageManager = packageManager;
     this.config = config;
   }
 }

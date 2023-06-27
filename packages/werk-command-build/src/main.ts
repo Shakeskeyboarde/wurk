@@ -5,6 +5,8 @@ import { build } from './build.js';
 const startCallbacks: (() => Promise<any>)[] = [];
 
 export default createCommand({
+  packageManager: ['npm'],
+
   init: ({ commander }) => {
     return commander.option('-s, --start', '');
   },

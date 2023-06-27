@@ -1,3 +1,5 @@
+import assert from 'node:assert';
+
 import { type Command, type CommandUnknownOpts } from '@commander-js/extra-typings';
 import { Sema as Semaphore } from 'async-sema';
 import chalk from 'chalk';
@@ -33,6 +35,12 @@ export const mainAction = async ({
 }: MainActionOptions): Promise<void> => {
   const commandPlugin = await loadCommandPlugin(cmd, config);
   const { command, ...commandInfo } = commandPlugin;
+
+  assert(
+    !command.packageManager || command.packageManager.includes(config.packageManager),
+    `Command "${cmd}" does not support package manager "${config.packageManager}".`,
+  );
+
   const root = getWorkspace({ ...config.rootPackage, selected: false }, commandInfo.name);
   const workspaces = await getWorkspaces({
     workspacePackages: config.workspacePackages,
@@ -52,6 +60,7 @@ export const mainAction = async ({
       command: commandInfo,
       rootDir: config.rootPackage.dir,
       commander: subCommander,
+      packageManager: config.packageManager,
     }) !== subCommander
   ) {
     throw new Error(`Command "${cmd}" did not return the correct commander instance. Did it return a sub-command?`);
@@ -66,6 +75,7 @@ export const mainAction = async ({
       args: commander.processedArgs,
       opts: commander.opts(),
       exitCode,
+      packageManager: config.packageManager,
     });
 
     command.cleanup(context);
@@ -97,6 +107,7 @@ export const mainAction = async ({
     gitFromRevision,
     isWorker: false,
     workerData: null,
+    packageManager: config.packageManager,
   });
 
   if (process.exitCode != null) return;
@@ -136,6 +147,7 @@ export const mainAction = async ({
             gitFromRevision,
             isWorker: false,
             workerData: null,
+            packageManager: config.packageManager,
           });
         } finally {
           semaphore?.release();
@@ -162,5 +174,6 @@ export const mainAction = async ({
     gitFromRevision,
     isWorker: false,
     workerData: null,
+    packageManager: config.packageManager,
   });
 };

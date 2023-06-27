@@ -1,6 +1,8 @@
 import { createCommand } from '@werk/cli';
 
 export default createCommand({
+  packageManager: ['npm'],
+
   after: async ({ log, workspaces }) => {
     log.info(
       JSON.stringify(

@@ -7,6 +7,7 @@ import { isMainThread, parentPort } from 'node:worker_threads';
 import { type Command as Commander } from '@commander-js/extra-typings';
 
 import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
+import { type PackageManager } from '../config.js';
 import { AfterContext, type AfterContextOptions } from '../context/after-context.js';
 import { BeforeContext, type BeforeContextOptions } from '../context/before-context.js';
 import { CleanupContext, type CleanupContextOptions } from '../context/cleanup-context.js';
@@ -31,6 +32,12 @@ export type AfterOptions<A extends CommanderArgs, O extends CommanderOptions> = 
 >;
 
 export interface CommandHooks<A extends CommanderArgs, O extends CommanderOptions, M> {
+  /**
+   * The package managers supported by the command, or false if the
+   * command does not depend on any package manager.
+   **/
+  readonly packageManager: readonly [PackageManager, ...PackageManager[]] | false;
+
   /**
    * Called when the command is loaded. Intended for configuration of
    * command options, arguments, and help text.
@@ -68,10 +75,13 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions, M> {
   readonly #cleanup: ((context: CleanupContext<A, O>) => void) | undefined;
   readonly #fileBackups: { filename: string; content: Buffer | null }[] = [];
 
+  readonly packageManager: readonly [PackageManager, ...PackageManager[]] | false;
+
   isWaitForced = false;
 
-  constructor({ init, before, each, after, cleanup }: CommandHooks<A, O, M>) {
+  constructor({ packageManager, init, before, each, after, cleanup }: CommandHooks<A, O, M>) {
     Object.assign(this, { [COMMAND]: true });
+    this.packageManager = packageManager;
     this.#init = init;
     this.#before = before;
     this.#each = each;
