@@ -9,30 +9,28 @@ jobs:
   pull-request:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [current]
-
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 18
           cache: 'npm'
 
       - name: Restore
         run: npm ci
 
       - name: Build
-        run: npm run build
+        run: |
+          npm run build
+          npx @werk/cli publish --no-build --to-archive
 
       - name: Test
         run: npm test
 
-      - name: Publish (NPM, Dry Run)
-        run: npx @werk/cli publish --dry-run
+      - name: Publish (Dry Run)
+        run: npx @werk/cli publish --from-archive --dry-run

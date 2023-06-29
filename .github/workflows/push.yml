@@ -12,20 +12,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [current]
-
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 18
           cache: 'npm'
 
       - name: Restore
@@ -39,16 +35,7 @@ jobs:
       - name: Test
         run: npm test
 
-      # - name: Publish (CodeCov)
-      #   if: github.ref == 'refs/heads/main'
-      #   uses: codecov/codecov-action@v3
-      #   with:
-      #     token: ${{ secrets.CODECOV_TOKEN }}
-      #     files: ./out/coverage/lcov.info
-      #     fail_ci_if_error: true
-      #     verbose: true
-
-      - name: Publish (NPM)
+      - name: Publish
         run: |
           npm config set //registry.npmjs.org/:_authToken '${NPM_TOKEN}'
           npx @werk/cli publish --from-archive
