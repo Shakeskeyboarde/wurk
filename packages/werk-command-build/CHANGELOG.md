@@ -1,3 +1,9 @@
+## 1.1.3 (2023-06-29)
+
+### Bug Fixes
+
+- Default config files not included in package. (746a99e)
+
 ## 1.1.2 (2023-06-29)
 
 ### Bug Fixes
