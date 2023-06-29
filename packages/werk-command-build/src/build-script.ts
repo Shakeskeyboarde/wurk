@@ -11,7 +11,7 @@ export const buildScript = async (options: BuildScriptOptions): Promise<void> =>
 
   log.notice(`${start ? 'Starting' : 'Building'} workspace "${workspace.name}" using package script.`);
 
-  await spawn('npm', ['run', '--if-present', start ? 'build' : 'start'], {
+  await spawn('npm', ['run', '--if-present', start ? 'start' : 'build'], {
     echo: true,
     errorReturn: true,
     errorSetExitCode: true,
