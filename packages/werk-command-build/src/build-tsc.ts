@@ -40,11 +40,11 @@ export const buildTsc = async ({ log, workspace, root, start, spawn }: BuildTscO
     const isEsm = isEsmEntry(packageJson);
     const isCommonJs = isCommonJsEntry(packageJson);
 
-    if (isEsm || (!isCommonJs && packageJson.type === 'module')) {
+    if (isEsm) {
       configs.push([isCommonJs ? 'lib/esm' : 'lib', 'ES2022']);
     }
 
-    if (isCommonJs || (!isEsm && packageJson.type !== 'module')) {
+    if (isCommonJs) {
       configs.push([isEsm ? 'lib/cjs' : 'lib', 'CommonJS']);
     }
 
@@ -141,9 +141,9 @@ const readTsConfig = async (
 };
 
 const isEsmEntry = (packageJson: PackageJson): boolean => {
-  return Boolean(packageJson.exports);
+  return Boolean(packageJson.exports || (packageJson.bin && packageJson.type === 'module'));
 };
 
 const isCommonJsEntry = (packageJson: PackageJson): boolean => {
-  return Boolean(packageJson.main);
+  return Boolean(packageJson.main || (packageJson.bin && (!packageJson.type || packageJson.type === 'commonjs')));
 };
