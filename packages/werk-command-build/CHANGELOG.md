@@ -1,3 +1,9 @@
+## 1.1.2 (2023-06-29)
+
+### Bug Fixes
+
+- Script mode runs wrong script (build and start switched). (bba61c4)
+
 ## 1.1.1 (2023-06-29)
 
 ### Bug Fixes
