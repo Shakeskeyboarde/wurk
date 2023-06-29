@@ -1,3 +1,9 @@
+## 1.1.1 (2023-06-29)
+
+### Bug Fixes
+
+- Only build if the package has at an entry point. (f57a88a)
+
 ## 1.1.0 (2023-06-27)
 
 ### Features
