@@ -18,13 +18,15 @@ export const getChanges = async (
 ): Promise<[changes: readonly Change[], isConventional: boolean]> => {
   let isConventional = true;
 
-  const text = await spawn('git', ['log', '--pretty=format:«¦%h¦%B¦»', `${commit}..HEAD`, '--', dir], {
-    capture: true,
-  }).getStdout('utf-8');
+  const text = await spawn(
+    'git',
+    ['log', '--pretty=format:%x00%x00%x00%h%x00%x00%B%x00%x00%x00', `${commit}..HEAD`, '--', dir],
+    { capture: true },
+  ).getStdout('utf-8');
 
-  const entries = [...text.matchAll(/«¦(.*?)¦\s*([^\r\n]*)\s*(?:\n\n\s*(.*?)\s*)?¦»$/gmsu)].map(
-    ([, hash = '', subject = '', body = '']) => ({ hash, subject, body }),
-  );
+  const entries = [
+    ...text.matchAll(/\0{3}([^\r\n\0]+?)\0{2}\s*([^\r\n\0]+)\s*(?:(?:\r?\n){2}\s*([^\0]*?)\s*)?\0{3}$/gmsu),
+  ].map(([, hash = '', subject = '', body = '']) => ({ hash, subject, body }));
 
   let changes: Change[] = entries
     .flatMap(({ hash, subject, body }): Change[] => {
