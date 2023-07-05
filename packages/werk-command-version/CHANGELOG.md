@@ -1,3 +1,9 @@
+## 1.3.2 (2023-07-05)
+
+### Code Refactoring
+
+- Use null chars for log separators instead of arbitrary unicode chars. (441695d)
+
 ## 1.3.1 (2023-06-27)
 
 ### Bug Fixes
