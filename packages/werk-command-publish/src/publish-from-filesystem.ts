@@ -28,7 +28,7 @@ export const publishFromFilesystem = async ({
   const { toArchive = false, tag, otp, removePackageFields = [], changelogCheck, dryRun = false } = opts;
   const isShallow = await workspace.getGitIsShallow();
 
-  assert(!isShallow, `Publishing is allowed when the Git repository is shallow.`);
+  assert(!isShallow, `Publishing is not allowed from a shallow Git repository.`);
 
   const [isPublished, isModified, isChangeLogOutdated] = await Promise.all([
     workspace.getNpmIsPublished(),
