@@ -4,6 +4,7 @@ import { join, resolve } from 'node:path';
 import { getGitHead } from '../git/get-git-head.js';
 import { getGitIsClean } from '../git/get-git-is-clean.js';
 import { getGitIsRepo } from '../git/get-git-is-repo.js';
+import { getGitIsShallow } from '../git/get-git-is-shallow.js';
 import { getNpmMetadata } from '../npm/get-npm-metadata.js';
 import { type Log } from '../utils/log.js';
 import { type PackageJson } from '../utils/package-json.js';
