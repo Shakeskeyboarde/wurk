@@ -1,3 +1,9 @@
+# 2.0.0 (2023-07-13)
+
+### Breaking Changes
+
+- Extra args passed to all scripts in a CSV. (9367000)
+
 ## 1.2.2 (2023-07-12)
 
 **Note**: Updated local dependencies.
