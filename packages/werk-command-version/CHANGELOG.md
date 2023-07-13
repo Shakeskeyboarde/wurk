@@ -1,3 +1,9 @@
+## 1.3.3 (2023-07-12)
+
+### Chores
+
+- Update deps. (84c3823)
+
 ## 1.3.2 (2023-07-05)
 
 ### Code Refactoring

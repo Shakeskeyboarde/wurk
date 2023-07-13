@@ -1,3 +1,13 @@
+## 1.4.1 (2023-07-12)
+
+### Bug Fixes
+
+- Error on shallow Git checkout. (735dafb)
+
+### Chores
+
+- Update deps. (84c3823)
+
 ## 1.4.0 (2023-06-27)
 
 ### Features
