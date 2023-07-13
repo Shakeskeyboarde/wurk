@@ -141,7 +141,8 @@ The `context.workspaces` and `context.workspace` properties contain instances of
 
 - `getLocalDependencies({ scopes? }?)`: Gets the workspaces which are local dependencies of this workspace. If `scopes` is not specified, dependencies from all scopes are returned.
 - `getNpmIsPublished()`: Returns true if the current workspace name and version are published to the registry.
-- `getGitIsRepo()`: Returns true if the workspace root directory is part of a git repository.
+- `getGitIsRepo()`: Return true if the workspace directory is only a shallow Git checkout.
+- `getGitIsShallow()`: Returns true if the workspace root directory is part of a git repository.
 - `getGitHead()`: Gets the Git head commit hash. Returns undefined outside of a Git repo unless the `--git-head` global option is not set.
 - `getGitFromRevision()`: Gets the "from" revision which should be used for detecting changes. Returns undefined outside of a Git repo, if the `--git-from-revision` options is not set.
 - `getGitIsClean(options?)`: Returns true if the workspace's git working tree is clean. Returns true outside of a Git repo.

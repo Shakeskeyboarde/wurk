@@ -269,6 +269,13 @@ export class Workspace {
   };
 
   /**
+   * Return true if the workspace directory is only a shallow Git checkout.
+   */
+  readonly getGitIsShallow = async (): Promise<boolean> => {
+    return await getGitIsShallow(this.dir);
+  };
+
+  /**
    * Get the current Git HEAD commit hash.
    *
    * A default can be set for non-Git environments using the `--git-head`

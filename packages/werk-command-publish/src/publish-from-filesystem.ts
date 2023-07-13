@@ -26,6 +26,10 @@ export const publishFromFilesystem = async ({
   spawn,
 }: publishFromFilesystemOptions): Promise<void> => {
   const { toArchive = false, tag, otp, removePackageFields = [], changelogCheck, dryRun = false } = opts;
+  const isShallow = await workspace.getGitIsShallow();
+
+  assert(!isShallow, `Publishing is allowed when the Git repository is shallow.`);
+
   const [isPublished, isModified, isChangeLogOutdated] = await Promise.all([
     workspace.getNpmIsPublished(),
     workspace.getIsModified({
@@ -125,13 +129,13 @@ export const publishFromFilesystem = async ({
 
 const getIsChangeLogOutdated = async (
   log: Log,
-  workspace: Pick<Workspace, 'name' | 'dir'>,
+  workspace: Pick<Workspace, 'name' | 'dir' | 'getGitIsShallow'>,
   spawn: Spawn,
 ): Promise<boolean> => {
   const isChangeLogOutdated = await spawn(
     'git',
     ['diff', '--name-only', 'HEAD~1', '--', resolve(workspace.dir, 'CHANGELOG.md')],
-    { capture: true },
+    { capture: true, errorEcho: true },
   )
     .getOutput('utf-8')
     .then((value) => !value);
