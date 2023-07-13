@@ -1,3 +1,9 @@
+## 1.4.3 (2023-07-12)
+
+### Bug Fixes
+
+- Incorrect message for shallow Git checkouts. (c263960)
+
 ## 1.4.2 (2023-07-12)
 
 **Note**: Updated local dependencies.
