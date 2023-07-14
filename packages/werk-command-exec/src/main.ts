@@ -8,11 +8,14 @@ export default createCommand({
       .passThroughOptions();
   },
 
-  each: async ({ args, workspace, spawn }) => {
+  each: async ({ log, isParallel, args, workspace, spawn }) => {
     if (!workspace.selected) return;
 
-    const exitCode = await spawn(...args, { echo: true, errorReturn: true }).getExitCode();
-
-    if (exitCode !== 0) process.exitCode = exitCode;
+    await spawn(...args, {
+      input: log.prefix || isParallel ? false : 'inherit',
+      echo: true,
+      errorSetExitCode: true,
+      errorReturn: true,
+    });
   },
 });
