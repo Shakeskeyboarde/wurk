@@ -17,37 +17,34 @@ export default createCommand({
       .passThroughOptions();
   },
 
-  before: async ({ args, opts }) => {
+  before: async ({ args, opts }): Promise<{ readonly scripts: readonly string[]; readonly sequential: boolean }[]> => {
     const [scriptsCsv] = args;
-    const { sequential = false } = opts;
     const scripts = scriptsCsv
       .split(',')
       .map((script) => script.trim())
       .filter(Boolean);
+    const sequential = opts.sequential || scripts.length === 1;
 
-    if (sequential) {
-      return [{ scripts }];
-    }
+    if (scripts.length === 0) return [];
 
-    return sequential ? [{ scripts }] : scripts.map((script) => ({ scripts: [script] }));
+    return sequential ? [{ scripts, sequential }] : scripts.map((script) => ({ scripts: [script], sequential }));
   },
 
-  each: async ({ args, workspace, matrixValue, spawn }) => {
+  each: async ({ log, isParallel, args, workspace, matrixValue, spawn }) => {
     if (!workspace.selected) return;
 
     const [, scriptArgs] = args;
-    const { scripts } = matrixValue;
+    const { scripts, sequential } = matrixValue;
 
     for (const script of scripts) {
-      const exitCode = await spawn('npm', ['run', '--if-present', script, '--', ...scriptArgs], {
+      await spawn('npm', ['run', '--if-present', script, '--', ...scriptArgs], {
+        input: !sequential || log.prefix || isParallel ? false : 'inherit',
         echo: true,
+        errorSetExitCode: true,
         errorReturn: true,
-      }).getExitCode();
+      });
 
-      if (exitCode !== 0) {
-        process.exitCode = exitCode;
-        return;
-      }
+      if (process.exitCode) return;
     }
   },
 });
