@@ -134,6 +134,7 @@ export const mainAction = async ({
           if (process.exitCode != null) return;
 
           await command.each({
+            isParallel: concurrency !== 1,
             log: { prefix: prefix ? workspace.name : undefined, formatPrefix },
             config: cmdConfig,
             command: commandInfo,

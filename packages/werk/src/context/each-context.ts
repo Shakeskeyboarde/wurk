@@ -6,11 +6,17 @@ import { BaseAsyncContext, type BaseAsyncContextOptions } from './base-async-con
 
 export interface EachContextOptions<A extends CommanderArgs, O extends CommanderOptions, M>
   extends BaseAsyncContextOptions<A, O> {
+  readonly isParallel: boolean;
   readonly workspace: WorkspacePartialOptions;
   readonly matrixValue: M;
 }
 
 export class EachContext<A extends CommanderArgs, O extends CommanderOptions, M> extends BaseAsyncContext<A, O> {
+  /**
+   * True if the command is running in parallel mode.
+   */
+  readonly isParallel: boolean;
+
   /**
    * The current workspace.
    */
@@ -23,6 +29,7 @@ export class EachContext<A extends CommanderArgs, O extends CommanderOptions, M>
   readonly matrixValue: M;
 
   constructor({
+    isParallel,
     workspace,
     matrixValue,
     gitHead,
@@ -32,6 +39,7 @@ export class EachContext<A extends CommanderArgs, O extends CommanderOptions, M>
   }: EachContextOptions<A, O, M>) {
     super({ ...superOptions, gitHead, gitFromRevision, saveAndRestoreFile });
 
+    this.isParallel = isParallel;
     this.workspace = new Workspace({ ...workspace, context: this, gitHead, gitFromRevision, saveAndRestoreFile });
     this.matrixValue = matrixValue;
   }

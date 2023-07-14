@@ -74,6 +74,7 @@ A context object is passed to each hook callback. The properties attached to tho
 - `saveAndRestoreFile(filename)` (**before**, **each**, **after**): Save the contents of a file and restore it after the command completes.
 - `spawn(cmd, args?, options?)` (**before**, **each**, **after**, **cleanup**): Spawn a process. The working directory will be the root of the current workspace if available (`each` hook), or the workspaces root otherwise.
 - `startWorker(data?)` (**before**, **each**, **after**): Re-runs the current hook in a [worker thread](https://nodejs.org/api/worker_threads.html).
+- `isParallel` (**each**): True if the command is running in parallel mode.
 - `isWorker` (**before**, **each**, **after**): True if the hook is running in a worker thread.
 - `workerData` (**before**, **each**, **after**): Data passed to the `startWorker(data?)` function, or undefined if `isWorker` is false.
 - `exitCode` (**cleanup**): Exit code of the command.
