@@ -39,7 +39,7 @@ export default createCommand({
     const { scripts } = matrixValue;
 
     for (const script of scripts) {
-      const exitCode = await spawn('npm', ['run', '--if-present', script, ...scriptArgs], {
+      const exitCode = await spawn('npm', ['run', '--if-present', script, '--', ...scriptArgs], {
         echo: true,
         errorReturn: true,
       }).getExitCode();
