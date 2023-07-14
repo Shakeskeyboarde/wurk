@@ -1,3 +1,9 @@
+## 2.0.1 (2023-07-13)
+
+### Bug Fixes
+
+- Force all extra arguments to be passed to the script command. (be07166)
+
 # 2.0.0 (2023-07-13)
 
 ### Breaking Changes
