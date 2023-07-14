@@ -1,3 +1,9 @@
+## 1.7.1 (2023-07-14)
+
+### Bug Fixes
+
+- **log:** Don't add extra line endings (ever). (309d14d)
+
 ## 1.7.0 (2023-07-14)
 
 ### Features

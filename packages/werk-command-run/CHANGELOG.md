@@ -1,3 +1,9 @@
+## 3.0.2 (2023-07-14)
+
+### Code Refactoring
+
+- Inherit output stream if non-parallel and not prefixed. (18e0cd9)
+
 ## 3.0.1 (2023-07-14)
 
 ### Documentation

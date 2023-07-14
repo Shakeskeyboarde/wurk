@@ -1,3 +1,9 @@
+## 1.2.1 (2023-07-14)
+
+### Code Refactoring
+
+- Inherit output streams if non-parallel and not prefixed. (658bc6d)
+
 ## 1.2.0 (2023-07-14)
 
 ### Features
