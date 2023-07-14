@@ -13,32 +13,21 @@ export default createCommand({
       )
       .argument('<script>', 'Script (or scripts CSV) to run in each workspace.')
       .argument('[args...]', 'Arguments passed to scripts.')
-      .option('-s, --sequential', 'Run multiple scripts (CSV) sequentially.')
       .passThroughOptions();
   },
 
-  before: async ({ args, opts }): Promise<{ readonly scripts: readonly string[]; readonly sequential: boolean }[]> => {
-    const [scriptsCsv] = args;
+  each: async ({ log, isParallel, args, workspace, spawn }) => {
+    if (!workspace.selected) return;
+
+    const [scriptsCsv, scriptArgs] = args;
     const scripts = scriptsCsv
       .split(',')
       .map((script) => script.trim())
       .filter(Boolean);
-    const sequential = opts.sequential || scripts.length === 1;
-
-    if (scripts.length === 0) return [];
-
-    return sequential ? [{ scripts, sequential }] : scripts.map((script) => ({ scripts: [script], sequential }));
-  },
-
-  each: async ({ log, isParallel, args, workspace, matrixValue, spawn }) => {
-    if (!workspace.selected) return;
-
-    const [, scriptArgs] = args;
-    const { scripts, sequential } = matrixValue;
 
     for (const script of scripts) {
       await spawn('npm', ['run', '--if-present', script, '--', ...scriptArgs], {
-        input: !sequential || log.prefix || isParallel ? false : 'inherit',
+        input: log.prefix || isParallel ? false : 'inherit',
         echo: true,
         errorSetExitCode: true,
         errorReturn: true,
