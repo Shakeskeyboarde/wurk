@@ -1,7 +1,7 @@
 {
   "name": "@werk/command-run",
   "description": "Run package scripts.",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-run/README.md",

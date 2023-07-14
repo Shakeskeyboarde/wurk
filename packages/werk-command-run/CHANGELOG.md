@@ -1,3 +1,9 @@
+## 3.0.1 (2023-07-14)
+
+### Documentation
+
+- Update readme to match removal of sequential option and passing additional arguments to all scripts. (8528b08)
+
 # 3.0.0 (2023-07-14)
 
 ### Breaking Changes
