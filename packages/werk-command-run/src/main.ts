@@ -19,6 +19,7 @@ export default createCommand({
   each: async ({ log, isParallel, args, workspace, spawn }) => {
     if (!workspace.selected) return;
 
+    const inheritStreams = !log.prefix && !isParallel;
     const [scriptsCsv, scriptArgs] = args;
     const scripts = scriptsCsv
       .split(',')
@@ -27,8 +28,8 @@ export default createCommand({
 
     for (const script of scripts) {
       await spawn('npm', ['run', '--if-present', script, '--', ...scriptArgs], {
-        input: log.prefix || isParallel ? false : 'inherit',
-        echo: true,
+        input: inheritStreams ? 'inherit' : false,
+        echo: inheritStreams ? 'inherit' : true,
         errorSetExitCode: true,
         errorReturn: true,
       });
