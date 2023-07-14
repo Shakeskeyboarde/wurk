@@ -15,11 +15,11 @@ npm i -D @werk/command-run
 
 ```sh
 # werk run <script> [args...]
-werk run test --pass-with-no-tests
+werk run test --passWithNoTests
 ```
 
-You can also run multiple scripts by passing a CSV of script names. Any additional arguments will be passed to the last script only. The scripts are run in parallel if global options allow, and the `--sequential` flag is not set.
+You can also run multiple scripts by passing a CSV of script names. Additional arguments will be passed to _ALL_ scripts. The scripts are run serially, in order, within each workspace. Multiple workspaces may still be processed in parallel.
 
 ```sh
-werk run lint,test --pass-with-no-tests
+werk run jest,vitest --passWithNoTests
 ```
