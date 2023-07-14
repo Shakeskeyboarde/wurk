@@ -1,3 +1,9 @@
+## 1.2.0 (2023-07-14)
+
+### Features
+
+- Allow input when non-parallel (serial) and log prefixing is disabled. (d2c391d)
+
 ## 1.1.2 (2023-07-12)
 
 **Note**: Updated local dependencies.

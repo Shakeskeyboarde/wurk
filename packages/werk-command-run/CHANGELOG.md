@@ -1,3 +1,13 @@
+# 3.0.0 (2023-07-14)
+
+### Breaking Changes
+
+- Remove sequential option. (63caa52)
+
+### Features
+
+- Allow input when non-parallel (serial) and log prefixing is disabled. (439da1a)
+
 ## 2.0.1 (2023-07-13)
 
 ### Bug Fixes

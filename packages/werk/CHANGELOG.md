@@ -1,3 +1,9 @@
+## 1.7.0 (2023-07-14)
+
+### Features
+
+- Add &#96;isParallel&#96; to each context. (0261fa0)
+
 ## 1.6.2 (2023-07-12)
 
 **Note**: Updated to version "1.6.2".
