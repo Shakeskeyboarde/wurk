@@ -65,17 +65,12 @@ export class LogStream extends Transform {
 
     if (!value) return;
 
-    // The exec() regex doesn't match "\r", because it could be half of an
-    // incomplete "\r\n" line ending. If we match it here, we might end
-    // up with an extra blank line.
-    const rx = /(.*?)\r?\n/gu;
+    const rx = /(.*?)(?:\r?\n|\r)/gu;
     let line: RegExpExecArray | null;
     let lastIndex = 0;
 
     while ((line = rx.exec(value))) {
-      // Split on "\r" (which we now know is not followed by a "\n") in
-      // case someone is trying to overwrite lines.
-      line[1]?.split('\r').forEach((part) => this.push(part));
+      this.push((line[1] ?? '') + '\n');
       lastIndex = rx.lastIndex;
     }
 

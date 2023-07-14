@@ -30,8 +30,6 @@ const defaultLevel =
     : 'info';
 
 export class Log {
-  readonly #trim: boolean;
-
   static #level: { readonly name: LogLevel; readonly value: number } = {
     name: defaultLevel,
     value: LOG_LEVEL[defaultLevel],
@@ -52,7 +50,6 @@ export class Log {
   readonly formatPrefix: (prefix: string) => string;
 
   constructor({ prefix = '', formatPrefix = identity }: LogOptions = {}) {
-    this.#trim = Boolean(prefix);
     this.stdout.on('data', (line: string) => this.#writeLine(process.stdout, line));
     this.stderr.on('data', (line: string) => this.#writeLine(process.stderr, line));
     this.prefix = prefix;
@@ -131,22 +128,22 @@ export class Log {
     );
     const lines = string.split(/\r?\n|\r/gu);
 
-    if (lines[lines.length - 1] === '') {
-      lines.pop();
-    }
-
-    lines.forEach((line) => this.#writeLine(stream, line, formatLine));
+    lines.forEach((line) => this.#writeLine(stream, line + '\n', formatLine));
   };
 
   readonly #writeLine = (stream: Writable, line: string, formatLine: (message: string) => string = identity): void => {
-    line = line.trimEnd().replace(ansiRegex, '');
+    // Remove ANSI escape codes because lines with different (unterminated)
+    // formatting might be interleaved due to multi-threading.
+    line = line.replace(ansiRegex, '');
 
-    if (this.#trim && !line) return;
-
-    line = formatLine(line) + '\n';
-
-    if (this.prefix) {
-      line = `${this.formatPrefix(this.prefix)}: ${line}`;
+    if (this.prefix.length) {
+      // Prefixing lines implies that line terminators must be added if
+      // if missing, and that blank lines must be omitted.
+      line = line.trimEnd() + '\n';
+      if (line.length <= 1) return;
+      line = `${this.formatPrefix(this.prefix)}: ${formatLine(line)}`;
+    } else {
+      line = formatLine(line);
     }
 
     stream.write(line);
