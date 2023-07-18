@@ -102,7 +102,7 @@ export const writeChangelog = async (
     .map((change) => ({ ...change, section: CHANGE_SECTIONS[change.type.toUpperCase()] ?? Section.chore }))
     .sort((a, b) => a.section - b.section);
 
-  let text = `${isMajorUpdate ? '#' : '##'} ${version} (${dateString})\n`;
+  let text = `${isMajorUpdate ? '#' : '##'} ${version.format()} (${dateString})\n`;
   let section: Section | undefined;
 
   sortedChanges.forEach((change) => {
@@ -134,7 +134,7 @@ export const writeChangelog = async (
       text += `\n**Note${change.scope ? ` (${change.scope})` : ''}**: ${change.message}\n`;
     });
 
-  const newEntry: Entry = { version: version.toString(), text };
+  const newEntry: Entry = { version: version.format(), text };
 
   if (index < 0) {
     entries.push(newEntry);

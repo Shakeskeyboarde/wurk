@@ -86,7 +86,7 @@ export default createCommand({
 
     // Non-private workspace versions must be updated if there are local dependency updates.
     if (!workspace.private && !updatedVersion && updatedDependencies) {
-      updatedVersion = getIncrementedVersion(workspace.version).toString();
+      updatedVersion = getIncrementedVersion(workspace.version).format();
       changes = [...(changes ?? []), { type: 'note', message: 'Updated local dependencies.' }];
     }
 
@@ -136,7 +136,7 @@ export default createCommand({
 });
 
 const setVersion = (spec: SemVer): [version: string, changes: readonly Change[]] => {
-  const version = spec.toString();
+  const version = spec.format();
   const changes = [{ type: 'note', message: `Updated to version "${version}".` }];
   return [version, changes];
 };
@@ -146,7 +146,7 @@ const bumpVersion = (
   preid: string | undefined,
   workspace: Workspace,
 ): [version: string, changes: readonly Change[]] => {
-  const version = getBumpedVersion(workspace.version, spec, preid).toString();
+  const version = getBumpedVersion(workspace.version, spec, preid).format();
   const changes = [{ type: 'note', message: `Updated to version "${version}".` }];
   return [version, changes];
 };
@@ -179,7 +179,7 @@ const autoVersion = async (
     log.warn(`Workspace "${workspace.name}" has non-conventional commits.`);
   }
 
-  const version = changes.length > 0 ? getChangeVersion(workspace.version, changes).toString() : undefined;
+  const version = changes.length > 0 ? getChangeVersion(workspace.version, changes).format() : undefined;
 
   return [version, changes];
 };
