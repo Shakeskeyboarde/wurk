@@ -1,3 +1,9 @@
+## 1.3.7 (2023-07-17)
+
+### Bug Fixes
+
+- Use format to stringify SemVer instances. (ca69ae5)
+
 ## 1.3.6 (2023-07-14)
 
 **Note**: Updated local dependencies.
