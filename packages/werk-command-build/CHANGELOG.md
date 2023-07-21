@@ -1,3 +1,13 @@
+## 1.1.8 (2023-07-21)
+
+### Bug Fixes
+
+- Error if workspace entry points are missing after build. (44689fa)
+
+### Chores
+
+- Add description to &#96;--start&#96; option. (d268e13)
+
 ## 1.1.7 (2023-07-14)
 
 **Note**: Updated local dependencies.
