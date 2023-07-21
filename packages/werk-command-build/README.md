@@ -19,7 +19,7 @@ werk build
 
 ## Start
 
-After building once, start continuously building workspaces. Generally, this means starting a dev server or rebuilding when files are changed.
+After building once, start continuously building workspaces. Generally, this means starting a development server or rebuilding when files are changed.
 
 ```sh
 werk build --start

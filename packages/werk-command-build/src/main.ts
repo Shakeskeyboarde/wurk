@@ -6,7 +6,7 @@ const startCallbacks: (() => Promise<any>)[] = [];
 
 export default createCommand({
   init: ({ commander }) => {
-    return commander.option('-s, --start', '');
+    return commander.option('-s, --start', 'Continuously build changed workspaces and start development servers.');
   },
 
   before: async ({ forceWait }) => {
