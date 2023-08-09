@@ -1,7 +1,7 @@
 {
   "name": "@werk/command-publish",
   "description": "Publish workspaces.",
-  "version": "1.4.5",
+  "version": "1.4.6",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-publish/README.md",
@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "@types/tar-stream": "^2.2.2",
-    "@werk/cli": "^1.7.1",
+    "@werk/cli": "^1.7.2",
     "tar-stream": "^3.1.6"
   }
 }

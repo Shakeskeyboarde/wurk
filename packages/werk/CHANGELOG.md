@@ -1,3 +1,9 @@
+## 1.7.2 (2023-08-09)
+
+### Bug Fixes
+
+- Add workspace getGitLastChangeCommit method. (bafd8a1)
+
 ## 1.7.1 (2023-07-14)
 
 ### Bug Fixes

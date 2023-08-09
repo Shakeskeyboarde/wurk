@@ -1,3 +1,9 @@
+## 1.4.6 (2023-08-09)
+
+### Bug Fixes
+
+- Make sure the changelog was updated in the last &#95;directory&#95; commit, not the current repo HEAD commit. (22899a3)
+
 ## 1.4.5 (2023-07-14)
 
 **Note**: Updated local dependencies.
