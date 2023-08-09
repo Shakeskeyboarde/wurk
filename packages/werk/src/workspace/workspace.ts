@@ -5,6 +5,7 @@ import { getGitHead } from '../git/get-git-head.js';
 import { getGitIsClean } from '../git/get-git-is-clean.js';
 import { getGitIsRepo } from '../git/get-git-is-repo.js';
 import { getGitIsShallow } from '../git/get-git-is-shallow.js';
+import { getGitLastChangeCommit } from '../git/get-git-last-change-commit.js';
 import { getNpmMetadata } from '../npm/get-npm-metadata.js';
 import { type Log } from '../utils/log.js';
 import { type PackageJson } from '../utils/package-json.js';
@@ -294,6 +295,14 @@ export class Workspace {
    */
   readonly getGitFromRevision = async (): Promise<string | undefined> => {
     return this.#gitFromRevision ?? (await getNpmMetadata(this.name, this.version).then((meta) => meta?.gitHead));
+  };
+
+  /**
+   * Get the hash of the most recent commit which modified the workspace
+   * directory.
+   */
+  readonly getGitLastChangeCommit = async (): Promise<string | undefined> => {
+    return await getGitLastChangeCommit(this.dir);
   };
 
   /**

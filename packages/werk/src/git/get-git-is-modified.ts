@@ -4,7 +4,6 @@ export const getGitIsModified = async (dir: string, fromRevision: string, headRe
   return await spawn('git', ['diff', '--name-only', `${fromRevision}..${headRevision}`, '--', dir], {
     cwd: dir,
     capture: true,
-    errorReturn: true,
   })
     .getOutput('utf-8')
     .then((output) => output.length > 0)
