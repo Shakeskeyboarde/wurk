@@ -129,12 +129,29 @@ export const publishFromFilesystem = async ({
 
 const getIsChangeLogOutdated = async (
   log: Log,
-  workspace: Pick<Workspace, 'name' | 'dir' | 'getGitIsShallow'>,
+  workspace: Pick<Workspace, 'name' | 'dir' | 'getGitLastChangeCommit'>,
   spawn: Spawn,
 ): Promise<boolean> => {
+  const lastCommit = await workspace.getGitLastChangeCommit();
+
+  log.debug(`Workspace "${workspace.name}" lastCommit=${lastCommit}`);
+
+  // Definitely outdated if there is no commit in the directory.
+  if (lastCommit == null) return true;
+
+  // git diff-tree -1 -r --name-only --no-commit-id 19fb750136fadef9929ea9b54c0807c0d9b06216 -- CHANGELOG.md
   const isChangeLogOutdated = await spawn(
     'git',
-    ['diff', '--name-only', 'HEAD~1', '--', resolve(workspace.dir, 'CHANGELOG.md')],
+    [
+      'diff-tree',
+      '-1',
+      '-r',
+      '--name-only',
+      '--no-commit-id',
+      lastCommit,
+      '--',
+      resolve(workspace.dir, 'CHANGELOG.md'),
+    ],
     { capture: true, errorEcho: true },
   )
     .getOutput('utf-8')
