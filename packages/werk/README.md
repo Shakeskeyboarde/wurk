@@ -128,8 +128,6 @@ werk [werk-options...] <command> [command-options...]
 
 Options which reduce the number of workspaces that are processed.
 
-- `-d, --with-dependencies`
-  - Always include dependencies when selecting workspaces.
 - `-w, --workspace <name>`
   - Include a workspace by name (repeatable).
 - `-k, --keyword <value>`
@@ -150,12 +148,14 @@ Options which reduce the number of workspaces that are processed.
   - Exclude modified workspaces.
 - `--not-unmodified`
   - Exclude unmodified workspaces.
+- `--no-dependencies`
+  - Do not include dependencies when selecting workspaces.
 
 By default, all workspaces are included. If the `--workspace` or `--keyword` options are used, then only workspaces matching any of the given workspace names or keywords will included.
 
 From the included workspaces, any matching a `--not-*` options will be excluded. You an consider "not" to be synonym for "exclude".
 
-And finally, if the `--with-dependencies` option is used, any dependencies of the remaining workspaces will be forcibly included, even if they were removed by a `--not-*` option.
+And finally, unless the `--no-dependencies` option is used, any dependencies of included workspaces will be also be included, even if they were removed by a `--not-*` option.
 
 **Note:** It is entirely up to each command to honor the "selected" workspaces. They are strongly encouraged to do so, but may choose not to if it doesn't make sense to the command.
 
@@ -193,7 +193,7 @@ You can configure Werk to automatically inject command-line arguments. This conf
 ```json
 {
   "werk": {
-    "globalArgs": ["--with-dependencies"],
+    "globalArgs": ["--no-dependencies"],
     "publish": {
       "globalArgs": ["--log-level=warn"],
       "args": ["--remove-package-fields=devDependencies"]
@@ -205,5 +205,5 @@ You can configure Werk to automatically inject command-line arguments. This conf
 Given the above configuration, if the `werk publish` command is run, it will be as if the following command is run.
 
 ```sh
-werk --with-dependencies --log-level=warn publish --remove-package-fields=devDependencies
+werk --no-dependencies --log-level=warn publish --remove-package-fields=devDependencies
 ```

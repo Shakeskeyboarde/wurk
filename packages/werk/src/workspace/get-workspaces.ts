@@ -20,11 +20,11 @@ export interface WorkspacesOptions extends GitOptions, SelectOptions {
   readonly commandName: string;
 }
 
-const getSorted = (workspaces: readonly WorkspacePackage[]): readonly WorkspacePackage[] => {
+const getSorted = (workspaces: readonly WorkspacePartialOptions[]): readonly WorkspacePartialOptions[] => {
   const unresolved = new Map(workspaces.map((workspace) => [workspace.name, workspace]));
   const localNames = new Set(unresolved.keys());
   const resolvedNames = new Set<string>();
-  const result: WorkspacePackage[] = [];
+  const result: WorkspacePartialOptions[] = [];
 
   while (unresolved.size) {
     let count = 0;
@@ -46,8 +46,8 @@ const getSorted = (workspaces: readonly WorkspacePackage[]): readonly WorkspaceP
   return result;
 };
 
-const getSelected = async (
-  workspaces: readonly WorkspacePackage[],
+const select = async (
+  workspaces: readonly WorkspacePartialOptions[],
   rootDir: string,
   {
     withDependencies,
@@ -64,14 +64,14 @@ const getSelected = async (
     gitFromRevision,
     gitHead,
   }: SelectOptions & GitOptions,
-): Promise<readonly (WorkspacePackage & { selected: boolean })[]> => {
+): Promise<void> => {
   const getIsPublished = async (name: string, version: string): Promise<boolean> => {
     return await getNpmMetadata(name, version).then((meta) => meta?.version === version);
   };
 
   const getIsModified = memoize(getWorkspaceIsModified, (...args) => JSON.stringify(args));
 
-  let result = await Promise.all(
+  await Promise.all(
     Array.from(workspaces).map(async (workspace) => {
       let isExcluded =
         excludeWorkspaces.some((nameOrPath) => isWorkspaceMatch(workspace, rootDir, nameOrPath)) ||
@@ -96,7 +96,7 @@ const getSelected = async (
       }
 
       if (isExcluded) {
-        return { ...workspace, selected: false };
+        return;
       }
 
       const isIncluded =
@@ -104,22 +104,21 @@ const getSelected = async (
         includeWorkspaces.some((nameOrPath) => isWorkspaceMatch(workspace, rootDir, nameOrPath)) ||
         Boolean(workspace.keywords?.some((keyword) => includeKeywords.includes(keyword)));
 
-      return { ...workspace, selected: isIncluded };
+      if (isIncluded) {
+        Object.assign(workspace, { selected: true });
+      }
     }),
   );
 
   if (withDependencies) {
-    result = result.map((workspace) => {
-      return workspace.selected
-        ? workspace
-        : {
-            ...workspace,
-            selected: getWorkspaceLocalDependencies(workspace, result).some((dependency) => dependency.selected),
-          };
+    workspaces.forEach((workspace) => {
+      if (workspace.selected) {
+        getWorkspaceLocalDependencies(workspace, workspaces).forEach((dependency) => {
+          Object.assign(dependency, { selected: true });
+        });
+      }
     });
   }
-
-  return result;
 };
 
 export const isWorkspaceMatch = (
@@ -152,10 +151,11 @@ export const getWorkspace = (
     werk = {},
     scripts = {},
     ...workspace
-  }: WorkspacePackage & { selected: boolean },
+  }: WorkspacePackage,
   commandName: string,
 ): WorkspacePartialOptions => {
   return {
+    selected: false,
     private: private_,
     type,
     types,
@@ -182,9 +182,10 @@ export const getWorkspaces = async ({
   commandName,
   ...options
 }: WorkspacesOptions): Promise<readonly WorkspacePartialOptions[]> => {
-  const sorted = getSorted(workspacePackages);
-  const selected = await getSelected(sorted, rootDir, options);
-  const result: WorkspacePartialOptions[] = selected.map((workspace) => getWorkspace(workspace, commandName));
+  const workspaces = workspacePackages.map((workspace) => getWorkspace(workspace, commandName));
+  const sorted = getSorted(workspaces);
 
-  return result;
+  await select(sorted, rootDir, options);
+
+  return sorted;
 };

@@ -41,7 +41,7 @@ export const mainAction = async ({
     `Command "${cmd}" does not support package manager "${config.packageManager}".`,
   );
 
-  const root = getWorkspace({ ...config.rootPackage, selected: false }, commandInfo.name);
+  const root = getWorkspace(config.rootPackage, commandInfo.name);
   const workspaces = await getWorkspaces({
     workspacePackages: config.workspacePackages,
     rootDir: config.rootPackage.dir,

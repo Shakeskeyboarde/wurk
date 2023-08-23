@@ -49,7 +49,6 @@ const asyncMain = async (): Promise<void> => {
         })
         .implies({ parallel: true }),
     )
-    .option('-d, --with-dependencies', 'Always include dependencies when selecting workspaces.')
     .option(
       '-w, --workspace <name>',
       'Include workspaces by name.',
@@ -88,6 +87,7 @@ const asyncMain = async (): Promise<void> => {
     .addOption(new Option('--not-unpublished', 'Exclude unpublished workspaces.').conflicts('notPublished'))
     .option('--not-modified', 'Exclude modified workspaces.')
     .addOption(new Option('--not-unmodified', 'Exclude unmodified workspaces.').conflicts('notModified'))
+    .option('--no-dependencies', 'Do not include dependencies when selecting workspaces.')
     .option('--no-wait', 'No waiting for dependency processing to complete.')
     .option('--no-prefix', 'No output prefixes.')
     .option('--git-head <sha>', 'Set a default head commit hash for non-Git environments.')
@@ -125,7 +125,7 @@ const asyncMain = async (): Promise<void> => {
       prefix: opts.prefix,
     },
     select: {
-      withDependencies: opts.withDependencies ?? false,
+      withDependencies: opts.dependencies,
       includeWorkspaces: opts.workspace ?? [],
       includeKeywords: opts.keyword ?? [],
       excludeWorkspaces: opts.notWorkspace ?? [],
