@@ -1,3 +1,9 @@
+# 2.0.0 (2023-08-23)
+
+### Breaking Changes
+
+- Changed --with-dependencies to --no-dependencies. (92b0a29)
+
 ## 1.7.2 (2023-08-09)
 
 ### Bug Fixes

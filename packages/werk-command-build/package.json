@@ -1,7 +1,7 @@
 {
   "name": "@werk/command-build",
   "description": "Quick near-zero-configuration builds using common tools and opinionated configurations.",
-  "version": "1.1.9",
+  "version": "1.1.10",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-build/README.md",
@@ -43,6 +43,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@werk/cli": "^1.7.2"
+    "@werk/cli": "^2.0.0"
   }
 }
