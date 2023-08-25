@@ -1,3 +1,9 @@
+## 1.1.13 (2023-08-24)
+
+### Chores
+
+- Use module=ESNext for auto esm builds. (6c9b934)
+
 ## 1.1.12 (2023-08-24)
 
 ### Bug Fixes
