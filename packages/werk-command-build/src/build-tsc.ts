@@ -58,7 +58,7 @@ export const buildTsc = async ({ log, workspace, root, start, spawn }: BuildTscO
           extends: extendsTsConfig,
           compilerOptions: {
             moduleDetection: 'auto',
-            moduleResolution: 'NodeNext',
+            moduleResolution: 'bundler',
             module,
             rootDir: 'src',
             outDir,
