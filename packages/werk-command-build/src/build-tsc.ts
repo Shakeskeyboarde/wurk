@@ -36,20 +36,28 @@ export const buildTsc = async ({ log, workspace, root, start, spawn }: BuildTscO
           .catch((): false => false),
       ]).then((tsConfigs) => tsConfigs.find(Boolean) || defaultTsConfig),
     ]);
-    const configs: [string, string][] = [];
+    const configs: ({ outDir: string; module: string } & Record<string, unknown>)[] = [];
     const isEsm = isEsmEntry(packageJson);
     const isCommonJs = isCommonJsEntry(packageJson);
 
     if (isEsm) {
-      configs.push([isCommonJs ? 'lib/esm' : 'lib', 'ES2022']);
+      configs.push({
+        outDir: isCommonJs ? 'lib/esm' : 'lib',
+        module: 'ES2022',
+        moduleResolution: 'bundler',
+      });
     }
 
     if (isCommonJs) {
-      configs.push([isEsm ? 'lib/cjs' : 'lib', 'CommonJS']);
+      configs.push({
+        outDir: isEsm ? 'lib/cjs' : 'lib',
+        module: 'CommonJS',
+        moduleResolution: 'node',
+      });
     }
 
-    for (const [outDir, module] of configs) {
-      const filename = resolve(workspace.dir, `tsconfig.build-${module.toLowerCase()}.json`);
+    for (const config of configs) {
+      const filename = resolve(workspace.dir, `tsconfig.build-${config.module.toLowerCase()}.json`);
 
       await workspace.saveAndRestoreFile(filename);
       await writeFile(
@@ -58,14 +66,12 @@ export const buildTsc = async ({ log, workspace, root, start, spawn }: BuildTscO
           extends: extendsTsConfig,
           compilerOptions: {
             moduleDetection: 'auto',
-            moduleResolution: 'bundler',
-            module,
-            rootDir: 'src',
-            outDir,
             noEmit: false,
             emitDeclarationOnly: false,
             declaration: true,
             sourceMap: true,
+            rootDir: 'src',
+            ...config,
           },
           include: ['src'],
           exclude: ['**/*.test.*', '**/*.spec.*', '**/*.stories.*'],
