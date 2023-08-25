@@ -43,7 +43,7 @@ export const buildTsc = async ({ log, workspace, root, start, spawn }: BuildTscO
     if (isEsm) {
       configs.push({
         outDir: isCommonJs ? 'lib/esm' : 'lib',
-        module: 'ES2022',
+        module: 'ESNext',
         moduleResolution: 'bundler',
       });
     }
