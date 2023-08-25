@@ -1,3 +1,9 @@
+## 1.1.12 (2023-08-24)
+
+### Bug Fixes
+
+- Automatic TSC CommonJS build failing after updating Typescript to 5.2.x. (70f1e01)
+
 ## 1.1.11 (2023-08-24)
 
 ### Chores
