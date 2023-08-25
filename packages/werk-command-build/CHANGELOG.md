@@ -1,3 +1,9 @@
+## 1.1.11 (2023-08-24)
+
+### Chores
+
+- Update deps. (751ae09)
+
 ## 1.1.10 (2023-08-23)
 
 **Note**: Updated local dependencies.
