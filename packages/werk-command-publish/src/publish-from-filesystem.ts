@@ -65,7 +65,11 @@ export const publishFromFilesystem = async ({
     getIsPackComplete(log, workspace, spawn),
   ]);
 
-  assert(isClean, `Workspace "${workspace.name}" has uncommitted changes.`);
+  if (!isClean) {
+    log.warn(`Not publishing workspace "${workspace.name}" because it has uncommitted changes.`);
+    return;
+  }
+
   assert(isBuilt, `Workspace "${workspace.name}" is not built. Some package entry points do not exist.`);
   assert(
     isPackComplete,
