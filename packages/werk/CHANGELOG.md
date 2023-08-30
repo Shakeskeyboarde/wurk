@@ -1,3 +1,9 @@
+## 2.0.1 (2023-08-30)
+
+### Chores
+
+- Create temp files under node&#95;modules. (9175022)
+
 # 2.0.0 (2023-08-23)
 
 ### Breaking Changes

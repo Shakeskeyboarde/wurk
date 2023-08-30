@@ -1,3 +1,9 @@
+## 1.3.10 (2023-08-30)
+
+### Chores
+
+- Create temp files under node&#95;modules. (9175022)
+
 ## 1.3.9 (2023-08-23)
 
 **Note**: Updated local dependencies.
