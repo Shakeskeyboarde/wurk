@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { createReadStream, createWriteStream } from 'node:fs';
 import { copyFile, mkdir, rm, stat } from 'node:fs/promises';
-import { basename, join } from 'node:path';
+import { basename, resolve } from 'node:path';
 import { createGunzip } from 'node:zlib';
 
 import { type Log, type Spawn, type Workspace } from '@werk/cli';
@@ -21,7 +21,7 @@ interface PublishFromArchiveOptions {
 export const publishFromArchive = async (options: PublishFromArchiveOptions): Promise<boolean> => {
   const { log, opts, workspace, spawn } = options;
   const { tag, otp, dryRun = false } = opts;
-  const filename = join(
+  const filename = resolve(
     workspace.dir,
     `${workspace.name.replace(/^@/u, '').replace(/\//gu, '-')}-${workspace.version}.tgz`,
   );
@@ -38,8 +38,8 @@ export const publishFromArchive = async (options: PublishFromArchiveOptions): Pr
 
   log.notice(`Publishing workspace "${workspace.name}@${workspace.version}" from archive.`);
 
-  const tmpDir = join(workspace.dir, `.${randomUUID()}.tmp`);
-  const tmpFilename = join(tmpDir, basename(filename));
+  const tmpDir = resolve(workspace.dir, `.${randomUUID()}.tmp`);
+  const tmpFilename = resolve(tmpDir, basename(filename));
 
   try {
     await mkdir(tmpDir, { recursive: true });
@@ -75,7 +75,7 @@ const extractPackageJson = async (tgz: string, tmpDir: string): Promise<void> =>
           return;
         }
 
-        stream.pipe(createWriteStream(join(tmpDir, 'package.json')).on('error', reject)).on('finish', () => {
+        stream.pipe(createWriteStream(resolve(tmpDir, 'package.json')).on('error', reject)).on('finish', () => {
           extractor.destroy();
           resolve_();
         });

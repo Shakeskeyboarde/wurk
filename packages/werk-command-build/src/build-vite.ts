@@ -1,4 +1,4 @@
-import { copyFile, stat } from 'node:fs/promises';
+import { stat } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -15,7 +15,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const defaultConfig = resolve(__dirname, '..', 'config', 'vite.config.ts');
 
 export const buildVite = async ({ log, workspace, start, spawn }: BuildViteOptions): Promise<void> => {
-  let config = await Promise.all(
+  const config = await Promise.all(
     ['vite.config.ts', 'vite.config.js']
       .map((filename) => resolve(workspace.dir, filename))
       .map((filename) =>
@@ -25,15 +25,9 @@ export const buildVite = async ({ log, workspace, start, spawn }: BuildViteOptio
       ),
   ).then((results) => results.find((filename): filename is string => Boolean(filename)));
 
-  if (!config) {
-    config = resolve(workspace.dir, 'vite.config.ts');
-    await workspace.saveAndRestoreFile(config);
-    await copyFile(defaultConfig, config);
-  }
-
   log.notice(`${start ? 'Starting' : 'Building'} workspace "${workspace.name}" using Vite.`);
 
-  await spawn('vite', [!start && 'build', start && '--host', `--config=${config}`], {
+  await spawn('vite', [!start && 'build', start && '--host', `--config=${config ?? defaultConfig}`], {
     echo: true,
     errorReturn: true,
     errorSetExitCode: true,

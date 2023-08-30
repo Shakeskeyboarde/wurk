@@ -1,7 +1,7 @@
 import assert from 'node:assert';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { inspect } from 'node:util';
 
@@ -22,7 +22,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 
 const readPackageInfo = async (dir: string): Promise<{ packageJson: PackageJson; dir: string } | undefined> => {
-  return await readFile(join(dir, 'package.json'), { encoding: 'utf8' })
+  return await readFile(resolve(dir, 'package.json'), { encoding: 'utf8' })
     .then((json) => ({ packageJson: JSON.parse(json) as PackageJson, dir }))
     .catch(() => {
       const next = dirname(dir);
@@ -41,7 +41,7 @@ export const loadPlugin = memoize(
       getNpmGlobalPackagesRoot(),
     ]);
 
-    const paths = [join(workspacesRoot, 'node_modules'), globalPackagesRoot, __dirname];
+    const paths = [resolve(workspacesRoot, 'node_modules'), globalPackagesRoot, __dirname];
     let resolved: { exports: Record<string, unknown>; main: string } | undefined;
 
     for (const packageName of packageNames) {

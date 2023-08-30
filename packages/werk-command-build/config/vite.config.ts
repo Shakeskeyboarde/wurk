@@ -1,17 +1,14 @@
 import assert from 'node:assert';
 import { readFile, stat } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
 
 import { type PackageJson } from '@werk/cli';
 import { type RollupOptions } from 'rollup';
 import { defineConfig, type LibraryOptions, type PluginOption } from 'vite';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
 export default defineConfig(async () => {
   const [packageJson, react, reload, dts, nodeExternals] = await Promise.all([
-    readFile(resolve(__dirname, 'package.json'), 'utf-8').then((json) => JSON.parse(json) as PackageJson),
+    readFile('package.json', 'utf-8').then((json) => JSON.parse(json) as PackageJson),
     import('@vitejs/plugin-react').then((exports) => exports.default.default ?? exports.default).catch(() => undefined),
     import('vite-plugin-full-reload').then((exports) => exports.default).catch(() => undefined),
     import('vite-plugin-dts').then((exports) => exports.default).catch(() => undefined),
@@ -27,7 +24,7 @@ export default defineConfig(async () => {
   if (packageJson?.main) {
     const entry = await Promise.all(
       ['tsx', 'ts', 'jsx', 'js'].map(async (ext) => {
-        const filename = resolve(__dirname, 'src', `index.${ext}`);
+        const filename = resolve('src', `index.${ext}`);
         const stats = await stat(filename).catch(() => undefined);
         return stats?.isFile() ? filename : undefined;
       }),
@@ -38,7 +35,7 @@ export default defineConfig(async () => {
     lib = {
       entry,
       formats: ['es', 'cjs'],
-      fileName: (format) => resolve(__dirname, 'lib', format === 'es' || format === 'esm' ? 'esm' : 'cjs', 'index.js'),
+      fileName: (format) => resolve('lib', format === 'es' || format === 'esm' ? 'esm' : 'cjs', 'index.js'),
     };
 
     rollupOptions = {
@@ -51,6 +48,7 @@ export default defineConfig(async () => {
   return {
     plugins: [reload?.('**'), react?.(), ...plugins],
     server: { hmr: !reload },
+    build: { outDir: 'dist' },
     lib,
     rollupOptions,
   };

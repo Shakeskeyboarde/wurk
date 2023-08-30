@@ -1,6 +1,6 @@
 import assert from 'node:assert';
-import { stat, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { mkdir, stat, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 
 import { createCommand } from '@werk/cli';
 
@@ -32,7 +32,8 @@ export default createCommand({
     if (await isVitestWorkspaceConfigFound(root.dir)) {
       log.warn('Preexisting Vitest workspace configuration found. Filter options will not apply.');
     } else {
-      const filename = join(root.dir, 'vitest.workspace.json');
+      const tempDir = resolve(root.dir, 'node_modules', '.werk-command-vitest');
+      const filename = resolve(tempDir, 'vitest.workspace.json');
       const workspaceNames = await Promise.all(
         Array.from(workspaces.values())
           .filter(({ selected }) => selected)
@@ -41,7 +42,7 @@ export default createCommand({
 
       assert(workspaceNames.length, 'No workspaces found with Vitest configuration.');
 
-      await root.saveAndRestoreFile(filename);
+      await mkdir(tempDir, { recursive: true });
       await writeFile(filename, JSON.stringify(workspaceNames));
     }
 
@@ -68,7 +69,7 @@ const isVitestWorkspaceConfigFound = async (dir: string): Promise<boolean> => {
       'vitest.projects.ts',
       'vitest.projects.json',
     ].map((filename) =>
-      stat(join(dir, filename))
+      stat(resolve(dir, filename))
         .then((stats) => stats.isFile())
         .catch(() => false),
     ),
@@ -78,7 +79,7 @@ const isVitestWorkspaceConfigFound = async (dir: string): Promise<boolean> => {
 const isVitestConfigFound = async (dir: string): Promise<boolean> => {
   return await Promise.all(
     ['vite.config.ts', 'vite.config.js', 'vitest.config.ts', 'vitest.config.js'].map((filename) =>
-      stat(join(dir, filename))
+      stat(resolve(dir, filename))
         .then((stats) => stats.isFile())
         .catch(() => false),
     ),

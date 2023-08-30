@@ -1,5 +1,5 @@
 import { readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { resolve } from 'node:path';
 
 import { eq, lte, rcompare, SemVer } from 'semver';
 
@@ -75,7 +75,7 @@ export const writeChangelog = async (
 ): Promise<boolean> => {
   version = new SemVer(version);
 
-  const filename = join(dir, 'CHANGELOG.md');
+  const filename = resolve(dir, 'CHANGELOG.md');
   const content = await readFile(filename, 'utf-8')
     .then((text) => text.trim())
     .catch(() => '');

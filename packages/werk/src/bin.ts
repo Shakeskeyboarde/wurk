@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 import assert from 'node:assert';
-import { join } from 'node:path';
+import { resolve } from 'node:path';
 
 import { getNpmWorkspacesRoot } from './npm/get-npm-workspaces-root.js';
 
 await getNpmWorkspacesRoot()
   .then(async (root) => {
-    const { main } = await import(join(root, 'node_modules', '@werk/cli', 'lib', 'main.js'));
+    const { main } = await import(resolve(root, 'node_modules', '@werk/cli', 'lib', 'main.js'));
     assert(typeof main === 'function');
     return main;
   })

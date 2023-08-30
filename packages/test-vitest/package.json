@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "name": "test-vitest",
+  "description": "Testing the vitest command",
+  "type": "module",
+  "dependencies": {
+    "@werk/cli": "^2.0.0"
+  }
+}

@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { resolve } from 'node:path';
 
 import { type Spawn } from '@werk/cli';
 
@@ -64,7 +64,7 @@ export const getChanges = async (
 
   if (changes.length) {
     // Remove duplicate change log entries.
-    const changeLogText = await readFile(join(dir, 'CHANGELOG.md'), 'utf-8').catch(() => '');
+    const changeLogText = await readFile(resolve(dir, 'CHANGELOG.md'), 'utf-8').catch(() => '');
     changes = changes.filter((change) => !changeLogText.includes(` ${change.message}\n`));
   }
 

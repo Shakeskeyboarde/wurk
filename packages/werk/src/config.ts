@@ -1,5 +1,5 @@
 import { readFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { getNpmWorkspaces } from './npm/get-npm-workspaces.js';
@@ -33,12 +33,12 @@ export type Config = {
 export const loadConfig = memoize(async (): Promise<Config> => {
   const __dirname = dirname(fileURLToPath(import.meta.url));
   const [packageJson, rootDir, workspacePackages] = await Promise.all([
-    await readFile(join(__dirname, '../package.json'), 'utf-8').then((json): PackageJson => JSON.parse(json)),
+    await readFile(resolve(__dirname, '../package.json'), 'utf-8').then((json): PackageJson => JSON.parse(json)),
     await getNpmWorkspacesRoot(),
     await getNpmWorkspaces(),
   ]);
   const { version = '', description = '' } = packageJson;
-  const filename = join(rootDir, 'package.json');
+  const filename = resolve(rootDir, 'package.json');
   const rootPackageJson: PackageJson | undefined = await readJsonFile<PackageJson>(filename).catch(() => undefined);
   const werk = isObject(rootPackageJson?.werk) ? { ...rootPackageJson?.werk } : {};
   const globalArgs = Array.isArray(werk.globalArgs) ? werk.globalArgs.map(String) : [];

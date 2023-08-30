@@ -1,5 +1,5 @@
 import { stat } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { resolve } from 'node:path';
 
 import { getGitHead } from '../git/get-git-head.js';
 import { getGitIsClean } from '../git/get-git-is-clean.js';
@@ -224,14 +224,14 @@ export class Workspace {
    * Read the `package.json` file from the workspace directory.
    */
   readonly readPackageJson = async (): Promise<PackageJson> => {
-    return await readJsonFile(join(this.dir, 'package.json'));
+    return await readJsonFile(resolve(this.dir, 'package.json'));
   };
 
   /**
    * Write the `package.json` file to the workspace directory.
    */
   readonly writePackageJson = async (json: PackageJson): Promise<void> => {
-    await writeJsonFile(join(this.dir, 'package.json'), json);
+    await writeJsonFile(resolve(this.dir, 'package.json'), json);
   };
 
   /**
@@ -246,7 +246,7 @@ export class Workspace {
   readonly patchPackageJson = async <T extends (Record<string, unknown> | null | undefined | false | 0 | '')[]>(
     ...jsonPatches: T
   ): Promise<void> => {
-    await patchJsonFile(join(this.dir, 'package.json'), ...jsonPatches.filter(Boolean));
+    await patchJsonFile(resolve(this.dir, 'package.json'), ...jsonPatches.filter(Boolean));
   };
 
   /**

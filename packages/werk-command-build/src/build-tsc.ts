@@ -1,5 +1,5 @@
 import { mkdir, readdir, stat, writeFile } from 'node:fs/promises';
-import { basename, dirname, resolve } from 'node:path';
+import { basename, dirname, posix, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { Log, type PackageJson, type Spawn, type Workspace } from '@werk/cli';
@@ -22,6 +22,13 @@ export const buildTsc = async ({ log, workspace, root, start, spawn }: BuildTscO
   });
 
   if (!tsBuildConfigs.length) {
+    const tempSubDir = relative(root.dir, workspace.dir);
+    const posixWorkspaceRoot = resolve(workspace.dir).replace(/\\/gu, '/');
+
+    if (tempSubDir.startsWith('..'))
+      throw new Error(`Workspace directory "${workspace.dir}" is outside of the workspaces root.`);
+
+    const tempDir = resolve(root.dir, 'node_modules/.werk-command-build', tempSubDir);
     const tsConfig = resolve(workspace.dir, 'tsconfig.json');
     const rootTsConfig = resolve(root.dir, 'tsconfig.json');
     const defaultTsConfig = resolve(__dirname, '..', 'config', 'tsconfig.json');
@@ -42,7 +49,7 @@ export const buildTsc = async ({ log, workspace, root, start, spawn }: BuildTscO
 
     if (isEsm) {
       configs.push({
-        outDir: isCommonJs ? 'lib/esm' : 'lib',
+        outDir: resolve(workspace.dir, isCommonJs ? 'lib/esm' : 'lib'),
         module: 'ESNext',
         moduleResolution: 'bundler',
       });
@@ -50,49 +57,51 @@ export const buildTsc = async ({ log, workspace, root, start, spawn }: BuildTscO
 
     if (isCommonJs) {
       configs.push({
-        outDir: isEsm ? 'lib/cjs' : 'lib',
+        outDir: resolve(workspace.dir, isEsm ? 'lib/cjs' : 'lib'),
         module: 'CommonJS',
         moduleResolution: 'node',
       });
     }
 
     for (const config of configs) {
-      const filename = resolve(workspace.dir, `tsconfig.build-${config.module.toLowerCase()}.json`);
+      const filename = resolve(tempDir, `tsconfig.build-${config.module.toLowerCase()}.json`);
 
-      await workspace.saveAndRestoreFile(filename);
+      await mkdir(tempDir, { recursive: true });
       await writeFile(
         filename,
-        JSON.stringify({
-          extends: extendsTsConfig,
-          compilerOptions: {
-            moduleDetection: 'auto',
-            noEmit: false,
-            emitDeclarationOnly: false,
-            declaration: true,
-            sourceMap: true,
-            rootDir: 'src',
-            ...config,
+        JSON.stringify(
+          {
+            extends: extendsTsConfig,
+            compilerOptions: {
+              moduleDetection: 'auto',
+              noEmit: false,
+              emitDeclarationOnly: false,
+              declaration: true,
+              sourceMap: true,
+              rootDir: resolve(workspace.dir, 'src'),
+              ...config,
+            },
+            include: [posix.resolve(posixWorkspaceRoot, 'src')],
+            exclude: ['**/*.test.*', '**/*.spec.*', '**/*.stories.*'].map((pattern) => {
+              return posix.resolve(posixWorkspaceRoot, pattern);
+            }),
           },
-          include: ['src'],
-          exclude: ['**/*.test.*', '**/*.spec.*', '**/*.stories.*'],
-        }),
+          null,
+          2,
+        ),
       );
 
       tsBuildConfigs.push(filename);
     }
   }
 
+  log.notice(`${start ? 'Starting' : 'Building'} workspace "${workspace.name}" using TypeScript.`);
+
   await Promise.all(
     tsBuildConfigs.map(async (filename) => {
       const name = basename(filename).replace(/(^tsconfig\.|\.json$)/gu, '');
       const subLog = new Log({ ...log, prefix: `${log.prefix}(${name})` });
       const { noEmit, emitDeclarationOnly, outDir, isEsm } = await readTsConfig(filename, workspace, spawn);
-
-      log.notice(
-        `${start ? 'Starting' : 'Building'} workspace "${workspace.name}" using TypeScript configuration "${basename(
-          filename,
-        )}".`,
-      );
 
       if (!noEmit && !emitDeclarationOnly && isEsm != null && resolve(outDir, workspace.dir) !== '') {
         await mkdir(outDir, { recursive: true });
