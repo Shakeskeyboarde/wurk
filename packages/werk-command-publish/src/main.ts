@@ -29,17 +29,12 @@ export default createCommand({
     forceWait();
 
     if (!opts.fromArchive && opts.build && root.scripts.build != null) {
-      log.notice('Building workspaces.');
-
-      const succeeded = await spawn('npm', [`--loglevel=${log.level.name}`, 'run', '--if-present', 'build'], {
+      await spawn('npm', [`--loglevel=${log.level.name}`, 'run', '--if-present', 'build'], {
         echo: 'inherit',
+        errorReturn: true,
         errorSetExitCode: true,
-      }).succeeded();
-
-      if (!succeeded) return;
+      });
     }
-
-    log.notice('Publishing workspaces.');
   },
 
   each: async (context) => {
