@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import { cpus } from 'node:os';
 import { inspect } from 'node:util';
 
-import { Option } from '@commander-js/extra-typings';
+import { createOption, Option } from '@commander-js/extra-typings';
 
 import { Commander } from './commander/commander.js';
 import { loadConfig } from './config.js';
@@ -24,18 +24,26 @@ export const main = (): void => {
 const asyncMain = async (): Promise<void> => {
   const config = await loadConfig();
 
+  const parseLogLevel = (value: string): LogLevel => {
+    assert(value in LOG_LEVEL, new Error(`Log level must be one of: ${Object.keys(LOG_LEVEL).join(', ')}.`));
+    return value as LogLevel;
+  };
+
   const commander = new Commander('werk')
     .description(config.description)
     .addHelpText('after', 'To get help for a specific command, run `werk <command> --help`.')
     .argument('<command>', 'Command to run.', (value) => value.toLocaleLowerCase())
     .argument('[args...]', 'Arguments to pass to the command.')
     .option(
-      '-l, --log-level <level>',
+      '-l, --loglevel <level>',
       'Set the log level (silent, error, warn, notice, info, verbose, silly).',
-      (value): LogLevel => {
-        assert(value in LOG_LEVEL, new Error(`Log level must be one of: ${Object.keys(LOG_LEVEL).join(', ')}.`));
-        return value as LogLevel;
-      },
+      parseLogLevel,
+    )
+    .addOption(
+      createOption('--log-level <level>', 'Alias for --loglevel.')
+        .argParser(parseLogLevel)
+        .hideHelp()
+        .conflicts('loglevel'),
     )
     .option('-p, --parallel', 'Process workspaces in parallel.')
     .addOption(
@@ -116,8 +124,9 @@ const asyncMain = async (): Promise<void> => {
   [cmd, cmdArgs] = commander.processedArgs;
 
   const opts = commander.opts();
+  const logLevel = opts.loglevel ?? opts.logLevel;
 
-  if (opts.logLevel) Log.setLevel(opts.logLevel);
+  if (logLevel) Log.setLevel(logLevel);
 
   const globalOpts: GlobalOptions = {
     log: {

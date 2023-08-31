@@ -172,7 +172,7 @@ By default, workspaces are processed serially. This is generally the slowest opt
 
 ### Logging Options
 
-- `-l, --log-level <level>`
+- `-l, --loglevel <level>`
   - Set the log level (`silent`, `error`, `warn`, `info`, `notice`, `verbose`, or `silly`). The default is `info`.
 - `--no-prefix`
   - Do not add prefixes to command output.
@@ -195,7 +195,7 @@ You can configure Werk to automatically inject command-line arguments. This conf
   "werk": {
     "globalArgs": ["--no-dependencies"],
     "publish": {
-      "globalArgs": ["--log-level=warn"],
+      "globalArgs": ["--loglevel=warn"],
       "args": ["--remove-package-fields=devDependencies"]
     }
   }
@@ -205,5 +205,5 @@ You can configure Werk to automatically inject command-line arguments. This conf
 Given the above configuration, if the `werk publish` command is run, it will be as if the following command is run.
 
 ```sh
-werk --no-dependencies --log-level=warn publish --remove-package-fields=devDependencies
+werk --no-dependencies --loglevel=warn publish --remove-package-fields=devDependencies
 ```
