@@ -87,7 +87,7 @@ export const writeChangelog = async (
   const index = entries.findIndex((entry) => lte(entry.version, version));
 
   if (index >= 0 && eq(entries[index]?.version as string, version)) {
-    // The version already exists in the change log.
+    // The version already exists in the changelog.
     return false;
   }
 

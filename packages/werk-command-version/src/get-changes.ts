@@ -63,7 +63,7 @@ export const getChanges = async (
     });
 
   if (changes.length) {
-    // Remove duplicate change log entries.
+    // Remove duplicate changelog entries.
     const changeLogText = await readFile(resolve(dir, 'CHANGELOG.md'), 'utf-8').catch(() => '');
     changes = changes.filter((change) => !changeLogText.includes(` ${change.message}\n`));
   }

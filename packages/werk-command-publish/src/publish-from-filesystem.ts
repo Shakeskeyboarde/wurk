@@ -52,7 +52,7 @@ export const publishFromFilesystem = async ({
   }
 
   if (isChangeLogOutdated) {
-    log.warn(`Not publishing workspace "${workspace.name}" because the change log was not updated in the last commit.`);
+    log.warn(`Not publishing workspace "${workspace.name}" because the changelog was not updated in the last commit.`);
     return;
   }
 
