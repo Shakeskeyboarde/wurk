@@ -4,6 +4,6 @@
   "description": "Testing the build command rollup mode",
   "type": "module",
   "dependencies": {
-    "@werk/cli": "^3.0.0"
+    "@werk/cli": "^3.0.1"
   }
 }

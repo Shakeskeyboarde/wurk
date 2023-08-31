@@ -1,3 +1,10 @@
+## 3.0.1 (2023-08-31)
+
+### Chores
+
+- Change --log-level option to --loglevel to match NPM. (174f2f6)
+- Add additional messaging when Werk commands cannot be loaded. (bbb1ac3)
+
 # 3.0.0 (2023-08-31)
 
 ### Breaking Changes

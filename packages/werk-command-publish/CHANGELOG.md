@@ -1,3 +1,9 @@
+## 2.0.2 (2023-08-31)
+
+### Chores
+
+- Don't pass loglevel to NPM. (80e2ce4)
+
 ## 2.0.1 (2023-08-31)
 
 ### Chores
