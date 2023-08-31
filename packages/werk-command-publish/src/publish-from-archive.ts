@@ -49,14 +49,7 @@ export const publishFromArchive = async (options: PublishFromArchiveOptions): Pr
 
     await spawn(
       'npm',
-      [
-        `--loglevel=${log.level.name}`,
-        'publish',
-        Boolean(tag) && `--tag=${tag}`,
-        Boolean(otp) && `--otp=${otp}`,
-        dryRun && '--dry-run',
-        tmpFilename,
-      ],
+      ['publish', Boolean(tag) && `--tag=${tag}`, Boolean(otp) && `--otp=${otp}`, dryRun && '--dry-run', tmpFilename],
       { cwd: tmpDir, echo: true },
     );
   } finally {

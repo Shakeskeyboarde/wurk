@@ -25,11 +25,11 @@ export default createCommand({
       .option('--dry-run', 'Perform a dry run for validation.');
   },
 
-  before: async ({ log, opts, root, spawn, forceWait }) => {
+  before: async ({ opts, root, spawn, forceWait }) => {
     forceWait();
 
     if (!opts.fromArchive && opts.build && root.scripts.build != null) {
-      await spawn('npm', [`--loglevel=${log.level.name}`, 'run', '--if-present', 'build'], {
+      await spawn('npm', ['run', '--if-present', 'build'], {
         echo: 'inherit',
         errorReturn: true,
         errorSetExitCode: true,

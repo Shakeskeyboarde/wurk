@@ -130,7 +130,6 @@ export const publishFromFilesystem = async ({
   await spawn(
     'npm',
     [
-      `--loglevel=${log.level.name}`,
       toArchive ? 'pack' : 'publish',
       Boolean(tag) && `--tag=${tag}`,
       Boolean(otp) && `--otp=${otp}`,
