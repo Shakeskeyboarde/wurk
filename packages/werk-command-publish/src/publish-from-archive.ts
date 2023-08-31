@@ -33,6 +33,7 @@ export const publishFromArchive = async (options: PublishFromArchiveOptions): Pr
     log.verbose(
       `Not publishing workspace "${workspace.name}@${workspace.version}" because the archive file "${filename}" is missing.`,
     );
+
     return false;
   }
 

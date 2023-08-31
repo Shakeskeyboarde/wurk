@@ -23,7 +23,7 @@ export const publishFromFilesystem = async ({
   opts,
   workspace,
   spawn,
-}: publishFromFilesystemOptions): Promise<void> => {
+}: publishFromFilesystemOptions): Promise<boolean> => {
   const { toArchive = false, tag, otp, removePackageFields = [], dryRun = false } = opts;
   const isShallow = await workspace.getGitIsShallow();
 
@@ -42,14 +42,16 @@ export const publishFromFilesystem = async ({
     log.verbose(
       `Not publishing workspace "${workspace.name}@${workspace.version}" because the version is already published.`,
     );
-    return;
+
+    return false;
   }
 
   if (isModified) {
     log.warn(
       `Not publishing workspace "${workspace.name}" because it has modified and unpublished local dependencies.`,
     );
-    return;
+
+    return false;
   }
 
   if (isChangeLogOutdated) {
@@ -67,7 +69,8 @@ export const publishFromFilesystem = async ({
 
   if (!isClean) {
     log.warn(`Not publishing workspace "${workspace.name}" because it has uncommitted changes.`);
-    return;
+
+    return false;
   }
 
   assert(isBuilt, `Workspace "${workspace.name}" is not built. Some package entry points do not exist.`);
@@ -133,6 +136,8 @@ export const publishFromFilesystem = async ({
   );
 
   published.add(workspace.name);
+
+  return true;
 };
 
 const getIsChangeLogOutdated = async (

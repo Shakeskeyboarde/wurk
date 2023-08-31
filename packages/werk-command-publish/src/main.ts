@@ -3,6 +3,8 @@ import { createCommand } from '@werk/cli';
 import { publishFromArchive } from './publish-from-archive.js';
 import { publishFromFilesystem } from './publish-from-filesystem.js';
 
+let isPublished = false;
+
 export default createCommand({
   init: ({ commander, command }) => {
     return commander
@@ -54,9 +56,15 @@ export default createCommand({
     }
 
     if (opts.fromArchive) {
-      await publishFromArchive(context);
+      isPublished = (await publishFromArchive(context)) || isPublished;
     } else {
-      await publishFromFilesystem(context);
+      isPublished = (await publishFromFilesystem(context)) || isPublished;
+    }
+  },
+
+  after: async ({ log }) => {
+    if (!isPublished) {
+      log.info('No workspaces are in a publishable state.');
     }
   },
 });
