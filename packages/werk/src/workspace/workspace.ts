@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
@@ -250,7 +251,7 @@ export class Workspace {
   };
 
   /**
-   * Get the local dependencies of the workspace, including transitive.
+   * Get the local dependencies of the workspace (recursive).
    */
   readonly getLocalDependencies = (options?: WorkspaceLocalDependenciesOptions): Workspace[] => {
     return getWorkspaceLocalDependencies(this, this.#context.workspaces.values(), options);
@@ -331,29 +332,38 @@ export class Workspace {
    * published and there is no difference between the published and local
    * code.
    *
-   * This also checks the workspace local dependencies (recursive) if the
-   * `includeDependencyScopes` option is set.
-   *
    * Uncommitted changes (ie. a dirty working tree) are not considered.
    */
-  readonly getIsModified = async (options: ChangeDetectionOptions = {}): Promise<boolean> => {
-    const { includeDependencyScopes = [], excludeDependencyNames = [] } = options;
+  readonly getIsModified = async (): Promise<boolean> => {
+    const isModified = await getWorkspaceIsModified(
+      this.dir,
+      this.name,
+      this.version,
+      this.#gitFromRevision,
+      this.#gitHead,
+    );
+
+    this.#context.log.debug(`Workspace "${this.name}" modified=${isModified}`);
+
+    return isModified;
+  };
+
+  /**
+   * Returns the workspace local dependencies (recursive) that are
+   * modified. See the `getIsModified()` method for more details.
+   */
+  readonly getModifiedLocalDependencies = async (options: ChangeDetectionOptions = {}): Promise<Workspace[]> => {
+    const { includeDependencyScopes, excludeDependencyNames = [] } = options;
+
     const localDependencies = this.getLocalDependencies({ scopes: includeDependencyScopes }).filter(
       ({ name }) => !excludeDependencyNames.includes(name),
     );
 
-    const [isModified, ...isDependencyModifiedArray] = await Promise.all([
-      !excludeDependencyNames.includes(this.name) &&
-        getWorkspaceIsModified(this.dir, this.name, this.version, this.#gitFromRevision, this.#gitHead),
-      ...localDependencies.map((dependency) => dependency.getIsModified(options)),
-    ]);
+    const modifiedDependencies = await Promise.all(
+      localDependencies.map(async (dependency) => [dependency, await dependency.getIsModified()] as const),
+    ).then((results) => results.flatMap(([dependency, isModified]) => (isModified ? [dependency] : [])));
 
-    const isDependencyModified = isDependencyModifiedArray.some(Boolean);
-
-    this.#context.log.debug(`Workspace "${this.name}" modified=${isModified}`);
-    this.#context.log.debug(`Workspace "${this.name}" dependencyModified=${isDependencyModified}`);
-
-    return isModified || isDependencyModified;
+    return modifiedDependencies;
   };
 
   /**
