@@ -29,11 +29,11 @@ export const publishFromFilesystem = async ({
 
   assert(!isShallow, `Publishing is not allowed from a shallow Git repository.`);
 
-  const [isPublished, isModified, isChangeLogOutdated] = await Promise.all([
+  const [isPublished, modifiedDependencies, isChangeLogOutdated] = await Promise.all([
     workspace.getNpmIsPublished(),
-    workspace.getIsModified({
+    workspace.getModifiedLocalDependencies({
       includeDependencyScopes: ['dependencies', 'peerDependencies', 'optionalDependencies'],
-      excludeDependencyNames: [workspace.name, ...published],
+      excludeDependencyNames: [...published],
     }),
     getIsChangeLogOutdated(log, workspace, spawn),
   ]);
@@ -46,9 +46,13 @@ export const publishFromFilesystem = async ({
     return false;
   }
 
-  if (isModified) {
+  if (modifiedDependencies.length) {
     log.warn(
-      `Not publishing workspace "${workspace.name}" because it has modified and unpublished local dependencies.`,
+      `Not publishing workspace "${
+        workspace.name
+      }" because it has modified and unpublished local dependencies.${modifiedDependencies.map(
+        ({ name }) => `\n  - ${name}`,
+      )}`,
     );
 
     return false;
