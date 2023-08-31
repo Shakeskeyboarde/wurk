@@ -4,6 +4,6 @@
   "description": "Testing the build command vite mode",
   "type": "module",
   "dependencies": {
-    "@werk/cli": "^2.0.2"
+    "@werk/cli": "^3.0.0"
   }
 }

@@ -1,3 +1,9 @@
+# 3.0.0 (2023-08-31)
+
+### Breaking Changes
+
+- Workspace getIsModified method no longer checks dependencies. (362a6c3)
+
 ## 2.0.2 (2023-08-31)
 
 ### Documentation

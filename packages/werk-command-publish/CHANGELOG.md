@@ -1,3 +1,9 @@
+## 2.0.1 (2023-08-31)
+
+### Chores
+
+- List unmodified and unpublished local dependencies. (759d362)
+
 # 2.0.0 (2023-08-31)
 
 ### Breaking Changes

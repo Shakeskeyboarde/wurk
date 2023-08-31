@@ -1,3 +1,9 @@
+# 3.0.0 (2023-08-31)
+
+### Breaking Changes
+
+- Remove &#96;--include-dependents&#96; option. Always bump dependent versions. (fd03770)
+
 # 2.0.0 (2023-08-31)
 
 ### Breaking Changes
