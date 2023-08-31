@@ -168,9 +168,11 @@ export const spawn = (
     error = err;
   });
 
-  // Switch the streams to flowing mode on the next tick, if they aren't
-  // already, to prevent memory leaks. Not entirely sure this is
-  // necessary, but I think it's better to be safe than sorry.
+  /*
+   * Switch the streams to flowing mode on the next tick, if they aren't
+   * already, to prevent memory leaks. Not entirely sure this is
+   * necessary, but I think it's better to be safe than sorry.
+   */
   Promise.resolve()
     .then(() => {
       childProcess.stdout?.resume();

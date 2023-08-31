@@ -132,13 +132,18 @@ export class Log {
   };
 
   readonly #writeLine = (stream: Writable, line: string, formatLine: (message: string) => string = identity): void => {
-    // Remove ANSI escape codes because lines with different (unterminated)
-    // formatting might be interleaved due to multi-threading.
+    /*
+     * Remove ANSI escape codes because lines with different
+     * (unterminated) formatting might be interleaved due to
+     * multi-threading.
+     */
     line = line.replace(ansiRegex, '');
 
     if (this.prefix.length) {
-      // Prefixing lines implies that line terminators must be added if
-      // if missing, and that blank lines must be omitted.
+      /*
+       * Prefixing lines implies that line terminators must be added if
+       * if missing, and that blank lines must be omitted.
+       */
       line = line.trimEnd() + '\n';
       if (line.length <= 1) return;
       line = `${this.formatPrefix(this.prefix)}: ${formatLine(line)}`;

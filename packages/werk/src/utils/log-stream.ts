@@ -25,8 +25,10 @@ export class LogStream extends Transform {
 
     this.#send(true);
 
-    // We don't want to call super.end() because log streams may be
-    // re-piped, and therefore should never really end.
+    /*
+     * We don't want to call super.end() because log streams may be
+     * re-piped, and therefore should never really end.
+     */
 
     return this;
   }
@@ -39,8 +41,10 @@ export class LogStream extends Transform {
     // Flush completed lines if the buffer is getting too big.
     if (this.#buffer.length > 40_000) this.#send(false);
 
-    // Delay flushing the buffer as long as we're receiving data, so that
-    // related lines stay together.
+    /*
+     * Delay flushing the buffer as long as we're receiving data, so that
+     * related lines stay together.
+     */
     clearTimeout(this.#timeout);
     this.#timeout = setTimeout(() => this.#send(true), 10);
 

@@ -80,9 +80,11 @@ export const publishFromFilesystem = async ({
 
   const dependenciesPatch: MutablePackageJson = {};
 
-  // Temporarily update local dependency versions to real versions. File
-  // (file:) and wildcard versions should not be published to the
-  // registry.
+  /*
+   * Temporarily update local dependency versions to real versions. File
+   * (file:) and wildcard versions should not be published to the
+   * registry.
+   */
   for (const scope of ['dependencies', 'peerDependencies', 'optionalDependencies'] as const) {
     const dependencies = workspace.getLocalDependencies({ scopes: [scope] });
 
@@ -107,10 +109,12 @@ export const publishFromFilesystem = async ({
     );
   });
 
-  // Temporarily set "gitHead" in the package.json file. NPM publish
-  // should do this automatically. But, it doesn't do it for packing.
-  // It's also not documented well even though it is definitely added
-  // intentionally in v7.
+  /*
+   * Temporarily set "gitHead" in the package.json file. NPM publish
+   * should do this automatically. But, it doesn't do it for packing.
+   * It's also not documented well even though it is definitely added
+   * intentionally in v7.
+   */
   const gitHead = await workspace.getGitHead();
   const gitHeadPatch = { gitHead };
 

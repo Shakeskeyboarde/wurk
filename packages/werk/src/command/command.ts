@@ -35,7 +35,7 @@ export interface CommandHooks<A extends CommanderArgs, O extends CommanderOption
   /**
    * The package managers supported by the command, or false if the
    * command does not depend on any package manager. Defaults to `['npm']`.
-   **/
+   */
   readonly packageManager?: readonly [PackageManager, ...PackageManager[]] | false;
   /**
    * Called when the command is loaded. Intended for configuration of
