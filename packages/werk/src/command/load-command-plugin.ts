@@ -24,7 +24,10 @@ export const loadCommandPlugin = async (
   const { exports, ...rest } = plugin;
   const command = exports?.default;
 
-  if (!isCommand(command)) throw new Error(`Command "${name}" does not have a valid command default export.`);
+  if (!isCommand(command))
+    throw new Error(
+      `Command "${name}" does not have a valid command default export. It may not be compatible with this Werk version.`,
+    );
 
   return { name, command, ...rest };
 };
