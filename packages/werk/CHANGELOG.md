@@ -1,3 +1,9 @@
+## 2.0.2 (2023-08-31)
+
+### Documentation
+
+- Prefer block comments for multiline. (91ae520)
+
 ## 2.0.1 (2023-08-30)
 
 ### Chores

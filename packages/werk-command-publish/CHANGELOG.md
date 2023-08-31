@@ -1,3 +1,19 @@
+# 2.0.0 (2023-08-31)
+
+### Breaking Changes
+
+- Remove the &#96;--no-changelog-check&#96; option and make outdated changelogs a non-fatal warning. (0801dd8)
+
+### Documentation
+
+- Prefer block comments for multiline. (91ae520)
+
+### Chores
+
+- Remove "building" and "publishing" logging from "before" hook. (1fc1e13)
+- Print message when nothing is publishable. (1e33576)
+- Change spelling of change log to changelog. (d6ac73d)
+
 ## 1.5.0 (2023-08-30)
 
 ### Features

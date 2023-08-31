@@ -1,3 +1,13 @@
+# 2.0.0 (2023-08-31)
+
+### Breaking Changes
+
+- Do not update dependent versions unless the &#96;--include-dependents&#96; option is set. (6e98ba2)
+
+### Chores
+
+- Change spelling of change log to changelog. (d6ac73d)
+
 ## 1.3.10 (2023-08-30)
 
 ### Chores
