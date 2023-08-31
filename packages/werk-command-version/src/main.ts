@@ -9,8 +9,8 @@ import { type Change, getChanges } from './get-changes.js';
 import { getIncrementedVersion } from './get-incremented-version.js';
 import { writeChangelog } from './write-changelog.js';
 
-const versionUpdates = new Map<string, string>();
-const isUpdated = new Set<string>();
+const workspaceVersionUpdates = new Map<string, string>();
+const workspaceChanges = new Map<string, () => Promise<void>>();
 
 export default createCommand({
   init: ({ commander }) => {
@@ -47,6 +47,7 @@ export default createCommand({
           value ? [...(previous ?? []), value] : previous,
       )
       .option('-p, --preid <id>', 'Add an identifier to prerelease bumps.')
+      .option('--include-dependents', 'Increment dependent workspace versions when local dependencies are updated.')
       .option('--no-changelog', 'Do not generate changelogs.')
       .option('--dry-run', 'Display proposed version changes without writing files.');
   },
@@ -61,111 +62,140 @@ export default createCommand({
 
   each: async ({ log, args, opts, workspace, spawn }) => {
     const [spec] = args;
-    const { note = [], preid, changelog, dryRun = false } = opts;
-    const isCurrentVersionPrerelease = Boolean(parse(workspace.version)?.prerelease?.length);
+    const { note = [], preid, includeDependents = false, changelog, dryRun = false } = opts;
 
-    assert(
-      !isCurrentVersionPrerelease || (typeof spec === 'string' && spec.startsWith('pre')),
-      `Workspace "${workspace.name}" cannot be bumped to a non-prerelease version.`,
-    );
-
-    let updatedVersion: string | undefined;
-    let changes: readonly Change[] | undefined;
+    let version = '';
+    let changes: readonly Change[] = [];
 
     if (workspace.selected) {
+      const isCurrentVersionPrerelease = Boolean(parse(workspace.version)?.prerelease?.length);
+
+      assert(
+        !isCurrentVersionPrerelease || (typeof spec === 'string' && spec.startsWith('pre')),
+        `Workspace "${workspace.name}" cannot be bumped to a non-prerelease version.`,
+      );
+
       if (spec instanceof SemVer) {
-        [updatedVersion, changes] = setVersion(spec);
+        [version, changes] = getExplicitVersion(spec);
       } else if (spec !== 'auto') {
-        [updatedVersion, changes] = bumpVersion(spec, preid, workspace);
+        [version, changes] = getBumpVersion(spec, preid, workspace);
       } else if (!workspace.private) {
-        [updatedVersion, changes] = await autoVersion(log, workspace, spawn);
+        [version, changes] = await getAutoVersion(log, workspace, spawn);
       }
     }
 
-    const updatedDependencies = updateDependencies(log, workspace);
+    const packagePatches: PackageJson[] = [];
+    const dependencyUpdates = getDependencyUpdates(log, workspace);
 
-    // Non-private workspace versions must be updated if there are local dependency updates.
-    if (!workspace.private && !updatedVersion && updatedDependencies) {
-      updatedVersion = getIncrementedVersion(workspace.version).format();
-      changes = [...(changes ?? []), { type: 'note', message: 'Updated local dependencies.' }];
-    }
-
-    if (note.length) {
-      changes = [...(changes ?? []), ...note.map((message) => ({ type: 'note', message }))];
-    }
-
-    const patches: PackageJson[] = [];
-
-    if (updatedVersion) {
-      versionUpdates.set(workspace.name, updatedVersion);
-      patches.push({ version: updatedVersion });
-      log.notice(`Updating workspace "${workspace.name}" version from "${workspace.version}" to "${updatedVersion}".`);
-    }
-
-    if (updatedDependencies) {
-      patches.push(updatedDependencies);
+    if (dependencyUpdates) {
+      packagePatches.push(dependencyUpdates);
       log.notice(`Updating workspace "${workspace.name}" dependencies.`);
     }
 
-    if (dryRun) {
-      await workspace.saveAndRestoreFile('package.json');
-      await workspace.saveAndRestoreFile('CHANGELOG.md');
+    /*
+     * If the `--include-dependents` option is set, increment the version
+     * of this workspace (the dependent) if all of the following are true.
+     *
+     * - Non-private.
+     * - Any dependencies have been updated.
+     * - Version hasn't already been updated due to other changes.
+     *
+     * This will cause the current workspace to be republished with the
+     * updated dependencies.
+     */
+    if (includeDependents && !workspace.private && dependencyUpdates && !version) {
+      version = getIncrementedVersion(workspace.version).format();
+      changes = [...changes, { type: 'note', message: 'Updated local dependencies.' }];
     }
 
-    if (patches.length) {
-      isUpdated.add(workspace.name);
-      await workspace.patchPackageJson(...patches);
+    const isVersionUpdated = Boolean(version) && version !== workspace.version;
+
+    if (isVersionUpdated) {
+      workspaceVersionUpdates.set(workspace.name, version);
+      packagePatches.push({ version: version });
+      log.notice(`Updating workspace "${workspace.name}" version from "${workspace.version}" to "${version}".`);
     }
 
-    if (updatedVersion && changelog && changes?.length) {
-      log.notice(`Updating workspace "${workspace.name}" change log.`);
-      isUpdated.add(workspace.name);
+    // Add any additional changelog notes.
+    if (note.length) {
+      changes = [...changes, ...note.map((message) => ({ type: 'note', message }))];
+    }
 
-      if (!(await writeChangelog(workspace.name, workspace.dir, updatedVersion, changes))) {
-        log.warn(`Version "${updatedVersion}" already exists in the workspace "${workspace.name}" change log.`);
+    const isPackageUpdated = Boolean(packagePatches.length);
+    const isChangeLogUpdated = Boolean(isVersionUpdated && changelog && changes.length);
+
+    if (!isPackageUpdated && !isChangeLogUpdated) return;
+
+    workspaceChanges.set(workspace.name, async () => {
+      if (dryRun) {
+        await workspace.saveAndRestoreFile('package.json');
+        await workspace.saveAndRestoreFile('CHANGELOG.md');
       }
-    }
+
+      if (isPackageUpdated) {
+        log.notice(`Writing workspace "${workspace.name}" package.`);
+        await workspace.patchPackageJson(...packagePatches);
+      }
+
+      if (isChangeLogUpdated) {
+        log.notice(`Writing workspace "${workspace.name}" changelog.`);
+
+        if (!(await writeChangelog(workspace.name, workspace.dir, version, changes))) {
+          log.warn(`Version "${version}" already exists in the workspace "${workspace.name}" changelog.`);
+        }
+      }
+    });
   },
 
   after: async ({ spawn }) => {
-    if (versionUpdates.size === 0) return;
+    for (const change of workspaceChanges.values()) {
+      await change();
+    }
 
-    // Update the package lock file.
-    await spawn('npm', ['update', ...versionUpdates.keys()], { errorEcho: true });
+    if (workspaceVersionUpdates.size) {
+      // Update the package lock file.
+      await spawn('npm', ['update', ...workspaceVersionUpdates.keys()], { errorEcho: true });
+    }
   },
 });
 
-const setVersion = (spec: SemVer): [version: string, changes: readonly Change[]] => {
+const getExplicitVersion = (spec: SemVer): [version: string, changes: readonly Change[], allowBump: boolean] => {
   const version = spec.format();
   const changes = [{ type: 'note', message: `Updated to version "${version}".` }];
-  return [version, changes];
+
+  return [version, changes, false];
 };
 
-const bumpVersion = (
+const getBumpVersion = (
   spec: ReleaseType,
   preid: string | undefined,
   workspace: Workspace,
-): [version: string, changes: readonly Change[]] => {
+): [version: string, changes: readonly Change[], allowBump: boolean] => {
   const version = getBumpedVersion(workspace.version, spec, preid).format();
   const changes = [{ type: 'note', message: `Updated to version "${version}".` }];
-  return [version, changes];
+
+  return [version, changes, false];
 };
 
-const autoVersion = async (
+const getAutoVersion = async (
   log: Log,
   workspace: Workspace,
   spawn: Spawn,
-): Promise<[version: string | undefined, changes: readonly Change[]]> => {
+): Promise<[version: string, changes: readonly Change[]]> => {
   const [isRepo, isClean] = await Promise.all([
     await workspace.getGitIsRepo(),
     await workspace.getGitIsClean({
       includeDependencyScopes: ['dependencies', 'peerDependencies', 'optionalDependencies'],
-      excludeDependencyNames: [...isUpdated],
+      excludeDependencyNames: [...workspaceChanges.keys()],
     }),
   ]);
 
   assert(isRepo, 'Auto versioning requires a Git repository.');
-  assert(isClean, 'Auto versioning requires a clean Git working tree.');
+
+  if (!isClean) {
+    log.warn('Auto versioning requires a clean Git working tree.');
+    return [workspace.version, []];
+  }
 
   const fromRevision = await workspace.getGitFromRevision();
 
@@ -179,22 +209,17 @@ const autoVersion = async (
     log.warn(`Workspace "${workspace.name}" has non-conventional commits.`);
   }
 
-  const version = changes.length > 0 ? getChangeVersion(workspace.version, changes).format() : undefined;
+  const version = changes.length > 0 ? getChangeVersion(workspace.version, changes).format() : '';
 
   return [version, changes];
 };
 
-const updateDependencies = (
-  log: Log,
-  workspace: Workspace,
-): Pick<PackageJson, 'dependencies' | 'peerDependencies' | 'optionalDependencies' | 'devDependencies'> | undefined => {
-  let updatedDependencies:
-    | Pick<PackageJson, 'dependencies' | 'peerDependencies' | 'optionalDependencies' | 'devDependencies'>
-    | undefined;
+const getDependencyUpdates = (log: Log, workspace: Workspace): PackageJson | undefined => {
+  let packagePatch: PackageJson | undefined;
 
   for (const scope of ['dependencies', 'peerDependencies', 'optionalDependencies', 'devDependencies'] as const) {
     for (const [depName, depRange] of Object.entries(workspace[scope])) {
-      const depVersion = versionUpdates.get(depName);
+      const depVersion = workspaceVersionUpdates.get(depName);
 
       // No update for this dependency.
       if (!depVersion) continue;
@@ -211,14 +236,14 @@ const updateDependencies = (
 
       const newDepRange = `${prefix}${depVersion}`;
 
-      updatedDependencies = {
-        ...updatedDependencies,
-        [scope]: { ...updatedDependencies?.[scope], [depName]: newDepRange },
+      packagePatch = {
+        ...packagePatch,
+        [scope]: { ...packagePatch?.[scope], [depName]: newDepRange },
       };
 
       log.debug(`Updating "${depName}" to "${newDepRange}" in workspace "${workspace.name}".`);
     }
 
-    return updatedDependencies;
+    return packagePatch;
   }
 };
