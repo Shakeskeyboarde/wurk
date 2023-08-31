@@ -20,7 +20,6 @@ export default createCommand({
           .conflicts('fromArchive'),
       )
       .option('--no-build', 'Skip building workspaces.')
-      .option('--no-changelog-check', 'Skip checking for CHANGELOG.md update in last commit.')
       .option('--dry-run', 'Perform a dry run for validation.');
   },
 

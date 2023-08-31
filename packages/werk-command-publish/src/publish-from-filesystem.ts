@@ -10,7 +10,6 @@ interface publishFromFilesystemOptions {
     readonly tag?: string;
     readonly otp?: string;
     readonly removePackageFields?: readonly string[];
-    readonly changelogCheck: boolean;
     readonly dryRun?: true;
   };
   workspace: Workspace;
@@ -25,7 +24,7 @@ export const publishFromFilesystem = async ({
   workspace,
   spawn,
 }: publishFromFilesystemOptions): Promise<void> => {
-  const { toArchive = false, tag, otp, removePackageFields = [], changelogCheck, dryRun = false } = opts;
+  const { toArchive = false, tag, otp, removePackageFields = [], dryRun = false } = opts;
   const isShallow = await workspace.getGitIsShallow();
 
   assert(!isShallow, `Publishing is not allowed from a shallow Git repository.`);
@@ -36,11 +35,13 @@ export const publishFromFilesystem = async ({
       includeDependencyScopes: ['dependencies', 'peerDependencies', 'optionalDependencies'],
       excludeDependencyNames: [workspace.name, ...published],
     }),
-    changelogCheck && getIsChangeLogOutdated(log, workspace, spawn),
+    getIsChangeLogOutdated(log, workspace, spawn),
   ]);
 
   if (isPublished) {
-    log.verbose(`Not publishing workspace "${workspace.name}@${workspace.version}" because it is already published.`);
+    log.verbose(
+      `Not publishing workspace "${workspace.name}@${workspace.version}" because the version is already published.`,
+    );
     return;
   }
 
@@ -52,8 +53,7 @@ export const publishFromFilesystem = async ({
   }
 
   if (isChangeLogOutdated) {
-    log.warn(`Not publishing workspace "${workspace.name}" because the changelog was not updated in the last commit.`);
-    return;
+    log.warn(`Workspace "${workspace.name}" changelog was not updated in the last commit. It may be outdated.`);
   }
 
   const [isClean, isBuilt, isPackComplete] = await Promise.all([
@@ -137,15 +137,15 @@ export const publishFromFilesystem = async ({
 
 const getIsChangeLogOutdated = async (
   log: Log,
-  workspace: Pick<Workspace, 'name' | 'dir' | 'getGitLastChangeCommit'>,
+  workspace: Pick<Workspace, 'name' | 'dir' | 'getGitLastChangeCommit' | 'getGitIsRepo'>,
   spawn: Spawn,
 ): Promise<boolean> => {
-  const lastCommit = await workspace.getGitLastChangeCommit();
+  const [lastCommit, isRepo] = await Promise.all([workspace.getGitLastChangeCommit(), workspace.getGitIsRepo()]);
 
-  log.debug(`Workspace "${workspace.name}" lastCommit=${lastCommit}`);
+  log.debug(`Workspace "${workspace.name}" lastCommit=${lastCommit} isRepo=${isRepo}`);
 
   // Definitely outdated if there is no commit in the directory.
-  if (lastCommit == null) return true;
+  if (isRepo && lastCommit == null) return true;
 
   // git diff-tree -1 -r --name-only --no-commit-id 19fb750136fadef9929ea9b54c0807c0d9b06216 -- CHANGELOG.md
   const isChangeLogOutdated = await spawn(
