@@ -47,7 +47,6 @@ export default createCommand({
           value ? [...(previous ?? []), value] : previous,
       )
       .option('-p, --preid <id>', 'Add an identifier to prerelease bumps.')
-      .option('--include-dependents', 'Increment dependent workspace versions when local dependencies are updated.')
       .option('--no-changelog', 'Do not generate changelogs.')
       .option('--dry-run', 'Display proposed version changes without writing files.');
   },
@@ -62,7 +61,7 @@ export default createCommand({
 
   each: async ({ log, args, opts, workspace, spawn }) => {
     const [spec] = args;
-    const { note = [], preid, includeDependents = false, changelog, dryRun = false } = opts;
+    const { note = [], preid, changelog, dryRun = false } = opts;
 
     let version = '';
     let changes: readonly Change[] = [];
@@ -93,8 +92,8 @@ export default createCommand({
     }
 
     /*
-     * If the `--include-dependents` option is set, increment the version
-     * of this workspace (the dependent) if all of the following are true.
+     * Increment the version of this workspace (the dependent) if all of
+     * the following are true.
      *
      * - Non-private.
      * - Any dependencies have been updated.
@@ -103,7 +102,7 @@ export default createCommand({
      * This will cause the current workspace to be republished with the
      * updated dependencies.
      */
-    if (includeDependents && !workspace.private && dependencyUpdates && !version) {
+    if (!workspace.private && dependencyUpdates && !version) {
       version = getIncrementedVersion(workspace.version).format();
       changes = [...changes, { type: 'note', message: 'Updated local dependencies.' }];
     }
