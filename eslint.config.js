@@ -4,7 +4,6 @@ export default rational({
   override: [
     {
       rules: {
-        'multiline-comment-style': ['warn'],
         '@typescript-eslint/restrict-template-expressions': 'off',
         '@typescript-eslint/no-unsafe-assignment': 'off',
         '@typescript-eslint/no-unsafe-member-access': 'off',
