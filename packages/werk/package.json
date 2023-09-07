@@ -51,7 +51,7 @@
   },
   "dependencies": {
     "@commander-js/extra-typings": "^11.0.0",
-    "@types/cross-spawn": "^6.0.2",
+    "@types/cross-spawn": "^6.0.3",
     "@types/semver": "^7.5.1",
     "@types/shell-quote": "^1.7.1",
     "ansi-regex": "^6.0.1",
