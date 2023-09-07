@@ -54,7 +54,7 @@ export default defineConfig(async (): Promise<UserConfig> => {
       dts?.({
         root: process.cwd(),
         entryRoot: 'src',
-        compilerOptions: tsConfigJson ? undefined : { rootDir: 'src' },
+        compilerOptions: { rootDir: tsConfigJson?.compilerOptions?.rootDir ?? 'src' },
         include: tsConfigJson?.include ?? ['src'],
         exclude: tsConfigJson?.exclude ?? ['**/*.test.*'],
       }),
