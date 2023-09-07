@@ -7,6 +7,7 @@ import { buildRollup } from './build-rollup.js';
 import { buildScript } from './build-script.js';
 import { buildTsc } from './build-tsc.js';
 import { buildVite } from './build-vite.js';
+import { isCommonJsEntry, isEsmEntry } from './util.js';
 
 interface BuildOptions {
   log: Log;
@@ -22,14 +23,20 @@ export const build = async (options: BuildOptions): Promise<void> => {
   if (start ? workspace.scripts.start != null : workspace.scripts.build != null) {
     await buildScript(options);
   } else {
-    const [isVite, isRollup] = await Promise.all([detectVite(workspace), detectRollup(workspace)]);
+    const [packageJson, isVite, isRollup] = await Promise.all([
+      workspace.readPackageJson(),
+      detectVite(workspace),
+      detectRollup(workspace),
+    ]);
+    const isEsm = isEsmEntry(packageJson);
+    const isCommonJs = isCommonJsEntry(packageJson);
 
     if (isVite) {
-      await buildVite(options);
+      await buildVite({ ...options, isEsm, isCommonJs });
     } else if (isRollup) {
       await buildRollup(options);
     } else {
-      await buildTsc(options);
+      await buildTsc({ ...options, isEsm, isCommonJs });
     }
   }
 

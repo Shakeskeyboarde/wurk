@@ -2,7 +2,7 @@ import { mkdir, readdir, stat, writeFile } from 'node:fs/promises';
 import { basename, dirname, posix, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { Log, type PackageJson, type Spawn, type Workspace } from '@werk/cli';
+import { Log, type Spawn, type Workspace } from '@werk/cli';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -11,10 +11,20 @@ interface BuildTscOptions {
   readonly workspace: Workspace;
   readonly root: { dir: string };
   readonly start: boolean;
+  readonly isEsm: boolean;
+  readonly isCommonJs: boolean;
   readonly spawn: Spawn;
 }
 
-export const buildTsc = async ({ log, workspace, root, start, spawn }: BuildTscOptions): Promise<void> => {
+export const buildTsc = async ({
+  log,
+  workspace,
+  root,
+  start,
+  isEsm,
+  isCommonJs,
+  spawn,
+}: BuildTscOptions): Promise<void> => {
   const tsBuildConfigs = await readdir(workspace.dir, { withFileTypes: true }).then((files) => {
     return files
       .filter((file) => file.isFile() && /^tsconfig\..*build.*\.json$/u.test(file.name))
@@ -32,20 +42,15 @@ export const buildTsc = async ({ log, workspace, root, start, spawn }: BuildTscO
     const tsConfig = resolve(workspace.dir, 'tsconfig.json');
     const rootTsConfig = resolve(root.dir, 'tsconfig.json');
     const defaultTsConfig = resolve(__dirname, '..', 'config', 'tsconfig.json');
-    const [packageJson, extendsTsConfig] = await Promise.all([
-      workspace.readPackageJson(),
-      Promise.all([
-        stat(tsConfig)
-          .then((stats): false | string => stats.isFile() && tsConfig)
-          .catch((): false => false),
-        stat(rootTsConfig)
-          .then((stats): false | string => stats.isFile() && rootTsConfig)
-          .catch((): false => false),
-      ]).then((tsConfigs) => tsConfigs.find(Boolean) || defaultTsConfig),
-    ]);
+    const extendsTsConfig = await Promise.all([
+      stat(tsConfig)
+        .then((stats): false | string => stats.isFile() && tsConfig)
+        .catch((): false => false),
+      stat(rootTsConfig)
+        .then((stats): false | string => stats.isFile() && rootTsConfig)
+        .catch((): false => false),
+    ]).then((tsConfigs) => tsConfigs.find(Boolean) || defaultTsConfig);
     const configs: ({ outDir: string; module: string } & Record<string, unknown>)[] = [];
-    const isEsm = isEsmEntry(packageJson);
-    const isCommonJs = isCommonJsEntry(packageJson);
 
     if (isEsm) {
       configs.push({
@@ -101,11 +106,11 @@ export const buildTsc = async ({ log, workspace, root, start, spawn }: BuildTscO
     tsBuildConfigs.map(async (filename) => {
       const name = basename(filename).replace(/(^tsconfig\.|\.json$)/gu, '');
       const subLog = new Log({ ...log, prefix: `${log.prefix}(${name})` });
-      const { noEmit, emitDeclarationOnly, outDir, isEsm } = await readTsConfig(filename, workspace, spawn);
+      const { noEmit, emitDeclarationOnly, outDir, isEsmConfig } = await readTsConfig(filename, workspace, spawn);
 
       if (!noEmit && !emitDeclarationOnly && isEsm != null && resolve(outDir, workspace.dir) !== '') {
         await mkdir(outDir, { recursive: true });
-        await writeFile(resolve(outDir, 'package.json'), JSON.stringify({ type: isEsm ? 'module' : 'commonjs' }));
+        await writeFile(resolve(outDir, 'package.json'), JSON.stringify({ type: isEsmConfig ? 'module' : 'commonjs' }));
       }
 
       await spawn('tsc', ['-p', filename, start && '--watch'], {
@@ -122,7 +127,7 @@ const readTsConfig = async (
   filename: string,
   workspace: Workspace,
   spawn: Spawn,
-): Promise<{ noEmit: boolean; emitDeclarationOnly: boolean; outDir: string; isEsm: boolean | null }> => {
+): Promise<{ noEmit: boolean; emitDeclarationOnly: boolean; outDir: string; isEsmConfig: boolean | null }> => {
   const config = await spawn('tsc', ['-p', filename, '--showConfig'], {
     cwd: workspace.dir,
     capture: true,
@@ -143,7 +148,7 @@ const readTsConfig = async (
   const configModule =
     config.compilerOptions?.module?.toLowerCase() ??
     (configTarget === 'es3' || configTarget === 'es5' ? 'commonjs' : 'es6');
-  const isEsm =
+  const isEsmConfig =
     configModule === 'commonjs'
       ? false
       : configModule.startsWith('es')
@@ -152,13 +157,5 @@ const readTsConfig = async (
       ? workspace.type === 'module'
       : null;
 
-  return { noEmit, emitDeclarationOnly, outDir, isEsm };
-};
-
-const isEsmEntry = (packageJson: PackageJson): boolean => {
-  return Boolean(packageJson.exports || (packageJson.bin && packageJson.type === 'module'));
-};
-
-const isCommonJsEntry = (packageJson: PackageJson): boolean => {
-  return Boolean(packageJson.main || (packageJson.bin && (!packageJson.type || packageJson.type === 'commonjs')));
+  return { noEmit, emitDeclarationOnly, outDir, isEsmConfig };
 };

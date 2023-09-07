@@ -8,13 +8,22 @@ interface BuildViteOptions {
   readonly log: Log;
   readonly workspace: Workspace;
   readonly start: boolean;
+  readonly isEsm: boolean;
+  readonly isCommonJs: boolean;
   readonly spawn: Spawn;
 }
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const defaultConfig = resolve(__dirname, '..', 'config', 'vite.config.ts');
 
-export const buildVite = async ({ log, workspace, start, spawn }: BuildViteOptions): Promise<void> => {
+export const buildVite = async ({
+  log,
+  workspace,
+  start,
+  isEsm,
+  isCommonJs,
+  spawn,
+}: BuildViteOptions): Promise<void> => {
   const config = await Promise.all(
     ['vite.config.ts', 'vite.config.js']
       .map((filename) => resolve(workspace.dir, filename))
@@ -27,7 +36,12 @@ export const buildVite = async ({ log, workspace, start, spawn }: BuildViteOptio
 
   log.notice(`${start ? 'Starting' : 'Building'} workspace "${workspace.name}" using Vite.`);
 
-  await spawn('vite', [!start && 'build', start && '--host', `--config=${config ?? defaultConfig}`], {
+  const isLib = isEsm || isCommonJs;
+  const command = isLib || !start ? 'build' : null;
+  const watch = isLib && start ? '--watch' : null;
+  const host = start ? '--host' : null;
+
+  await spawn('vite', [command, watch, host, `--config=${config ?? defaultConfig}`], {
     echo: true,
     errorReturn: true,
     errorSetExitCode: true,

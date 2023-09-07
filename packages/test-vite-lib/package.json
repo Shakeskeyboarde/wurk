@@ -1,0 +1,16 @@
+{
+  "private": true,
+  "name": "test-vite-lib",
+  "description": "Testing the build command vite library mode",
+  "type": "module",
+  "types": "./lib/index.d.ts",
+  "main": "./lib/index.cjs",
+  "exports": {
+    "types": "./lib/index.d.ts",
+    "require": "./lib/index.cjs",
+    "default": "./lib/index.js"
+  },
+  "dependencies": {
+    "@werk/cli": "^3.0.1"
+  }
+}
