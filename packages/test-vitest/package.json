@@ -3,7 +3,5 @@
   "name": "test-vitest",
   "description": "Testing the vitest command",
   "type": "module",
-  "dependencies": {
-    "@werk/cli": "^3.0.2"
-  }
+  "dependencies": {}
 }

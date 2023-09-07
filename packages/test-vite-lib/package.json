@@ -10,7 +10,5 @@
     "require": "./lib/index.cjs",
     "default": "./lib/index.js"
   },
-  "dependencies": {
-    "@werk/cli": "^3.0.2"
-  }
+  "dependencies": {}
 }

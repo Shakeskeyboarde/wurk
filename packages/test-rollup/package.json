@@ -3,7 +3,5 @@
   "name": "test-rollup",
   "description": "Testing the build command rollup mode",
   "type": "module",
-  "dependencies": {
-    "@werk/cli": "^3.0.2"
-  }
+  "dependencies": {}
 }
