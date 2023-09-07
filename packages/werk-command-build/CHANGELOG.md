@@ -1,3 +1,9 @@
+## 1.1.18 (2023-09-07)
+
+### Bug Fixes
+
+- Fix rootDir if tsconfig exists, but does not have a rootDir configured. (8d62d42)
+
 ## 1.1.17 (2023-09-07)
 
 ### Chores
