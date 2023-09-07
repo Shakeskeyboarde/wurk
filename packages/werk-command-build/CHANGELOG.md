@@ -1,3 +1,9 @@
+## 1.1.17 (2023-09-07)
+
+### Chores
+
+- Vite library mode improvements. (09950df)
+
 ## 1.1.16 (2023-08-31)
 
 **Note**: Updated local dependencies.
