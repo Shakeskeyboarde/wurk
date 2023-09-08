@@ -42,20 +42,22 @@ export default defineConfig(async (): Promise<UserConfig> => {
     if (isEsm) formats.push('es');
     if (isCommonJs) formats.push('cjs');
 
+    const external: (string | RegExp)[] = [/^node:/u];
+    const externalPackages = Object.keys({
+      ...packageJson.dependencies,
+      ...packageJson.peerDependencies,
+      ...packageJson.optionalDependencies,
+      ...packageJson.devDependencies,
+    });
+
+    if (externalPackages.length) {
+      external.push(new RegExp(`^(?:${externalPackages.join('|')})(?:/|$)`, 'u'));
+    }
+
     config.build.sourcemap = true;
     config.build.outDir = 'lib';
     config.build.lib = { entry, formats, fileName: '[name]' };
-    config.build.rollupOptions = {
-      external: [
-        /^node:/u,
-        ...Object.keys({
-          ...packageJson.dependencies,
-          ...packageJson.peerDependencies,
-          ...packageJson.optionalDependencies,
-        }),
-      ],
-      output: { preserveModules: true },
-    };
+    config.build.rollupOptions = { external, output: { preserveModules: true } };
     config.plugins.push(
       dts?.({
         root: process.cwd(),
