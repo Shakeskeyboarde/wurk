@@ -1,3 +1,13 @@
+## 1.1.22 (2023-09-08)
+
+### Bug Fixes
+
+- Remove invalid &#96;--host&#96; option in Vite library watch mode. (4269e69)
+
+### Chores
+
+- Add --watch alias for --start option. (4aaf813)
+
 ## 1.1.21 (2023-09-08)
 
 ### Bug Fixes
