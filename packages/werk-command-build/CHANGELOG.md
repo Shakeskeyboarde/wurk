@@ -1,3 +1,9 @@
+## 1.1.20 (2023-09-08)
+
+### Bug Fixes
+
+- Remove rollup-plugin-node-externals because it doesn't work as configured and is unnecessary. (c0e1641)
+
 ## 1.1.19 (2023-09-07)
 
 ### Bug Fixes
