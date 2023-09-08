@@ -1,3 +1,9 @@
+## 1.1.23 (2023-09-08)
+
+### Bug Fixes
+
+- Disable Vite emptying output directory when running in watch mode. (c569212)
+
 ## 1.1.22 (2023-09-08)
 
 ### Bug Fixes
