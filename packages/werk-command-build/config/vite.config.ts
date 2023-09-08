@@ -56,6 +56,7 @@ export default defineConfig(async (): Promise<UserConfig> => {
 
     config.build.sourcemap = true;
     config.build.outDir = 'lib';
+    config.build.emptyOutDir = false;
     config.build.lib = { entry, formats, fileName: '[name]' };
     config.build.rollupOptions = { external, output: { preserveModules: true } };
     config.plugins.push(
