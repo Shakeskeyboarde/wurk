@@ -1,3 +1,9 @@
+## 1.1.19 (2023-09-07)
+
+### Bug Fixes
+
+- Add src/&#42;&#42; to package files for default vite config imports. (39e253a)
+
 ## 1.1.18 (2023-09-07)
 
 ### Bug Fixes
