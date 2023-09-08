@@ -39,7 +39,7 @@ export const buildVite = async ({
   const isLib = isEsm || isCommonJs;
   const command = isLib || !start ? 'build' : null;
   const watch = isLib && start ? '--watch' : null;
-  const host = start ? '--host' : null;
+  const host = !isLib && start ? '--host' : null;
 
   await spawn('vite', [command, watch, host, `--config=${config ?? defaultConfig}`], {
     echo: true,
