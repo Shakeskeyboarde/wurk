@@ -80,7 +80,6 @@ The following plugins are used in the default configuration, _if they are instal
 - `@vitejs/plugin-react`
 - `vite-plugin-full-reload`
 - `vite-plugin-dts` (library mode only)
-- `rollup-plugin-node-externals` (library mode only)
 
 ### Mode: `rollup`
 

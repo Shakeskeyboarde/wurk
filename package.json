@@ -32,7 +32,6 @@
     "eslint-config-rational": "^3.0.8",
     "prettier": "^3.0.3",
     "rollup": "^3.29.0",
-    "rollup-plugin-node-externals": "^6.1.1",
     "typescript": "^5.2.2",
     "vite": "^4.4.9",
     "vite-plugin-dts": "^3.5.3",

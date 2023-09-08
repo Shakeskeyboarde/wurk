@@ -7,7 +7,7 @@ import { defineConfig, type LibraryFormats, type UserConfig } from 'vite';
 import { isCommonJsEntry, isEsmEntry } from '../src/util.js';
 
 export default defineConfig(async (): Promise<UserConfig> => {
-  const [packageJson, tsConfigJson, react, reload, dts, nodeExternals] = await Promise.all([
+  const [packageJson, tsConfigJson, react, reload, dts] = await Promise.all([
     readFile('package.json', 'utf-8').then((json) => JSON.parse(json)),
     readFile('tsconfig.json', 'utf-8')
       .then((json) => JSON.parse(json))
@@ -15,7 +15,6 @@ export default defineConfig(async (): Promise<UserConfig> => {
     import('@vitejs/plugin-react').then((exports) => exports.default.default ?? exports.default).catch(() => undefined),
     import('vite-plugin-full-reload').then((exports) => exports.default).catch(() => undefined),
     import('vite-plugin-dts').then((exports) => exports.default).catch(() => undefined),
-    import('rollup-plugin-node-externals').then((exports) => exports.default).catch(() => undefined),
   ]);
 
   const config: UserConfig & Required<Pick<UserConfig, 'plugins' | 'server' | 'build'>> = {
@@ -47,7 +46,14 @@ export default defineConfig(async (): Promise<UserConfig> => {
     config.build.outDir = 'lib';
     config.build.lib = { entry, formats, fileName: '[name]' };
     config.build.rollupOptions = {
-      plugins: [nodeExternals?.()],
+      external: [
+        /^node:/u,
+        ...Object.keys({
+          ...packageJson.dependencies,
+          ...packageJson.peerDependencies,
+          ...packageJson.optionalDependencies,
+        }),
+      ],
       output: { preserveModules: true },
     };
     config.plugins.push(
