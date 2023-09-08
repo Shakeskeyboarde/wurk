@@ -7,18 +7,19 @@ import { defineConfig, type LibraryFormats, type UserConfig } from 'vite';
 import { isCommonJsEntry, isEsmEntry } from '../src/util.js';
 
 export default defineConfig(async (): Promise<UserConfig> => {
-  const [packageJson, tsConfigJson, react, reload, dts] = await Promise.all([
+  const [packageJson, tsConfigJson, reload, svgr, react, dts] = await Promise.all([
     readFile('package.json', 'utf-8').then((json) => JSON.parse(json)),
     readFile('tsconfig.json', 'utf-8')
       .then((json) => JSON.parse(json))
       .catch(() => undefined),
-    import('@vitejs/plugin-react').then((exports) => exports.default.default ?? exports.default).catch(() => undefined),
     import('vite-plugin-full-reload').then((exports) => exports.default).catch(() => undefined),
+    import('vite-plugin-svgr').then((exports) => exports.default).catch(() => undefined),
+    import('@vitejs/plugin-react').then((exports) => exports.default.default ?? exports.default).catch(() => undefined),
     import('vite-plugin-dts').then((exports) => exports.default).catch(() => undefined),
   ]);
 
   const config: UserConfig & Required<Pick<UserConfig, 'plugins' | 'server' | 'build'>> = {
-    plugins: [reload?.('**'), react?.()],
+    plugins: [reload?.('**'), svgr?.({ exportAsDefault: true }), react?.()],
     server: { hmr: !reload },
     build: { outDir: 'dist' },
   };

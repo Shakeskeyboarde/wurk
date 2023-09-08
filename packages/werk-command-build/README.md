@@ -78,8 +78,34 @@ In library mode, all non-dev dependencies will be externalized.
 The following plugins are used in the default configuration, _if they are installed._
 
 - `@vitejs/plugin-react`
-- `vite-plugin-full-reload`
 - `vite-plugin-dts` (library mode only)
+- `vite-plugin-full-reload`
+- `vite-plugin-svgr`
+
+#### SVGR
+
+The default configuration for `vite-plugin-svgr` exports the SVG as
+default. The following type declaration is required for TypeScript to
+allow SVG imports.
+
+```ts
+declare module '*.svg' {
+  import { type ComponentType, type SVGProps } from 'react';
+  const value: ComponentType<SVGProps<SVGElement>>;
+  export default value;
+}
+```
+
+With the above declaration, SVGs can be imported and used as follows. All
+SVG element props are supported.
+
+```ts
+import MySvg from './my-svg.svg';
+
+const MyComponent = (): JSX.Element => {
+  return <MySvg />
+};
+```
 
 ### Mode: `rollup`
 
