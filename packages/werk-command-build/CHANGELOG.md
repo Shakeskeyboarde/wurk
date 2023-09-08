@@ -1,3 +1,9 @@
+## 1.1.21 (2023-09-08)
+
+### Bug Fixes
+
+- Match external packages with sub-path imports. (429bc39)
+
 ## 1.1.20 (2023-09-08)
 
 ### Bug Fixes
