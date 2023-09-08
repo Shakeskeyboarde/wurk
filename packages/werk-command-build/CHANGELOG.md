@@ -1,3 +1,9 @@
+## 1.1.24 (2023-09-08)
+
+### Chores
+
+- Add SVG-to-JSX (SVGR) support to default vite config. (40513fe)
+
 ## 1.1.23 (2023-09-08)
 
 ### Bug Fixes
