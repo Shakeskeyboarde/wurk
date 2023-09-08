@@ -22,7 +22,8 @@
   "files": [
     "CHANGELOG.md",
     "lib/**",
-    "config/**"
+    "config/**",
+    "src/**"
   ],
   "keywords": [
     "werk",
