@@ -38,3 +38,5 @@ export default createCommand({
     await Promise.all(startCallbacks.map((callback) => callback()));
   },
 });
+
+export * from './util.js';

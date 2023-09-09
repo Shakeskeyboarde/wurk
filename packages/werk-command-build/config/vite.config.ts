@@ -2,11 +2,12 @@ import assert from 'node:assert';
 import { readFile, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
+import { Log } from '@werk/cli';
+import { isCommonJsEntry, isEsmEntry } from '@werk/command-build';
 import { defineConfig, type LibraryFormats, type UserConfig } from 'vite';
 
-import { isCommonJsEntry, isEsmEntry } from '../src/util.js';
-
 export default defineConfig(async (): Promise<UserConfig> => {
+  const log = new Log();
   const [packageJson, tsConfigJson, reload, svgr, react, dts] = await Promise.all([
     readFile('package.json', 'utf-8').then((json) => JSON.parse(json)),
     readFile('tsconfig.json', 'utf-8')
@@ -17,6 +18,11 @@ export default defineConfig(async (): Promise<UserConfig> => {
     import('@vitejs/plugin-react').then((exports) => exports.default.default ?? exports.default).catch(() => undefined),
     import('vite-plugin-dts').then((exports) => exports.default).catch(() => undefined),
   ]);
+
+  if (!react) log.warn('WARNING: Installing "@vitejs/plugin-react" is recommended.');
+  if (!dts) log.warn('WARNING: Installing "vite-plugin-dts" is recommended.');
+  if (!reload) log.warn('WARNING: Installing "vite-plugin-full-reload" is recommended.');
+  if (!svgr) log.warn('WARNING: Installing "vite-plugin-svgr" is recommended.');
 
   const config: UserConfig & Required<Pick<UserConfig, 'plugins' | 'server' | 'build'>> = {
     plugins: [reload?.('**'), svgr?.({ exportAsDefault: true }), react?.()],
