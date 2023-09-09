@@ -84,20 +84,17 @@ The following plugins are used in the default configuration, _if they are instal
 
 #### SVGR
 
-The default configuration for `vite-plugin-svgr` exports the SVG as
-default. The following type declaration is required for TypeScript to
-allow SVG imports.
+The default configuration for `vite-plugin-svgr` provides the SVG react component as the default export (not a named export). The following type declaration is required for TypeScript to allow SVG imports.
 
 ```ts
 declare module '*.svg' {
   import { type ComponentType, type SVGProps } from 'react';
-  const value: ComponentType<SVGProps<SVGElement>>;
-  export default value;
+  const ReactComponent: ComponentType<SVGProps<SVGElement>>;
+  export default ReactComponent;
 }
 ```
 
-With the above declaration, SVGs can be imported and used as follows. All
-SVG element props are supported.
+With the above declaration, SVGs can be imported and used as follows. All SVG element props are supported.
 
 ```ts
 import MySvg from './my-svg.svg';
