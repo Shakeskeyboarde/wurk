@@ -1,3 +1,9 @@
+## 1.1.25 (2023-09-09)
+
+### Documentation
+
+- Update readme. (37e2f2e)
+
 ## 1.1.24 (2023-09-08)
 
 ### Chores
