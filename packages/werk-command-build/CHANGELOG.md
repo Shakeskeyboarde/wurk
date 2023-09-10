@@ -1,3 +1,9 @@
+## 1.1.26 (2023-09-09)
+
+### Chores
+
+- Add warnings when optional dependencies are not installed. (d86135d)
+
 ## 1.1.25 (2023-09-09)
 
 ### Documentation
