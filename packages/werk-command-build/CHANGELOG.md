@@ -1,3 +1,13 @@
+## 1.1.30 (2023-09-11)
+
+### Bug Fixes
+
+- Don't display optional plugin warning when using custom config. (699742d)
+
+### Chores
+
+- Update vite-plugin-refresh. (a63873c)
+
 ## 1.1.29 (2023-09-11)
 
 ### Bug Fixes
