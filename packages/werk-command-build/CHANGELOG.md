@@ -1,3 +1,9 @@
+## 1.1.27 (2023-09-11)
+
+### Code Refactoring
+
+- Remove vite-plugin-full-reload, replaced with custom solution. Use vite config merging. Move optional plugin warnings out of vite config. (4906c28)
+
 ## 1.1.26 (2023-09-09)
 
 ### Chores
