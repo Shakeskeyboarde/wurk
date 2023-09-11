@@ -83,7 +83,7 @@ export default defineConfig(async (): Promise<UserConfig> => {
   return mergeConfig(
     config,
     {
-      plugins: [refresh?.({ reload: true })],
+      plugins: [refresh?.()],
     },
     true,
   );

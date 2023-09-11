@@ -82,10 +82,6 @@ The following plugins are used in the default configuration, _if they are instal
 - `vite-plugin-refresh` (non-library mode only)
 - `vite-plugin-svgr`
 
-#### Refresh
-
-The default configuration for `vite-plugin-refresh` enables full page reloading, which disabled HMR.
-
 #### SVGR
 
 The default configuration for `vite-plugin-svgr` provides the SVG react component as the default export (not a named export). The following type declaration is required for TypeScript to allow SVG imports.
