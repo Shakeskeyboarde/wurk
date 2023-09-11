@@ -1,3 +1,9 @@
+## 1.1.28 (2023-09-11)
+
+### Chores
+
+- Use vite-plugin-refresh if available. (f934201)
+
 ## 1.1.27 (2023-09-11)
 
 ### Code Refactoring
