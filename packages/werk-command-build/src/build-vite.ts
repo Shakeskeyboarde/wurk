@@ -42,14 +42,7 @@ export const loadViteOptionalPlugins = async () => {
   return { react, dts, refresh, svgr };
 };
 
-export const buildVite = async ({
-  log,
-  workspace,
-  start,
-  isEsm,
-  isCjs,
-  spawn,
-}: BuildViteOptions): Promise<void> => {
+export const buildVite = async ({ log, workspace, start, isEsm, isCjs, spawn }: BuildViteOptions): Promise<void> => {
   const [config, optionalPlugins] = await Promise.all([
     Promise.all(
       ['vite.config.ts', 'vite.config.js']
