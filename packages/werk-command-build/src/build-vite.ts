@@ -7,7 +7,6 @@ import { type Log, type Spawn, type Workspace } from '@werk/cli';
 interface BuildViteOptions {
   readonly log: Log;
   readonly workspace: Workspace;
-  readonly root: { readonly dir: string };
   readonly start: boolean;
   readonly isEsm: boolean;
   readonly isCjs: boolean;
@@ -19,7 +18,7 @@ const defaultConfig = resolve(__dirname, '..', 'config', 'vite.config.ts');
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export const loadViteOptionalPlugins = async () => {
-  const [react, dts, svgr] = await Promise.all([
+  const [react, dts, refresh, svgr] = await Promise.all([
     // eslint-disable-next-line import/no-extraneous-dependencies
     import('@vitejs/plugin-react')
       .then((exports) => {
@@ -35,16 +34,17 @@ export const loadViteOptionalPlugins = async () => {
     // eslint-disable-next-line import/no-extraneous-dependencies
     import('vite-plugin-dts').then((exports) => exports.default).catch(() => undefined),
     // eslint-disable-next-line import/no-extraneous-dependencies
+    import('vite-plugin-refresh').then((exports) => exports.default).catch(() => undefined),
+    // eslint-disable-next-line import/no-extraneous-dependencies
     import('vite-plugin-svgr').then((exports) => exports.default).catch(() => undefined),
   ]);
 
-  return { react, dts, svgr };
+  return { react, dts, refresh, svgr };
 };
 
 export const buildVite = async ({
   log,
   workspace,
-  root,
   start,
   isEsm,
   isCjs,
@@ -76,6 +76,7 @@ export const buildVite = async ({
 
   if (!optionalPlugins.react) log.warn('Plugin "@vite/plugin-react" is recommended.');
   if (!optionalPlugins.dts && isLib) log.warn('Plugin "vite-plugin-dts" is recommended.');
+  if (!optionalPlugins.refresh) log.warn('Plugin "vite-plugin-refresh" is recommended.');
   if (!optionalPlugins.svgr) log.warn('Plugin "vite-plugin-svgr" is recommended.');
 
   if (command === 'serve') {
@@ -87,7 +88,6 @@ export const buildVite = async ({
     errorReturn: true,
     errorSetExitCode: true,
     env: {
-      VITE_RELOAD_ROOT: root.dir,
       VITE_LIB_ESM: isEsm ? 'true' : undefined,
       VITE_LIB_CJS: isCjs ? 'true' : undefined,
     },

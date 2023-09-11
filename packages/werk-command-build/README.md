@@ -79,7 +79,12 @@ The following plugins are used in the default configuration, _if they are instal
 
 - `@vitejs/plugin-react`
 - `vite-plugin-dts` (library mode only)
+- `vite-plugin-refresh` (non-library mode only)
 - `vite-plugin-svgr`
+
+#### Refresh
+
+The default configuration for `vite-plugin-refresh` enables full page reloading, which disabled HMR.
 
 #### SVGR
 

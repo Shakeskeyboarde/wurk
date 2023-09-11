@@ -3,30 +3,9 @@ import { readFile, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import { loadViteOptionalPlugins } from '@werk/command-build';
-import { defineConfig, type LibraryFormats, mergeConfig, normalizePath, type Plugin, type UserConfig } from 'vite';
-
-const reload = (root = process.cwd()): Plugin => ({
-  name: 'reload',
-  apply: 'serve',
-  configureServer: ({ watcher, ws, config: { logger } }) => {
-    let timeout: NodeJS.Timeout | undefined;
-
-    const onChange = (): void => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        logger.info('page reloading...');
-        ws.send({ type: 'full-reload', path: '*' });
-      }, 1000);
-    };
-
-    watcher.add(normalizePath(resolve(root, '**')));
-    watcher.on('add', onChange);
-    watcher.on('change', onChange);
-  },
-});
+import { defineConfig, type LibraryFormats, mergeConfig, type UserConfig } from 'vite';
 
 export default defineConfig(async (): Promise<UserConfig> => {
-  const reloadRoot = process.env.VITE_RELOAD_ROOT;
   const isEsmLib = Boolean(process.env.VITE_LIB_ESM);
   const isCjsLib = Boolean(process.env.VITE_LIB_CJS);
   const [packageJson, tsConfigJson, plugins] = await Promise.all([
@@ -36,7 +15,7 @@ export default defineConfig(async (): Promise<UserConfig> => {
       .catch(() => undefined),
     loadViteOptionalPlugins(),
   ]);
-  const { react, dts, svgr } = plugins;
+  const { react, dts, refresh, svgr } = plugins;
 
   const config: UserConfig = {
     plugins: [svgr?.({ exportAsDefault: true }), react?.()],
@@ -104,8 +83,7 @@ export default defineConfig(async (): Promise<UserConfig> => {
   return mergeConfig(
     config,
     {
-      plugins: [reload(reloadRoot)],
-      server: { hmr: false },
+      plugins: [refresh?.({ reload: true })],
     },
     true,
   );
