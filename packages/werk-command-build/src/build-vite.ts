@@ -13,6 +13,7 @@ interface BuildViteOptions {
   readonly spawn: Spawn;
 }
 
+const START_DELAY_SECONDS = 10;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const defaultConfig = resolve(__dirname, '..', 'config', 'vite.config.ts');
 
@@ -63,17 +64,20 @@ export const buildVite = async ({ log, workspace, start, isEsm, isCjs, spawn }: 
 
   log.notice(
     `${start ? 'Starting' : 'Building'} workspace "${workspace.name}" using Vite${
-      command === 'serve' ? ' (10 second delay)' : ''
+      command === 'serve' ? ` (${START_DELAY_SECONDS} second delay)` : ''
     }.`,
   );
 
-  if (!optionalPlugins.react) log.warn('Plugin "@vite/plugin-react" is recommended.');
-  if (!optionalPlugins.dts && isLib) log.warn('Plugin "vite-plugin-dts" is recommended.');
-  if (!optionalPlugins.refresh) log.warn('Plugin "vite-plugin-refresh" is recommended.');
-  if (!optionalPlugins.svgr) log.warn('Plugin "vite-plugin-svgr" is recommended.');
+  if (!config) {
+    // Using default config.
+    if (!optionalPlugins.react) log.warn('Plugin "@vite/plugin-react" is recommended.');
+    if (!optionalPlugins.dts && isLib) log.warn('Plugin "vite-plugin-dts" is recommended.');
+    if (!optionalPlugins.refresh) log.warn('Plugin "vite-plugin-refresh" is recommended.');
+    if (!optionalPlugins.svgr) log.warn('Plugin "vite-plugin-svgr" is recommended.');
+  }
 
   if (command === 'serve') {
-    await new Promise((res) => setTimeout(res, 10_000));
+    await new Promise((res) => setTimeout(res, START_DELAY_SECONDS * 1000));
   }
 
   await spawn('vite', [command, watch, host, `--config=${config ?? defaultConfig}`], {
