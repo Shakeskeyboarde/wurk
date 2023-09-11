@@ -12,7 +12,7 @@ interface BuildTscOptions {
   readonly root: { dir: string };
   readonly start: boolean;
   readonly isEsm: boolean;
-  readonly isCommonJs: boolean;
+  readonly isCjs: boolean;
   readonly spawn: Spawn;
 }
 
@@ -22,7 +22,7 @@ export const buildTsc = async ({
   root,
   start,
   isEsm,
-  isCommonJs,
+  isCjs,
   spawn,
 }: BuildTscOptions): Promise<void> => {
   const tsBuildConfigs = await readdir(workspace.dir, { withFileTypes: true }).then((files) => {
@@ -39,28 +39,28 @@ export const buildTsc = async ({
       throw new Error(`Workspace directory "${workspace.dir}" is outside of the workspaces root.`);
 
     const tempDir = resolve(root.dir, 'node_modules/.werk-command-build', tempSubDir);
-    const tsConfig = resolve(workspace.dir, 'tsconfig.json');
-    const rootTsConfig = resolve(root.dir, 'tsconfig.json');
-    const defaultTsConfig = resolve(__dirname, '..', 'config', 'tsconfig.json');
-    const extendsTsConfig = await Promise.all([
-      stat(tsConfig)
-        .then((stats): false | string => stats.isFile() && tsConfig)
+    const tsConfigWorkspace = resolve(workspace.dir, 'tsconfig.json');
+    const tsConfigRoot = resolve(root.dir, 'tsconfig.json');
+    const tsConfigWerk = resolve(__dirname, '..', 'config', 'tsconfig.werk.json');
+    const tsConfigBase = await Promise.all([
+      stat(tsConfigWorkspace)
+        .then((stats): false | string => stats.isFile() && tsConfigWorkspace)
         .catch((): false => false),
-      stat(rootTsConfig)
-        .then((stats): false | string => stats.isFile() && rootTsConfig)
+      stat(tsConfigRoot)
+        .then((stats): false | string => stats.isFile() && tsConfigRoot)
         .catch((): false => false),
-    ]).then((tsConfigs) => tsConfigs.find(Boolean) || defaultTsConfig);
+    ]).then((tsConfigs) => tsConfigs.find(Boolean) || tsConfigWerk);
     const configs: ({ outDir: string; module: string } & Record<string, unknown>)[] = [];
 
     if (isEsm) {
       configs.push({
-        outDir: resolve(workspace.dir, isCommonJs ? 'lib/esm' : 'lib'),
+        outDir: resolve(workspace.dir, isCjs ? 'lib/esm' : 'lib'),
         module: 'ESNext',
         moduleResolution: 'bundler',
       });
     }
 
-    if (isCommonJs) {
+    if (isCjs) {
       configs.push({
         outDir: resolve(workspace.dir, isEsm ? 'lib/cjs' : 'lib'),
         module: 'CommonJS',
@@ -76,7 +76,7 @@ export const buildTsc = async ({
         filename,
         JSON.stringify(
           {
-            extends: extendsTsConfig,
+            extends: tsConfigBase,
             compilerOptions: {
               moduleDetection: 'auto',
               noEmit: false,

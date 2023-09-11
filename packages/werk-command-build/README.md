@@ -79,7 +79,6 @@ The following plugins are used in the default configuration, _if they are instal
 
 - `@vitejs/plugin-react`
 - `vite-plugin-dts` (library mode only)
-- `vite-plugin-full-reload`
 - `vite-plugin-svgr`
 
 #### SVGR

@@ -7,7 +7,6 @@ import { buildRollup } from './build-rollup.js';
 import { buildScript } from './build-script.js';
 import { buildTsc } from './build-tsc.js';
 import { buildVite } from './build-vite.js';
-import { isCommonJsEntry, isEsmEntry } from './util.js';
 
 interface BuildOptions {
   log: Log;
@@ -16,6 +15,14 @@ interface BuildOptions {
   start: boolean;
   spawn: Spawn;
 }
+
+const isEsmPackage = (packageJson: Record<string, unknown>): boolean => {
+  return Boolean(packageJson.exports || (packageJson.bin && packageJson.type === 'module'));
+};
+
+const isCjsPackage = (packageJson: Record<string, unknown>): boolean => {
+  return Boolean(packageJson.main || (packageJson.bin && (!packageJson.type || packageJson.type === 'commonjs')));
+};
 
 export const build = async (options: BuildOptions): Promise<void> => {
   const { log, workspace, start } = options;
@@ -28,15 +35,15 @@ export const build = async (options: BuildOptions): Promise<void> => {
       detectVite(workspace),
       detectRollup(workspace),
     ]);
-    const isEsm = isEsmEntry(packageJson);
-    const isCommonJs = isCommonJsEntry(packageJson);
+    const isEsm = isEsmPackage(packageJson);
+    const isCjs = isCjsPackage(packageJson);
 
     if (isVite) {
-      await buildVite({ ...options, isEsm, isCommonJs });
+      await buildVite({ ...options, isEsm, isCjs });
     } else if (isRollup) {
       await buildRollup(options);
     } else {
-      await buildTsc({ ...options, isEsm, isCommonJs });
+      await buildTsc({ ...options, isEsm, isCjs });
     }
   }
 

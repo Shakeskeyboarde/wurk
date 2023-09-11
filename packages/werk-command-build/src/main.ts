@@ -28,9 +28,7 @@ export default createCommand({
     assert(await workspace.getIsBuilt(), `Workspace "${workspace.name}" is missing entry points after building.`);
 
     if (start) {
-      startCallbacks.push(async () => {
-        await build({ ...options, start: true });
-      });
+      startCallbacks.push(() => build({ ...options, start: true }));
     }
   },
 
@@ -39,4 +37,4 @@ export default createCommand({
   },
 });
 
-export * from './util.js';
+export { loadViteOptionalPlugins } from './build-vite.js';
