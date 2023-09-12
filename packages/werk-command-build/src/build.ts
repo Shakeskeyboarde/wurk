@@ -27,7 +27,13 @@ const isCjsPackage = (packageJson: Record<string, unknown>): boolean => {
 export const build = async (options: BuildOptions): Promise<void> => {
   const { log, workspace, start } = options;
 
-  if (start ? workspace.scripts.start != null : workspace.scripts.build != null) {
+  if (
+    start
+      ? workspace.scripts.start != null
+      : workspace.scripts.build != null &&
+        // Avoid infinite recursion.
+        (process.env.npm_command !== 'run-script' || process.env.npm_lifecycle_event !== 'build')
+  ) {
     await buildScript(options);
   } else {
     const [packageJson, isVite, isRollup] = await Promise.all([

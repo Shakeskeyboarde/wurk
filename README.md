@@ -1,10 +1,10 @@
 # Werk
 
-An open-minded monorepo tool, with opinionated plugins.
+Open-minded build tooling, with opinionated plugins.
 
 [![npm](https://img.shields.io/npm/v/@werk/cli?label=NPM)](https://www.npmjs.com/package/@werk/cli)
 
-Werk is a framework for writing custom commands. It provides consistency and a helpful foundation for handling the boilerplate necessary to achieve command goals.
+Werk is a framework for writing custom commands. It provides consistency and a helpful foundation for handling the boilerplate necessary to achieve command goals. While it will work for single package projects, it really shines in monorepos.
 
 Read the [usage documentation](packages/werk/README.md) or learn how to build your own [custom commands](packages/werk/README_CUSTOM_COMMANDS.md).
 
