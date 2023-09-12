@@ -1,3 +1,9 @@
+## 4.0.1 (2023-09-12)
+
+### Documentation
+
+- Improve Werk description. (ac2b969)
+
 # 4.0.0 (2023-09-12)
 
 ### Breaking Changes
