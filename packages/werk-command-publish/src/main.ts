@@ -59,7 +59,7 @@ export default createCommand({
 
   after: async ({ log }) => {
     if (!isPublished) {
-      log.info('No workspaces are in a publishable state.');
+      log.info('No publishable packages found.');
     }
   },
 });
