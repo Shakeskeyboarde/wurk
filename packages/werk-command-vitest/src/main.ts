@@ -40,7 +40,7 @@ export default createCommand({
           .map(({ dir }) => isVitestConfigFound(dir).then((isConfigured) => (isConfigured ? dir : undefined))),
       ).then((results) => results.filter((result): result is string => Boolean(result)));
 
-      assert(workspaceNames.length, 'No workspaces found with Vitest configuration.');
+      assert(workspaceNames.length, 'No Vitest configurations found.');
 
       await mkdir(tempDir, { recursive: true });
       await writeFile(filename, JSON.stringify(workspaceNames));
