@@ -1,3 +1,14 @@
+# 4.0.0 (2023-09-12)
+
+### Breaking Changes
+
+- Remove support for globally installed command plugins. (e70567b)
+
+### Chores
+
+- Support non-mono-repos. (1b4a5e5)
+- Improve PackageJson type safety. (4f66efb)
+
 ## 3.0.2 (2023-09-07)
 
 ### Chores

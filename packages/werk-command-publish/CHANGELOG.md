@@ -1,3 +1,9 @@
+## 2.0.4 (2023-09-12)
+
+### Chores
+
+- Change no publishable packages error wording. (4f25a0a)
+
 ## 2.0.3 (2023-09-07)
 
 **Note**: Updated local dependencies.

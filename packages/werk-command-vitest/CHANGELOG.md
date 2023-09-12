@@ -1,3 +1,9 @@
+## 1.1.11 (2023-09-12)
+
+### Chores
+
+- Change no configs error wording. (712e41f)
+
 ## 1.1.10 (2023-09-07)
 
 **Note**: Updated local dependencies.

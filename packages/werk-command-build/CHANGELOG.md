@@ -1,3 +1,9 @@
+## 1.1.31 (2023-09-12)
+
+### Chores
+
+- Avoid infinite build script recursion. (bb28be5)
+
 ## 1.1.30 (2023-09-11)
 
 ### Bug Fixes
