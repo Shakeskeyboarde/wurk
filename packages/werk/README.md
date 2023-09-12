@@ -19,7 +19,7 @@ Open-minded build tooling, with opinionated plugins.
 
 ## Features
 
-Werk is a framework for writing custom commands as [command plugins](#custom-commands), providing a common set of features to make tool development quick and easy. It is designed to be flexible and extensible, while still providing a consistent user experience. It can be used with single package projects, but has many features specific to monorepos.
+Werk is a framework for creating build and build-related commands as [command plugins](#custom-commands). Command implementors benefit from a well defined lifecycle, contextual information, and utilities. Command users can expect a baseline level of consistency and quality.
 
 - Workspaces
   - Information
