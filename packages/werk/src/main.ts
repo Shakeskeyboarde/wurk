@@ -17,11 +17,19 @@ process.on('unhandledRejection', (error) => {
   throw error;
 });
 
-export const main = (): void => {
-  asyncMain().catch(onError);
+export const main = (args = process.argv.slice(2)): void => {
+  asyncMain(args).catch(onError);
 };
 
-const asyncMain = async (): Promise<void> => {
+const asyncMain = async (args: string[]): Promise<void> => {
+  const recursionDepth = process.env.WERK_RECURSION_DEPTH ? Number(process.env.WERK_RECURSION_DEPTH) : 0;
+
+  if (Number.isNaN(recursionDepth) || recursionDepth >= 3) {
+    throw new Error('Werk recursion depth exceeded.');
+  }
+
+  process.env.WERK_RECURSION_DEPTH = (recursionDepth + 1).toString(10);
+
   const config = await loadConfig();
 
   const parseLogLevel = (value: string): LogLevel => {
@@ -73,6 +81,7 @@ const asyncMain = async (): Promise<void> => {
       'Include workspaces by keyword.',
       (value, previous: string[] | undefined): string[] => [...(previous ?? []), value],
     )
+    .option('--include-workspace-root', 'Include the root workspace.')
     .option(
       '--not-workspace <name>',
       'Exclude workspaces by name.',
@@ -103,9 +112,7 @@ const asyncMain = async (): Promise<void> => {
     .version(config.version)
     .passThroughOptions();
 
-  commander.parse([...config.globalArgs, ...process.argv.slice(2)], { from: 'user' });
-
-  assert(config.workspacePackages.length, 'No workspaces found.');
+  commander.parse([...config.globalArgs, ...args], { from: 'user' });
 
   let [cmd, cmdArgs] = commander.processedArgs;
 
@@ -137,6 +144,7 @@ const asyncMain = async (): Promise<void> => {
       withDependencies: opts.dependencies,
       includeWorkspaces: opts.workspace ?? [],
       includeKeywords: opts.keyword ?? [],
+      includeRoot: opts.includeWorkspaceRoot ?? false,
       excludeWorkspaces: opts.notWorkspace ?? [],
       excludeKeywords: opts.notKeyword ?? [],
       excludePrivate: opts.notPrivate ?? false,

@@ -15,8 +15,8 @@ export type WorkspacePartialOptions = Omit<
 >;
 
 export interface WorkspacesOptions extends GitOptions, SelectOptions {
+  readonly rootPackage: WorkspacePackage;
   readonly workspacePackages: readonly WorkspacePackage[];
-  readonly rootDir: string;
   readonly commandName: string;
 }
 
@@ -63,7 +63,7 @@ const select = async (
     excludeUnmodified,
     gitFromRevision,
     gitHead,
-  }: SelectOptions & GitOptions,
+  }: Omit<SelectOptions, 'includeRoot'> & GitOptions,
 ): Promise<void> => {
   const getIsPublished = async (name: string, version: string): Promise<boolean> => {
     return await getNpmMetadata(name, version).then((meta) => meta?.version === version);
@@ -177,15 +177,21 @@ export const getWorkspace = (
 };
 
 export const getWorkspaces = async ({
+  rootPackage,
   workspacePackages,
-  rootDir,
   commandName,
+  includeRoot,
   ...options
-}: WorkspacesOptions): Promise<readonly WorkspacePartialOptions[]> => {
-  const workspaces = workspacePackages.map((workspace) => getWorkspace(workspace, commandName));
-  const sorted = getSorted(workspaces);
+}: WorkspacesOptions): Promise<
+  [root: WorkspacePartialOptions, workspaces: readonly WorkspacePartialOptions[], isMonorepo: boolean]
+> => {
+  const isMonorepo = workspacePackages.length > 0 || 'workspaces' in rootPackage;
+  const isRootIncluded = includeRoot || !isMonorepo;
+  const root = getWorkspace(rootPackage, commandName);
+  const others = workspacePackages.map((workspace) => getWorkspace(workspace, commandName));
+  const workspaces = getSorted(isRootIncluded ? [root, ...others] : others);
 
-  await select(sorted, rootDir, options);
+  await select(workspaces, rootPackage.dir, options);
 
-  return sorted;
+  return [root, workspaces, isMonorepo];
 };

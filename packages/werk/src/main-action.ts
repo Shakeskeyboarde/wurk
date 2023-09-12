@@ -9,8 +9,9 @@ import { Commander, getCommanderMetadata } from './commander/commander.js';
 import { type Config } from './config.js';
 import { CleanupContext } from './context/cleanup-context.js';
 import { type GlobalOptions } from './options.js';
+import { log } from './utils/log.js';
 import { getWorkspaceDependencyNames } from './workspace/get-workspace-dependency-names.js';
-import { getWorkspace, getWorkspaces } from './workspace/get-workspaces.js';
+import { getWorkspaces } from './workspace/get-workspaces.js';
 
 interface MainActionOptions {
   readonly config: Config;
@@ -41,14 +42,19 @@ export const mainAction = async ({
     `Command "${cmd}" does not support package manager "${config.packageManager}".`,
   );
 
-  const root = getWorkspace(config.rootPackage, commandInfo.name);
-  const workspaces = await getWorkspaces({
+  const [root, workspaces, isMonorepo] = await getWorkspaces({
+    rootPackage: config.rootPackage,
     workspacePackages: config.workspacePackages,
-    rootDir: config.rootPackage.dir,
     commandName: commandInfo.name,
     ...globalOpts.select,
     ...globalOpts.git,
   });
+
+  if (workspaces.length === 0) {
+    log.warn('No workspaces selected.');
+    return;
+  }
+
   const subCommander = new Commander().copyInheritedSettings(commander as CommandUnknownOpts);
 
   process.chdir(config.rootPackage.dir);
@@ -113,9 +119,10 @@ export const mainAction = async ({
   if (process.exitCode != null) return;
 
   const { concurrency, wait } = globalOpts.run;
-  const { prefix } = globalOpts.log;
+  const prefix = globalOpts.log.prefix && isMonorepo;
   const semaphore = concurrency > 0 ? new Semaphore(concurrency) : null;
   const promises = new Map<string, Promise<any>>();
+
   let prefixColorIndex = 0;
 
   for (const workspace of workspaces.values()) {

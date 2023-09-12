@@ -1,6 +1,6 @@
 {
   "name": "@werk/cli",
-  "description": "An open-minded monorepo tool, with opinionated plugins.",
+  "description": "Open-minded build tooling, with opinionated plugins.",
   "version": "3.0.2",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",

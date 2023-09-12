@@ -1,6 +1,6 @@
 # Werk
 
-An open-minded monorepo tool, with opinionated plugins.
+Open-minded build tooling, with opinionated plugins.
 
 [![npm](https://img.shields.io/npm/v/@werk/cli?label=NPM)](https://www.npmjs.com/package/@werk/cli)
 
@@ -19,7 +19,7 @@ An open-minded monorepo tool, with opinionated plugins.
 
 ## Features
 
-Werk is a framework for building monorepo tools as [command plugins](#custom-commands), providing a common set of features to make tool development quick and easy. It is designed to be flexible and extensible, while still providing a consistent user experience.
+Werk is a framework for writing custom commands as [command plugins](#custom-commands), providing a common set of features to make tool development quick and easy. It is designed to be flexible and extensible, while still providing a consistent user experience. It can be used with single package projects, but has many features specific to monorepos.
 
 - Workspaces
   - Information
@@ -36,19 +36,19 @@ Werk is a framework for building monorepo tools as [command plugins](#custom-com
 
 ## Prerequisites
 
-Werk supports monorepos based on NPM (version 8+) workspaces. There are no current plans to support other package managers.
+Werk supports projects based on NPM (version 8+) workspaces. There are no current plans to support other package managers.
 
 Git is used if available, but is not required. If Git is not available, Werk will not be able to detect changes.
 
 ## Getting Started
 
-Install Werk globally so you can use the `werk` command anywhere and without `npx`. Don't worry, the global install will delegate to a local install if one exists!
+Install Werk globally so you can use the `werk` command anywhere and without `npx`. Don't worry, the global install will delegate to the locally installed version of Werk in your projects.
 
 ```sh
 npm i -g @werk/cli
 ```
 
-All [commands](#official-commands) are modular and must be installed separately. Commands can be installed either globally or locally. Installing them as local dev dependencies of your monorepo root is recommended.
+All [commands](#official-commands) are modular and must be installed separately. Install them locally (not globally) in the root package of your repository.
 
 ```sh
 npm i -D @werk/command-list
@@ -84,14 +84,7 @@ Run `npm i -D @werk/command-<name>` in your workspaces root to install these com
 
 [Learn how to create your own custom command plugins!](https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk/README_CUSTOM_COMMANDS.md)
 
-When you run `werk <command>`, the package for the command will be looked up and loaded dynamically. The package must be installed, either globally or locally to a workspaces root. They can even be a workspace inside your monorepo!
-
-Packages will be resolved as follows.
-
-- Local: `@werk/command-<command>`
-- Local: `werk-command-<command>`
-- Global: `@werk/command-<command>`
-- Global: `werk-command-<command>`
+When you run `werk <command>`, the package for the command is loaded dynamically. The corresponding command package must already be installed.
 
 If you want to use a command package with a non-standard name, you can
 map the command name to an arbitrary package name in your workspaces root `package.json` file. This will completely override the normal package resolution strategy for the command.

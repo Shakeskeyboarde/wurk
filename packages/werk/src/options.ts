@@ -9,6 +9,7 @@ export interface SelectOptions {
   readonly withDependencies: boolean;
   readonly includeWorkspaces: readonly string[];
   readonly includeKeywords: readonly string[];
+  readonly includeRoot: boolean;
   readonly excludeWorkspaces: readonly string[];
   readonly excludeKeywords: readonly string[];
   readonly excludePrivate: boolean;
