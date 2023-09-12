@@ -22,7 +22,7 @@ type MutableJson<T> = T extends readonly (infer V)[]
 
 export interface PackageJson extends ReadonlyJson<OmitWithIndex<IPackageJsonBase, 'scripts'>> {
   readonly scripts?: ReadonlyJson<IScriptsMap>;
-  readonly [key: string]: any;
+  readonly [key: string]: unknown;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface

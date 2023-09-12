@@ -7,6 +7,7 @@ import { spawn } from '../utils/spawn.js';
 export interface NpmMetadata {
   version: string;
   gitHead?: string;
+  [key: string]: unknown;
 }
 
 export const getNpmMetadata = memoize(
