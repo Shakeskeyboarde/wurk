@@ -1,4 +1,5 @@
 import assert from 'node:assert';
+import { stat } from 'node:fs/promises';
 import { relative, resolve } from 'node:path';
 
 import { type Log, type MutablePackageJson, type Spawn, type Workspace } from '@werk/cli';
@@ -156,26 +157,31 @@ const getIsChangeLogOutdated = async (
   if (isRepo && lastCommit == null) return true;
 
   // git diff-tree -1 -r --name-only --no-commit-id 19fb750136fadef9929ea9b54c0807c0d9b06216 -- CHANGELOG.md
-  const isChangeLogOutdated = await spawn(
-    'git',
-    [
-      'diff-tree',
-      '-1',
-      '-r',
-      '--name-only',
-      '--no-commit-id',
-      lastCommit,
-      '--',
-      resolve(workspace.dir, 'CHANGELOG.md'),
-    ],
-    { capture: true, errorEcho: true },
-  )
-    .getOutput('utf-8')
-    .then((value) => !value);
+  const [isChangeLogPresent, isChangeLogOutdated] = await Promise.all([
+    stat(resolve(workspace.dir, 'CHANGELOG.md'))
+      .then((stats) => stats.isFile())
+      .catch(() => false),
+    spawn(
+      'git',
+      [
+        'diff-tree',
+        '-1',
+        '-r',
+        '--name-only',
+        '--no-commit-id',
+        lastCommit,
+        '--',
+        resolve(workspace.dir, 'CHANGELOG.md'),
+      ],
+      { capture: true, errorEcho: true },
+    )
+      .getOutput('utf-8')
+      .then((value) => !value),
+  ]);
 
   log.debug(`Workspace "${workspace.name}" changeLogOutdated=${isChangeLogOutdated}`);
 
-  return isChangeLogOutdated;
+  return isChangeLogPresent && isChangeLogOutdated;
 };
 
 const getIsPackComplete = async (
