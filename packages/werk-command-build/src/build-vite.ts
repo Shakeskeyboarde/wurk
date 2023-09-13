@@ -81,6 +81,7 @@ export const buildVite = async ({ log, workspace, start, isEsm, isCjs, spawn }: 
   }
 
   await spawn('vite', [command, watch, host, `--config=${config ?? defaultConfig}`], {
+    cwd: workspace.dir,
     echo: true,
     errorReturn: true,
     errorSetExitCode: true,

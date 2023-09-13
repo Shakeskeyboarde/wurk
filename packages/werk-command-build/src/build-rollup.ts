@@ -27,6 +27,7 @@ export const buildRollup = async ({ log, workspace, start, spawn }: BuildRollupO
     'rollup',
     [config && `--config=${config}`, config?.endsWith('.ts') && `--configPlugin=typescript`, start && '--watch'],
     {
+      cwd: workspace.dir,
       echo: true,
       errorReturn: true,
       errorSetExitCode: true,

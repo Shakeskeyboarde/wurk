@@ -114,6 +114,7 @@ export const buildTsc = async ({
       }
 
       await spawn('tsc', ['-p', filename, start && '--watch'], {
+        cwd: workspace.dir,
         echo: true,
         errorSetExitCode: true,
         errorReturn: true,
