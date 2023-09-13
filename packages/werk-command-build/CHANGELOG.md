@@ -1,3 +1,9 @@
+## 1.1.33 (2023-09-13)
+
+### Bug Fixes
+
+- Always use explicit spawn cwd. (0656a47)
+
 ## 1.1.32 (2023-09-12)
 
 **Note**: Updated local dependencies.

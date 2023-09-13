@@ -1,3 +1,9 @@
+## 1.2.10 (2023-09-13)
+
+### Bug Fixes
+
+- Always use explicit spawn cwd. (a0bed80)
+
 ## 1.2.9 (2023-09-12)
 
 **Note**: Updated local dependencies.

@@ -1,3 +1,9 @@
+# 5.0.0 (2023-09-13)
+
+### Breaking Changes
+
+- Always use root workspace (repo root) directory for context.spawn default working directory. (716a5cb)
+
 ## 4.0.1 (2023-09-12)
 
 ### Documentation

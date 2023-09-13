@@ -1,3 +1,9 @@
+## 3.0.11 (2023-09-13)
+
+### Bug Fixes
+
+- Always use explicit spawn cwd. (b2dfc0f)
+
 ## 3.0.10 (2023-09-12)
 
 **Note**: Updated local dependencies.

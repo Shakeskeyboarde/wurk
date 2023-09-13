@@ -1,3 +1,13 @@
+## 2.0.7 (2023-09-13)
+
+### Bug Fixes
+
+- Always use explicit spawn cwd. (267c9bb)
+
+### Chores
+
+- Update deps. (3ee8dc0)
+
 ## 2.0.6 (2023-09-13)
 
 ### Chores
