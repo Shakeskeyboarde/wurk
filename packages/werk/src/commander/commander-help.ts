@@ -20,7 +20,7 @@ export class CommanderHelp extends Help {
     };
 
     const formatList = (textArray: string[]): string => {
-      return textArray.join('\n').replace(/^/gm, ' '.repeat(itemIndentWidth));
+      return textArray.join('\n').replace(/^/gmu, ' '.repeat(itemIndentWidth));
     };
 
     // Usage

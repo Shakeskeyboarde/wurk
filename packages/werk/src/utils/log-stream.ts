@@ -69,7 +69,7 @@ export class LogStream extends Transform {
 
     if (!value) return;
 
-    const rx = /(.*?)(?:\r?\n|\r)/gu;
+    const rx = /(.*)(?:\r?\n|\r)/gu;
     let line: RegExpExecArray | null;
     let lastIndex = 0;
 

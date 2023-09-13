@@ -126,7 +126,7 @@ export class Log {
     const string = String(
       message instanceof Error ? (process.env.DEBUG ? message.stack ?? message : message.message) : message,
     );
-    const lines = string.split(/\r?\n|\r/gu);
+    const lines = string.split(/\r?\n|\r/u);
 
     lines.forEach((line) => this.#writeLine(stream, line + '\n', formatLine));
   };

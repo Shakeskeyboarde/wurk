@@ -24,33 +24,56 @@ export const getChanges = async (
     { capture: true },
   ).getStdout('utf-8');
 
-  const entries = [
-    ...text.matchAll(/\0{3}([^\r\n\0]+?)\0{2}\s*([^\r\n\0]+)\s*(?:(?:\r?\n){2}\s*([^\0]*?)\s*)?\0{3}$/gmsu),
-  ].map(([, hash = '', subject = '', body = '']) => ({ hash, subject, body }));
+  const entries = [...text.matchAll(/\0{3}([^\0]*)\0{2}([^\0]*)\0{3}$/gmu)].flatMap(([, hash, message]) => {
+    if (!hash || !message) return [];
+
+    let [subject, body = ''] = message.split(/\0{2}/u, 2);
+
+    hash = hash?.trim();
+    subject = subject?.trim();
+    body = body.trim();
+
+    if (!subject) return [];
+
+    return { hash, subject, body };
+  });
 
   let changes: Change[] = entries
     .flatMap(({ hash, subject, body }): Change[] => {
-      const subjectMatch = subject.match(
-        /^\s*([a-zA-Z]+|BREAKING[ -]CHANGE)\s*(?:\(\s*(.*?)\s*\))?\s*(!)?\s*:\s*(.*?)\s*$/u,
-      );
+      const subjectMatch = subject.match(/^\s*([a-zA-Z]+|BREAKING[ -]CHANGE)\s*(?:\((.*?)\)\s*)?(!\s*)?:(.*)$/u);
 
       if (!subjectMatch) {
         isConventional = false;
         return [];
       }
 
-      const [, type = '', scope, breaking, summary = ''] = subjectMatch;
+      let [, type = '', scope, breaking, summary = ''] = subjectMatch;
+
+      type = type.trim();
+      scope = scope?.trim();
+      breaking = breaking?.trim();
+      summary = summary.trim();
+
       const message = `${summary} (${hash})`;
 
       if (type === 'internal') return [];
 
-      const bodyLines = body.split(/\r?\n/gu);
+      const bodyLines = body.split(/\r?\n/u);
 
       return [
         { type: breaking ? 'BREAKING CHANGE' : type, scope, message },
         ...bodyLines.flatMap((line) => {
-          const lineMatch = line.match(/^\s*BREAKING[ -]CHANGES?\s*!?\s*:\s*(.*?)\s*$/mu);
-          return lineMatch ? [{ type: 'BREAKING CHANGE', message: `${lineMatch[1]} (${hash})` }] : [];
+          const lineMatch = line.match(/^\s*BREAKING[ -]CHANGES?\s*(?:!\s*)?:(.*)$/mu);
+
+          if (!lineMatch) return [];
+
+          let [, breakingMessage = ''] = lineMatch;
+
+          breakingMessage = breakingMessage.trim();
+
+          if (!breakingMessage) return [];
+
+          return { type: 'BREAKING CHANGE', message: `${breakingMessage} (${hash})` };
         }),
       ];
     })

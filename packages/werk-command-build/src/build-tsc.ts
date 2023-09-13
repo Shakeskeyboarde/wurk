@@ -104,7 +104,7 @@ export const buildTsc = async ({
 
   await Promise.all(
     tsBuildConfigs.map(async (filename) => {
-      const name = basename(filename).replace(/(^tsconfig\.|\.json$)/gu, '');
+      const name = basename(filename).replace(/^tsconfig\.|\.json$/gu, '');
       const subLog = new Log({ ...log, prefix: `${log.prefix}(${name})` });
       const { noEmit, emitDeclarationOnly, outDir, isEsmConfig } = await readTsConfig(filename, workspace, spawn);
 

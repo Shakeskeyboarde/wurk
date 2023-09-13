@@ -79,9 +79,7 @@ export const writeChangelog = async (
   const content = await readFile(filename, 'utf-8')
     .then((text) => text.trim())
     .catch(() => '');
-  const entries = [
-    ...content.matchAll(/^#+ (\d+\.\d+\.\d+(?:-[a-z0-9.+-]*)?)(?:.(?!^#+ \d+\.\d+\.\d+(?:-[a-z0-9.+-]*)?))*.?/gmsu),
-  ]
+  const entries = [...content.matchAll(/^#+ (\d+\.\d+\.\d+(?:-[a-z\d.+-]*)?)(?:.(?!^#+ \d+\.\d+\.\d))*.?/gmsu)]
     .map((entry): Entry => ({ version: entry[1] as string, text: entry[0].trimEnd() + '\n' }))
     .sort((a, b) => rcompare(a.version, b.version));
   const index = entries.findIndex((entry) => lte(entry.version, version));

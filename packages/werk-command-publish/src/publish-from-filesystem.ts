@@ -98,7 +98,7 @@ export const publishFromFilesystem = async ({
 
     for (const dependency of dependencies) {
       // Try to match the existing version range prefix, or default to "^".
-      const rangePrefix = workspace[scope][dependency.name]?.match(/^(|~|^|>=?)[a-zA-Z0-9.-]+$/u)?.[1] ?? '^';
+      const rangePrefix = workspace[scope][dependency.name]?.match(/^([~^]|>=?)?[a-zA-Z\d.-]+$/u)?.[1] ?? '^';
 
       dependenciesPatch[scope] = {
         ...dependenciesPatch[scope],
