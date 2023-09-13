@@ -14,6 +14,7 @@ export default createCommand({
     const inheritStreams = !log.prefix && !isParallel;
 
     await spawn(...args, {
+      cwd: workspace.dir,
       input: inheritStreams ? 'inherit' : false,
       echo: inheritStreams ? 'inherit' : true,
       errorSetExitCode: true,
