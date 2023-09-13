@@ -1,3 +1,9 @@
+## 2.0.6 (2023-09-13)
+
+### Chores
+
+- Ignore missing changelogs. (a66f611)
+
 ## 2.0.5 (2023-09-12)
 
 **Note**: Updated local dependencies.
