@@ -136,7 +136,10 @@ export const publishFromFilesystem = async ({
       Boolean(otp) && `--otp=${otp}`,
       dryRun && '--dry-run',
     ],
-    { echo: true },
+    {
+      cwd: workspace.dir,
+      echo: true,
+    },
   );
 
   published.add(workspace.name);
@@ -173,7 +176,11 @@ const getIsChangeLogOutdated = async (
         '--',
         resolve(workspace.dir, 'CHANGELOG.md'),
       ],
-      { capture: true, errorEcho: true },
+      {
+        cwd: workspace.dir,
+        capture: true,
+        errorEcho: true,
+      },
     )
       .getOutput('utf-8')
       .then((value) => !value),
@@ -189,9 +196,10 @@ const getIsPackComplete = async (
   workspace: Pick<Workspace, 'name' | 'dir' | 'getEntryPoints'>,
   spawn: Spawn,
 ): Promise<boolean> => {
-  const packJson = await spawn('npm', ['pack', '--dry-run', '--json'], { capture: true }).getJson<
-    readonly { readonly files: readonly { readonly path: string }[] }[]
-  >();
+  const packJson = await spawn('npm', ['pack', '--dry-run', '--json'], {
+    cwd: workspace.dir,
+    capture: true,
+  }).getJson<readonly { readonly files: readonly { readonly path: string }[] }[]>();
   const packFiles = (packJson?.[0]?.files ?? []).map(({ path }) => resolve(workspace.dir, path));
   const isPackComplete = workspace
     .getEntryPoints()
