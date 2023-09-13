@@ -7,7 +7,7 @@ export default createCommand({
 
     log.info(`Git status for workspace "${workspace.name}".`);
 
-    const status = await spawn('git', ['status', '--porcelain', '--', '.'], {
+    const status = await spawn('git', ['status', '--porcelain', '--', workspace.dir], {
       echo: true,
       capture: true,
     }).getStdout('utf-8');
