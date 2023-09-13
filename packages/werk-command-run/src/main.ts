@@ -28,6 +28,7 @@ export default createCommand({
 
     for (const script of scripts) {
       await spawn('npm', ['run', '--if-present', script, '--', ...scriptArgs], {
+        cwd: workspace.dir,
         input: inheritStreams ? 'inherit' : false,
         echo: inheritStreams ? 'inherit' : true,
         errorSetExitCode: true,
