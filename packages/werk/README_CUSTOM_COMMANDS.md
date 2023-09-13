@@ -72,7 +72,7 @@ A context object is passed to each hook callback. The properties attached to tho
 - `workspace` (**each**): The current [workspace](#workspaces).
 - `forceWait()` (**before**): Force dependent workspaces to wait for their dependencies (ie. ignore the CLI `--no-wait` option).
 - `saveAndRestoreFile(filename)` (**before**, **each**, **after**): Save the contents of a file and restore it after the command completes.
-- `spawn(cmd, args?, options?)` (**before**, **each**, **after**, **cleanup**): Spawn a process. The working directory will be the root of the current workspace if available (`each` hook), or the workspaces root otherwise.
+- `spawn(cmd, args?, options?)` (**before**, **each**, **after**, **cleanup**): Spawn a process. The working directory will be the workspaces (monorepo) root.
 - `startWorker(data?)` (**before**, **each**, **after**): Re-runs the current hook in a [worker thread](https://nodejs.org/api/worker_threads.html).
 - `isParallel` (**each**): True if the command is running in parallel mode.
 - `isWorker` (**before**, **each**, **after**): True if the hook is running in a worker thread.
@@ -184,7 +184,7 @@ The `context.spawn(cmd, args?, options?)` function is a promise based helper for
 **Note:** Using this helper is optional. However, please consider piping output from alternatively spawned processes to `log.stdout` and `log.stderr`.
 
 ```ts
-const spawnPromise = spawn('git', ['status', '--porcelain'], {
+const spawnPromise = context.spawn('git', ['status', '--porcelain'], {
   // Pass through output streams.
   //  Default: false
   echo: true,
@@ -218,7 +218,7 @@ const spawnPromise = spawn('git', ['status', '--porcelain'], {
   errorMessage: (error, exitCode) => `Something went wrong`,
 
   // Set the process working directory.
-  //  Default: context.workspace.dir or context.rootDir
+  //  Default: context.root.dir
   cwd: '/current/working/directory',
 
   // Set the process environment variables (merged with process.env).

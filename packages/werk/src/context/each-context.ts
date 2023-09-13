@@ -1,5 +1,5 @@
 import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
-import { type Spawn, spawn } from '../utils/spawn.js';
+import { type Spawn } from '../utils/spawn.js';
 import { type WorkspacePartialOptions } from '../workspace/get-workspaces.js';
 import { Workspace } from '../workspace/workspace.js';
 import { BaseAsyncContext, type BaseAsyncContextOptions } from './base-async-context.js';
@@ -44,10 +44,7 @@ export class EachContext<A extends CommanderArgs, O extends CommanderOptions, M>
     this.matrixValue = matrixValue;
   }
 
-  /**
-   * Spawn a child process at the current workspace root.
-   */
   readonly spawn: Spawn = (cmd, args, options) => {
-    return spawn(cmd, args, { cwd: this.workspace.dir, log: this.log, ...options });
+    return super.spawn(cmd, args, { log: this.log, ...options });
   };
 }

@@ -36,7 +36,7 @@ Werk is a framework for creating build and build-related commands as [command pl
 
 ## Prerequisites
 
-Werk supports projects based on NPM (version 8+) workspaces. There are no current plans to support other package managers.
+Werk supports projects based on NPM (version 8+). There are no current plans to support other package managers.
 
 Git is used if available, but is not required. If Git is not available, Werk will not be able to detect changes.
 
@@ -125,6 +125,8 @@ Options which reduce the number of workspaces that are processed.
   - Include a workspace by name (repeatable).
 - `-k, --keyword <value>`
   - Include workspaces with a matching keyword (repeatable).
+- `--include-workspace-root`
+  - Include the root work workspace.
 - `--not-workspace <name>`
   - Exclude a workspace by name (repeatable).
 - `--not-keyword <value>`

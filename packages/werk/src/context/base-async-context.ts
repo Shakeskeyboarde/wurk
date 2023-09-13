@@ -1,5 +1,5 @@
 import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
-import { type Spawn, spawn } from '../utils/spawn.js';
+import { spawn, type SpawnOptions, type SpawnPromise } from '../utils/spawn.js';
 import { type WorkspacePartialOptions } from '../workspace/get-workspaces.js';
 import { Workspace } from '../workspace/workspace.js';
 import { BaseContext, type BaseContextOptions } from './base-context.js';
@@ -90,20 +90,27 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
     this.isWorker = isWorker;
     this.workerData = workerData;
     this.#startWorker = startWorker;
+
+    this.spawn = this.spawn.bind(this);
+    this.startWorker = this.startWorker.bind(this);
   }
 
   /**
    * Spawn a child process at the workspaces root.
    */
-  readonly spawn: Spawn = (cmd, args, options) => {
+  spawn(
+    cmd: string,
+    args?: readonly (string | number | false | null | undefined)[],
+    options?: SpawnOptions,
+  ): SpawnPromise {
     return spawn(cmd, args, { cwd: this.root.dir, log: this.log, ...options });
-  };
+  }
 
   /**
    * Returns false if already running in a worker thread. Creating nested
    * worker threads is not supported.
    */
-  readonly startWorker = async (data?: any): Promise<boolean> => {
+  async startWorker(data?: any): Promise<boolean> {
     return await this.#startWorker(data);
-  };
+  }
 }
