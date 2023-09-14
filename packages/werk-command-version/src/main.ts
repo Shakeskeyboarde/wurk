@@ -88,7 +88,7 @@ export default createCommand({
 
     if (dependencyUpdates) {
       packagePatches.push(dependencyUpdates);
-      log.notice(`Updating workspace "${workspace.name}" dependencies.`);
+      log.debug(`Updating workspace "${workspace.name}" dependencies.`);
     }
 
     /*
@@ -132,12 +132,12 @@ export default createCommand({
       }
 
       if (isPackageUpdated) {
-        log.notice(`Writing workspace "${workspace.name}" package.`);
+        log.debug(`Writing workspace "${workspace.name}" package.`);
         await workspace.patchPackageJson(...packagePatches);
       }
 
       if (isChangeLogUpdated) {
-        log.notice(`Writing workspace "${workspace.name}" changelog.`);
+        log.debug(`Writing workspace "${workspace.name}" changelog.`);
 
         if (!(await writeChangelog(workspace.name, workspace.dir, version, changes))) {
           log.warn(`Version "${version}" already exists in the workspace "${workspace.name}" changelog.`);
@@ -146,7 +146,12 @@ export default createCommand({
     });
   },
 
-  after: async ({ spawn }) => {
+  after: async ({ log, spawn }) => {
+    if (workspaceChanges.size === 0) {
+      log.info('No versions updated.');
+      return;
+    }
+
     for (const change of workspaceChanges.values()) {
       await change();
     }
