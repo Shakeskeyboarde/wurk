@@ -1,3 +1,9 @@
+## 5.0.1 (2023-09-13)
+
+### Bug Fixes
+
+- Regexp problems exposed by new linter rules. (9d7274f)
+
 # 5.0.0 (2023-09-13)
 
 ### Breaking Changes

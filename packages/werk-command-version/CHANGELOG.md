@@ -1,3 +1,13 @@
+## 3.0.6 (2023-09-13)
+
+### Bug Fixes
+
+- Regexp problems exposed by new linter rules. (9d7274f)
+
+### Chores
+
+- Log "writing" message at debug level. (07e2957)
+
 ## 3.0.5 (2023-09-13)
 
 **Note**: Updated local dependencies.

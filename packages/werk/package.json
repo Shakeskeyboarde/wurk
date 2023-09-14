@@ -1,7 +1,7 @@
 {
   "name": "@werk/cli",
   "description": "Open-minded build tooling, with opinionated plugins.",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk/README.md",

@@ -1,7 +1,7 @@
 {
   "name": "@werk/command-vitest",
   "description": "Run Vitest using its built-in workspaces support",
-  "version": "1.1.13",
+  "version": "1.1.14",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-vitest/README.md",
@@ -35,6 +35,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@werk/cli": "^5.0.0"
+    "@werk/cli": "^5.0.1"
   }
 }
