@@ -1,3 +1,9 @@
+## 3.1.1 (2023-09-17)
+
+### Improvements
+
+- Ignore any commit type string containing "internal", "version", or "release". Also, support the "improvement" type. (24b86ba)
+
 ## 3.1.0 (2023-09-17)
 
 ### Features
