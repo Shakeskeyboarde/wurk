@@ -3,8 +3,73 @@ import { resolve } from 'node:path';
 
 import { type Spawn } from '@werk/cli';
 
+export enum ChangeType {
+  none,
+  breaking,
+  feat,
+  fix,
+  refactor,
+  improvement,
+  perf,
+  tests,
+  docs,
+  build,
+  ci,
+  chore,
+  revert,
+  note,
+}
+
+const CHANGE_TYPES: Readonly<Record<string, ChangeType>> = {
+  'breaking change': ChangeType.breaking,
+  'breaking-change': ChangeType.breaking,
+  'breaking changes': ChangeType.breaking,
+  'breaking-changes': ChangeType.breaking,
+  break: ChangeType.breaking,
+  breaks: ChangeType.breaking,
+  breaking: ChangeType.breaking,
+  major: ChangeType.breaking,
+  feat: ChangeType.feat,
+  feats: ChangeType.feat,
+  feature: ChangeType.feat,
+  features: ChangeType.feat,
+  featuring: ChangeType.feat,
+  minor: ChangeType.feat,
+  patch: ChangeType.fix,
+  fix: ChangeType.fix,
+  fixes: ChangeType.fix,
+  fixed: ChangeType.fix,
+  fixing: ChangeType.fix,
+  refactor: ChangeType.refactor,
+  refactors: ChangeType.refactor,
+  refactored: ChangeType.refactor,
+  improve: ChangeType.improvement,
+  improves: ChangeType.improvement,
+  improved: ChangeType.improvement,
+  improving: ChangeType.improvement,
+  improvement: ChangeType.improvement,
+  improvements: ChangeType.improvement,
+  perf: ChangeType.perf,
+  performance: ChangeType.perf,
+  test: ChangeType.tests,
+  tests: ChangeType.tests,
+  tested: ChangeType.tests,
+  testing: ChangeType.tests,
+  doc: ChangeType.docs,
+  docs: ChangeType.docs,
+  build: ChangeType.build,
+  builds: ChangeType.build,
+  building: ChangeType.build,
+  ci: ChangeType.ci,
+  revert: ChangeType.revert,
+  reverts: ChangeType.revert,
+  reverting: ChangeType.revert,
+  note: ChangeType.note,
+  notes: ChangeType.note,
+};
+
 export interface Change {
-  readonly type: string;
+  readonly type: ChangeType;
   readonly scope?: string;
   readonly message: string;
 }
@@ -40,30 +105,30 @@ export const getChanges = async (
 
   let changes: Change[] = entries
     .flatMap(({ hash, subject, body }): Change[] => {
-      const subjectMatch = subject.match(/^\s*([a-zA-Z]+|BREAKING[ -]CHANGE)\s*(?:\((.*?)\)\s*)?(!\s*)?:(.*)$/u);
+      const subjectMatch = subject.match(/^\s*([a-z-]+)\s*(?:\((.*?)\)\s*)?(?:!\s*)?:(.*)$/iu);
 
       if (!subjectMatch) {
         isConventional = false;
         return [];
       }
 
-      let [, type = '', scope, breaking, summary = ''] = subjectMatch;
+      let [, typeString = '', scope, summary = ''] = subjectMatch;
 
-      type = type.trim().toLowerCase();
+      typeString = typeString.trim().toLowerCase();
       scope = scope?.trim();
-      breaking = breaking?.trim();
       summary = summary.trim();
 
+      const type =
+        typeString.includes('internal') || typeString.includes('version') || typeString.includes('release')
+          ? ChangeType.breaking
+          : CHANGE_TYPES[typeString] ?? ChangeType.fix;
       const message = `${summary} (${hash})`;
-
-      if (type.includes('internal') || type.includes('version') || type.includes('release')) return [];
-
       const bodyLines = body.split(/\r?\n/u);
 
       return [
-        { type: breaking ? 'BREAKING CHANGE' : type, scope, message },
+        { type, scope, message },
         ...bodyLines.flatMap((line) => {
-          const lineMatch = line.match(/^\s*BREAKING[ -]CHANGES?\s*(?:!\s*)?:(.*)$/mu);
+          const lineMatch = line.match(/^\s*break(?:s|ing(?:[ -]?changes?)?)?\s*(?:!\s*)?:(.*)$/imu);
 
           if (!lineMatch) return [];
 
@@ -71,9 +136,7 @@ export const getChanges = async (
 
           breakingMessage = breakingMessage.trim();
 
-          if (!breakingMessage) return [];
-
-          return { type: 'BREAKING CHANGE', message: `${breakingMessage} (${hash})` };
+          return { type: ChangeType.breaking, message: `${breakingMessage} (${hash})` };
         }),
       ];
     })

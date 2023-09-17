@@ -5,7 +5,7 @@ import { parse, type ReleaseType, SemVer } from 'semver';
 
 import { getBumpedVersion } from './get-bumped-version.js';
 import { getChangeVersion } from './get-change-version.js';
-import { type Change, getChanges } from './get-changes.js';
+import { type Change, ChangeType, getChanges } from './get-changes.js';
 import { getIncrementedVersion } from './get-incremented-version.js';
 import { writeChangelog } from './write-changelog.js';
 
@@ -105,7 +105,7 @@ export default createCommand({
      */
     if (!workspace.private && dependencyUpdates && !version) {
       version = getIncrementedVersion(workspace.version).format();
-      changes = [...changes, { type: 'note', message: 'Updated local dependencies.' }];
+      changes = [...changes, { type: ChangeType.note, message: 'Updated local dependencies.' }];
     }
 
     const isVersionUpdated = Boolean(version) && version !== workspace.version;
@@ -118,7 +118,7 @@ export default createCommand({
 
     // Add any additional changelog notes.
     if (note.length) {
-      changes = [...changes, ...note.map((message) => ({ type: 'note', message }))];
+      changes = [...changes, ...note.map((message) => ({ type: ChangeType.note, message }))];
     }
 
     const isPackageUpdated = Boolean(packagePatches.length);
@@ -166,7 +166,7 @@ export default createCommand({
 
 const getExplicitVersion = (spec: SemVer): [version: string, changes: readonly Change[], allowBump: boolean] => {
   const version = spec.format();
-  const changes = [{ type: 'note', message: `Updated to version "${version}".` }];
+  const changes = [{ type: ChangeType.note, message: `Updated to version "${version}".` }];
 
   return [version, changes, false];
 };
@@ -177,7 +177,7 @@ const getBumpVersion = (
   workspace: Workspace,
 ): [version: string, changes: readonly Change[], allowBump: boolean] => {
   const version = getBumpedVersion(workspace.version, spec, preid).format();
-  const changes = [{ type: 'note', message: `Updated to version "${version}".` }];
+  const changes = [{ type: ChangeType.note, message: `Updated to version "${version}".` }];
 
   return [version, changes, false];
 };
@@ -214,7 +214,7 @@ const getAutoVersion = async (
     log.warn(`Workspace "${workspace.name}" has non-conventional commits.`);
   }
 
-  const version = changes.length > 0 ? getChangeVersion(workspace.version, changes).format() : '';
+  const version = getChangeVersion(workspace.version, changes);
 
   return [version, changes];
 };

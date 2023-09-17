@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 
 import { eq, lte, rcompare, SemVer } from 'semver';
 
-import { type Change } from './get-changes.js';
+import { type Change, ChangeType } from './get-changes.js';
 
 interface Entry {
   version: string;
@@ -11,6 +11,7 @@ interface Entry {
 }
 
 enum Section {
+  hidden,
   breaking,
   feat,
   fix,
@@ -26,50 +27,68 @@ enum Section {
   note,
 }
 
-const CHANGE_SECTIONS: Readonly<Record<string, Section>> = {
-  'breaking change': Section.breaking,
-  'breaking-change': Section.breaking,
-  'breaking changes': Section.breaking,
-  'breaking-changes': Section.breaking,
-  feat: Section.feat,
-  feature: Section.feat,
-  features: Section.feat,
-  fix: Section.fix,
-  fixes: Section.fix,
-  fixed: Section.fix,
-  refactor: Section.refactor,
-  refactors: Section.refactor,
-  improve: Section.improvement,
-  improvement: Section.improvement,
-  improvements: Section.improvement,
-  perf: Section.perf,
-  performance: Section.perf,
-  test: Section.tests,
-  tests: Section.tests,
-  doc: Section.docs,
-  docs: Section.docs,
-  build: Section.build,
-  ci: Section.ci,
-  revert: Section.revert,
-  reverts: Section.revert,
-  note: Section.note,
-  notes: Section.note,
+const getSection = (type: ChangeType): Section => {
+  switch (type) {
+    case ChangeType.breaking:
+      return Section.breaking;
+    case ChangeType.feat:
+      return Section.feat;
+    case ChangeType.fix:
+      return Section.fix;
+    case ChangeType.refactor:
+      return Section.refactor;
+    case ChangeType.improvement:
+      return Section.improvement;
+    case ChangeType.perf:
+      return Section.perf;
+    case ChangeType.tests:
+      return Section.tests;
+    case ChangeType.docs:
+      return Section.docs;
+    case ChangeType.build:
+      return Section.build;
+    case ChangeType.ci:
+      return Section.ci;
+    case ChangeType.chore:
+      return Section.chore;
+    case ChangeType.revert:
+      return Section.revert;
+    case ChangeType.note:
+      return Section.note;
+    case ChangeType.none:
+      return Section.hidden;
+  }
 };
 
-const SECTION_HEADINGS: Readonly<Record<Section, string>> = {
-  [Section.breaking]: 'Breaking Changes',
-  [Section.feat]: 'Features',
-  [Section.fix]: 'Bug Fixes',
-  [Section.refactor]: 'Code Refactoring',
-  [Section.improvement]: 'Improvements',
-  [Section.perf]: 'Performance Improvements',
-  [Section.tests]: 'Tests',
-  [Section.docs]: 'Documentation',
-  [Section.build]: 'Build System',
-  [Section.ci]: 'Continuous Integration',
-  [Section.chore]: 'Chores',
-  [Section.revert]: 'Reverts',
-  [Section.note]: '',
+const getHeading = (section: Section): string => {
+  switch (section) {
+    case Section.breaking:
+      return 'Breaking Changes';
+    case Section.feat:
+      return 'Features';
+    case Section.fix:
+      return 'Bug Fixes';
+    case Section.refactor:
+      return 'Code Refactoring';
+    case Section.improvement:
+      return 'Improvements';
+    case Section.perf:
+      return 'Performance Improvements';
+    case Section.tests:
+      return 'Tests';
+    case Section.docs:
+      return 'Documentation';
+    case Section.build:
+      return 'Build System';
+    case Section.ci:
+      return 'Continuous Integration';
+    case Section.chore:
+      return 'Chores';
+    case Section.revert:
+      return 'Reverts';
+    default:
+      return '';
+  }
 };
 
 export const writeChangelog = async (
@@ -102,14 +121,14 @@ export const writeChangelog = async (
     date.getDate().toString(10).padStart(2, '0'),
   ].join('-');
   const sortedChanges = changes
-    .map((change) => ({ ...change, section: CHANGE_SECTIONS[change.type] ?? Section.chore }))
+    .map((change) => ({ ...change, section: getSection(change.type) }))
+    .filter((change) => change.section !== Section.hidden)
     .sort((a, b) => a.section - b.section);
 
   let text = `${isMajorUpdate ? '#' : '##'} ${version.format()} (${dateString})\n`;
   let section: Section | undefined;
 
   sortedChanges.forEach((change) => {
-    // Skip notes. They go at the end.
     if (change.section === Section.note) return;
 
     // Omit parts of the scope that match all or part of the workspace name.
@@ -125,17 +144,17 @@ export const writeChangelog = async (
 
     if (section !== change.section) {
       section = change.section;
-      text += `\n### ${SECTION_HEADINGS[section]}\n\n`;
+      text += `\n### ${getHeading(change.section)}\n\n`;
     }
 
     text += `- ${scope ? `**${scope}:** ` : ''}${change.message}\n`;
   });
 
-  sortedChanges
-    .filter((change) => change.section === Section.note)
-    .forEach((change) => {
-      text += `\n**Note${change.scope ? ` (${change.scope})` : ''}**: ${change.message}\n`;
-    });
+  sortedChanges.forEach((change) => {
+    if (change.section !== Section.note) return;
+
+    text += `\n**Note${change.scope ? ` (${change.scope})` : ''}**: ${change.message}\n`;
+  });
 
   const newEntry: Entry = { version: version.format(), text };
 

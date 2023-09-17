@@ -1,32 +1,31 @@
-import { type ReleaseType, SemVer } from 'semver';
+import { SemVer } from 'semver';
 
-import { type Change } from './get-changes.js';
+import { type Change, ChangeType } from './get-changes.js';
 
-const RELEASE_TYPES: Readonly<Record<string, 'patch' | 'minor' | 'major'>> = {
-  'breaking change': 'major',
-  'breaking-change': 'major',
-  'breaking changes': 'major',
-  'breaking-changes': 'major',
-  feat: 'minor',
-  feature: 'minor',
-  features: 'minor',
-};
+enum VersionBump {
+  none,
+  patch,
+  minor,
+  major,
+}
 
-export const getChangeVersion = (version: string | SemVer, changes: readonly Change[]): SemVer => {
+export const getChangeVersion = (version: string | SemVer, changes: readonly Change[]): string => {
   version = new SemVer(version);
 
-  const releaseType = changes.reduce<Exclude<ReleaseType, `pre${string}`>>((acc, change) => {
-    const value = RELEASE_TYPES[change.type] ?? 'patch';
-
-    switch (value) {
-      case 'major':
-        return 'major';
-      case 'minor':
-        return acc === 'patch' ? 'minor' : acc;
-      case 'patch':
-        return acc;
+  const bump = changes.reduce((current, change) => {
+    switch (change.type) {
+      case ChangeType.none:
+        return current;
+      case ChangeType.breaking:
+        return VersionBump.major;
+      case ChangeType.feat:
+        return Math.max(current, VersionBump.minor);
+      default:
+        return Math.max(current, VersionBump.patch);
     }
-  }, 'patch');
+  }, VersionBump.none);
 
-  return version.inc(releaseType);
+  if (bump === VersionBump.none) return '';
+
+  return version.inc(bump === VersionBump.major ? 'major' : bump === VersionBump.minor ? 'minor' : 'patch').format();
 };
