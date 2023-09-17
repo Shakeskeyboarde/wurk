@@ -1,3 +1,9 @@
+## 1.2.1 (2023-09-17)
+
+### Improvements
+
+- Add 'ls' alias to the list command. (13c438c)
+
 ## 1.2.0 (2023-09-17)
 
 ### Features
