@@ -1,3 +1,9 @@
+## 3.1.2 (2023-09-17)
+
+### Improvements
+
+- Looser conventional commit detection and safer code. (66a587c)
+
 ## 3.1.1 (2023-09-17)
 
 ### Improvements
