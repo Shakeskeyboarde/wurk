@@ -15,6 +15,7 @@ enum Section {
   feat,
   fix,
   refactor,
+  improvement,
   perf,
   tests,
   docs,
@@ -26,30 +27,33 @@ enum Section {
 }
 
 const CHANGE_SECTIONS: Readonly<Record<string, Section>> = {
-  'BREAKING CHANGE': Section.breaking,
-  'BREAKING-CHANGE': Section.breaking,
-  'BREAKING CHANGES': Section.breaking,
-  'BREAKING-CHANGES': Section.breaking,
-  FEAT: Section.feat,
-  FEATURE: Section.feat,
-  FEATURES: Section.feat,
-  FIX: Section.fix,
-  FIXES: Section.fix,
-  FIXED: Section.fix,
-  REFACTOR: Section.refactor,
-  REFACTORS: Section.refactor,
-  PERF: Section.perf,
-  PERFORMANCE: Section.perf,
-  TEST: Section.tests,
-  TESTS: Section.tests,
-  DOC: Section.docs,
-  DOCS: Section.docs,
-  BUILD: Section.build,
-  CI: Section.ci,
-  REVERT: Section.revert,
-  REVERTS: Section.revert,
-  NOTE: Section.note,
-  NOTES: Section.note,
+  'breaking change': Section.breaking,
+  'breaking-change': Section.breaking,
+  'breaking changes': Section.breaking,
+  'breaking-changes': Section.breaking,
+  feat: Section.feat,
+  feature: Section.feat,
+  features: Section.feat,
+  fix: Section.fix,
+  fixes: Section.fix,
+  fixed: Section.fix,
+  refactor: Section.refactor,
+  refactors: Section.refactor,
+  improve: Section.improvement,
+  improvement: Section.improvement,
+  improvements: Section.improvement,
+  perf: Section.perf,
+  performance: Section.perf,
+  test: Section.tests,
+  tests: Section.tests,
+  doc: Section.docs,
+  docs: Section.docs,
+  build: Section.build,
+  ci: Section.ci,
+  revert: Section.revert,
+  reverts: Section.revert,
+  note: Section.note,
+  notes: Section.note,
 };
 
 const SECTION_HEADINGS: Readonly<Record<Section, string>> = {
@@ -57,6 +61,7 @@ const SECTION_HEADINGS: Readonly<Record<Section, string>> = {
   [Section.feat]: 'Features',
   [Section.fix]: 'Bug Fixes',
   [Section.refactor]: 'Code Refactoring',
+  [Section.improvement]: 'Improvements',
   [Section.perf]: 'Performance Improvements',
   [Section.tests]: 'Tests',
   [Section.docs]: 'Documentation',
@@ -97,7 +102,7 @@ export const writeChangelog = async (
     date.getDate().toString(10).padStart(2, '0'),
   ].join('-');
   const sortedChanges = changes
-    .map((change) => ({ ...change, section: CHANGE_SECTIONS[change.type.toUpperCase()] ?? Section.chore }))
+    .map((change) => ({ ...change, section: CHANGE_SECTIONS[change.type] ?? Section.chore }))
     .sort((a, b) => a.section - b.section);
 
   let text = `${isMajorUpdate ? '#' : '##'} ${version.format()} (${dateString})\n`;

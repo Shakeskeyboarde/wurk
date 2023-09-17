@@ -3,20 +3,20 @@ import { type ReleaseType, SemVer } from 'semver';
 import { type Change } from './get-changes.js';
 
 const RELEASE_TYPES: Readonly<Record<string, 'patch' | 'minor' | 'major'>> = {
-  'BREAKING CHANGE': 'major',
-  'BREAKING CHANGES': 'major',
-  'BREAKING-CHANGE': 'major',
-  'BREAKING-CHANGES': 'major',
-  FEAT: 'minor',
-  FEATURE: 'minor',
-  FEATURES: 'minor',
+  'breaking change': 'major',
+  'breaking-change': 'major',
+  'breaking changes': 'major',
+  'breaking-changes': 'major',
+  feat: 'minor',
+  feature: 'minor',
+  features: 'minor',
 };
 
 export const getChangeVersion = (version: string | SemVer, changes: readonly Change[]): SemVer => {
   version = new SemVer(version);
 
   const releaseType = changes.reduce<Exclude<ReleaseType, `pre${string}`>>((acc, change) => {
-    const value = RELEASE_TYPES[change.type.toUpperCase()] ?? 'patch';
+    const value = RELEASE_TYPES[change.type] ?? 'patch';
 
     switch (value) {
       case 'major':

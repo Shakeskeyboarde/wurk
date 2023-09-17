@@ -49,14 +49,14 @@ export const getChanges = async (
 
       let [, type = '', scope, breaking, summary = ''] = subjectMatch;
 
-      type = type.trim();
+      type = type.trim().toLowerCase();
       scope = scope?.trim();
       breaking = breaking?.trim();
       summary = summary.trim();
 
       const message = `${summary} (${hash})`;
 
-      if (type === 'internal') return [];
+      if (type.includes('internal') || type.includes('version') || type.includes('release')) return [];
 
       const bodyLines = body.split(/\r?\n/u);
 
