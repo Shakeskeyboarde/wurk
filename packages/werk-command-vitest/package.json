@@ -1,6 +1,6 @@
 {
   "name": "@werk/command-vitest",
-  "description": "Run Vitest using its built-in workspaces support",
+  "description": "Run Vitest.",
   "version": "1.1.14",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",

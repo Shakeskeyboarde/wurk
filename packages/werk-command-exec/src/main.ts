@@ -1,11 +1,12 @@
 import { createCommand } from '@werk/cli';
 
 export default createCommand({
-  init: ({ commander }) => {
+  config: (commander) => {
     return commander
       .argument('<executable>', 'An executable to run in each workspace.')
       .argument('[args...]', 'Arguments passed to the executable.')
-      .passThroughOptions();
+      .passThroughOptions()
+      .allowUnknownOption();
   },
 
   each: async ({ log, isParallel, args, workspace, spawn }) => {

@@ -1,6 +1,6 @@
 {
   "name": "@werk/command-publish",
-  "description": "Publish workspaces.",
+  "description": "Publish packages.",
   "version": "2.0.8",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",

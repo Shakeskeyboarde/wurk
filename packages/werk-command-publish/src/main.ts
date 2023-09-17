@@ -6,10 +6,9 @@ import { publishFromFilesystem } from './publish-from-filesystem.js';
 let isPublished = false;
 
 export default createCommand({
-  init: ({ commander, command }) => {
+  config: (commander) => {
     return commander
-      .description(command.packageJson.description ?? '')
-      .description('Only unpublished versions of public workspaces are published.')
+      .addHelpText('after', 'Only unpublished versions of public workspaces are published.')
       .option('--to-archive', 'Pack each workspace into an archive.')
       .addOption(
         commander.createOption('--from-archive', 'Publish pre-packed workspace archives.').conflicts('toArchive'),

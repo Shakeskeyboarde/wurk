@@ -7,9 +7,13 @@ import { build } from './build.js';
 const startCallbacks: (() => Promise<any>)[] = [];
 
 export default createCommand({
-  init: ({ commander }) => {
+  config: (commander) => {
     return commander
-      .option('-s, --start', 'Continuously build changed workspaces and start development servers.')
+      .addHelpText(
+        'after',
+        'Auto detects and uses common tools and opinionated configurations for near-zero configuration.',
+      )
+      .option('-s, --start', 'Continuously build on source code changes and start development servers.')
       .addOption(commander.createOption('-w, --watch', 'Alias for the --start option.').implies({ start: true }));
   },
 

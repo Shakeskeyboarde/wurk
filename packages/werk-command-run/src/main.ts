@@ -1,11 +1,11 @@
 import { createCommand } from '@werk/cli';
 
 export default createCommand({
-  init: ({ commander, command }) => {
+  config: (commander) => {
     return commander
-      .description(command.packageJson.description ?? '')
-      .description('Scripts are only run if they are present.')
-      .description(
+      .addHelpText('after', 'Scripts are only run if they are present.')
+      .addHelpText(
+        'after',
         `The script can be a CSV of scripts to run more than one script
         at a time. Extra arguments are passed to ALL scripts. The
         scripts are run in parallel if global options allow, and the
@@ -13,7 +13,8 @@ export default createCommand({
       )
       .argument('<script>', 'Script (or scripts CSV) to run in each workspace.')
       .argument('[args...]', 'Arguments passed to scripts.')
-      .passThroughOptions();
+      .passThroughOptions()
+      .allowUnknownOption();
   },
 
   each: async ({ log, isParallel, args, workspace, spawn }) => {

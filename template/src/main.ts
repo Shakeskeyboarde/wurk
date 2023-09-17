@@ -1,9 +1,9 @@
 import { createCommand } from '@werk/cli';
 
 export default createCommand({
-  init: (context) => {
-    // TODO: Add command options.
-    return context.commander;
+  config: (commander) => {
+    // TODO: Configure the command line interface.
+    return commander;
   },
 
   before: async (context) => {

@@ -13,7 +13,7 @@ const workspaceVersionUpdates = new Map<string, string>();
 const workspaceChanges = new Map<string, () => Promise<void>>();
 
 export default createCommand({
-  init: ({ commander }) => {
+  config: (commander) => {
     return commander
       .argument(
         '<spec>',
@@ -48,7 +48,8 @@ export default createCommand({
       )
       .option('-p, --preid <id>', 'Add an identifier to prerelease bumps.')
       .option('--no-changelog', 'Do not generate changelogs.')
-      .option('--dry-run', 'Display proposed version changes without writing files.');
+      .option('--dry-run', 'Display proposed version changes without writing files.')
+      .passThroughOptions();
   },
 
   before: async ({ log, args, opts, forceWait }) => {

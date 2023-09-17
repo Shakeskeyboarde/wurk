@@ -7,11 +7,13 @@ import { createCommand } from '@werk/cli';
 export default createCommand({
   packageManager: false,
 
-  init: ({ commander }) => {
+  config: (commander) => {
     return commander
       .argument('[args...]', 'Arguments to pass to Vitest.')
       .helpOption(false)
       .option('-h, --help')
+      .passThroughOptions()
+      .allowExcessArguments()
       .allowUnknownOption();
   },
 
