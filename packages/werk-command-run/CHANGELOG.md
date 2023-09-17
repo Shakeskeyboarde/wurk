@@ -1,3 +1,9 @@
+## 3.1.0 (2023-09-17)
+
+### Features
+
+- Updates for the new CLI version. (ad5a6f9)
+
 ## 3.0.12 (2023-09-13)
 
 **Note**: Updated local dependencies.

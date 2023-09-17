@@ -1,3 +1,9 @@
+# 6.0.0 (2023-09-17)
+
+### Breaking Changes
+
+- Detect, load, and configure all commands, instead of only the command entered in the command line. (a293ae8)
+
 ## 5.0.1 (2023-09-13)
 
 ### Bug Fixes

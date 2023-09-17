@@ -1,3 +1,9 @@
+## 1.2.0 (2023-09-17)
+
+### Features
+
+- Updates for the new CLI version. (ad5a6f9)
+
 ## 1.1.34 (2023-09-13)
 
 ### Bug Fixes
