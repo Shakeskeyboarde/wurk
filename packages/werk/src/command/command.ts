@@ -4,15 +4,17 @@ import { unlinkSync, writeFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { isMainThread, parentPort } from 'node:worker_threads';
 
-import { type Command as Commander } from '@commander-js/extra-typings';
-
-import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
+import {
+  type AnyCustomCommander,
+  type CommanderArgs,
+  type CommanderOptions,
+  type CustomCommander,
+} from '../commander/commander.js';
 import { type PackageManager } from '../config.js';
 import { AfterContext, type AfterContextOptions } from '../context/after-context.js';
 import { BeforeContext, type BeforeContextOptions } from '../context/before-context.js';
 import { CleanupContext, type CleanupContextOptions } from '../context/cleanup-context.js';
 import { EachContext, type EachContextOptions } from '../context/each-context.js';
-import { InitContext, type InitContextOptions } from '../context/init-context.js';
 import { type Log, log } from '../utils/log.js';
 import { startWorker, type WorkerOptions, type WorkerPromise } from '../utils/start-worker.js';
 
@@ -41,7 +43,7 @@ export interface CommandHooks<A extends CommanderArgs, O extends CommanderOption
    * Called when the command is loaded. Intended for configuration of
    * command options, arguments, and help text.
    */
-  readonly init?: (context: InitContext) => Commander<A, O>;
+  readonly config?: (commander: CustomCommander) => CustomCommander<A, O>;
   /**
    * Run once before handling individual workspaces. This hook can also
    * return an array of values which will be used as a "matrix" when
@@ -67,7 +69,7 @@ export interface CommandHooks<A extends CommanderArgs, O extends CommanderOption
 const COMMAND = Symbol('WerkCommand');
 
 export class Command<A extends CommanderArgs, O extends CommanderOptions, M> {
-  readonly #init: ((context: InitContext) => Commander<A, O>) | undefined;
+  readonly #config: ((commander: CustomCommander) => CustomCommander<A, O>) | undefined;
   readonly #before: ((context: BeforeContext<A, O>) => Promise<void | undefined | M[]>) | undefined;
   readonly #each: ((context: EachContext<A, O, M>) => Promise<void>) | undefined;
   readonly #after: ((context: AfterContext<A, O>) => Promise<void>) | undefined;
@@ -78,10 +80,10 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions, M> {
 
   isWaitForced = false;
 
-  constructor({ packageManager, init, before, each, after, cleanup }: CommandHooks<A, O, M>) {
+  constructor({ packageManager, config, before, each, after, cleanup }: CommandHooks<A, O, M>) {
     Object.assign(this, { [COMMAND]: true });
     this.packageManager = packageManager ?? ['npm'];
-    this.#init = init;
+    this.#config = config;
     this.#before = before;
     this.#each = each;
     this.#after = after;
@@ -91,20 +93,12 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions, M> {
     process.on('exit', this.#restoreBackupFiles);
   }
 
-  readonly init = (options: InitContextOptions): Commander<any, any> => {
-    log.silly('init()');
-    if (!this.#init) return options.commander;
+  readonly config = (commander: CustomCommander, commandName: string): AnyCustomCommander => {
+    log.silly(`${commandName}.config()`);
 
-    const context = new InitContext(options);
+    if (!this.#config) return commander;
 
-    try {
-      return this.#init(context) as Commander<any, any>;
-    } catch (error) {
-      context.log.error(error instanceof Error ? error.message : `${error}`);
-      process.exitCode = process.exitCode || 1;
-    }
-
-    return options.commander;
+    return this.#config(commander);
   };
 
   readonly before = async (options: BeforeOptions<A, O>): Promise<void | undefined | M[]> => {
@@ -118,8 +112,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions, M> {
       workerData: undefined,
       forceWait: this.#forceWait,
       saveAndRestoreFile: this.#saveAndRestoreFile,
-      startWorker: (data) =>
-        this.#startWorker(options.command.main, { workerData: { stage: 'before', options, data } }),
+      startWorker: (data) => this.#startWorker(options.commandMain, { workerData: { stage: 'before', options, data } }),
     });
 
     return await this.#before(context).catch((error) => {
@@ -138,7 +131,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions, M> {
       isWorker: !isMainThread,
       workerData: undefined,
       saveAndRestoreFile: this.#saveAndRestoreFile,
-      startWorker: (data) => this.#startWorker(options.command.main, { workerData: { stage: 'each', options, data } }),
+      startWorker: (data) => this.#startWorker(options.commandMain, { workerData: { stage: 'each', options, data } }),
     });
 
     await this.#each(context).catch((error) => {
@@ -157,7 +150,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions, M> {
       isWorker: !isMainThread,
       workerData: undefined,
       saveAndRestoreFile: this.#saveAndRestoreFile,
-      startWorker: (data) => this.#startWorker(options.command.main, { workerData: { stage: 'after', options, data } }),
+      startWorker: (data) => this.#startWorker(options.commandMain, { workerData: { stage: 'after', options, data } }),
     });
 
     await this.#after(context).catch((error) => {

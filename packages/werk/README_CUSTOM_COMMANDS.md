@@ -23,7 +23,7 @@ import { createCommand } from '@werk/cli';
 
 export default createCommand({
   packageManager: ['npm'],
-  init: (context) => {},
+  config: (commander) => commander,
   before: async (context) => {},
   each: async (context) => {},
   after: async (context) => {},
@@ -43,36 +43,31 @@ The following properties define requirements for the command (all optional).
 
 A Werk command is compose of hook callbacks (all optional).
 
-- `init`: Called when the command is loaded. Intended for configuring command options, arguments, and help text.
+- `config`: Called once when the command is loaded to configure the command line interface.
 - `before`: Run once before handling individual workspaces.
 - `each`: Run once for each workspace in order of interdependency ( dependencies before dependents).
   - _Please honor the `context.workspace.selected` property if possible!_
 - `after`: Run once after handling individual workspaces.
-- `cleanup`: Run once after handling all workspaces. Intended for synchronous cleanup of temporary files.
+- `cleanup`: Run once after all other hooks, even if an error occurs in the `before`, `each`, or `after` hooks.
 
 If you set `process.exitCode` to a number (including zero) in any hook, the command will exit with that code after the hook completes. This _STRONGLY_ is preferred to forcing an exit with `process.exit()`.
 
 ### Hook Contexts
 
-A context object is passed to each hook callback. The properties attached to those contexts are as follows.
+A context object is passed to all hooks, _except for `config`_ which only receives a Commander instance to configure. The properties attached to contexts are as follows.
 
 - `log`: A logger which should be preferred over `console.*` logging.
-- `command`: Information about the command.
-  - `name`: Command name.
-  - `main`: Main filename of the command package.
-  - `dir`: Root directory of the command package.
-  - `packageJson`: Contents of the command package's `package.json` file.
+- `commandMain` (**before**, **each**, **after**): Main filename of the command package.
 - `config`: The command configuration from the workspaces root `package.json` file `werk.<command>.config` key.
 - `rootDir`: Absolute path of the workspaces root.
-- `commander` (**init**): Configurable [Commander](https://www.npmjs.com/package/commander) instance for defining command options, arguments, and help text.
-- `args` (**before**, **each**, **after**, **cleanup**): Positional arguments parsed from command line.
-- `opts` (**before**, **each**, **after**, **cleanup**): Named options parsed from the command line.
+- `args`: Positional arguments parsed from command line.
+- `opts`: Named options parsed from the command line.
 - `root` (**before**, **each**, **after**): The workspaces root [workspace](#workspaces).
 - `workspaces` (**before**, **each**, **after**): A map (by name) of all [workspaces](#workspaces).
 - `workspace` (**each**): The current [workspace](#workspaces).
 - `forceWait()` (**before**): Force dependent workspaces to wait for their dependencies (ie. ignore the CLI `--no-wait` option).
 - `saveAndRestoreFile(filename)` (**before**, **each**, **after**): Save the contents of a file and restore it after the command completes.
-- `spawn(cmd, args?, options?)` (**before**, **each**, **after**, **cleanup**): Spawn a process. The working directory will be the workspaces (monorepo) root.
+- `spawn(cmd, args?, options?)`: Spawn a process. The working directory will be the workspaces (monorepo) root.
 - `startWorker(data?)` (**before**, **each**, **after**): Re-runs the current hook in a [worker thread](https://nodejs.org/api/worker_threads.html).
 - `isParallel` (**each**): True if the command is running in parallel mode.
 - `isWorker` (**before**, **each**, **after**): True if the hook is running in a worker thread.
@@ -155,24 +150,22 @@ The `context.workspaces` and `context.workspace` properties contain instances of
 
 ## Command Line Parsing
 
-The `init` hook `context.commander` property is just a [Commander](https://www.npmjs.com/package/commander) instance. You may configure it in almost any way you want, _EXCEPT_ for adding adding action callbacks or sub-commands. Calling the `action()` or `command()` methods will throw an error.
+The `config` hook is passed a [Commander](https://www.npmjs.com/package/commander) instance. You may configure it in almost any way you want. However, adding actions or sub-commands is not supported. The action will be overridden by Werk, and sub-commands will not benefit from Werk's lifecycle management.
 
 The configured command must be returned so that Typescript can infer the `context.args` and `context.opts` types for the other hooks.
 
 ```ts
 export default createCommand({
-  init: (context) => {
-    return context.commander
-      .description('My awesome Werk command.')
+  config: (commander) => {
+    return commander
       .argument('<foo>', 'A positional argument named foo.')
       .option('--bar', 'A flag option named bar.')
-      .option('--baz <value>', 'An option with a value named baz.')
-      .version('1.2.3');
+      .option('--baz <value>', 'An option with a value named baz.');
   },
 });
 ```
 
-The `description` and `version` from your command's `package.json` file will be used if they are not overridden in the `init` hook.
+The `description` and `version` from your command's `package.json` file will be used if they are not overridden in the `config` hook.
 
 ## Spawning Processes
 
@@ -356,4 +349,4 @@ await context.workspace.writePackageJson((packageJson) => {
 
 ## Publishing Commands
 
-If possible, name your package following the `werk-command-<name>` pattern. Add the `werk-command` keyword to make it easier for others to find on the registry.
+Name your package `werk-command-<name>` or `@<scope>/werk-command-<name>`. Also, add the `werk-command` keyword to make it easier for others to find on the NPM registry.

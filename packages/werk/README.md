@@ -84,27 +84,16 @@ Run `npm i -D @werk/command-<name>` in your workspaces root to install these com
 
 [Learn how to create your own custom command plugins!](https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk/README_CUSTOM_COMMANDS.md)
 
-When you run `werk <command>`, the package for the command is loaded dynamically. The corresponding command package must already be installed.
+Werk scans the `package.json` file in your repo root for command plugin package dependencies. By default, any package that start with `*/werk-command-`, `werk-command-` or `@werk/command-` will be loaded as a command plugin.
 
-If you want to use a command package with a non-standard name, you can
-map the command name to an arbitrary package name in your workspaces root `package.json` file. This will completely override the normal package resolution strategy for the command.
+You can also force command names to resolve to specific packages by mapping the command name to an arbitrary package name in your `package.json` file.
 
 ```json
 {
   "werk": {
     "commandPackages": {
-      "run": "some-package-name"
+      "run": "arbitrary-package-name"
     }
-  }
-}
-```
-
-For personal or enterprise scoped commands, you can set a list of package prefixes that Werk will try when auto-detecting command packages. Prefixes are _prepended_ to the default list: `[...prefixes, "@werk/command-", "werk-command-"]`.
-
-```json
-{
-  "werk": {
-    "commandPackagePrefixes": ["@myscope/werk-command-"]
   }
 }
 ```

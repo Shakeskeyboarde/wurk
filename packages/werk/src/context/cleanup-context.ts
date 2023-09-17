@@ -30,8 +30,8 @@ export class CleanupContext<A extends CommanderArgs, O extends CommanderOptions>
    */
   readonly exitCode: number;
 
-  constructor({ log, command, config, rootDir, args, opts, exitCode, packageManager }: CleanupContextOptions<A, O>) {
-    super({ log, command, config, packageManager });
+  constructor({ log, config, rootDir, args, opts, exitCode, packageManager }: CleanupContextOptions<A, O>) {
+    super({ log, config, packageManager });
 
     this.rootDir = rootDir;
     this.args = args;

@@ -23,7 +23,6 @@ export type Config = {
   readonly description: string;
   readonly rootPackage: WorkspacePackage;
   readonly workspacePackages: readonly WorkspacePackage[];
-  readonly commandPackagePrefixes: string[];
   readonly commandPackages: Record<string, string>;
   readonly commandConfigs: Record<string, CommandConfig>;
   readonly globalArgs: readonly string[];
@@ -37,14 +36,14 @@ export const loadConfig = memoize(async (): Promise<Config> => {
     await getNpmWorkspacesRoot(),
     await getNpmWorkspaces(),
   ]);
+
+  process.chdir(rootDir);
+
   const { version = '', description = '' } = packageJson;
   const filename = resolve(rootDir, 'package.json');
   const rootPackageJson: PackageJson | undefined = await readJsonFile<PackageJson>(filename).catch(() => undefined);
   const werk = isObject(rootPackageJson?.werk) ? { ...rootPackageJson?.werk } : {};
   const globalArgs = Array.isArray(werk.globalArgs) ? werk.globalArgs.map(String) : [];
-  const commandPackagePrefixes = Array.isArray(werk.commandPackagePrefixes)
-    ? werk.commandPackagePrefixes.filter((value) => typeof value === 'string')
-    : [];
   const commandPackages = isObject(werk.commandPackages)
     ? Object.fromEntries(
         Object.entries(werk.commandPackages).filter((entry): entry is [string, string] => typeof entry[1] === 'string'),
@@ -53,7 +52,6 @@ export const loadConfig = memoize(async (): Promise<Config> => {
   const legacyCommandConfigs = werk.commandConfig;
 
   delete werk.globalArgs;
-  delete werk.commandPackagePrefixes;
   delete werk.commandPackages;
   delete werk.commandConfig;
 
@@ -79,7 +77,6 @@ export const loadConfig = memoize(async (): Promise<Config> => {
     description,
     rootPackage: { name: ':root', version: '0.0.0', ...rootPackageJson, dir: rootDir },
     workspacePackages,
-    commandPackagePrefixes,
     commandPackages,
     commandConfigs,
     globalArgs,

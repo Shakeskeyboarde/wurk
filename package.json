@@ -9,7 +9,7 @@
     "test": "npm run lint -- --max-warnings=0 && node_modules/.bin/werk vitest run",
     "clean": "rm -rf out **/out lib **/lib",
     "modernize": "npx npm-check-updates@latest -i --workspaces --root --format group",
-    "start": "( npm --quiet run build &>/dev/null || ( echo 'build failed' && exit 1 ) ) && werk"
+    "start": "echo 'building...' && ( npm --quiet run build &>/dev/null || ( echo 'build failed' && exit 1 ) ) && echo 'starting...\\n' && werk"
   },
   "workspaces": [
     "packages/werk",
@@ -28,6 +28,10 @@
     "@types/node": "^20.6.0",
     "@vitejs/plugin-react": "^4.0.4",
     "@vitest/coverage-v8": "^0.34.4",
+    "@werk/command-build": "*",
+    "@werk/command-publish": "*",
+    "@werk/command-version": "*",
+    "@werk/command-vitest": "*",
     "eslint": "^8.49.0",
     "eslint-config-rational": "^3.0.9",
     "prettier": "^3.0.3",
@@ -38,5 +42,11 @@
     "vite-plugin-refresh": "^1.0.3",
     "vite-plugin-svgr": "^3.2.0",
     "vitest": "^0.34.4"
+  },
+  "werk": {
+    "commandPackages": {
+      "a": "typescript",
+      "b": "does-not-exist"
+    }
   }
 }

@@ -1,12 +1,22 @@
-import { type Command as CommanderBase, Help } from '@commander-js/extra-typings';
+import { type CommandUnknownOpts, Help } from '@commander-js/extra-typings';
 
-export class CommanderHelp extends Help {
+export class CustomHelp extends Help {
   wrap(str: string, width: number, indent: number, minColumnWidth?: number): string {
     str = str.replace(/\n[^\S\r\n]+/gu, '\n').replace(/(?<!\n)\n(?!\n)/gu, ' ');
     return super.wrap(str, width, indent, minColumnWidth);
   }
 
-  formatHelp(commander: CommanderBase, helper: Help): string {
+  subcommandTerm(commander: CommandUnknownOpts): string {
+    return commander.name();
+  }
+
+  longestSubcommandTermLength(commander: CommandUnknownOpts, helper: Help): number {
+    return helper.visibleCommands(commander).reduce((result, command) => {
+      return Math.max(result, command.name().length);
+    }, 0);
+  }
+
+  formatHelp(commander: CommandUnknownOpts, helper: Help): string {
     const helpWidth = helper.helpWidth || 80;
     const itemIndentWidth = 2;
     const itemSeparatorWidth = 3; // between term and description
@@ -91,6 +101,6 @@ export class CommanderHelp extends Help {
       output = output.concat(['Commands:', formatList(commandList), '']);
     }
 
-    return output.join('\n');
+    return output.join('\n') + '\n';
   }
 }

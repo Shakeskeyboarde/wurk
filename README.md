@@ -11,10 +11,10 @@ Read the [usage documentation](packages/werk/README.md) or learn how to build yo
 ## Packages
 
 - [@werk/cli](packages/werk/README.md): Werk core package.
-- [@werk/command-list](packages/werk-command-list/README.md): List workspaces as JSON with filtering applied.
+- [@werk/command-list](packages/werk-command-list/README.md): List workspaces.
 - [@werk/command-run](packages/werk-command-run/README.md): Run package scripts.
 - [@werk/command-exec](packages/werk-command-exec/README.md): Run executables.
-- [@werk/command-build](packages/werk-command-build/README.md): Build using auto-detected tools.
-- [@werk/command-vitest](packages/werk-command-vitest/README.md): Run Vitest using its built-in workspaces support.
+- [@werk/command-build](packages/werk-command-build/README.md): Build packages.
+- [@werk/command-vitest](packages/werk-command-vitest/README.md): Run Vitest.
 - [@werk/command-version](packages/werk-command-version/README.md): Update versions.
-- [@werk/command-publish](packages/werk-command-publish/README.md): Publish packages to NPM registries.
+- [@werk/command-publish](packages/werk-command-publish/README.md): Publish packages.

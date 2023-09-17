@@ -1,3 +1,4 @@
+import assert from 'node:assert';
 import { type Writable } from 'node:stream';
 
 import getAnsiRegex from 'ansi-regex';
@@ -10,11 +11,11 @@ export interface LogOptions {
   formatPrefix?: (prefix: string) => string;
 }
 
-export type LogLevel = keyof typeof LOG_LEVEL;
+export type LogLevel = keyof typeof LOG_LEVEL_VALUES;
 
-const ansiRegex = getAnsiRegex();
+const ANSI_REGEXP = getAnsiRegex();
 
-export const LOG_LEVEL = {
+const LOG_LEVEL_VALUES = {
   silent: 0,
   error: 10,
   warn: 20,
@@ -24,15 +25,25 @@ export const LOG_LEVEL = {
   silly: 60,
 } as const;
 
-const defaultLevel =
-  process.env.WERK_LOG_LEVEL && process.env.WERK_LOG_LEVEL in LOG_LEVEL
+const LOG_LEVEL_DEFAULT: LogLevel =
+  process.env.WERK_LOG_LEVEL && process.env.WERK_LOG_LEVEL in LOG_LEVEL_VALUES
     ? (process.env.WERK_LOG_LEVEL as LogLevel)
-    : 'info';
+    : 'warn';
+
+const onceCache = new Set<string>();
+
+export const parseLogLevel = (value: string): LogLevel => {
+  assert(
+    value in LOG_LEVEL_VALUES,
+    new Error(`Log level must be one of: ${Object.keys(LOG_LEVEL_VALUES).join(', ')}.`),
+  );
+  return value as LogLevel;
+};
 
 export class Log {
   static #level: { readonly name: LogLevel; readonly value: number } = {
-    name: defaultLevel,
-    value: LOG_LEVEL[defaultLevel],
+    name: LOG_LEVEL_DEFAULT,
+    value: LOG_LEVEL_VALUES[LOG_LEVEL_DEFAULT],
   };
 
   static get level(): { readonly name: LogLevel; readonly value: number } {
@@ -41,7 +52,7 @@ export class Log {
 
   static setLevel(level: LogLevel): void {
     process.env.WERK_LOG_LEVEL = level;
-    Log.#level = { name: level, value: LOG_LEVEL[level] };
+    Log.#level = { name: level, value: LOG_LEVEL_VALUES[level] };
   }
 
   readonly stdout: Writable = new LogStream();
@@ -64,7 +75,7 @@ export class Log {
    * Print a dimmed message to stderr.
    */
   readonly silly = (message?: unknown): void => {
-    if (LOG_LEVEL.silly <= this.level.value) {
+    if (LOG_LEVEL_VALUES.silly <= this.level.value) {
       this.#write(process.stderr, message, chalk.dim);
     }
   };
@@ -77,7 +88,7 @@ export class Log {
    * Print a dimmed message to stderr.
    */
   readonly verbose = (message?: unknown): void => {
-    if (LOG_LEVEL.verbose <= this.level.value) {
+    if (LOG_LEVEL_VALUES.verbose <= this.level.value) {
       this.#write(process.stderr, message, chalk.dim);
     }
   };
@@ -90,7 +101,7 @@ export class Log {
    * Print an undecorated message to stdout.
    */
   readonly info = (message?: unknown): void => {
-    if (LOG_LEVEL.info <= this.level.value) {
+    if (LOG_LEVEL_VALUES.info <= this.level.value) {
       this.#write(process.stdout, message);
     }
   };
@@ -99,7 +110,7 @@ export class Log {
    * Print a bright message to stderr.
    */
   readonly notice = (message?: unknown): void => {
-    if (LOG_LEVEL.notice <= this.level.value) {
+    if (LOG_LEVEL_VALUES.notice <= this.level.value) {
       this.#write(process.stderr, message, chalk.whiteBright);
     }
   };
@@ -108,8 +119,18 @@ export class Log {
    * Print a yellow message to stderr.
    */
   readonly warn = (message?: unknown): void => {
-    if (LOG_LEVEL.warn <= this.level.value) {
+    if (LOG_LEVEL_VALUES.warn <= this.level.value) {
       this.#write(process.stderr, message, chalk.yellowBright);
+    }
+  };
+
+  /**
+   * Print a yellow message to stderr, but only if the message has not
+   * been printed before.
+   */
+  readonly warnOnce = (message?: unknown): void => {
+    if (LOG_LEVEL_VALUES.warn <= this.level.value) {
+      this.#write(process.stderr, message, chalk.yellowBright, true);
     }
   };
 
@@ -117,15 +138,36 @@ export class Log {
    * Print a red message to stderr.
    */
   readonly error = (message?: unknown): void => {
-    if (LOG_LEVEL.error <= this.level.value) {
+    if (LOG_LEVEL_VALUES.error <= this.level.value) {
       this.#write(process.stderr, message, chalk.redBright);
     }
   };
 
-  readonly #write = (stream: Writable, message: unknown, formatLine?: (message: string) => string): void => {
+  /**
+   * Print a red message to stderr, but only if the message has not been
+   * printed before.
+   */
+  readonly errorOnce = (message?: unknown): void => {
+    if (LOG_LEVEL_VALUES.error <= this.level.value) {
+      this.#write(process.stderr, message, chalk.redBright, true);
+    }
+  };
+
+  readonly #write = (
+    stream: Writable,
+    message: unknown,
+    formatLine?: (message: string) => string,
+    once = false,
+  ): void => {
     const string = String(
-      message instanceof Error ? (process.env.DEBUG ? message.stack ?? message : message.message) : message,
+      message instanceof Error ? (process.env.DEBUG ? message.stack ?? message : message.message) : message ?? '',
     );
+
+    if (once) {
+      if (onceCache.has(string)) return;
+      onceCache.add(string);
+    }
+
     const lines = string.split(/\r?\n|\r/u);
 
     lines.forEach((line) => this.#writeLine(stream, line + '\n', formatLine));
@@ -137,7 +179,7 @@ export class Log {
      * (unterminated) formatting might be interleaved due to
      * multi-threading.
      */
-    line = line.replace(ansiRegex, '');
+    line = line.replace(ANSI_REGEXP, '');
 
     if (this.prefix.length) {
       /*

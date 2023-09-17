@@ -1,51 +1,37 @@
 import assert from 'node:assert';
 
-import { type Command, type CommandUnknownOpts } from '@commander-js/extra-typings';
 import { Sema as Semaphore } from 'async-sema';
 import chalk from 'chalk';
 
-import { loadCommandPlugin } from './command/load-command-plugin.js';
-import { Commander, getCommanderMetadata } from './commander/commander.js';
-import { type Config } from './config.js';
-import { CleanupContext } from './context/cleanup-context.js';
-import { type GlobalOptions } from './options.js';
-import { log } from './utils/log.js';
-import { getWorkspaceDependencyNames } from './workspace/get-workspace-dependency-names.js';
-import { getWorkspaces } from './workspace/get-workspaces.js';
-
-interface MainActionOptions {
-  readonly config: Config;
-  readonly commander: Command<any, any>;
-  readonly cmd: string;
-  readonly cmdArgs: readonly string[];
-  readonly cmdConfig: unknown;
-  readonly globalOpts: GlobalOptions;
-}
+import { type Config } from '../config.js';
+import { CleanupContext } from '../context/cleanup-context.js';
+import { type GlobalOptions } from '../options.js';
+import { log } from '../utils/log.js';
+import { getWorkspaceDependencyNames } from '../workspace/get-workspace-dependency-names.js';
+import { getWorkspaces } from '../workspace/get-workspaces.js';
+import { type CommandPlugin } from './load-command-plugins.js';
 
 type PrefixColor = (typeof PREFIX_COLORS)[number];
 
 const PREFIX_COLORS = ['cyan', 'magenta', 'yellow', 'blue', 'green', 'red'] as const;
 
-export const mainAction = async ({
-  config,
-  commander,
-  cmd,
-  cmdArgs,
-  cmdConfig,
-  globalOpts,
-}: MainActionOptions): Promise<void> => {
-  const commandPlugin = await loadCommandPlugin(cmd, config);
-  const { command, ...commandInfo } = commandPlugin;
-
+export const runCommand = async (
+  globalConfig: Config,
+  globalOpts: GlobalOptions,
+  { command, commandName, commandMain, commander }: CommandPlugin,
+): Promise<void> => {
   assert(
-    !command.packageManager || command.packageManager.includes(config.packageManager),
-    `Command "${cmd}" does not support package manager "${config.packageManager}".`,
+    !command.packageManager || command.packageManager.includes(globalConfig.packageManager),
+    `Command "${commandName}" does not support package manager "${globalConfig.packageManager}".`,
   );
 
+  const config = globalConfig.commandConfigs[commandName];
+  const args = commander.processedArgs;
+  const opts = commander.opts();
   const [root, workspaces, isMonorepo] = await getWorkspaces({
-    rootPackage: config.rootPackage,
-    workspacePackages: config.workspacePackages,
-    commandName: commandInfo.name,
+    rootPackage: globalConfig.rootPackage,
+    workspacePackages: globalConfig.workspacePackages,
+    commandName,
     ...globalOpts.select,
     ...globalOpts.git,
   });
@@ -55,33 +41,19 @@ export const mainAction = async ({
     return;
   }
 
-  const subCommander = new Commander().copyInheritedSettings(commander as CommandUnknownOpts);
-
-  process.chdir(config.rootPackage.dir);
-
-  if (
-    command.init({
-      log: undefined,
-      config: cmdConfig,
-      command: commandInfo,
-      rootDir: config.rootPackage.dir,
-      commander: subCommander,
-      packageManager: config.packageManager,
-    }) !== subCommander
-  ) {
-    throw new Error(`Command "${cmd}" did not return the correct commander instance. Did it return a sub-command?`);
-  }
+  process.chdir = () => {
+    log.warnOnce('A command plugin tried to change the working directory. This is not supported.');
+  };
 
   process.on('exit', (exitCode) => {
     const context = new CleanupContext({
       log: undefined,
-      config: cmdConfig,
-      command: commandInfo,
-      rootDir: config.rootPackage.dir,
+      config,
+      rootDir: globalConfig.rootPackage.dir,
       args: commander.processedArgs,
       opts: commander.opts(),
       exitCode,
-      packageManager: config.packageManager,
+      packageManager: globalConfig.packageManager,
     });
 
     command.cleanup(context);
@@ -90,21 +62,11 @@ export const mainAction = async ({
     process.on(event, () => process.exit(process.exitCode || 1));
   });
 
-  const { isVersionSet, isDescriptionSet } = getCommanderMetadata(subCommander);
-  const { packageJson } = commandInfo;
-
-  if (!isDescriptionSet && packageJson.description) subCommander.description(packageJson.description);
-  if (!isVersionSet && packageJson.version) subCommander.version(packageJson.version);
-
-  subCommander.name(`${commander.name()} ${cmd}`).parse(cmdArgs, { from: 'user' });
-
-  const args = subCommander.processedArgs;
-  const opts = subCommander.opts();
   const { gitHead, gitFromRevision } = globalOpts.git;
   const matrixValues = await command.before({
     log: undefined,
-    config: cmdConfig,
-    command: commandInfo,
+    config,
+    commandMain,
     args,
     opts,
     root,
@@ -113,7 +75,7 @@ export const mainAction = async ({
     gitFromRevision,
     isWorker: false,
     workerData: null,
-    packageManager: config.packageManager,
+    packageManager: globalConfig.packageManager,
   });
 
   if (process.exitCode != null) return;
@@ -143,8 +105,8 @@ export const mainAction = async ({
           await command.each({
             isParallel: concurrency !== 1,
             log: { prefix: prefix ? workspace.name : undefined, formatPrefix },
-            config: cmdConfig,
-            command: commandInfo,
+            config,
+            commandMain,
             args,
             opts,
             root,
@@ -155,7 +117,7 @@ export const mainAction = async ({
             gitFromRevision,
             isWorker: false,
             workerData: null,
-            packageManager: config.packageManager,
+            packageManager: globalConfig.packageManager,
           });
         } finally {
           semaphore?.release();
@@ -172,8 +134,8 @@ export const mainAction = async ({
 
   await command.after({
     log: undefined,
-    config: cmdConfig,
-    command: commandInfo,
+    config,
+    commandMain,
     args,
     opts,
     root,
@@ -182,6 +144,6 @@ export const mainAction = async ({
     gitFromRevision,
     isWorker: false,
     workerData: null,
-    packageManager: config.packageManager,
+    packageManager: globalConfig.packageManager,
   });
 };

@@ -7,6 +7,7 @@ import { BaseContext, type BaseContextOptions } from './base-context.js';
 export interface BaseAsyncContextOptions<A extends CommanderArgs, O extends CommanderOptions>
   extends BaseContextOptions {
   readonly config: unknown;
+  readonly commandMain: string;
   readonly args: A;
   readonly opts: O;
   readonly root: WorkspacePartialOptions;
@@ -21,6 +22,11 @@ export interface BaseAsyncContextOptions<A extends CommanderArgs, O extends Comm
 
 export abstract class BaseAsyncContext<A extends CommanderArgs, O extends CommanderOptions> extends BaseContext {
   #startWorker: (data?: any) => Promise<boolean>;
+
+  /**
+   * The command entrypoint filename.
+   */
+  readonly commandMain: string;
 
   /**
    * Arguments parsed from the command line.
@@ -63,7 +69,7 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
   constructor({
     log,
     config,
-    command,
+    commandMain,
     args,
     opts,
     root,
@@ -76,8 +82,9 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
     saveAndRestoreFile,
     startWorker,
   }: BaseAsyncContextOptions<A, O>) {
-    super({ log, command, config, packageManager });
+    super({ log, config, packageManager });
 
+    this.commandMain = commandMain;
     this.args = args;
     this.opts = opts;
     this.root = new Workspace({ ...root, context: this, gitHead, gitFromRevision, saveAndRestoreFile });

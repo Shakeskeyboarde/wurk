@@ -24,7 +24,6 @@ import { type WorkspacePackage } from './workspace-package.js';
 
 interface PartialContext {
   readonly log: Log;
-  readonly command: { readonly name: string };
   readonly workspaces: ReadonlyMap<string, Workspace>;
   readonly spawn: Spawn;
 }
