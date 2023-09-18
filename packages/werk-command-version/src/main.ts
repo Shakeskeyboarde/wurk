@@ -9,6 +9,17 @@ import { type Change, ChangeType, getChanges } from './get-changes.js';
 import { getIncrementedVersion } from './get-incremented-version.js';
 import { writeChangelog } from './write-changelog.js';
 
+const BUMP_TYPE = [
+  'patch',
+  'prepatch',
+  'minor',
+  'preminor',
+  'major',
+  'premajor',
+  'prerelease',
+  'auto',
+] as const satisfies readonly (ReleaseType | 'auto')[];
+
 const workspaceVersionUpdates = new Map<string, string>();
 const workspaceChanges = new Map<string, () => Promise<void>>();
 
@@ -19,16 +30,10 @@ export default createCommand({
         '<spec>',
         'Bump type (patch, minor, major, prepatch, preminor, premajor, prerelease, auto) or version number.',
         (value): ReleaseType | 'auto' | SemVer => {
-          switch (value) {
-            case 'patch':
-            case 'prepatch':
-            case 'minor':
-            case 'preminor':
-            case 'major':
-            case 'premajor':
-            case 'prerelease':
-            case 'auto':
-              return value;
+          if (value && !/\d/u.test(value)) {
+            const bumpType = BUMP_TYPE.filter((spec) => spec.startsWith(value));
+
+            if (bumpType.length === 1) return bumpType[0]!;
           }
 
           try {
