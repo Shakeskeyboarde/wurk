@@ -32,6 +32,10 @@ const mainAsync = async (args: string[]): Promise<void> => {
   const globalConfig = await loadConfig();
   const commander = createCommander('werk');
   const commanderConfigured = commander
+    .passThroughOptions()
+    .allowExcessArguments()
+    .allowUnknownOption()
+    .allowPartialCommand()
     .description(globalConfig.description)
     .addHelpText('after', 'To get help for a specific command, run `werk <command> --help`.')
     .option(
@@ -111,10 +115,7 @@ const mainAsync = async (args: string[]): Promise<void> => {
     .option('--no-prefix', 'No output prefixes.')
     .option('--git-head <sha>', 'Set a default head commit hash for non-Git environments.')
     .option('--git-from-revision <rev>', 'Set the revision used for detecting modifications.')
-    .version(globalConfig.version, '-v, --version', 'Display the current version.')
-    .passThroughOptions()
-    .allowExcessArguments()
-    .allowUnknownOption();
+    .version(globalConfig.version, '-v, --version', 'Display the current version.');
 
   const plugins = await loadCommandPlugins(globalConfig, commander);
   const getGlobalOptions = (): GlobalOptions => {
@@ -158,8 +159,7 @@ const mainAsync = async (args: string[]): Promise<void> => {
   };
 
   commander.action((_opts, self) => {
-    commander.outputHelp();
-    console.log();
+    commander.outputHelp({ error: true });
 
     if (self.args[0] == null) {
       throw new Error('A command is required.');

@@ -2,6 +2,7 @@ import {
   type AddHelpTextContext,
   type AddHelpTextPosition,
   Command as Commander,
+  type CommandUnknownOpts,
   type ErrorOptions,
   type OutputConfiguration,
 } from '@commander-js/extra-typings';
@@ -11,6 +12,52 @@ import { CustomHelp } from './help.js';
 
 export type CommanderArgs = unknown[];
 export type CommanderOptions = Record<string, unknown>;
+
+declare module '@commander-js/extra-typings' {
+  interface Command {
+    /**
+     * Allow partial command name matches.
+     *
+     * @returns `this` for command chaining.
+     */
+    allowPartialCommand(enable?: boolean): this;
+  }
+}
+
+Object.assign(Commander.prototype, {
+  allowPartialCommand(this: CommandUnknownOpts, enable = true): any {
+    Object.assign(this, {
+      _allowPartialCommand: enable,
+    });
+
+    return this;
+  },
+  _findCommand(this: CommandUnknownOpts, commandName: string | undefined): CommandUnknownOpts | undefined {
+    if (!commandName || this.commands.length === 0) return undefined;
+
+    const exact =
+      /**
+       * Prefer an exact name match over an alias in case of alias
+       * overlaps.
+       */
+      this.commands.find((command) => command.name() === commandName) ??
+      /**
+       * Prefer an exact alias match over a partial name match.
+       */
+      this.commands.find((command) => command.aliases().includes(commandName));
+
+    if (exact || !(this as any)._allowPartialCommand) return exact;
+
+    const partials = this.commands.filter(
+      (command) =>
+        command.name().startsWith(commandName) || command.aliases().some((alias) => alias.startsWith(commandName)),
+    );
+
+    if (partials.length <= 1) return partials[0];
+
+    return undefined;
+  },
+});
 
 export class CustomCommander<A extends CommanderArgs = [], O extends CommanderOptions = {}> extends Commander<A, O> {
   constructor(name?: string) {
