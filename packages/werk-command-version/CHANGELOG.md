@@ -1,3 +1,9 @@
+## 3.1.3 (2023-09-17)
+
+### Improvements
+
+- Partial match bump type (eg. "a" matches "auto"). (150f98d)
+
 ## 3.1.2 (2023-09-17)
 
 ### Improvements

@@ -1,3 +1,9 @@
+## 6.0.1 (2023-09-17)
+
+### Improvements
+
+- Add partial command name matching. (ec95902)
+
 # 6.0.0 (2023-09-17)
 
 ### Breaking Changes
