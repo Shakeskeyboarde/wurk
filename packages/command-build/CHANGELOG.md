@@ -1,3 +1,13 @@
+## 1.3.2 (2023-09-19)
+
+### Improvements
+
+- Simplify vite optional plugins. (08e345d)
+
+### Code Refactoring
+
+- Directory structure. (c94eccb)
+
 ## 1.3.1 (2023-09-18)
 
 **Note**: Updated local dependencies.

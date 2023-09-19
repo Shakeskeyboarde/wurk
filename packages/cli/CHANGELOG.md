@@ -1,3 +1,13 @@
+# 7.0.0 (2023-09-19)
+
+### Breaking Changes
+
+- Removed all but the command package mapping configuration from package.json files. (e6547e4)
+
+### Improvements
+
+- Support importRelative() type casting. (db2e9a3)
+
 ## 6.0.3 (2023-09-18)
 
 ### Improvements

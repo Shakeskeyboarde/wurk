@@ -1,3 +1,17 @@
+## 3.1.6 (2023-09-19)
+
+### Improvements
+
+- Reorder changelog headings. (b495a9a)
+
+### Code Refactoring
+
+- Directory structure. (c94eccb)
+
+### Notes
+
+- Print changelog notes like any other section (un-special). (80ce961)
+
 ## 3.1.5 (2023-09-18)
 
 ### Improvements

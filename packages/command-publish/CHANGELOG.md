@@ -1,3 +1,9 @@
+## 2.1.4 (2023-09-19)
+
+### Code Refactoring
+
+- Directory structure. (c94eccb)
+
 ## 2.1.3 (2023-09-18)
 
 **Note**: Updated local dependencies.
