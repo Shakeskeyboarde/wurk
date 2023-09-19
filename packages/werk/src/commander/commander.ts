@@ -48,14 +48,22 @@ Object.assign(Commander.prototype, {
 
     if (exact || !(this as any)._allowPartialCommand) return exact;
 
-    const partials = this.commands.filter(
-      (command) =>
-        command.name().startsWith(commandName) || command.aliases().some((alias) => alias.startsWith(commandName)),
+    const partials = this.commands.flatMap((command) => {
+      if (command.name().startsWith(commandName)) return [{ command, name: command.name() }];
+
+      const name = command.aliases().find((alias) => alias.startsWith(commandName));
+
+      return name ? [{ command, name }] : [];
+    });
+
+    if (partials.length <= 1) return partials[0]?.command;
+
+    throw new Error(
+      `Command "${commandName}" is ambiguous. Did you mean one of the following?${partials.reduce(
+        (result, partial) => `${result}\n  - ${partial.name}`,
+        '',
+      )}`,
     );
-
-    if (partials.length <= 1) return partials[0];
-
-    return undefined;
   },
 });
 
