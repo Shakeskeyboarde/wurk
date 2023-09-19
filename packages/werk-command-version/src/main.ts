@@ -34,6 +34,15 @@ export default createCommand({
             const bumpType = BUMP_TYPE.filter((spec) => spec.startsWith(value));
 
             if (bumpType.length === 1) return bumpType[0]!;
+
+            if (bumpType && bumpType.length > 1) {
+              throw new Error(
+                `Version increment "${value}" is ambiguous. Did you mean one of the following?${bumpType.reduce(
+                  (result, type) => `${result}\n  - ${type}`,
+                  '',
+                )}`,
+              );
+            }
           }
 
           try {
