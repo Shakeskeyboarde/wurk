@@ -2,9 +2,10 @@ import { mkdir, readdir, stat, writeFile } from 'node:fs/promises';
 import { basename, dirname, posix, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { Log, type Spawn, type Workspace } from '@werk/cli';
+import { findAsync, Log, type Spawn, type Workspace } from '@werk/cli';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const TSCONFIG_BASE_DEFAULT = resolve(__dirname, '..', 'config', 'tsconfig.werk.json');
 
 interface BuildTscOptions {
   readonly log: Log;
@@ -39,17 +40,14 @@ export const buildTsc = async ({
       throw new Error(`Workspace directory "${workspace.dir}" is outside of the workspaces root.`);
 
     const tempDir = resolve(root.dir, 'node_modules/.werk-command-build', tempSubDir);
-    const tsConfigWorkspace = resolve(workspace.dir, 'tsconfig.json');
-    const tsConfigRoot = resolve(root.dir, 'tsconfig.json');
-    const tsConfigWerk = resolve(__dirname, '..', 'config', 'tsconfig.werk.json');
-    const tsConfigBase = await Promise.all([
-      stat(tsConfigWorkspace)
-        .then((stats): false | string => stats.isFile() && tsConfigWorkspace)
-        .catch((): false => false),
-      stat(tsConfigRoot)
-        .then((stats): false | string => stats.isFile() && tsConfigRoot)
-        .catch((): false => false),
-    ]).then((tsConfigs) => tsConfigs.find(Boolean) || tsConfigWerk);
+    const tsConfigBase =
+      (await findAsync(
+        [resolve(workspace.dir, 'tsconfig.json'), resolve(root.dir, 'tsconfig.json')],
+        async (filename) =>
+          await stat(filename)
+            .then((stats) => stats.isFile())
+            .catch(() => false),
+      )) ?? TSCONFIG_BASE_DEFAULT;
     const configs: ({ outDir: string; module: string } & Record<string, unknown>)[] = [];
 
     if (isEsm) {

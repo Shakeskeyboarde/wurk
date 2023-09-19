@@ -1,7 +1,7 @@
 import { stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-import { type Log, type PackageJson, type Spawn, type Workspace } from '@werk/cli';
+import { findAsync, type Log, type PackageJson, type Spawn, type Workspace } from '@werk/cli';
 
 import { buildRollup } from './build-rollup.js';
 import { buildScript } from './build-script.js';
@@ -25,7 +25,7 @@ const isCjsPackage = (packageJson: Record<string, unknown>): boolean => {
 };
 
 export const build = async (options: BuildOptions): Promise<void> => {
-  const { log, workspace, start } = options;
+  const { workspace, start } = options;
 
   if (
     start
@@ -42,44 +42,50 @@ export const build = async (options: BuildOptions): Promise<void> => {
     const isCjs = isCjsPackage(packageJson);
 
     if (isVite) {
-      await buildVite({ ...options, isEsm, isCjs });
+      await buildVite({ ...options, isEsm, isCjs, ...isVite });
     } else if (isRollup) {
-      await buildRollup(options);
+      await buildRollup({ ...options, ...isRollup });
     } else {
       await buildTsc({ ...options, isEsm, isCjs });
     }
   }
-
-  if (!start && !(await workspace.getIsBuilt())) {
-    log.warn('Build incomplete. Not all package.json entry points exist.');
-  }
 };
 
-const detectVite = async (workspace: Workspace, packageJson: PackageJson): Promise<boolean> => {
+const detectVite = async (
+  workspace: Workspace,
+  packageJson: PackageJson,
+): Promise<{ isIndexHtmlPresent: boolean; customConfigFile: string | undefined } | false> => {
   const isViteDevDependency = Boolean(packageJson.devDependencies?.vite);
 
-  if (isViteDevDependency) return true;
-
-  const [isIndexHtmlPresent, isConfigTsPresent, isConfigJsPresent] = await Promise.all([
+  const [isIndexHtmlPresent, customConfigFile] = await Promise.all([
     stat(resolve(workspace.dir, 'index.html'))
       .then((stats) => stats.isFile())
       .catch(() => false),
-    stat(resolve(workspace.dir, 'vite.config.ts'))
-      .then((stats) => stats.isFile())
-      .catch(() => false),
-    stat(resolve(workspace.dir, 'vite.config.js'))
-      .then((stats) => stats.isFile())
-      .catch(() => false),
+    findAsync(
+      ['ts', 'mts', 'cts', 'js', 'mjs', 'cjs'].map((ext) => resolve(workspace.dir, `vite.config.${ext}`)),
+      (filename) =>
+        stat(filename)
+          .then((stats) => stats.isFile())
+          .catch(() => false),
+    ),
   ]);
 
-  return isIndexHtmlPresent || isConfigTsPresent || isConfigJsPresent;
+  return (
+    (isViteDevDependency || isIndexHtmlPresent || Boolean(customConfigFile)) && {
+      isIndexHtmlPresent,
+      customConfigFile,
+    }
+  );
 };
 
-const detectRollup = async (workspace: Workspace): Promise<boolean> => {
-  return await Promise.all(
-    ['rollup.config.ts', 'rollup.config.js', 'rollup.config.mjs'].map(async (filename) => {
-      const stats = await stat(resolve(workspace.dir, filename)).catch(() => undefined);
-      return stats?.isFile();
-    }),
-  ).then((results) => results.some(Boolean));
+const detectRollup = async (workspace: Workspace): Promise<{ customConfigFile: string } | false> => {
+  const customConfigFile = await findAsync(
+    ['ts', 'mts', 'cts', 'js', 'mjs', 'cjs'].map((ext) => resolve(workspace.dir, `rollup.config.${ext}`)),
+    (filename) =>
+      stat(filename)
+        .then((stats) => stats.isFile())
+        .catch(() => false),
+  );
+
+  return customConfigFile ? { customConfigFile } : false;
 };

@@ -1,9 +1,8 @@
-import assert from 'node:assert';
 import { stat } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { type Log, type Spawn, type Workspace } from '@werk/cli';
+import { findAsync, type Log, type Spawn, type Workspace } from '@werk/cli';
 
 import { type ViteConfigOptions } from './vite-config.js';
 
@@ -13,51 +12,39 @@ interface BuildViteOptions {
   readonly start: boolean;
   readonly isEsm: boolean;
   readonly isCjs: boolean;
+  readonly isIndexHtmlPresent: boolean;
+  readonly customConfigFile: string | undefined;
   readonly spawn: Spawn;
 }
 
 const START_DELAY_SECONDS = 10;
 const DEFAULT_CONFIG_FILE = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'config', 'vite.config.ts');
+const ENTRY_BASENAMES = ['index', 'exports', 'main', 'bundle'] as const;
+const ENTRY_EXTENSIONS = ['ts', 'tsx', 'js', 'jsx'];
+const ENTRIES = ENTRY_BASENAMES.flatMap(<TBasename extends string>(basename: TBasename) =>
+  ENTRY_EXTENSIONS.map((ext) => ({ basename, filename: `src/${basename}.${ext}` })),
+);
 
-const getExistingFile = async (dir: string, filenames: string[]): Promise<string | undefined> => {
-  return await Promise.all(
-    filenames
-      .map((filename) => resolve(dir, filename))
-      .map((filename) =>
-        stat(filename)
-          .then((stats) => stats.isFile() && filename)
-          .catch(() => false),
-      ),
-  ).then((results) => results.find((filename): filename is string => typeof filename === 'string'));
-};
-
-export const buildVite = async ({ log, workspace, start, isEsm, isCjs, spawn }: BuildViteOptions): Promise<void> => {
+export const buildVite = async ({
+  log,
+  workspace,
+  start,
+  isEsm,
+  isCjs,
+  isIndexHtmlPresent,
+  customConfigFile,
+  spawn,
+}: BuildViteOptions): Promise<void> => {
   let isLib = false;
 
   // eslint-disable-next-line import/no-extraneous-dependencies
   const vite = await import('vite');
-  const customConfigFile = await Promise.all(
-    ['ts', 'js'].map(async (ext) => {
-      const filename = `vite.config.${ext}`;
-      const stats = await stat(resolve(workspace.dir, filename)).catch(() => undefined);
-
-      return Boolean(stats?.isFile()) && filename;
-    }),
-  ).then((filenames) => filenames.find((filename): filename is string => Boolean(filename)));
 
   if (customConfigFile) {
     const viteConfig = await vite.loadConfigFromFile({ command: 'build', mode: 'production' });
     isLib = Boolean(viteConfig?.config.build?.lib);
   } else {
-    isLib = isEsm || isCjs;
-
-    if (!isLib) {
-      const isIndexHtmlPresent = await stat(resolve(workspace.dir, 'index.html'))
-        .then((stats) => stats.isFile())
-        .catch(() => false);
-
-      isLib = !isIndexHtmlPresent;
-    }
+    isLib = isEsm || isCjs || !isIndexHtmlPresent;
   }
 
   const command = isLib || !start ? 'build' : 'serve';
@@ -77,21 +64,22 @@ export const buildVite = async ({ log, workspace, start, isEsm, isCjs, spawn }: 
   const env: NodeJS.ProcessEnv = {};
 
   if (isLib && !customConfigFile) {
-    const entry = await getExistingFile(workspace.dir, [
-      'src/index.ts',
-      'src/index.tsx',
-      'src/index.js',
-      'src/index.jsx',
-    ]);
-
-    assert(entry, `Could not find Vite library entry point for workspace "${workspace.name}".`);
+    const entry = isIndexHtmlPresent
+      ? undefined
+      : await findAsync(
+          ENTRIES.map(({ filename, ...value }) => ({ ...value, filename: resolve(workspace.dir, filename) })),
+          (value) =>
+            stat(value.filename)
+              .then((stats) => stats.isFile())
+              .catch(() => false),
+        );
 
     const config: ViteConfigOptions = {
       emptyOutDir: !watch,
       lib: {
-        entry,
+        entry: entry?.filename,
         formats: isEsm ? (isCjs ? ['es', 'cjs'] : ['es']) : isCjs ? ['cjs'] : ['es', 'cjs'],
-        preserveModules: true,
+        preserveModules: entry?.basename !== 'bundle',
       },
     };
 

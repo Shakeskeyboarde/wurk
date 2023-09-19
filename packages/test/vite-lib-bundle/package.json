@@ -1,0 +1,16 @@
+{
+  "private": true,
+  "name": "test-vite-bundle",
+  "description": "Testing the build command vite library mode with bundling",
+  "type": "module",
+  "types": "./lib/bundle.d.ts",
+  "main": "./lib/bundle.cjs",
+  "exports": {
+    "types": "./lib/bundle.d.ts",
+    "require": "./lib/bundle.cjs",
+    "default": "./lib/bundle.js"
+  },
+  "devDependencies": {
+    "vite": "^4.4.9"
+  }
+}
