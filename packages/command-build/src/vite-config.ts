@@ -36,6 +36,11 @@ export interface ViteConfigOptions {
      */
     preserveModules?: boolean;
   };
+  /**
+   * Optional plugins can be forcibly disabled by adding their package
+   * name with a value of false.
+   */
+  plugins?: Partial<Record<keyof Plugins, boolean>>;
 }
 
 const readPackage = async (dir = process.cwd()): Promise<Record<string, any>> => {
@@ -47,24 +52,26 @@ const readPackage = async (dir = process.cwd()): Promise<Record<string, any>> =>
     });
 };
 
-const tryPlugin = async <TName extends keyof Plugins>(
-  name: TName,
-  ...args: Parameters<Plugins[TName]['default']>
-): Promise<ReturnType<Plugins[TName]['default']> | undefined> => {
-  try {
-    const { exports } = await importRelative<Plugins[TName]>(name);
-    console.log(`vite using optional plugin "${name}".`);
-    const plugin = exports.default(...(args as any)) as any;
-    return plugin;
-  } catch (error) {
-    return undefined;
-  }
-};
-
 export const getViteConfig = async (
   env: ConfigEnv,
-  { emptyOutDir = true, lib }: ViteConfigOptions = {},
+  { emptyOutDir = true, lib, plugins }: ViteConfigOptions = {},
 ): Promise<UserConfig> => {
+  const tryPlugin = async <TName extends keyof Plugins>(
+    name: TName,
+    ...args: Parameters<Plugins[TName]['default']>
+  ): Promise<ReturnType<Plugins[TName]['default']> | undefined> => {
+    if (plugins?.[name] === false) return undefined;
+
+    try {
+      const { exports } = await importRelative<Plugins[TName]>(name);
+      console.log(`vite using optional plugin "${name}".`);
+      const plugin = exports.default(...(args as any)) as any;
+      return plugin;
+    } catch (error) {
+      return undefined;
+    }
+  };
+
   if (lib) {
     const { entry = 'src/index.ts', formats = [], preserveModules = true } = lib;
     const entryRoot = dirname(entry);
@@ -90,7 +97,7 @@ export const getViteConfig = async (
           root: process.cwd(),
           entryRoot,
           include: [entryRoot],
-          exclude: ['**/*.test.*'],
+          exclude: ['**/*.test.*', '**/*.spec.*', '**/*.stories.*'],
         }),
       ],
       build: {
