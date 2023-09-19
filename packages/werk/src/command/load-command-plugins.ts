@@ -1,6 +1,6 @@
 import { type CustomCommander } from '../commander/commander.js';
 import { type Config } from '../config.js';
-import { loadPlugin } from '../utils/load-plugin.js';
+import { importRelative } from '../utils/import-relative.js';
 import { type PackageJson } from '../utils/package-json.js';
 import { type Command, isCommand } from './command.js';
 import { createCommand } from './create-command.js';
@@ -21,13 +21,13 @@ const loadCommandPlugin = async (
   packageId: string,
 ): Promise<CommandPlugin> => {
   try {
-    const plugin = await loadPlugin(workspacesRoot, packageId);
+    const plugin = await importRelative(packageId, { dir: workspacesRoot });
 
     if (!plugin) {
       throw new Error('Could not find plugin package.json file.');
     }
 
-    const { exports, main, dir, packageJson } = plugin;
+    const { exports, entry: main, dir, packageJson } = plugin;
 
     if (exports.default == null) {
       throw new Error('Plugin has no default export.');
