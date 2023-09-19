@@ -1,3 +1,9 @@
+## 1.2.5 (2023-09-19)
+
+### Notes
+
+- Updated local dependencies.
+
 ## 1.2.4 (2023-09-19)
 
 ### Code Refactoring

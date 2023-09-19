@@ -1,3 +1,14 @@
+## 1.3.3 (2023-09-19)
+
+### Bug Fixes
+
+- Remove unnecessary &#96;root&#96; from vite-plugin-dts options. (2880bc6)
+
+### Improvements
+
+- Detect vite based on &#96;vite&#96; dev dependency, so that an &#96;index.html&#96; file is not necessary for library mode. (0a18912)
+- Allow plugins to be disabled when extending the build-in configuration. (c424111)
+
 ## 1.3.2 (2023-09-19)
 
 ### Improvements

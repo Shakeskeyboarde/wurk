@@ -1,3 +1,9 @@
+## 7.0.1 (2023-09-19)
+
+### Improvements
+
+- **build:** Detect vite based on &#96;vite&#96; dev dependency, so that an &#96;index.html&#96; file is not necessary for library mode. (0a18912)
+
 # 7.0.0 (2023-09-19)
 
 ### Breaking Changes
