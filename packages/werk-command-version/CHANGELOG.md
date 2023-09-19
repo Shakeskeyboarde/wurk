@@ -1,3 +1,9 @@
+## 3.1.5 (2023-09-18)
+
+### Improvements
+
+- Make a suggestion when a partial version increment match is ambiguous. (e847c29)
+
 ## 3.1.4 (2023-09-18)
 
 **Note**: Updated local dependencies.

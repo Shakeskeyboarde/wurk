@@ -1,7 +1,7 @@
 {
   "name": "@werk/command-version",
   "description": "Update versions.",
-  "version": "3.1.4",
+  "version": "3.1.5",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-version/README.md",
@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@types/semver": "^7.5.1",
-    "@werk/cli": "^6.0.2",
+    "@werk/cli": "^6.0.3",
     "semver": "^7.5.4"
   }
 }

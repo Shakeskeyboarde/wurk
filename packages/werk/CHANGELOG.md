@@ -1,3 +1,9 @@
+## 6.0.3 (2023-09-18)
+
+### Improvements
+
+- Make a suggestion when a partial command match is ambiguous. (77f3188)
+
 ## 6.0.2 (2023-09-18)
 
 ### Bug Fixes
