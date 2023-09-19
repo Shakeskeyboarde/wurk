@@ -86,8 +86,9 @@ const getHeading = (section: Section): string => {
       return 'Chores';
     case Section.revert:
       return 'Reverts';
+    case Section.note:
     default:
-      return '';
+      return 'Notes';
   }
 };
 
@@ -129,8 +130,6 @@ export const writeChangelog = async (
   let section: Section | undefined;
 
   sortedChanges.forEach((change) => {
-    if (change.section === Section.note) return;
-
     // Omit parts of the scope that match all or part of the workspace name.
     const nameParts = name.split('/');
     const scope = change.scope
@@ -148,12 +147,6 @@ export const writeChangelog = async (
     }
 
     text += `- ${scope ? `**${scope}:** ` : ''}${change.message}\n`;
-  });
-
-  sortedChanges.forEach((change) => {
-    if (change.section !== Section.note) return;
-
-    text += `\n**Note${change.scope ? ` (${change.scope})` : ''}**: ${change.message}\n`;
   });
 
   const newEntry: Entry = { version: version.format(), text };
