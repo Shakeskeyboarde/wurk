@@ -4,7 +4,6 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { type Log, type Spawn, type Workspace } from '@werk/cli';
-import { type LibraryFormats } from 'vite';
 
 import { type ViteConfigOptions } from './vite-config.js';
 
@@ -33,15 +32,32 @@ const getExistingFile = async (dir: string, filenames: string[]): Promise<string
 };
 
 export const buildVite = async ({ log, workspace, start, isEsm, isCjs, spawn }: BuildViteOptions): Promise<void> => {
-  let isLib = isEsm || isCjs;
+  let isLib = false;
 
   // eslint-disable-next-line import/no-extraneous-dependencies
   const vite = await import('vite');
-  const customConfigFile = await getExistingFile(workspace.dir, ['vite.config.ts', 'vite.config.js']);
+  const customConfigFile = await Promise.all(
+    ['ts', 'js'].map(async (ext) => {
+      const filename = `vite.config.${ext}`;
+      const stats = await stat(resolve(workspace.dir, filename)).catch(() => undefined);
+
+      return Boolean(stats?.isFile()) && filename;
+    }),
+  ).then((filenames) => filenames.find((filename): filename is string => Boolean(filename)));
 
   if (customConfigFile) {
     const viteConfig = await vite.loadConfigFromFile({ command: 'build', mode: 'production' });
     isLib = Boolean(viteConfig?.config.build?.lib);
+  } else {
+    isLib = isEsm || isCjs;
+
+    if (!isLib) {
+      const isIndexHtmlPresent = await stat(resolve(workspace.dir, 'index.html'))
+        .then((stats) => stats.isFile())
+        .catch(() => false);
+
+      isLib = !isIndexHtmlPresent;
+    }
   }
 
   const command = isLib || !start ? 'build' : 'serve';
@@ -74,7 +90,7 @@ export const buildVite = async ({ log, workspace, start, isEsm, isCjs, spawn }: 
       emptyOutDir: !watch,
       lib: {
         entry,
-        formats: [isEsm && 'es', isCjs && 'cjs'].filter(Boolean) as LibraryFormats[],
+        formats: isEsm ? (isCjs ? ['es', 'cjs'] : ['es']) : isCjs ? ['cjs'] : ['es', 'cjs'],
         preserveModules: true,
       },
     };

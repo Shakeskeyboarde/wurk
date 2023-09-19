@@ -1,7 +1,7 @@
 import { stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-import { type Log, type Spawn, type Workspace } from '@werk/cli';
+import { type Log, type PackageJson, type Spawn, type Workspace } from '@werk/cli';
 
 import { buildRollup } from './build-rollup.js';
 import { buildScript } from './build-script.js';
@@ -36,11 +36,8 @@ export const build = async (options: BuildOptions): Promise<void> => {
   ) {
     await buildScript(options);
   } else {
-    const [packageJson, isVite, isRollup] = await Promise.all([
-      workspace.readPackageJson(),
-      detectVite(workspace),
-      detectRollup(workspace),
-    ]);
+    const packageJson = await workspace.readPackageJson();
+    const [isVite, isRollup] = await Promise.all([detectVite(workspace, packageJson), detectRollup(workspace)]);
     const isEsm = isEsmPackage(packageJson);
     const isCjs = isCjsPackage(packageJson);
 
@@ -58,13 +55,24 @@ export const build = async (options: BuildOptions): Promise<void> => {
   }
 };
 
-const detectVite = async (workspace: Workspace): Promise<boolean> => {
-  return await Promise.all(
-    ['index.html', 'vite.config.ts', 'vite.config.js'].map(async (filename) => {
-      const stats = await stat(resolve(workspace.dir, filename)).catch(() => undefined);
-      return stats?.isFile();
-    }),
-  ).then((results) => results.some(Boolean));
+const detectVite = async (workspace: Workspace, packageJson: PackageJson): Promise<boolean> => {
+  const isViteDevDependency = Boolean(packageJson.devDependencies?.vite);
+
+  if (isViteDevDependency) return true;
+
+  const [isIndexHtmlPresent, isConfigTsPresent, isConfigJsPresent] = await Promise.all([
+    stat(resolve(workspace.dir, 'index.html'))
+      .then((stats) => stats.isFile())
+      .catch(() => false),
+    stat(resolve(workspace.dir, 'vite.config.ts'))
+      .then((stats) => stats.isFile())
+      .catch(() => false),
+    stat(resolve(workspace.dir, 'vite.config.js'))
+      .then((stats) => stats.isFile())
+      .catch(() => false),
+  ]);
+
+  return isIndexHtmlPresent || isConfigTsPresent || isConfigJsPresent;
 };
 
 const detectRollup = async (workspace: Workspace): Promise<boolean> => {

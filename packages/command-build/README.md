@@ -29,14 +29,14 @@ werk build --watch
 
 A build mode will be selected automatically based on the presence of tool configuration files.
 
-- `script`: Run the workspace build script.
-  - `build` script (or `start` when the `--start` option is set) is present in the workspace `package.json` file.
 - `tsc`: Build using the TypeScript compiler.
-  - `tsconfig.*build*.json` present in the package root, or **DEFAULT** if conditions for other build modes are not met.
+  - `tsconfig.*build*.json` present in the package root, _or DEFAULT if conditions for other build modes are not met._
 - `vite`: Build using Vite.
-  - `index.html` or `vite.config.*` is present in the package root.
+  - `index.html` or `vite.config.*` is present in the package root, or if `vite` is present the `package.json` file's `devDependencies`.
 - `rollup`: Build using Rollup.
   - `rollup.config.*` present in the package root.
+- `script`: Run the workspace build script.
+  - `build` script (or `start` when the `--start` option is set) is present in the workspace `package.json` file.
 
 ### Mode: `script`
 
