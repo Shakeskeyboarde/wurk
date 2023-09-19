@@ -10,18 +10,21 @@ interface Options {
   dir?: string;
 }
 
-export interface ResolvedImport {
+export interface ResolvedImport<TExports extends Record<string, any> = Record<string, unknown>> {
   dir: string;
   packageJson: PackageJson;
   entry: string;
-  exports: Record<string, unknown>;
+  exports: TExports;
 }
 
 /**
  * Do a NodeJS ESM import relative to a directory, using the package.json
  * exports field, if available.
  */
-export const importRelative = async (name: string, { dir = process.cwd() }: Options = {}): Promise<ResolvedImport> => {
+export const importRelative = async <TExports extends Record<string, any> = Record<string, unknown>>(
+  name: string,
+  { dir = process.cwd() }: Options = {},
+): Promise<ResolvedImport<TExports>> => {
   const match = name.match(/^((?:@[^/]*\/)?[^/]*)(\/.*)?$/u);
 
   if (!match) return await import(name);
@@ -72,7 +75,7 @@ export const importRelative = async (name: string, { dir = process.cwd() }: Opti
         return await importRelative(name, { dir: parentDir });
       }
 
-      const exports: Record<string, unknown> = await import(join(packageDir, resolved.entry));
+      const exports = await import(join(packageDir, resolved.entry));
 
       return { dir: packageDir, exports, ...resolved };
     });
