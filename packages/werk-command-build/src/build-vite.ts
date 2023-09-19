@@ -1,8 +1,12 @@
+import assert from 'node:assert';
 import { stat } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { type Log, type Spawn, type Workspace } from '@werk/cli';
+import { type LibraryFormats } from 'vite';
+
+import { getViteConfigPlugins, type ViteConfigOptions } from './vite-config.js';
 
 interface BuildViteOptions {
   readonly log: Log;
@@ -14,50 +18,38 @@ interface BuildViteOptions {
 }
 
 const START_DELAY_SECONDS = 10;
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const defaultConfig = resolve(__dirname, '..', 'config', 'vite.config.ts');
+const DEFAULT_CONFIG_FILE = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'config', 'vite.config.ts');
 
-// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-export const loadViteOptionalPlugins = async () => {
-  const [react, dts, refresh, svgr] = await Promise.all([
-    // eslint-disable-next-line import/no-extraneous-dependencies
-    import('@vitejs/plugin-react')
-      .then((exports) => {
-        /*
-         * XXX: Current version (4.0.4) of "@vitejs/plugin-react" has a broken
-         *      package.json configuration for ESM, which causes the `default`
-         *      export to be the wrong type. The following is a workaround
-         *      until the issue is fixed.
-         */
-        return exports.default as unknown as Extract<typeof exports.default | typeof exports.default.default, Function>;
-      })
-      .catch(() => undefined),
-    // eslint-disable-next-line import/no-extraneous-dependencies
-    import('vite-plugin-dts').then((exports) => exports.default).catch(() => undefined),
-    // eslint-disable-next-line import/no-extraneous-dependencies
-    import('vite-plugin-refresh').then((exports) => exports.default).catch(() => undefined),
-    // eslint-disable-next-line import/no-extraneous-dependencies
-    import('vite-plugin-svgr').then((exports) => exports.default).catch(() => undefined),
-  ]);
-
-  return { react, dts, refresh, svgr };
+const getExistingFile = async (dir: string, filenames: string[]): Promise<string | undefined> => {
+  return await Promise.all(
+    filenames
+      .map((filename) => resolve(dir, filename))
+      .map((filename) =>
+        stat(filename)
+          .then((stats) => stats.isFile() && filename)
+          .catch(() => false),
+      ),
+  ).then((results) => results.find((filename): filename is string => typeof filename === 'string'));
 };
 
 export const buildVite = async ({ log, workspace, start, isEsm, isCjs, spawn }: BuildViteOptions): Promise<void> => {
-  const [config, optionalPlugins] = await Promise.all([
-    Promise.all(
-      ['vite.config.ts', 'vite.config.js']
-        .map((filename) => resolve(workspace.dir, filename))
-        .map((filename) =>
-          stat(filename)
-            .then((stats) => stats.isFile() && filename)
-            .catch(() => false),
-        ),
-    ).then((results) => results.find((filename): filename is string => Boolean(filename))),
-    loadViteOptionalPlugins(),
-  ]);
+  let isLib = isEsm || isCjs;
 
-  const isLib = isEsm || isCjs;
+  // eslint-disable-next-line import/no-extraneous-dependencies
+  const vite = await import('vite');
+  const customConfigFile = await getExistingFile(workspace.dir, ['vite.config.ts', 'vite.config.js']);
+
+  if (customConfigFile) {
+    const viteConfig = await vite.loadConfigFromFile({ command: 'build', mode: 'production' });
+    isLib = Boolean(viteConfig?.config.build?.lib);
+  } else {
+    const plugins = await getViteConfigPlugins(workspace.dir);
+
+    Object.entries(plugins)
+      .filter(([, plugin]) => plugin == null)
+      .forEach(([name]) => log.warn(`Plugin "${name}" is recommended.`));
+  }
+
   const command = isLib || !start ? 'build' : 'serve';
   const watch = isLib && start ? '--watch' : null;
   const host = !isLib && start ? '--host' : null;
@@ -68,26 +60,39 @@ export const buildVite = async ({ log, workspace, start, isEsm, isCjs, spawn }: 
     }.`,
   );
 
-  if (!config) {
-    // Using default config.
-    if (!optionalPlugins.react) log.warn('Plugin "@vite/plugin-react" is recommended.');
-    if (!optionalPlugins.dts && isLib) log.warn('Plugin "vite-plugin-dts" is recommended.');
-    if (!optionalPlugins.refresh) log.warn('Plugin "vite-plugin-refresh" is recommended.');
-    if (!optionalPlugins.svgr) log.warn('Plugin "vite-plugin-svgr" is recommended.');
-  }
-
   if (command === 'serve') {
     await new Promise((res) => setTimeout(res, START_DELAY_SECONDS * 1000));
   }
 
-  await spawn('vite', [command, watch, host, `--config=${config ?? defaultConfig}`], {
+  const env: NodeJS.ProcessEnv = {};
+
+  if (isLib && !customConfigFile) {
+    const entry = await getExistingFile(workspace.dir, [
+      'src/index.ts',
+      'src/index.tsx',
+      'src/index.js',
+      'src/index.jsx',
+    ]);
+
+    assert(entry, `Could not find Vite library entry point for workspace "${workspace.name}".`);
+
+    const config: ViteConfigOptions = {
+      emptyOutDir: !watch,
+      lib: {
+        entry,
+        formats: [isEsm && 'es', isCjs && 'cjs'].filter(Boolean) as LibraryFormats[],
+        preserveModules: true,
+      },
+    };
+
+    env.VITE_WERK_OPTIONS = JSON.stringify(config);
+  }
+
+  await spawn('vite', [command, watch, host, `--config=${customConfigFile ?? DEFAULT_CONFIG_FILE}`], {
     cwd: workspace.dir,
     echo: true,
     errorReturn: true,
     errorSetExitCode: true,
-    env: {
-      VITE_LIB_ESM: isEsm ? 'true' : undefined,
-      VITE_LIB_CJS: isCjs ? 'true' : undefined,
-    },
+    env,
   });
 };

@@ -40,5 +40,3 @@ export default createCommand({
     await Promise.all(startCallbacks.map((callback) => callback()));
   },
 });
-
-export { loadViteOptionalPlugins } from './build-vite.js';
