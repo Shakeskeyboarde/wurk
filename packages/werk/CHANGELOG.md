@@ -1,3 +1,9 @@
+## 6.0.2 (2023-09-18)
+
+### Bug Fixes
+
+- Shouldn't use require.resolve to import plugins relatively. (f6b6f01)
+
 ## 6.0.1 (2023-09-17)
 
 ### Improvements

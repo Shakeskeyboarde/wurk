@@ -1,3 +1,9 @@
+## 1.3.0 (2023-09-18)
+
+### Features
+
+- Allow extending the built-in vite configuration by importing '@werk/command-build/vite-config' in a custom vite config file. (bd35225)
+
 ## 1.2.1 (2023-09-17)
 
 **Note**: Updated local dependencies.
