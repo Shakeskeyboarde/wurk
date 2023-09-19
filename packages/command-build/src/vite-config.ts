@@ -6,10 +6,10 @@ import { importRelative } from '@werk/cli';
 import { type ConfigEnv, type LibraryFormats, type UserConfig } from 'vite';
 
 interface Plugins {
-  '@vitejs/plugin-react': typeof import('@vitejs/plugin-react') | undefined;
-  'vite-plugin-dts': typeof import('vite-plugin-dts') | undefined;
-  'vite-plugin-refresh': typeof import('vite-plugin-refresh') | undefined;
-  'vite-plugin-svgr': typeof import('vite-plugin-svgr') | undefined;
+  '@vitejs/plugin-react': typeof import('@vitejs/plugin-react');
+  'vite-plugin-dts': typeof import('vite-plugin-dts');
+  'vite-plugin-refresh': typeof import('vite-plugin-refresh');
+  'vite-plugin-svgr': typeof import('vite-plugin-svgr');
 }
 
 export interface ViteConfigOptions {
@@ -47,33 +47,24 @@ const readPackage = async (dir = process.cwd()): Promise<Record<string, any>> =>
     });
 };
 
-const tryGetViteConfigPlugin = async <TName extends keyof Plugins>(
+const tryPlugin = async <TName extends keyof Plugins>(
   name: TName,
-  dir = process.cwd(),
-): Promise<Record<TName, Plugins[TName]>> => {
+  ...args: Parameters<Plugins[TName]['default']>
+): Promise<ReturnType<Plugins[TName]['default']> | undefined> => {
   try {
-    const { exports } = await importRelative(name, { dir });
-    return { [name]: exports } as Record<TName, Plugins[TName]>;
+    const { exports } = await importRelative<Plugins[TName]>(name);
+    console.log(`vite using optional plugin "${name}".`);
+    const plugin = exports.default(...(args as any)) as any;
+    return plugin;
   } catch (error) {
-    return { [name]: undefined } as Record<TName, Plugins[TName]>;
+    return undefined;
   }
-};
-
-export const getViteConfigPlugins = async (dir = process.cwd()): Promise<Plugins> => {
-  return {
-    ...(await tryGetViteConfigPlugin('@vitejs/plugin-react', dir)),
-    ...(await tryGetViteConfigPlugin('vite-plugin-dts', dir)),
-    ...(await tryGetViteConfigPlugin('vite-plugin-refresh', dir)),
-    ...(await tryGetViteConfigPlugin('vite-plugin-svgr', dir)),
-  };
 };
 
 export const getViteConfig = async (
   env: ConfigEnv,
   { emptyOutDir = true, lib }: ViteConfigOptions = {},
 ): Promise<UserConfig> => {
-  const plugins = await getViteConfigPlugins();
-
   if (lib) {
     const { entry = 'src/index.ts', formats = [], preserveModules = true } = lib;
     const entryRoot = dirname(entry);
@@ -93,9 +84,9 @@ export const getViteConfig = async (
 
     return {
       plugins: [
-        plugins['vite-plugin-svgr']?.default({ exportAsDefault: true }),
-        plugins['@vitejs/plugin-react']?.default(),
-        plugins['vite-plugin-dts']?.default({
+        tryPlugin('vite-plugin-svgr', { exportAsDefault: true }),
+        tryPlugin('@vitejs/plugin-react'),
+        tryPlugin('vite-plugin-dts', {
           root: process.cwd(),
           entryRoot,
           include: [entryRoot],
@@ -121,9 +112,9 @@ export const getViteConfig = async (
 
   return {
     plugins: [
-      plugins['vite-plugin-svgr']?.default({ exportAsDefault: true }),
-      plugins['@vitejs/plugin-react']?.default(),
-      plugins['vite-plugin-refresh']?.default(),
+      tryPlugin('vite-plugin-svgr', { exportAsDefault: true }),
+      tryPlugin('@vitejs/plugin-react'),
+      tryPlugin('vite-plugin-refresh'),
     ],
     build: {
       outDir: 'dist',

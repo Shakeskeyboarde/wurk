@@ -17,15 +17,13 @@ npm i -D @werk/command-exec
 werk build
 ```
 
-## Start
+## Watch
 
 After building once, start continuously building workspaces. Generally, this means starting a development server or rebuilding when files are changed.
 
 ```sh
-werk build --start
+werk build --watch
 ```
-
-Why is `--start` an option to the build command? Because generally you want to build everything once, before starting the continuous build, so that projects with interdependency do not initially fail to build due to missing dependencies.
 
 ## Modes
 
@@ -48,38 +46,23 @@ Runs the `build` script from the workspace `package.json` file. If the `--start`
 
 Builds once for every `tsconfig.*build*.json` file found in the workspace. If no matching build configuration is present (when used as the default build mode), then temporary configurations will be generated.
 
-Generated configurations write output to the `lib` directory. If the workspace package has a `main` entry, the output will be CommonJS. If the workspace has an `exports` entry, the output will be ESM. If both are present, then both types of output will be generated, ESM to the `lib/esm` directory, and CommonJS to the `lib/cjs` directory.
+Generated configurations write output to the `lib` directory. CommonJS and/or ESModule output is determined automatically.
 
-Generated configurations will extends a `tsconfig.json` file in the workspace or the workspaces root. The following options are overridden by generated configurations.
-
-- compilerOptions
-  - moduleDetection: `auto`
-  - moduleResolution: `NodeNext`
-  - module: `ES2022` or `CommonJS`
-  - outDir: `lib`, `lib/esm`, or `lib/cjs`
-  - rootDir: `src`
-  - noEmit: `false`
-  - emitDeclarationOnly: `false`
-  - declaration: `true`
-  - sourceMap: `true`
-- include: `["src"]`
-- exclude: `["**/*.test.*", "**/*.spec.*", "**/*.stories.*]`
+Generated configurations will extends a `tsconfig.json` file in the workspace or the workspaces root.
 
 **Note:** A simple `package.json` file will also be written to each output directory, as long as it's not the workspace root. This package file contains only the [type](https://nodejs.org/api/packages.html#type) directive, set to the value which matches the TypeScript configuration (`module` or `commonjs`).
 
 ### Mode: `vite`
 
-Uses the `vite.config.js` or `vite.config.ts` file in the workspace root if it exists. If no configuration exists, a default configuration will be used.
+Uses the `vite.config.ts` or `vite.config.js` file in the workspace root if it exists.
 
-The default configuration will output to the `dist` directory, unless `package.json` contains a `main` entry, in which case library mode will be used to build ESM (`lib/esm`) and CommonJS (`lib/cjs`) module output.
-
-In library mode, all non-dev dependencies will be externalized.
+If no configuration exists, a default configuration will be used. Under the default configuration, library mode is enabled if the `package.json` file contains `bin`, `main`, or `exports` entry points. CommonJS and/or ESModule output is determined automatically.
 
 The following plugins are used in the default configuration, _if they are installed._
 
 - `@vitejs/plugin-react`
-- `vite-plugin-dts` (library mode only)
-- `vite-plugin-refresh` (non-library mode only)
+- `vite-plugin-dts`
+- `vite-plugin-refresh`
 - `vite-plugin-svgr`
 
 #### SVGR

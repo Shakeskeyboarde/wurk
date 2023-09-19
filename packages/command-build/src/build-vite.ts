@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { type Log, type Spawn, type Workspace } from '@werk/cli';
 import { type LibraryFormats } from 'vite';
 
-import { getViteConfigPlugins, type ViteConfigOptions } from './vite-config.js';
+import { type ViteConfigOptions } from './vite-config.js';
 
 interface BuildViteOptions {
   readonly log: Log;
@@ -42,12 +42,6 @@ export const buildVite = async ({ log, workspace, start, isEsm, isCjs, spawn }: 
   if (customConfigFile) {
     const viteConfig = await vite.loadConfigFromFile({ command: 'build', mode: 'production' });
     isLib = Boolean(viteConfig?.config.build?.lib);
-  } else {
-    const plugins = await getViteConfigPlugins(workspace.dir);
-
-    Object.entries(plugins)
-      .filter(([, plugin]) => plugin == null)
-      .forEach(([name]) => log.warn(`Plugin "${name}" is recommended.`));
   }
 
   const command = isLib || !start ? 'build' : 'serve';
