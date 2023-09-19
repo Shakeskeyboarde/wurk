@@ -1,3 +1,9 @@
+## 1.2.6 (2023-09-19)
+
+### Improvements
+
+- **cli:** Add workspace.getMissingEntryPoints method. (2be8daa)
+
 ## 1.2.5 (2023-09-19)
 
 ### Notes

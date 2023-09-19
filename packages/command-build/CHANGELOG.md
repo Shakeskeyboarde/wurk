@@ -1,3 +1,9 @@
+## 1.3.4 (2023-09-19)
+
+### Improvements
+
+- Support bundling in library mode. (7847c49)
+
 ## 1.3.3 (2023-09-19)
 
 ### Bug Fixes

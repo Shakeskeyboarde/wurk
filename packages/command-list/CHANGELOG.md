@@ -1,3 +1,9 @@
+## 1.2.7 (2023-09-19)
+
+### Notes
+
+- Updated local dependencies.
+
 ## 1.2.6 (2023-09-19)
 
 ### Notes

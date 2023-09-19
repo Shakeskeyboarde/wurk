@@ -1,3 +1,9 @@
+## 7.0.2 (2023-09-19)
+
+### Improvements
+
+- Add workspace.getMissingEntryPoints method. (2be8daa)
+
 ## 7.0.1 (2023-09-19)
 
 ### Improvements
