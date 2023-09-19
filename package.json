@@ -12,8 +12,9 @@
     "start": "echo 'building...' && ( npm --quiet run build &>/dev/null || ( echo 'build failed' && exit 1 ) ) && echo 'starting...\\n' && werk"
   },
   "workspaces": [
-    "packages/werk",
-    "packages/*"
+    "packages/cli",
+    "packages/*",
+    "packages/test/*"
   ],
   "engines": {
     "node": ">=18",
@@ -45,7 +46,7 @@
     "vitest": "^0.34.4"
   },
   "werk": {
-    "commandPackages": {
+    "commands": {
       "a": "typescript",
       "b": "does-not-exist"
     }
