@@ -25,7 +25,6 @@ export const runCommand = async (
     `Command "${commandName}" does not support package manager "${globalConfig.packageManager}".`,
   );
 
-  const config = globalConfig.commandConfigs[commandName];
   const args = commander.processedArgs;
   const opts = commander.opts();
   const [root, workspaces, isMonorepo] = await getWorkspaces({
@@ -48,7 +47,6 @@ export const runCommand = async (
   process.on('exit', (exitCode) => {
     const context = new CleanupContext({
       log: undefined,
-      config,
       rootDir: globalConfig.rootPackage.dir,
       args: commander.processedArgs,
       opts: commander.opts(),
@@ -65,7 +63,6 @@ export const runCommand = async (
   const { gitHead, gitFromRevision } = globalOpts.git;
   const matrixValues = await command.before({
     log: undefined,
-    config,
     commandMain,
     args,
     opts,
@@ -105,7 +102,6 @@ export const runCommand = async (
           await command.each({
             isParallel: concurrency !== 1,
             log: { prefix: prefix ? workspace.name : undefined, formatPrefix },
-            config,
             commandMain,
             args,
             opts,
@@ -134,7 +130,6 @@ export const runCommand = async (
 
   await command.after({
     log: undefined,
-    config,
     commandMain,
     args,
     opts,

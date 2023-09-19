@@ -58,7 +58,6 @@ A context object is passed to all hooks, _except for `config`_ which only receiv
 
 - `log`: A logger which should be preferred over `console.*` logging.
 - `commandMain` (**before**, **each**, **after**): Main filename of the command package.
-- `config`: The command configuration from the workspaces root `package.json` file `werk.<command>.config` key.
 - `rootDir`: Absolute path of the workspaces root.
 - `args`: Positional arguments parsed from command line.
 - `opts`: Named options parsed from the command line.
@@ -125,7 +124,6 @@ The `context.workspaces` and `context.workspace` properties contain instances of
 - `dir`: Absolute root directory of the workspace.
 - `selected`: True if the workspace matched the Werk [global options](README.md#command-line-options).
 - `dependencyNames`: A set of the unique (deduplicated) dependency names collected from all of the dependency maps.
-- `config`: The command configuration value from the workspace `package.json` file `werk.<command>.config` key.
 
 **Package methods:**
 

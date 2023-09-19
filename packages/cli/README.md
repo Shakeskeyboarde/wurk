@@ -15,7 +15,6 @@ Open-minded build tooling, with opinionated plugins.
   - [Parallelization Options](#parallelization-options)
   - [Logging Options](#logging-options)
   - [Git Options](#git-options)
-  - [Pre-Configured Commands](#pre-configured-commands)
 
 ## Features
 
@@ -91,7 +90,7 @@ You can also force command names to resolve to specific packages by mapping the 
 ```json
 {
   "werk": {
-    "commandPackages": {
+    "commands": {
       "run": "arbitrary-package-name"
     }
   }
@@ -169,25 +168,3 @@ The log level can also be set using the `WERK_LOG_LEVEL` environment variable. T
   - Provide a default Git "HEAD" commit in non-Git environments. This has no effect if Git is available.
 - `--git-from-revision <rev>`
   - Use a specific Git revision when detecting modifications. If not specified, it will be detected from the registry metadata of the current version.
-
-### Pre-Configured Commands
-
-You can configure Werk to automatically inject command-line arguments. This configuration must be in the workspaces root `package.json` file.
-
-```json
-{
-  "werk": {
-    "globalArgs": ["--no-dependencies"],
-    "publish": {
-      "globalArgs": ["--loglevel=warn"],
-      "args": ["--remove-package-fields=devDependencies"]
-    }
-  }
-}
-```
-
-Given the above configuration, if the `werk publish` command is run, it will be as if the following command is run.
-
-```sh
-werk --no-dependencies --loglevel=warn publish --remove-package-fields=devDependencies
-```

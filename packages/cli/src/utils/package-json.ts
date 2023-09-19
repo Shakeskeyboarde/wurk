@@ -22,6 +22,11 @@ type MutableJson<T> = T extends readonly (infer V)[]
 
 export interface PackageJson extends ReadonlyJson<OmitWithIndex<IPackageJsonBase, 'scripts'>> {
   readonly scripts?: ReadonlyJson<IScriptsMap>;
+  readonly werk?: {
+    readonly commands: {
+      readonly [key: string]: string;
+    };
+  };
   readonly [key: string]: unknown;
 }
 

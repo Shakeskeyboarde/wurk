@@ -178,5 +178,5 @@ const mainAsync = async (args: string[]): Promise<void> => {
     );
   });
 
-  await commander.parseAsync([...globalConfig.globalArgs, ...args], { from: 'user' });
+  await commander.parseAsync(args, { from: 'user' });
 };

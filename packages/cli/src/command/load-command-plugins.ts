@@ -84,10 +84,10 @@ const loadCommandPlugin = async (
 };
 
 export const loadCommandPlugins = async (
-  config: Pick<Config, 'rootPackage' | 'commandPackages'>,
+  config: Pick<Config, 'rootPackage' | 'commandPackageIds'>,
   parentCommander: CustomCommander,
 ): Promise<CommandPlugin[]> => {
-  const resolved = new Map(Object.entries(config.commandPackages));
+  const resolved = new Map(Object.entries(config.commandPackageIds));
 
   Object.keys({
     ...config.rootPackage.dependencies,

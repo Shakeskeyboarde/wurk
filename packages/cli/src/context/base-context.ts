@@ -4,7 +4,6 @@ import { Log, type LogOptions } from '../utils/log.js';
 export interface BaseContextOptions {
   readonly log: LogOptions | undefined;
   readonly packageManager: PackageManager;
-  readonly config: unknown;
 }
 
 export abstract class BaseContext {
@@ -34,9 +33,8 @@ export abstract class BaseContext {
    */
   readonly config: unknown;
 
-  constructor({ log, packageManager, config }: BaseContextOptions) {
+  constructor({ log, packageManager }: BaseContextOptions) {
     this.log = new Log(log);
     this.packageManager = packageManager;
-    this.config = config;
   }
 }

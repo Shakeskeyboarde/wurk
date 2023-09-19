@@ -6,7 +6,6 @@ import { BaseContext, type BaseContextOptions } from './base-context.js';
 
 export interface BaseAsyncContextOptions<A extends CommanderArgs, O extends CommanderOptions>
   extends BaseContextOptions {
-  readonly config: unknown;
   readonly commandMain: string;
   readonly args: A;
   readonly opts: O;
@@ -68,7 +67,6 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
 
   constructor({
     log,
-    config,
     commandMain,
     args,
     opts,
@@ -82,7 +80,7 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
     saveAndRestoreFile,
     startWorker,
   }: BaseAsyncContextOptions<A, O>) {
-    super({ log, config, packageManager });
+    super({ log, packageManager });
 
     this.commandMain = commandMain;
     this.args = args;
