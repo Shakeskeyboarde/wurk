@@ -15,9 +15,9 @@ enum Section {
   breaking,
   feat,
   fix,
-  refactor,
   improvement,
   perf,
+  refactor,
   tests,
   docs,
   build,
@@ -35,12 +35,12 @@ const getSection = (type: ChangeType): Section => {
       return Section.feat;
     case ChangeType.fix:
       return Section.fix;
-    case ChangeType.refactor:
-      return Section.refactor;
     case ChangeType.improvement:
       return Section.improvement;
     case ChangeType.perf:
       return Section.perf;
+    case ChangeType.refactor:
+      return Section.refactor;
     case ChangeType.tests:
       return Section.tests;
     case ChangeType.docs:
@@ -68,12 +68,12 @@ const getHeading = (section: Section): string => {
       return 'Features';
     case Section.fix:
       return 'Bug Fixes';
-    case Section.refactor:
-      return 'Code Refactoring';
     case Section.improvement:
       return 'Improvements';
     case Section.perf:
       return 'Performance Improvements';
+    case Section.refactor:
+      return 'Code Refactoring';
     case Section.tests:
       return 'Tests';
     case Section.docs:
