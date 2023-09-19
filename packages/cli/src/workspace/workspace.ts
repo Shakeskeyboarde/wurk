@@ -370,7 +370,7 @@ export class Workspace {
    * `package.json` file. These are the files that should be built and
    * published with the package.
    */
-  readonly getEntryPoints = (): readonly EntryPoint[] => {
+  readonly getEntryPoints = (): EntryPoint[] => {
     const entryPoints: EntryPoint[] = [];
     const addEntryPoints = (type: EntryPoint['type'], value: unknown): void => {
       if (typeof value === 'string') {
@@ -393,16 +393,27 @@ export class Workspace {
   };
 
   /**
+   * Return a list of all the workspace entry points that are missing.
+   */
+  readonly getMissingEntryPoints = async (): Promise<EntryPoint[]> => {
+    const values = this.getEntryPoints();
+    const sparse = await Promise.all(
+      values.map((value) =>
+        stat(value.filename)
+          .then(() => undefined)
+          .catch(() => value),
+      ),
+    );
+
+    return sparse.filter((value): value is EntryPoint => Boolean(value));
+  };
+
+  /**
    * Return true if all of the workspace entry points exist.
    */
   readonly getIsBuilt = async (): Promise<boolean> => {
-    const isBuilt = await Promise.all(
-      this.getEntryPoints().map(async ({ filename }) => {
-        return await stat(filename)
-          .then((stats) => stats.isFile())
-          .catch(() => false);
-      }),
-    ).then((results) => results.every(Boolean));
+    const missing = await this.getMissingEntryPoints();
+    const isBuilt = missing.length === 0;
 
     this.#context.log.debug(`Workspace "${this.name}" built=${isBuilt}`);
 

@@ -6,6 +6,7 @@ export { type AfterContext } from './context/after-context.js';
 export { type BeforeContext } from './context/before-context.js';
 export { type CleanupContext } from './context/cleanup-context.js';
 export { type EachContext } from './context/each-context.js';
+export { findAsync } from './utils/find-async.js';
 export { importRelative, type ResolvedImport } from './utils/import-relative.js';
 export { Log } from './utils/log.js';
 export { type MutablePackageJson, type PackageJson } from './utils/package-json.js';

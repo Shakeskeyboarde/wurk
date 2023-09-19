@@ -106,7 +106,7 @@ export const loadCommandPlugins = async (
     });
 
   return await Promise.all(
-    [...resolved.entries()].map(async ([name, packageId]): Promise<CommandPlugin> => {
+    [...resolved.entries()].map(async ([name, packageId]) => {
       return await loadCommandPlugin(config.rootPackage.dir, parentCommander, name, packageId);
     }),
   );

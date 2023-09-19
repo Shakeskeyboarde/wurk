@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import { mkdir, stat, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
-import { createCommand } from '@werk/cli';
+import { createCommand, findAsync } from '@werk/cli';
 
 export default createCommand({
   packageManager: false,
@@ -62,28 +62,45 @@ export default createCommand({
 });
 
 const isVitestWorkspaceConfigFound = async (dir: string): Promise<boolean> => {
-  return await Promise.all(
-    [
-      'vitest.workspace.ts',
-      'vitest.workspace.js',
-      'vitest.workspace.json',
-      'vitest.projects.js',
-      'vitest.projects.ts',
-      'vitest.projects.json',
-    ].map((filename) =>
-      stat(resolve(dir, filename))
-        .then((stats) => stats.isFile())
-        .catch(() => false),
+  return Boolean(
+    await findAsync(
+      [
+        'vitest.workspace.ts',
+        'vitest.workspace.js',
+        'vitest.workspace.json',
+        'vitest.projects.ts',
+        'vitest.projects.js',
+        'vitest.projects.json',
+      ],
+      (filename) =>
+        stat(resolve(dir, filename))
+          .then((stats) => stats.isFile())
+          .catch(() => false),
     ),
-  ).then((results) => results.some(Boolean));
+  );
 };
 
 const isVitestConfigFound = async (dir: string): Promise<boolean> => {
-  return await Promise.all(
-    ['vite.config.ts', 'vite.config.js', 'vitest.config.ts', 'vitest.config.js'].map((filename) =>
-      stat(resolve(dir, filename))
-        .then((stats) => stats.isFile())
-        .catch(() => false),
+  return Boolean(
+    await findAsync(
+      [
+        'vite.config.ts',
+        'vite.config.mts',
+        'vite.config.cts',
+        'vite.config.js',
+        'vite.config.mjs',
+        'vite.config.cjs',
+        'vitest.config.ts',
+        'vitest.config.mts',
+        'vitest.config.cts',
+        'vitest.config.js',
+        'vitest.config.mjs',
+        'vitest.config.cjs',
+      ],
+      (filename) =>
+        stat(resolve(dir, filename))
+          .then((stats) => stats.isFile())
+          .catch(() => false),
     ),
-  ).then((results) => results.some(Boolean));
+  );
 };
