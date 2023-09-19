@@ -94,7 +94,6 @@ export const getViteConfig = async (
         tryPlugin('vite-plugin-svgr', { exportAsDefault: true }),
         tryPlugin('@vitejs/plugin-react'),
         tryPlugin('vite-plugin-dts', {
-          root: process.cwd(),
           entryRoot,
           include: [entryRoot],
           exclude: ['**/*.test.*', '**/*.spec.*', '**/*.stories.*'],
