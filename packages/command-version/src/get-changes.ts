@@ -121,8 +121,8 @@ export const getChanges = async (
       summary = summary.trim();
 
       const type = /none|internal|version(?:ed|ing)|releas(?:ed?|ing)/u.test(typeString)
-        ? ChangeType.breaking
-          : CHANGE_TYPES[typeString] ?? ChangeType.fix;
+        ? ChangeType.none
+        : CHANGE_TYPES[typeString] ?? ChangeType.fix;
       const message = `${summary} (${hash})`;
       const bodyLines = body.split(/\r?\n/u);
 
