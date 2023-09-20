@@ -1,3 +1,14 @@
+## 3.1.11 (2023-09-19)
+
+### Bug Fixes
+
+- Make "none" change types actually none, instead of breaking!? (7cffd62)
+
+### Chores
+
+- (actually a fix) Add missing chore commit type matching. (3e24a27)
+- Looser "none" change matching. (9997c75)
+
 ## 3.1.10 (2023-09-19)
 
 ### Bug Fixes
