@@ -6,9 +6,21 @@
   "types": "./lib/bundle.d.ts",
   "main": "./lib/bundle.cjs",
   "exports": {
-    "types": "./lib/bundle.d.ts",
-    "require": "./lib/bundle.cjs",
-    "default": "./lib/bundle.js"
+    ".": {
+      "types": "./lib/bundle.d.ts",
+      "require": "./lib/bundle.cjs",
+      "default": "./lib/bundle.js"
+    },
+    "./sub": {
+      "types": "./lib/foo.d.ts",
+      "require": "./lib/foo.cjs",
+      "default": "./lib/foo.js"
+    },
+    "./svg": {
+      "types": "./lib/test.d.ts",
+      "require": "./lib/test.cjs",
+      "default": "./lib/test.js"
+    }
   },
   "devDependencies": {
     "vite": "^4.4.9"

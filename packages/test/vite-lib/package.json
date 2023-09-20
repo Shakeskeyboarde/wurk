@@ -6,9 +6,16 @@
   "types": "./lib/index.d.ts",
   "main": "./lib/index.cjs",
   "exports": {
-    "types": "./lib/index.d.ts",
-    "require": "./lib/index.cjs",
-    "default": "./lib/index.js"
+    ".": {
+      "types": "./lib/index.d.ts",
+      "require": "./lib/index.cjs",
+      "default": "./lib/index.js"
+    },
+    "./component": {
+      "types": "./lib/component.d.ts",
+      "require": "./lib/component.cjs",
+      "default": "./lib/component.js"
+    }
   },
   "dependencies": {
     "@types/react": "^18.2.22",

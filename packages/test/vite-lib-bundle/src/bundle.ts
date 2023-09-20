@@ -1,1 +1,2 @@
-export * from './other.js';
+export * from './bar.js';
+export * from './foo.js';
