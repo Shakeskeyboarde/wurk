@@ -50,5 +50,12 @@
   },
   "dependencies": {
     "@werk/cli": "^7.0.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.4",
+    "vite-plugin-bin": "^1.0.1",
+    "vite-plugin-dts": "^3.5.3",
+    "vite-plugin-refresh": "^1.0.3",
+    "vite-plugin-svgr": "^4.0.0"
   }
 }

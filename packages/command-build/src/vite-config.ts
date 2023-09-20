@@ -10,6 +10,7 @@ interface Plugins {
   'vite-plugin-dts': typeof import('vite-plugin-dts');
   'vite-plugin-refresh': typeof import('vite-plugin-refresh');
   'vite-plugin-svgr': typeof import('vite-plugin-svgr');
+  'vite-plugin-bin': typeof import('vite-plugin-bin');
 }
 
 export interface ViteConfigOptions {
@@ -56,7 +57,10 @@ export const getViteConfig = async (
   env: ConfigEnv,
   { emptyOutDir = true, lib, plugins }: ViteConfigOptions = {},
 ): Promise<UserConfig> => {
-  const packageJson = await readPackage();
+  // eslint-disable-next-line import/no-extraneous-dependencies
+  const [vite, packageJson] = await Promise.all([import('vite'), readPackage()]);
+  const logger = vite.createLogger();
+
   const tryPlugin = async <TName extends keyof Plugins>(
     name: TName,
     ...args: Parameters<Plugins[TName]['default']>
@@ -65,8 +69,8 @@ export const getViteConfig = async (
 
     try {
       const { exports } = await importRelative<Plugins[TName]>(name);
-      console.log(`vite using optional plugin "${name}".`);
-      const plugin = exports.default(...(args as any)) as any;
+      logger.info(`vite using optional plugin "${name}".`);
+      const plugin: any = exports.default(...(args as any));
       return plugin;
     } catch (error) {
       return undefined;
@@ -76,7 +80,7 @@ export const getViteConfig = async (
   if (lib) {
     const { entry = 'src/index.ts', formats = [], preserveModules = true } = lib;
 
-    console.log(`vite library mode (${preserveModules ? 'preserving modules' : 'bundling'}).`);
+    logger.info(`vite library mode (${preserveModules ? 'preserving modules' : 'bundling'}).`);
 
     const external: RegExp[] = [/^node:/u];
     const dependencyNames = Object.keys({
@@ -92,7 +96,7 @@ export const getViteConfig = async (
 
     return {
       plugins: [
-        tryPlugin('vite-plugin-svgr', { exportAsDefault: true }),
+        tryPlugin('vite-plugin-svgr', { exportAsDefault: true, svgrOptions: { exportType: 'default' } } as any),
         tryPlugin('@vitejs/plugin-react'),
         tryPlugin('vite-plugin-dts', {
           entryRoot: 'src',
@@ -100,6 +104,7 @@ export const getViteConfig = async (
           include: ['src'],
           exclude: ['**/*.test.*', '**/*.spec.*', '**/*.stories.*'],
         }),
+        tryPlugin('vite-plugin-bin'),
       ],
       build: {
         target: 'esnext',
@@ -119,11 +124,11 @@ export const getViteConfig = async (
     };
   }
 
-  console.log('vite app mode.');
+  logger.info('vite app mode.');
 
   return {
     plugins: [
-      tryPlugin('vite-plugin-svgr', { exportAsDefault: true }),
+      tryPlugin('vite-plugin-svgr', { exportAsDefault: true, svgrOptions: { exportType: 'default' } } as any),
       tryPlugin('@vitejs/plugin-react'),
       tryPlugin('vite-plugin-refresh'),
     ],

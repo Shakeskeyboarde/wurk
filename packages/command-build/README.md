@@ -66,6 +66,7 @@ The following plugins are used in the default configuration, _if they are dev de
 - `vite-plugin-dts`
 - `vite-plugin-refresh`
 - `vite-plugin-svgr`
+- `vite-plugin-bin`
 
 #### SVGR
 
