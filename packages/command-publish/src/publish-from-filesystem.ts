@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import { stat } from 'node:fs/promises';
 import { relative, resolve } from 'node:path';
 
-import { type Log, type MutablePackageJson, type Spawn, type Workspace } from '@werk/cli';
+import { type EntryPoint, type Log, type MutablePackageJson, type Spawn, type Workspace } from '@werk/cli';
 
 interface publishFromFilesystemOptions {
   log: Log;
@@ -63,13 +63,13 @@ export const publishFromFilesystem = async ({
     log.warn(`Workspace "${workspace.name}" changelog was not updated in the last commit. It may be outdated.`);
   }
 
-  const [isClean, isBuilt, isPackComplete] = await Promise.all([
+  const [isClean, missing, missingPacked] = await Promise.all([
     workspace.getGitIsClean({
       includeDependencyScopes: ['dependencies', 'peerDependencies', 'optionalDependencies'],
       excludeDependencyNames: [...published],
     }),
-    workspace.getIsBuilt(),
-    getIsPackComplete(log, workspace, spawn),
+    workspace.getMissingEntryPoints(),
+    getMissingPackFiles(workspace, spawn),
   ]);
 
   if (!isClean) {
@@ -78,11 +78,23 @@ export const publishFromFilesystem = async ({
     return false;
   }
 
-  assert(isBuilt, `Workspace "${workspace.name}" is not built. Some package entry points do not exist.`);
-  assert(
-    isPackComplete,
-    `Workspace "${workspace.name}" packed archive is incomplete. Some package entry points do not exist.`,
-  );
+  if (missing.length) {
+    throw new Error(
+      `Workspace "${workspace.name}" is missing the following entry points:${missing.reduce(
+        (result, { type, filename }) => `${result}\n  - ${relative(workspace.dir, filename)} (${type})`,
+        '',
+      )}`,
+    );
+  }
+
+  if (missingPacked.length) {
+    throw new Error(
+      `Workspace "${workspace.name}" packed archive is missing the following entry points:${missingPacked.reduce(
+        (result, { type, filename }) => `${result}\n  - ${relative(workspace.dir, filename)} (${type})`,
+        '',
+      )}`,
+    );
+  }
 
   log.notice(`Publishing workspace "${workspace.name}@${workspace.version}"${opts.toArchive ? ' to archive' : ''}.`);
 
@@ -191,21 +203,18 @@ const getIsChangeLogOutdated = async (
   return isChangeLogPresent && isChangeLogOutdated;
 };
 
-const getIsPackComplete = async (
-  log: Log,
+const getMissingPackFiles = async (
   workspace: Pick<Workspace, 'name' | 'dir' | 'getEntryPoints'>,
   spawn: Spawn,
-): Promise<boolean> => {
+): Promise<EntryPoint[]> => {
   const packJson = await spawn('npm', ['pack', '--dry-run', '--json'], {
     cwd: workspace.dir,
     capture: true,
   }).getJson<readonly { readonly files: readonly { readonly path: string }[] }[]>();
-  const packFiles = (packJson?.[0]?.files ?? []).map(({ path }) => resolve(workspace.dir, path));
-  const isPackComplete = workspace
+  const packed = (packJson?.[0]?.files ?? []).map(({ path }) => resolve(workspace.dir, path));
+  const missing = workspace
     .getEntryPoints()
-    .every(({ filename }) => packFiles.some((packFile) => relative(packFile, filename) === ''));
+    .filter(({ filename }) => !packed.some((packedFilename) => relative(packedFilename, filename) === ''));
 
-  log.debug(`Workspace "${workspace.name}" packed=${isPackComplete}`);
-
-  return isPackComplete;
+  return missing;
 };
