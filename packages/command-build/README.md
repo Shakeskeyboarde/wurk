@@ -58,9 +58,9 @@ Uses the `vite.config.ts` or `vite.config.js` file in the workspace root if it e
 
 If no configuration exists, a default configuration will be used. Under the default configuration, library mode is enabled if the `package.json` file contains `bin`, `main`, or `exports` entry points. CommonJS and/or ESModule output is determined automatically.
 
-When library mode is enabled, bundling is disabled (ie. "preserve modules"), _unless_ the library entrypoint is named `bundle.*`. Disabling bundling means that one output file per-input file is generated, which is useful for tree-shaking.
+When library mode is enabled, bundling is disabled (ie. "preserve modules"), _unless_ a library entrypoint is named `bundle.*`. Disabling bundling means that one output file per-input file is generated, which is useful for tree-shaking.
 
-The following plugins are used in the default configuration, _if they are installed._
+The following plugins are used in the default configuration, _if they are dev dependencies of the workspace._
 
 - `@vitejs/plugin-react`
 - `vite-plugin-dts`

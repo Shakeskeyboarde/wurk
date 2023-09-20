@@ -56,11 +56,12 @@ export const getViteConfig = async (
   env: ConfigEnv,
   { emptyOutDir = true, lib, plugins }: ViteConfigOptions = {},
 ): Promise<UserConfig> => {
+  const packageJson = await readPackage();
   const tryPlugin = async <TName extends keyof Plugins>(
     name: TName,
     ...args: Parameters<Plugins[TName]['default']>
   ): Promise<ReturnType<Plugins[TName]['default']> | undefined> => {
-    if (plugins?.[name] === false) return undefined;
+    if (plugins?.[name] === false || !packageJson?.devDependencies?.[name]) return undefined;
 
     try {
       const { exports } = await importRelative<Plugins[TName]>(name);
@@ -78,7 +79,6 @@ export const getViteConfig = async (
     console.log(`vite library mode (${preserveModules ? 'preserving modules' : 'bundling'}).`);
 
     const external: RegExp[] = [/^node:/u];
-    const packageJson = await readPackage();
     const dependencyNames = Object.keys({
       ...packageJson.dependencies,
       ...packageJson.peerDependencies,
