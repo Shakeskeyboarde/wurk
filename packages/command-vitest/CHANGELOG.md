@@ -1,3 +1,9 @@
+## 1.2.8 (2023-09-19)
+
+### Bug Fixes
+
+- Use vite to build commands. (d7c8db8)
+
 ## 1.2.7 (2023-09-19)
 
 ### Notes

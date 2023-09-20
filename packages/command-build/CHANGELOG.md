@@ -1,3 +1,9 @@
+# 2.0.0 (2023-09-19)
+
+### Breaking Changes
+
+- Require optional vite plugins to be workspace dev dependencies. (b82cd45)
+
 ## 1.3.5 (2023-09-19)
 
 ### Improvements
