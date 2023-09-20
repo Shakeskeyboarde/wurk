@@ -102,6 +102,7 @@ export const getViteConfig = async (
         }),
       ],
       build: {
+        target: 'esnext',
         outDir: 'lib',
         emptyOutDir,
         sourcemap: true,
@@ -127,6 +128,7 @@ export const getViteConfig = async (
       tryPlugin('vite-plugin-refresh'),
     ],
     build: {
+      target: 'esnext',
       outDir: 'dist',
       emptyOutDir,
     },
