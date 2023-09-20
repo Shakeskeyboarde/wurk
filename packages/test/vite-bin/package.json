@@ -1,0 +1,12 @@
+{
+  "private": true,
+  "name": "test-vite-bin",
+  "description": "Testing the build command vite library mode for bins.",
+  "type": "module",
+  "types": "./lib/index.d.ts",
+  "bin": "./lib/index.js",
+  "devDependencies": {
+    "vite": "^4.4.9",
+    "vite-plugin-dts": "^3.5.3"
+  }
+}
