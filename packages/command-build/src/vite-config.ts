@@ -24,7 +24,7 @@ export interface ViteConfigOptions {
     /**
      * Entry file for the library. Defaults to `"src/index.ts"`
      */
-    entry?: string;
+    entry?: string | string[];
     /**
      * Library formats (eg. "es", "cjs") to build. Defaults to
      * `["es", "cjs"]`.
@@ -94,8 +94,8 @@ export const getViteConfig = async (
         tryPlugin('vite-plugin-svgr', { exportAsDefault: true }),
         tryPlugin('@vitejs/plugin-react'),
         tryPlugin('vite-plugin-dts', {
-          entryRoot,
-          include: [entryRoot],
+          entryRoot: 'src',
+          include: ['src'],
           exclude: ['**/*.test.*', '**/*.spec.*', '**/*.stories.*'],
         }),
       ],
