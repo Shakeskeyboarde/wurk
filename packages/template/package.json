@@ -33,6 +33,6 @@
     "access": "public"
   },
   "dependencies": {
-    "@werk/cli": "^7.0.2"
+    "@werk/cli": "^7.0.3"
   }
 }

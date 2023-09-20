@@ -1,3 +1,9 @@
+## 2.1.7 (2023-09-19)
+
+### Improvements
+
+- Print list of missing entrypoints. (992a64e)
+
 ## 2.1.6 (2023-09-19)
 
 ### Notes

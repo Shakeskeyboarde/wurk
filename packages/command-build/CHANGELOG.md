@@ -1,3 +1,14 @@
+## 1.3.5 (2023-09-19)
+
+### Improvements
+
+- Detect and use actual vite library mode entrypoints from package.json. (6f039c6)
+- More logging in the vite configuration file. (e01e982)
+- Bundle dev dependencies when modules are not preserved. (2727a40)
+- Copy dts files in library mode. (8c9c16f)
+- Support multiple library mode entrypoints. (9b68000)
+- Only warn when package entrypoints are missing after building. (be509b9)
+
 ## 1.3.4 (2023-09-19)
 
 ### Improvements

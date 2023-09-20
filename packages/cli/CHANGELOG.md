@@ -1,3 +1,9 @@
+## 7.0.3 (2023-09-19)
+
+### Bug Fixes
+
+- Export EntryPoint type. (378f1fb)
+
 ## 7.0.2 (2023-09-19)
 
 ### Improvements
