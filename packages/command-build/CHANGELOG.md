@@ -1,3 +1,13 @@
+## 2.0.1 (2023-09-19)
+
+### Bug Fixes
+
+- Vite build failed in package type "commonjs" workspaces. (49c7ab9)
+
+### Improvements
+
+- Enable vite build target esnext. (0780aeb)
+
 # 2.0.0 (2023-09-19)
 
 ### Breaking Changes
