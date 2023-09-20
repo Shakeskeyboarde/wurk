@@ -1,5 +1,5 @@
 import { stat } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { findAsync, type Log, type Spawn, type Workspace } from '@werk/cli';
@@ -19,11 +19,6 @@ interface BuildViteOptions {
 
 const START_DELAY_SECONDS = 10;
 const DEFAULT_CONFIG_FILE = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'config', 'vite.config.ts');
-const ENTRY_BASENAMES = ['index', 'exports', 'main', 'bundle'] as const;
-const ENTRY_EXTENSIONS = ['ts', 'tsx', 'js', 'jsx'];
-const ENTRIES = ENTRY_BASENAMES.flatMap(<TBasename extends string>(basename: TBasename) =>
-  ENTRY_EXTENSIONS.map((ext) => ({ basename, filename: `src/${basename}.${ext}` })),
-);
 
 export const buildVite = async ({
   log,
@@ -64,22 +59,42 @@ export const buildVite = async ({
   const env: NodeJS.ProcessEnv = {};
 
   if (isLib && !customConfigFile) {
-    const entry = isIndexHtmlPresent
-      ? undefined
-      : await findAsync(
-          ENTRIES.map(({ filename, ...value }) => ({ ...value, filename: resolve(workspace.dir, filename) })),
-          (value) =>
-            stat(value.filename)
-              .then((stats) => stats.isFile())
-              .catch(() => false),
-        );
+    const outputs = workspace.getEntryPoints();
+    const basenames = [
+      ...new Set(
+        outputs.flatMap(({ filename }) => {
+          const match = relative(resolve(workspace.dir, 'lib'), filename).match(/^(.*)\.[cm]?js$/u);
+          return match ? [resolve(workspace.dir, 'src', match[1]!)] : [];
+        }),
+      ),
+    ];
+
+    const entry = [
+      ...new Set(
+        await Promise.all(
+          basenames.map((value) => {
+            return findAsync(
+              ['.ts', '.tsx', '.js', '.jsx', '.svg'].map((ext) => `${value}${ext}`),
+              (filename) =>
+                stat(filename)
+                  .then((stats) => stats.isFile())
+                  .catch(() => false),
+            );
+          }),
+        ),
+      ),
+    ].filter((filename): filename is string => Boolean(filename));
+
+    const preserveModules = entry.every((filename) =>
+      /[\\/]src[\\/][^\\/]+(?<![\\/]bundle)\.[^\\/.]+$/u.test(filename),
+    );
 
     const config: ViteConfigOptions = {
       emptyOutDir: !watch,
       lib: {
-        entry: entry?.filename,
+        entry,
         formats: isEsm ? (isCjs ? ['es', 'cjs'] : ['es']) : isCjs ? ['cjs'] : ['es', 'cjs'],
-        preserveModules: entry?.basename !== 'bundle',
+        preserveModules,
       },
     };
 
