@@ -14,4 +14,4 @@ export { type Spawn, type SpawnOptions, type SpawnPromise } from './utils/spawn.
 export { type SpawnSync, type SpawnSyncOptions, type SpawnSyncResult } from './utils/spawn-sync.js';
 export { type WorkerPromise } from './utils/start-worker.js';
 export { type WorkspaceLocalDependenciesOptions } from './workspace/get-workspace-local-dependencies.js';
-export { type Workspace } from './workspace/workspace.js';
+export { type EntryPoint, type Workspace } from './workspace/workspace.js';
