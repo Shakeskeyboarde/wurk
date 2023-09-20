@@ -74,9 +74,10 @@ export const getViteConfig = async (
 
   if (lib) {
     const { entry = 'src/index.ts', formats = [], preserveModules = true } = lib;
-    const entryRoot = dirname(entry);
 
-    const external: (string | RegExp)[] = [/^node:/u];
+    console.log(`vite library mode (${preserveModules ? 'preserving modules' : 'bundling'}).`);
+
+    const external: RegExp[] = [/^node:/u];
     const packageJson = await readPackage();
     const dependencyNames = Object.keys({
       ...packageJson.dependencies,
@@ -116,6 +117,8 @@ export const getViteConfig = async (
       },
     };
   }
+
+  console.log('vite app mode.');
 
   return {
     plugins: [
