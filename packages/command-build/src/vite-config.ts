@@ -95,6 +95,7 @@ export const getViteConfig = async (
         tryPlugin('@vitejs/plugin-react'),
         tryPlugin('vite-plugin-dts', {
           entryRoot: 'src',
+          copyDtsFiles: true,
           include: ['src'],
           exclude: ['**/*.test.*', '**/*.spec.*', '**/*.stories.*'],
         }),
