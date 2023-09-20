@@ -1,3 +1,9 @@
+## 2.0.3 (2023-09-20)
+
+### Improvements
+
+- Add vite-plugin-bin support. (51b951f)
+
 ## 2.0.2 (2023-09-20)
 
 ### Improvements
