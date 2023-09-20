@@ -23,6 +23,9 @@
     }
   },
   "devDependencies": {
-    "vite": "^4.4.9"
+    "@vitejs/plugin-react": "^4.0.4",
+    "vite": "^4.4.9",
+    "vite-plugin-dts": "^3.5.3",
+    "vite-plugin-svgr": "^3.2.0"
   }
 }
