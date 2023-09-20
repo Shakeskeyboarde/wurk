@@ -61,6 +61,8 @@ const CHANGE_TYPES: Readonly<Record<string, ChangeType>> = {
   builds: ChangeType.build,
   building: ChangeType.build,
   ci: ChangeType.ci,
+  chore: ChangeType.chore,
+  chores: ChangeType.chore,
   revert: ChangeType.revert,
   reverts: ChangeType.revert,
   reverting: ChangeType.revert,
