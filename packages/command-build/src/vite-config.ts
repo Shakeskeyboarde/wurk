@@ -82,7 +82,7 @@ export const getViteConfig = async (
       ...packageJson.dependencies,
       ...packageJson.peerDependencies,
       ...packageJson.optionalDependencies,
-      ...packageJson.devDependencies,
+      ...(preserveModules ? packageJson.devDependencies : undefined),
     });
 
     if (dependencyNames.length) {
