@@ -1,4 +1,3 @@
-import assert from 'node:assert';
 import { relative } from 'node:path';
 
 import { createCommand } from '@werk/cli';
@@ -31,20 +30,18 @@ export default createCommand({
     await build({ ...options, start: false });
 
     const missing = await workspace.getMissingEntryPoints();
-    const missingMessage =
-      missing.length === 0
-        ? undefined
-        : `Workspace "${workspace.name}" is missing the following entry points:${missing.reduce(
-            (result, { type, filename }) => `${result}\n  - ${relative(workspace.dir, filename)} (${type})`,
-            '',
-          )}`;
+
+    if (missing.length) {
+      log.warn(
+        `Workspace "${workspace.name}" is missing the following entry points:${missing.reduce(
+          (result, { type, filename }) => `${result}\n  - ${relative(workspace.dir, filename)} (${type})`,
+          '',
+        )}`,
+      );
+    }
 
     if (start) {
       startCallbacks.push(() => build({ ...options, start: true }));
-
-      if (missingMessage) log.warn(missingMessage);
-    } else {
-      assert(!missingMessage, missingMessage);
     }
   },
 
