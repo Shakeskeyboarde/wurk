@@ -1,3 +1,9 @@
+## 2.0.2 (2023-09-20)
+
+### Improvements
+
+- Add shebang and executable bit to bin file outputs. (9ec1fa3)
+
 ## 2.0.1 (2023-09-19)
 
 ### Bug Fixes
