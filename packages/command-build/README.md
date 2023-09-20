@@ -54,7 +54,7 @@ Generated configurations will extends a `tsconfig.json` file in the workspace or
 
 ### Mode: `vite`
 
-Uses the `vite.config.ts` or `vite.config.js` file in the workspace root if it exists.
+Uses the `vite.config.*` file in the workspace root if it exists.
 
 If no configuration exists, a default configuration will be used. Under the default configuration, library mode is enabled if the `package.json` file contains `bin`, `main`, or `exports` entry points. CommonJS and/or ESModule output is determined automatically.
 
@@ -91,4 +91,4 @@ const MyComponent = (): JSX.Element => {
 
 ### Mode: `rollup`
 
-Uses the `rollup.config.js` or `rollup.config.mjs` file in the workspace.
+Uses the `rollup.config.*` file in the workspace.

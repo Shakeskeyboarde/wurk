@@ -18,7 +18,7 @@ interface BuildViteOptions {
 }
 
 const START_DELAY_SECONDS = 10;
-const DEFAULT_CONFIG_FILE = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'config', 'vite.config.ts');
+const DEFAULT_CONFIG_FILE = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'config', 'vite.config.mts');
 
 export const buildVite = async ({
   log,

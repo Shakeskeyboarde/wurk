@@ -1,0 +1,12 @@
+{
+  "private": true,
+  "name": "test-vite-cjs",
+  "description": "Testing the build command vite library mode with CJS",
+  "type": "commonjs",
+  "types": "./lib/index.d.ts",
+  "main": "./lib/index.js",
+  "devDependencies": {
+    "vite": "^4.4.9",
+    "vite-plugin-dts": "^3.5.3"
+  }
+}
