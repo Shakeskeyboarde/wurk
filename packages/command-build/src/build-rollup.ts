@@ -14,10 +14,10 @@ export const buildRollup = async ({
   start,
   customConfigFile,
   spawn,
-}: BuildRollupOptions): Promise<void> => {
+}: BuildRollupOptions): Promise<boolean> => {
   log.notice(`${start ? 'Starting' : 'Building'} workspace "${workspace.name}" using Rollup.`);
 
-  await spawn(
+  return await spawn(
     'rollup',
     [
       customConfigFile && `--config=${customConfigFile}`,
@@ -30,5 +30,5 @@ export const buildRollup = async ({
       errorReturn: true,
       errorSetExitCode: true,
     },
-  );
+  ).succeeded();
 };

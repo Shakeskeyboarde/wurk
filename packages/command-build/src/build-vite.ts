@@ -29,7 +29,7 @@ export const buildVite = async ({
   isIndexHtmlPresent,
   customConfigFile,
   spawn,
-}: BuildViteOptions): Promise<void> => {
+}: BuildViteOptions): Promise<boolean> => {
   let isLib = false;
 
   // eslint-disable-next-line import/no-extraneous-dependencies
@@ -101,11 +101,11 @@ export const buildVite = async ({
     env.VITE_WERK_OPTIONS = JSON.stringify(config);
   }
 
-  await spawn('vite', [command, watch, host, `--config=${customConfigFile ?? DEFAULT_CONFIG_FILE}`], {
+  return await spawn('vite', [command, watch, host, `--config=${customConfigFile ?? DEFAULT_CONFIG_FILE}`], {
     cwd: workspace.dir,
     echo: true,
     errorReturn: true,
     errorSetExitCode: true,
     env,
-  });
+  }).succeeded();
 };

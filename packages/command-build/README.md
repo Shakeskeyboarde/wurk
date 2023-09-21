@@ -63,10 +63,20 @@ When library mode is enabled, bundling is disabled (ie. "preserve modules"), _un
 The following plugins are used in the default configuration, _if they are dev dependencies of the workspace._
 
 - `@vitejs/plugin-react`
+- `vite-plugin-bin`
+- `vite-plugin-checker`
 - `vite-plugin-dts`
 - `vite-plugin-refresh`
 - `vite-plugin-svgr`
-- `vite-plugin-bin`
+
+#### Checker
+
+The checker plugin will enable Typescript and ESLint checking based on the workspace configuration.
+
+Typescript checking is enabled if there is Typescript configuration in the
+workspace.
+
+ESlint checking is enabled if the workspace `package.json` has an `eslint` script.
 
 #### SVGR
 

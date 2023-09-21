@@ -24,7 +24,7 @@ const isCjsPackage = (packageJson: Record<string, unknown>): boolean => {
   return Boolean(packageJson.main || (packageJson.bin && (!packageJson.type || packageJson.type === 'commonjs')));
 };
 
-export const build = async (options: BuildOptions): Promise<void> => {
+export const build = async (options: BuildOptions): Promise<boolean> => {
   const { workspace, start } = options;
 
   if (
@@ -34,21 +34,18 @@ export const build = async (options: BuildOptions): Promise<void> => {
         // Avoid infinite recursion.
         (process.env.npm_command !== 'run-script' || process.env.npm_lifecycle_event !== 'build')
   ) {
-    await buildScript(options);
-  } else {
-    const packageJson = await workspace.readPackageJson();
-    const [isVite, isRollup] = await Promise.all([detectVite(workspace, packageJson), detectRollup(workspace)]);
-    const isEsm = isEsmPackage(packageJson);
-    const isCjs = isCjsPackage(packageJson);
-
-    if (isVite) {
-      await buildVite({ ...options, isEsm, isCjs, ...isVite });
-    } else if (isRollup) {
-      await buildRollup({ ...options, ...isRollup });
-    } else {
-      await buildTsc({ ...options, isEsm, isCjs });
-    }
+    return await buildScript(options);
   }
+
+  const packageJson = await workspace.readPackageJson();
+  const [isVite, isRollup] = await Promise.all([detectVite(workspace, packageJson), detectRollup(workspace)]);
+  const isEsm = isEsmPackage(packageJson);
+  const isCjs = isCjsPackage(packageJson);
+
+  if (isVite) return await buildVite({ ...options, isEsm, isCjs, ...isVite });
+  if (isRollup) return await buildRollup({ ...options, ...isRollup });
+
+  return await buildTsc({ ...options, isEsm, isCjs });
 };
 
 const detectVite = async (

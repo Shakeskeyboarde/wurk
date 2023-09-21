@@ -25,7 +25,7 @@ export const buildTsc = async ({
   isEsm,
   isCjs,
   spawn,
-}: BuildTscOptions): Promise<void> => {
+}: BuildTscOptions): Promise<boolean> => {
   const tsBuildConfigs = await readdir(workspace.dir, { withFileTypes: true }).then((files) => {
     return files
       .filter((file) => file.isFile() && /^tsconfig\..*build.*\.json$/u.test(file.name))
@@ -100,7 +100,7 @@ export const buildTsc = async ({
 
   log.notice(`${start ? 'Starting' : 'Building'} workspace "${workspace.name}" using TypeScript.`);
 
-  await Promise.all(
+  const results = await Promise.all(
     tsBuildConfigs.map(async (filename) => {
       const name = basename(filename).replace(/^tsconfig\.|\.json$/gu, '');
       const subLog = new Log({ ...log, prefix: `${log.prefix}(${name})` });
@@ -111,15 +111,17 @@ export const buildTsc = async ({
         await writeFile(resolve(outDir, 'package.json'), JSON.stringify({ type: isEsmConfig ? 'module' : 'commonjs' }));
       }
 
-      await spawn('tsc', ['-p', filename, start && '--watch'], {
+      return await spawn('tsc', ['-p', filename, start && '--watch'], {
         cwd: workspace.dir,
         echo: true,
         errorSetExitCode: true,
         errorReturn: true,
         log: subLog,
-      });
+      }).succeeded();
     }),
   );
+
+  return results.every(Boolean);
 };
 
 const readTsConfig = async (
