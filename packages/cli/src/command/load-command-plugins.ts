@@ -21,11 +21,9 @@ const loadCommandPlugin = async (
   packageId: string,
 ): Promise<CommandPlugin> => {
   try {
-    const plugin = await importRelative(packageId, { dir: workspacesRoot });
-
-    if (!plugin) {
-      throw new Error('Could not find plugin package.json file.');
-    }
+    const plugin = await importRelative(packageId, { dir: workspacesRoot }).catch((error) => {
+      throw new Error('Plugin import failed.', { cause: error });
+    });
 
     const { exports, entry: main, dir, packageJson } = plugin;
 

@@ -31,52 +31,56 @@ export const importRelative = async <TExports extends Record<string, any> = Reco
 
   const id = match[1]!;
   const pathPart = match[2] ? `./${match[2]}` : '.';
-  const packageDir = resolve(dir, 'node_modules', id);
+  const next = async (current: string): Promise<ResolvedImport<TExports>> => {
+    const packageDir = resolve(current, 'node_modules', id);
 
-  return await readFile(join(packageDir, 'package.json'), 'utf8')
-    .then(JSON.parse)
-    .then((packageJson): { entry: string; packageJson: PackageJson } | undefined => {
-      const entry = [
-        ...(pathPart === '.'
-          ? [
-              packageJson.exports,
-              packageJson.exports?.import,
-              packageJson.exports?.default,
-              packageJson.exports?.node,
-              packageJson.exports?.node?.import,
-              packageJson.exports?.node?.default,
-              packageJson.exports?.default,
-              packageJson.exports?.default?.import,
-              packageJson.exports?.default?.default,
-            ]
-          : []),
-        packageJson.exports?.[pathPart],
-        packageJson.exports?.[pathPart]?.import,
-        packageJson.exports?.[pathPart]?.default,
-        packageJson.exports?.node?.[pathPart],
-        packageJson.exports?.node?.[pathPart]?.import,
-        packageJson.exports?.node?.[pathPart]?.default,
-        packageJson.exports?.default?.[pathPart],
-        packageJson.exports?.default?.[pathPart]?.import,
-        packageJson.exports?.default?.[pathPart]?.default,
-        packageJson.module,
-        packageJson.main,
-      ].find((value): value is string => typeof value === 'string');
+    return await readFile(join(packageDir, 'package.json'), 'utf8')
+      .then(JSON.parse)
+      .then((packageJson): { entry: string; packageJson: PackageJson } | undefined => {
+        const entry = [
+          ...(pathPart === '.'
+            ? [
+                packageJson.exports,
+                packageJson.exports?.import,
+                packageJson.exports?.default,
+                packageJson.exports?.node,
+                packageJson.exports?.node?.import,
+                packageJson.exports?.node?.default,
+                packageJson.exports?.default,
+                packageJson.exports?.default?.import,
+                packageJson.exports?.default?.default,
+              ]
+            : []),
+          packageJson.exports?.[pathPart],
+          packageJson.exports?.[pathPart]?.import,
+          packageJson.exports?.[pathPart]?.default,
+          packageJson.exports?.node?.[pathPart],
+          packageJson.exports?.node?.[pathPart]?.import,
+          packageJson.exports?.node?.[pathPart]?.default,
+          packageJson.exports?.default?.[pathPart],
+          packageJson.exports?.default?.[pathPart]?.import,
+          packageJson.exports?.default?.[pathPart]?.default,
+          packageJson.module,
+          packageJson.main,
+        ].find((value): value is string => typeof value === 'string');
 
-      return entry ? { entry, packageJson } : undefined;
-    })
-    .catch(() => undefined)
-    .then(async (resolved) => {
-      if (resolved == null) {
-        const parentDir = dirname(dir);
+        return entry ? { entry, packageJson } : undefined;
+      })
+      .catch(() => undefined)
+      .then(async (resolved) => {
+        if (resolved == null) {
+          const parentDir = dirname(current);
 
-        if (parentDir === dir) throw new Error('Module not found.');
+          if (parentDir === current) throw new Error('Module not found.');
 
-        return await importRelative(name, { dir: parentDir });
-      }
+          return await next(parentDir);
+        }
 
-      const exports = await import(join(packageDir, resolved.entry));
+        const exports = await import(join(packageDir, resolved.entry));
 
-      return { dir: packageDir, exports, ...resolved };
-    });
+        return { dir: packageDir, exports, ...resolved };
+      });
+  };
+
+  return await next(dir);
 };
