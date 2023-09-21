@@ -73,10 +73,10 @@ The following plugins are used in the default configuration, _if they are dev de
 
 The checker plugin will enable Typescript and ESLint checking based on the workspace configuration.
 
-Typescript checking is enabled if there is Typescript configuration in the
-workspace.
+Typescript checking is enabled if Typescript is dev dependency of the root workspace, and there is Typescript configuration in the
+current workspace.
 
-ESlint checking is enabled if the workspace `package.json` has an `eslint` script.
+ESlint checking is enabled if ESLint is a dev dependency of the root workspace, and the current workspace `package.json` has an `eslint` script.
 
 #### SVGR
 

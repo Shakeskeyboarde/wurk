@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 import { readFile, stat } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 import { findAsync, importRelative } from '@werk/cli';
 import { type ConfigEnv, type LibraryFormats, type PluginOption, type UserConfig } from 'vite';
@@ -46,12 +46,14 @@ export interface ViteConfigOptions {
   plugins?: Partial<Record<keyof Plugins, boolean>>;
 }
 
-const readPackage = async (dir = process.cwd()): Promise<Record<string, any>> => {
-  return await readFile(join(dir, 'package.json'), 'utf8')
-    .then(JSON.parse)
+const readPackage = async (
+  current = process.cwd(),
+): Promise<{ packageJson: Record<string, any>; packageRoot: string } | undefined> => {
+  return await readFile(join(current, 'package.json'), 'utf8')
+    .then((text) => ({ packageJson: JSON.parse(text) as Record<string, any>, packageRoot: current }))
     .catch(() => {
-      const parent = dirname(dir);
-      return parent === dir ? undefined : readPackage(parent);
+      const parent = dirname(current);
+      return parent === current ? undefined : readPackage(parent);
     });
 };
 
@@ -59,17 +61,14 @@ export const getViteConfig = async (
   env: ConfigEnv,
   { emptyOutDir = true, lib, plugins }: ViteConfigOptions = {},
 ): Promise<UserConfig> => {
-  const [vite, packageJson, tsConfigPath] = await Promise.all([
-    // eslint-disable-next-line import/no-extraneous-dependencies
-    import('vite'),
-    readPackage(),
-    findAsync(['tsconfig.json'], (value) =>
-      stat(value)
-        .then((stats) => stats.isFile())
-        .catch(() => false),
-    ),
-  ]);
+  // eslint-disable-next-line import/no-extraneous-dependencies
+  const vite = await import('vite');
   const logger = vite.createLogger();
+  const { packageJson, packageRoot } = (await readPackage()) ?? { packageJson: {}, packageRoot: process.cwd() };
+  const workspacesRoot = vite.searchForWorkspaceRoot(packageRoot, packageRoot);
+  const workspacesJson: Record<string, any> = await readFile(resolve(workspacesRoot, 'package.json'), 'utf8')
+    .then(JSON.parse)
+    .catch(() => ({}));
 
   const tryPlugin = async <TName extends keyof Plugins>(
     name: TName,
@@ -77,24 +76,39 @@ export const getViteConfig = async (
   ): Extract<PluginOption, Promise<any>> => {
     if (plugins?.[name] === false || !packageJson?.devDependencies?.[name]) return undefined;
 
-    try {
-      const { exports } = await importRelative<Plugins[TName]>(name);
-      logger.info(`vite using optional plugin "${name}".`);
-      args = typeof args === 'function' ? await args() : args;
-      return { ...exports.default(...(args as [any])) };
-    } catch (error) {
-      return undefined;
-    }
+    const result = await importRelative<Plugins[TName]>(name, { dir: packageRoot });
+
+    logger.info(`vite using optional plugin "${name}".`);
+
+    const resolvedArgs = ((typeof args === 'function' ? await args() : args) ?? []) as [any];
+
+    return { ...result.exports.default(...resolvedArgs) };
   };
 
   const getCheckerConfig = async (): Promise<Parameters<typeof CheckerType>> => {
-    const typescript = Boolean(tsConfigPath);
-    const eslint = packageJson.scripts?.eslint ? { lintCommand: packageJson.scripts.eslint } : false;
+    const eslint = Boolean(workspacesJson.devDependencies?.eslint && packageJson.scripts?.eslint);
+    const typescript = Boolean(workspacesJson.devDependencies?.typescript);
+    const tsconfigPath = typescript
+      ? await findAsync([resolve(packageRoot, 'tsconfig.json')], (value) =>
+          stat(value)
+            .then((stats) => stats.isFile())
+            .catch(() => false),
+        )
+      : undefined;
+
+    if (typescript && !tsconfigPath) {
+      throw new Error('vite-plugin-checker requires a workspace tsconfig.json file when using Typescript.');
+    }
 
     logger.info(`vite-plugin-checker typescript is ${typescript ? 'enabled' : 'disabled'}.`);
     logger.info(`vite-plugin-checker eslint is ${eslint ? 'enabled' : 'disabled'}.`);
 
-    return [{ typescript, eslint }];
+    return [
+      {
+        typescript: tsconfigPath ? { tsconfigPath } : false,
+        eslint: eslint ? { lintCommand: packageJson.scripts.eslint } : false,
+      },
+    ];
   };
 
   if (lib) {
@@ -115,6 +129,7 @@ export const getViteConfig = async (
     }
 
     return {
+      root: packageRoot,
       plugins: [
         tryPlugin('vite-plugin-checker', getCheckerConfig),
         tryPlugin('vite-plugin-svgr', [{ exportAsDefault: true, svgrOptions: { exportType: 'default' } } as any]),
