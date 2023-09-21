@@ -1,3 +1,9 @@
+## 2.0.4 (2023-09-21)
+
+### Chores
+
+- Remove chmod and shebang insertion for bin entrypoints. (f7f4d79)
+
 ## 2.0.3 (2023-09-20)
 
 ### Improvements
