@@ -25,6 +25,7 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^4.0.4",
     "vite": "^4.4.9",
+    "vite-plugin-checker": "^0.6.2",
     "vite-plugin-dts": "^3.5.3",
     "vite-plugin-svgr": "^4.0.0"
   }
