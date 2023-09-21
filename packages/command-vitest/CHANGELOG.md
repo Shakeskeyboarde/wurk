@@ -1,3 +1,9 @@
+## 1.2.9 (2023-09-21)
+
+### Chores
+
+- Enable vite checker in all vite built workspaces. (9b2f796)
+
 ## 1.2.8 (2023-09-19)
 
 ### Bug Fixes

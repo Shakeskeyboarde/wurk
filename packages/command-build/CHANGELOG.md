@@ -1,3 +1,9 @@
+## 2.0.5 (2023-09-21)
+
+### Improvements
+
+- Add optional &#96;vite-plugin-checker&#96; support for typescript and eslint. (2a60c22)
+
 ## 2.0.4 (2023-09-21)
 
 ### Chores

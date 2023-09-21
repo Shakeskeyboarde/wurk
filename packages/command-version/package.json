@@ -1,7 +1,7 @@
 {
   "name": "@werk/command-version",
   "description": "Update versions.",
-  "version": "3.1.11",
+  "version": "3.1.12",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-version/README.md",
