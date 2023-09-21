@@ -1,4 +1,3 @@
-import { chmod, readFile, stat, writeFile } from 'node:fs/promises';
 import { relative } from 'node:path';
 
 import { createCommand } from '@werk/cli';
@@ -42,35 +41,17 @@ export default createCommand({
       );
     }
 
+    updateRequired.add(workspace.name);
+
     if (start) {
       startCallbacks.push(() => build({ ...options, start: true }));
       return;
     }
-
-    updateRequired.add(workspace.name);
-
-    const entryPoints = workspace.getEntryPoints();
-    const bins = entryPoints.flatMap(({ type, filename }) => {
-      if (type !== 'bin' || !/\.[cm]?js$/u.test(filename)) return [];
-      return [filename];
-    });
-
-    await Promise.all(
-      bins.map(async (bin) => {
-        const [stats, content] = await Promise.all([
-          stat(bin).catch(() => undefined),
-          readFile(bin, 'utf8').catch(() => undefined),
-        ]);
-
-        if (stats) await chmod(bin, 0o111 | stats.mode);
-        if (content && !content.startsWith('#!')) await writeFile(bin, `#!/usr/bin/env node\n${content}`);
-      }),
-    );
   },
 
   after: async ({ spawn }) => {
     if (updateRequired.size) {
-      await spawn('npm', ['update', ...updateRequired.keys()], { errorEcho: true });
+      await spawn('npm', ['update', ...updateRequired.keys()], { errorEcho: true, errorReturn: true });
     }
 
     await Promise.all(startCallbacks.map((callback) => callback()));
