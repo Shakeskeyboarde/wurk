@@ -142,6 +142,10 @@ export const getViteConfig = async (
         rollupOptions: {
           external,
           output: { preserveModules },
+          // See: https://github.com/vitejs/vite-plugin-react/issues/137
+          onwarn: (warning, warn) => {
+            if (warning.code !== 'MODULE_LEVEL_DIRECTIVE') warn(warning);
+          },
         },
       },
     };
@@ -160,6 +164,12 @@ export const getViteConfig = async (
       target: 'esnext',
       outDir: 'dist',
       emptyOutDir,
+      rollupOptions: {
+        // See: https://github.com/vitejs/vite-plugin-react/issues/137
+        onwarn: (warning, warn) => {
+          if (warning.code !== 'MODULE_LEVEL_DIRECTIVE') warn(warning);
+        },
+      },
     },
   };
 };
