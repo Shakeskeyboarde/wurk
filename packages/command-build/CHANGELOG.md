@@ -1,3 +1,9 @@
+## 2.0.6 (2023-09-21)
+
+### Improvements
+
+- Ignore vite react plugin warning about module level directives like (eg. "use client"). (228ca77)
+
 ## 2.0.5 (2023-09-21)
 
 ### Improvements
