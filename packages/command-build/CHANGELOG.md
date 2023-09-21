@@ -1,3 +1,9 @@
+## 2.0.7 (2023-09-21)
+
+### Improvements
+
+- Throw an error when typescript and vite-plugin-checker are installed, but no tsconfig exists in the workspace. (7d36b01)
+
 ## 2.0.6 (2023-09-21)
 
 ### Improvements

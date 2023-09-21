@@ -1,3 +1,9 @@
+## 7.0.4 (2023-09-21)
+
+### Code Refactoring
+
+- Improvements to importRelative. (f042e64)
+
 ## 7.0.3 (2023-09-19)
 
 ### Bug Fixes

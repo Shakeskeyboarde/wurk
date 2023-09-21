@@ -1,3 +1,9 @@
+## 3.1.13 (2023-09-21)
+
+### Notes
+
+- Updated local dependencies.
+
 ## 3.1.12 (2023-09-21)
 
 ### Chores
