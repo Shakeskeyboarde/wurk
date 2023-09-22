@@ -1,3 +1,9 @@
+## 2.0.8 (2023-09-22)
+
+### Improvements
+
+- Add &#96;--vite&#96; and &#96;--abort-on-failure&#96; options. (9fef75d)
+
 ## 2.0.7 (2023-09-21)
 
 ### Improvements
