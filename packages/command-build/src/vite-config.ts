@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 import { readFile, stat } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 
 import { findAsync, importRelative } from '@werk/cli';
 import { type ConfigEnv, type LibraryFormats, type PluginOption, type UserConfig } from 'vite';
@@ -27,7 +27,7 @@ export interface ViteConfigOptions {
     /**
      * Entry file for the library. Defaults to `"src/index.ts"`
      */
-    entry?: string | string[];
+    entry?: string[];
     /**
      * Library formats (eg. "es", "cjs") to build. Defaults to
      * `["es", "cjs"]`.
@@ -112,9 +112,16 @@ export const getViteConfig = async (
   };
 
   if (lib) {
-    const { entry = 'src/index.ts', formats = [], preserveModules = true } = lib;
+    const { entry = [], formats = [], preserveModules = true } = lib;
 
-    logger.info(`vite library mode (${preserveModules ? 'preserving modules' : 'bundling'}).`);
+    if (entry.length === 0) entry.push(resolve(packageRoot, 'src/index.ts'));
+
+    logger.info(
+      `vite library mode (${preserveModules ? 'preserving modules' : 'bundling'}).${entry.reduce(
+        (acc, value) => `${acc}\n  - ${relative(packageRoot, value)}`,
+        '',
+      )}`,
+    );
 
     const external: RegExp[] = [/^node:/u];
     const deps = Object.keys({

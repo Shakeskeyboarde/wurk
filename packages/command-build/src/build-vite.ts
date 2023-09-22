@@ -29,7 +29,7 @@ export const buildVite = async ({
   isIndexHtmlPresent,
   customConfigFile,
   spawn,
-}: BuildViteOptions): Promise<boolean> => {
+}: BuildViteOptions): Promise<boolean | null> => {
   let isLib = false;
 
   // eslint-disable-next-line import/no-extraneous-dependencies
@@ -84,6 +84,11 @@ export const buildVite = async ({
         ),
       ),
     ].filter((filename): filename is string => Boolean(filename));
+
+    if (entry.length === 0) {
+      log.warn(`No entry points found in workspace "${workspace.name}".`);
+      return null;
+    }
 
     const preserveModules = entry.every((filename) =>
       /[\\/]src[\\/][^\\/]+(?<![\\/]bundle)\.[^\\/.]+$/u.test(filename),
