@@ -1,7 +1,7 @@
 {
   "name": "@werk/command-build",
   "description": "Build packages.",
-  "version": "2.0.9",
+  "version": "2.0.10",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-build/README.md",

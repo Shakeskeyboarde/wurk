@@ -1,3 +1,9 @@
+## 2.0.10 (2023-09-22)
+
+### Improvements
+
+- Handle no entrypoints better. (22b1bc2)
+
 ## 2.0.9 (2023-09-22)
 
 ### Notes
