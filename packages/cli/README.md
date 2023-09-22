@@ -81,7 +81,7 @@ Run `npm i -D @werk/command-<name>` in your workspaces root to install these com
 
 ### Custom Commands
 
-[Learn how to create your own custom command plugins!](https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk/README_CUSTOM_COMMANDS.md)
+[Learn how to create your own custom command plugins!](https://github.com/Shakeskeyboarde/werk/blob/main/packages/cli/README_CUSTOM_COMMANDS.md)
 
 Werk scans the `package.json` file in your repo root for command plugin package dependencies. By default, any package that start with `*/werk-command-`, `werk-command-` or `@werk/command-` will be loaded as a command plugin.
 
