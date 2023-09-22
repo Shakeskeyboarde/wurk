@@ -11,8 +11,9 @@ import { buildVite } from './build-vite.js';
 interface BuildOptions {
   log: Log;
   workspace: Workspace;
-  root: { dir: string };
-  start: boolean;
+  root: Workspace;
+  watch: boolean;
+  vite: boolean;
   spawn: Spawn;
 }
 
@@ -24,28 +25,46 @@ const isCjsPackage = (packageJson: Record<string, unknown>): boolean => {
   return Boolean(packageJson.main || (packageJson.bin && (!packageJson.type || packageJson.type === 'commonjs')));
 };
 
-export const build = async (options: BuildOptions): Promise<boolean> => {
-  const { workspace, start } = options;
+export const build = async ({ log, root, workspace, watch, vite, spawn }: BuildOptions): Promise<boolean | null> => {
+  const scriptName = watch ? 'start' : 'build';
 
   if (
-    start
-      ? workspace.scripts.start != null
-      : workspace.scripts.build != null &&
-        // Avoid infinite recursion.
-        (process.env.npm_command !== 'run-script' || process.env.npm_lifecycle_event !== 'build')
+    !vite &&
+    workspace.scripts[scriptName] != null &&
+    /*
+     * Avoid infinite recursion if this is a root workspace script
+     * and the root workspace is included.
+     */
+    (process.env.npm_command !== 'run-script' || process.env.npm_lifecycle_event !== scriptName)
   ) {
-    return await buildScript(options);
+    return await buildScript({ log, workspace, scriptName, spawn });
   }
 
-  const packageJson = await workspace.readPackageJson();
+  const [packageJson, rootPackageJson] = await Promise.all([workspace.readPackageJson(), root.readPackageJson()]);
   const [isVite, isRollup] = await Promise.all([detectVite(workspace, packageJson), detectRollup(workspace)]);
+  const isTypescript = Boolean(packageJson.devDependencies?.typescript || rootPackageJson.devDependencies?.typescript);
   const isEsm = isEsmPackage(packageJson);
   const isCjs = isCjsPackage(packageJson);
 
-  if (isVite) return await buildVite({ ...options, isEsm, isCjs, ...isVite });
-  if (isRollup) return await buildRollup({ ...options, ...isRollup });
+  if (vite || isVite)
+    return await buildVite({
+      log,
+      workspace,
+      watch,
+      isEsm,
+      isCjs,
+      ...(isVite || {
+        isIndexHtmlPresent: false,
+        customConfigFile: undefined,
+      }),
+      spawn,
+    });
 
-  return await buildTsc({ ...options, isEsm, isCjs });
+  if (isRollup) return await buildRollup({ log, workspace, watch, ...isRollup, spawn });
+
+  if (isTypescript) return await buildTsc({ log, root, workspace, watch, isEsm, isCjs, spawn });
+
+  return null;
 };
 
 const detectVite = async (

@@ -4,8 +4,10 @@ import { createCommand } from '@werk/cli';
 
 import { build } from './build.js';
 
-const startCallbacks: (() => Promise<any>)[] = [];
+const startCallbacks: (() => Promise<boolean | null>)[] = [];
 const updateRequired = new Set<string>();
+
+let isAborted = false;
 
 export default createCommand({
   config: (commander) => {
@@ -14,38 +16,44 @@ export default createCommand({
         'after',
         'Auto detects and uses common tools and opinionated configurations for near-zero configuration.',
       )
-      .option('-s, --start', 'Continuously build on source code changes and start development servers.')
-      .addOption(commander.createOption('-w, --watch', 'Alias for the --start option.').implies({ start: true }));
+      .option('-w, --watch', 'Continuously build on source code changes and start development servers.')
+      .addOption(commander.createOption('-s, --start', 'Alias for the --watch option.').implies({ watch: true }))
+      .option('--vite', 'Use Vite for all builds instead of auto-detecting.')
+      .option('--abort-on-failure', 'Abort on the first build failure.');
   },
 
   before: async ({ forceWait }) => {
     forceWait();
   },
 
-  each: async (options) => {
-    const { log, opts, workspace } = options;
-    const { start = false } = opts;
+  each: async ({ opts, log, root, workspace, spawn }) => {
+    if (isAborted) return;
+
+    const { watch = false, vite = false, abortOnFailure = false } = opts;
 
     if (!workspace.selected) return;
 
-    await build({ ...options, start: false });
+    const isBuilt = await build({ log, workspace, root, watch: false, vite, spawn });
 
-    const missing = await workspace.getMissingEntryPoints();
+    if (isBuilt) {
+      const missing = await workspace.getMissingEntryPoints();
 
-    if (missing.length) {
-      log.warn(
-        `Workspace "${workspace.name}" is missing the following entry points:${missing.reduce(
-          (result, { type, filename }) => `${result}\n  - ${relative(workspace.dir, filename)} (${type})`,
-          '',
-        )}`,
-      );
+      if (missing.length) {
+        log.warn(
+          `Workspace "${workspace.name}" is missing the following entry points:${missing.reduce(
+            (result, { type, filename }) => `${result}\n  - ${relative(workspace.dir, filename)} (${type})`,
+            '',
+          )}`,
+        );
+      }
+
+      updateRequired.add(workspace.name);
+    } else if (isBuilt != null && abortOnFailure) {
+      isAborted = true;
     }
 
-    updateRequired.add(workspace.name);
-
-    if (start) {
-      startCallbacks.push(() => build({ ...options, start: true }));
-      return;
+    if (watch) {
+      startCallbacks.push(() => build({ log, workspace, root, watch: true, vite, spawn }));
     }
   },
 

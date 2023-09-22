@@ -11,7 +11,7 @@ interface BuildTscOptions {
   readonly log: Log;
   readonly workspace: Workspace;
   readonly root: { dir: string };
-  readonly start: boolean;
+  readonly watch: boolean;
   readonly isEsm: boolean;
   readonly isCjs: boolean;
   readonly spawn: Spawn;
@@ -21,7 +21,7 @@ export const buildTsc = async ({
   log,
   workspace,
   root,
-  start,
+  watch,
   isEsm,
   isCjs,
   spawn,
@@ -98,7 +98,7 @@ export const buildTsc = async ({
     }
   }
 
-  log.notice(`${start ? 'Starting' : 'Building'} workspace "${workspace.name}" using TypeScript.`);
+  log.notice(`${watch ? 'Starting' : 'Building'} workspace "${workspace.name}" using TypeScript.`);
 
   const results = await Promise.all(
     tsBuildConfigs.map(async (filename) => {
@@ -111,7 +111,7 @@ export const buildTsc = async ({
         await writeFile(resolve(outDir, 'package.json'), JSON.stringify({ type: isEsmConfig ? 'module' : 'commonjs' }));
       }
 
-      return await spawn('tsc', ['-p', filename, start && '--watch'], {
+      return await spawn('tsc', ['-p', filename, watch && '--watch'], {
         cwd: workspace.dir,
         echo: true,
         errorSetExitCode: true,

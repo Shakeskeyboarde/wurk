@@ -9,7 +9,7 @@ import { type ViteConfigOptions } from './vite-config.js';
 interface BuildViteOptions {
   readonly log: Log;
   readonly workspace: Workspace;
-  readonly start: boolean;
+  readonly watch: boolean;
   readonly isEsm: boolean;
   readonly isCjs: boolean;
   readonly isIndexHtmlPresent: boolean;
@@ -23,7 +23,7 @@ const DEFAULT_CONFIG_FILE = resolve(dirname(fileURLToPath(import.meta.url)), '..
 export const buildVite = async ({
   log,
   workspace,
-  start,
+  watch,
   isEsm,
   isCjs,
   isIndexHtmlPresent,
@@ -42,17 +42,17 @@ export const buildVite = async ({
     isLib = isEsm || isCjs || !isIndexHtmlPresent;
   }
 
-  const command = isLib || !start ? 'build' : 'serve';
-  const watch = isLib && start ? '--watch' : null;
-  const host = !isLib && start ? '--host' : null;
+  const commandArg = isLib || !watch ? 'build' : 'serve';
+  const watchArg = isLib && watch ? '--watch' : null;
+  const hostArg = !isLib && watch ? '--host' : null;
 
   log.notice(
-    `${start ? 'Starting' : 'Building'} workspace "${workspace.name}" using Vite${
-      command === 'serve' ? ` (${START_DELAY_SECONDS} second delay)` : ''
+    `${watch ? 'Starting' : 'Building'} workspace "${workspace.name}" using Vite${
+      commandArg === 'serve' ? ` (${START_DELAY_SECONDS} second delay)` : ''
     }.`,
   );
 
-  if (command === 'serve') {
+  if (commandArg === 'serve') {
     await new Promise((res) => setTimeout(res, START_DELAY_SECONDS * 1000));
   }
 
@@ -90,7 +90,7 @@ export const buildVite = async ({
     );
 
     const config: ViteConfigOptions = {
-      emptyOutDir: !watch,
+      emptyOutDir: !watchArg,
       lib: {
         entry,
         formats: isEsm ? (isCjs ? ['es', 'cjs'] : ['es']) : isCjs ? ['cjs'] : ['es', 'cjs'],
@@ -101,7 +101,7 @@ export const buildVite = async ({
     env.VITE_WERK_OPTIONS = JSON.stringify(config);
   }
 
-  return await spawn('vite', [command, watch, host, `--config=${customConfigFile ?? DEFAULT_CONFIG_FILE}`], {
+  return await spawn('vite', [commandArg, watchArg, hostArg, `--config=${customConfigFile ?? DEFAULT_CONFIG_FILE}`], {
     cwd: workspace.dir,
     echo: true,
     errorReturn: true,
