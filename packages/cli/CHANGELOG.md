@@ -1,3 +1,9 @@
+## 7.0.5 (2023-09-22)
+
+### Chores
+
+- Fix broken readme links. (e6a21ff)
+
 ## 7.0.4 (2023-09-21)
 
 ### Code Refactoring

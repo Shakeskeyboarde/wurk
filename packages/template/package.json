@@ -33,7 +33,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@werk/cli": "^7.0.4"
+    "@werk/cli": "^7.0.5"
   },
   "devDependencies": {
     "vite": "^4.4.9",
