@@ -17,7 +17,6 @@ export type WorkspacePartialOptions = Omit<
 export interface WorkspacesOptions extends GitOptions, SelectOptions {
   readonly rootPackage: WorkspacePackage;
   readonly workspacePackages: readonly WorkspacePackage[];
-  readonly commandName: string;
 }
 
 const getSorted = (workspaces: readonly WorkspacePartialOptions[]): readonly WorkspacePartialOptions[] => {
@@ -132,28 +131,24 @@ export const isWorkspaceMatch = (
   );
 };
 
-export const getWorkspace = (
-  {
-    private: private_ = false,
-    type = 'commonjs',
-    types,
-    bin = {},
-    main,
-    module,
-    exports = {},
-    directories = {},
-    man = [],
-    dependencies = {},
-    peerDependencies = {},
-    optionalDependencies = {},
-    devDependencies = {},
-    keywords = [],
-    werk = {},
-    scripts = {},
-    ...workspace
-  }: WorkspacePackage,
-  commandName: string,
-): WorkspacePartialOptions => {
+export const getWorkspace = ({
+  private: private_ = false,
+  type = 'commonjs',
+  types,
+  bin = {},
+  main,
+  module,
+  exports = {},
+  directories = {},
+  man = [],
+  dependencies = {},
+  peerDependencies = {},
+  optionalDependencies = {},
+  devDependencies = {},
+  keywords = [],
+  scripts = {},
+  ...workspace
+}: WorkspacePackage): WorkspacePartialOptions => {
   return {
     selected: false,
     private: private_,
@@ -171,7 +166,6 @@ export const getWorkspace = (
     devDependencies,
     keywords,
     scripts,
-    config: werk[commandName]?.config,
     ...workspace,
   };
 };
@@ -179,7 +173,6 @@ export const getWorkspace = (
 export const getWorkspaces = async ({
   rootPackage,
   workspacePackages,
-  commandName,
   includeRoot,
   ...options
 }: WorkspacesOptions): Promise<
@@ -187,8 +180,8 @@ export const getWorkspaces = async ({
 > => {
   const isMonorepo = workspacePackages.length > 0 || 'workspaces' in rootPackage;
   const isRootIncluded = includeRoot || !isMonorepo;
-  const root = getWorkspace(rootPackage, commandName);
-  const others = workspacePackages.map((workspace) => getWorkspace(workspace, commandName));
+  const root = getWorkspace(rootPackage);
+  const others = workspacePackages.map((workspace) => getWorkspace(workspace));
   const workspaces = getSorted(isRootIncluded ? [root, ...others] : others);
 
   await select(workspaces, rootPackage.dir, options);

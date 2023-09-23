@@ -43,7 +43,7 @@ const loadCommandPlugin = async (
       commander.description(packageJson.description);
     }
 
-    exports.default.config(commander, name);
+    exports.default.config(commander);
 
     if (packageJson.version) {
       commander.version(packageJson.version, '-v, --version', 'Display the current version.');

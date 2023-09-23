@@ -32,7 +32,6 @@ export interface WorkspaceOptions
   extends Required<Omit<WorkspacePackage, 'werk' | 'types' | 'bin' | 'main' | 'module' | 'exports'>>,
     Pick<WorkspacePackage, 'types' | 'bin' | 'main' | 'module' | 'exports'> {
   readonly selected: boolean;
-  readonly config: unknown;
   readonly context: PartialContext;
   readonly gitHead: string | undefined;
   readonly gitFromRevision: string | undefined;
@@ -169,21 +168,6 @@ export class Workspace {
    */
   readonly dependencyNames: readonly string[];
 
-  /**
-   * Command configuration from the workspace `package.json` file.
-   *
-   * ```json
-   * {
-   *   "werk": {
-   *     <command>: {
-   *       "config": <value>
-   *     }
-   *   }
-   * }
-   * ```
-   */
-  readonly config: unknown;
-
   constructor(options: WorkspaceOptions) {
     this.#context = options.context;
     this.#gitHead = options.gitHead;
@@ -208,7 +192,6 @@ export class Workspace {
     this.keywords = options.keywords;
     this.scripts = options.scripts;
     this.selected = options.selected;
-    this.config = options.config;
     this.dependencyNames = getWorkspaceDependencyNames(options);
   }
 

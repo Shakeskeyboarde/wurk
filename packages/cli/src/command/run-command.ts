@@ -18,8 +18,10 @@ const PREFIX_COLORS = ['cyan', 'magenta', 'yellow', 'blue', 'green', 'red'] as c
 export const runCommand = async (
   globalConfig: Config,
   globalOpts: GlobalOptions,
-  { command, commandName, commandMain, commander }: CommandPlugin,
+  plugin: CommandPlugin,
 ): Promise<void> => {
+  const { command, commandName, commandMain, commander } = plugin;
+
   assert(
     !command.packageManager || command.packageManager.includes(globalConfig.packageManager),
     `Command "${commandName}" does not support package manager "${globalConfig.packageManager}".`,
@@ -30,7 +32,6 @@ export const runCommand = async (
   const [root, workspaces, isMonorepo] = await getWorkspaces({
     rootPackage: globalConfig.rootPackage,
     workspacePackages: globalConfig.workspacePackages,
-    commandName,
     ...globalOpts.select,
     ...globalOpts.git,
   });

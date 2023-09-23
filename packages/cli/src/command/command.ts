@@ -93,9 +93,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions, M> {
     process.on('exit', this.#restoreBackupFiles);
   }
 
-  readonly config = (commander: CustomCommander, commandName: string): AnyCustomCommander => {
-    log.silly(`${commandName}.config()`);
-
+  readonly config = (commander: CustomCommander): AnyCustomCommander => {
     if (!this.#config) return commander;
 
     return this.#config(commander);

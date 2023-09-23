@@ -18,21 +18,6 @@ export abstract class BaseContext {
    */
   readonly packageManager: PackageManager;
 
-  /**
-   * Command configuration from the workspaces root `package.json` file.
-   *
-   * ```json
-   * {
-   *   "werk": {
-   *     <command>: {
-   *       "config": <value>
-   *     }
-   *   }
-   * }
-   * ```
-   */
-  readonly config: unknown;
-
   constructor({ log, packageManager }: BaseContextOptions) {
     this.log = new Log(log);
     this.packageManager = packageManager;
