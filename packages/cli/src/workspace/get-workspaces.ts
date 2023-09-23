@@ -6,13 +6,11 @@ import { memoize } from '../utils/memoize.js';
 import { getWorkspaceDependencyNames } from './get-workspace-dependency-names.js';
 import { getWorkspaceIsModified } from './get-workspace-is-modified.js';
 import { getWorkspaceLocalDependencies } from './get-workspace-local-dependencies.js';
-import { type WorkspaceOptions } from './workspace.js';
 import { type WorkspacePackage } from './workspace-package.js';
 
-export type WorkspacePartialOptions = Omit<
-  WorkspaceOptions,
-  'context' | 'gitHead' | 'gitFromRevision' | 'saveAndRestoreFile'
->;
+export interface WorkspacePartialOptions extends WorkspacePackage {
+  selected: boolean;
+}
 
 export interface WorkspacesOptions extends GitOptions, SelectOptions {
   readonly rootPackage: WorkspacePackage;

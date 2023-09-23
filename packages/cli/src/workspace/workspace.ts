@@ -22,20 +22,14 @@ import {
 } from './get-workspace-local-dependencies.js';
 import { type WorkspacePackage } from './workspace-package.js';
 
-interface PartialContext {
-  readonly log: Log;
-  readonly workspaces: ReadonlyMap<string, Workspace>;
-  readonly spawn: Spawn;
-}
-
-export interface WorkspaceOptions
-  extends Required<Omit<WorkspacePackage, 'werk' | 'types' | 'bin' | 'main' | 'module' | 'exports'>>,
-    Pick<WorkspacePackage, 'types' | 'bin' | 'main' | 'module' | 'exports'> {
+export interface WorkspaceOptions extends WorkspacePackage {
   readonly selected: boolean;
-  readonly context: PartialContext;
   readonly gitHead: string | undefined;
   readonly gitFromRevision: string | undefined;
+  readonly log: Log;
+  readonly workspaces: ReadonlyMap<string, Workspace>;
   readonly saveAndRestoreFile: (filename: string) => Promise<void>;
+  readonly spawn: Spawn;
 }
 
 export interface ChangeDetectionOptions {
@@ -62,10 +56,12 @@ export interface EntryPoint {
 }
 
 export class Workspace {
-  readonly #context: PartialContext;
+  readonly #log: Log;
+  readonly #workspaces: ReadonlyMap<string, Workspace>;
   readonly #gitHead: string | undefined;
   readonly #gitFromRevision: string | undefined;
   readonly #saveAndRestoreFile: (filename: string) => Promise<void>;
+  readonly #spawn: Spawn;
 
   /**
    * Absolute path of the workspace directory.
@@ -169,28 +165,31 @@ export class Workspace {
   readonly dependencyNames: readonly string[];
 
   constructor(options: WorkspaceOptions) {
-    this.#context = options.context;
+    this.#log = options.log;
+    this.#workspaces = options.workspaces;
     this.#gitHead = options.gitHead;
     this.#gitFromRevision = options.gitFromRevision;
     this.#saveAndRestoreFile = options.saveAndRestoreFile;
+    this.#spawn = options.spawn;
+
     this.dir = options.dir;
     this.name = options.name;
     this.version = options.version;
-    this.private = options.private;
+    this.private = options.private ?? false;
     this.type = options.type === 'module' ? 'module' : 'commonjs';
     this.types = options.types;
     this.bin = options.bin;
     this.main = options.main;
     this.module = options.module;
     this.exports = options.exports;
-    this.directories = options.directories;
+    this.directories = options.directories ?? {};
     this.man = Array.isArray(options.man) ? options.man : [options.man];
-    this.dependencies = options.dependencies;
-    this.peerDependencies = options.peerDependencies;
-    this.optionalDependencies = options.optionalDependencies;
-    this.devDependencies = options.devDependencies;
-    this.keywords = options.keywords;
-    this.scripts = options.scripts;
+    this.dependencies = options.dependencies ?? {};
+    this.peerDependencies = options.peerDependencies ?? {};
+    this.optionalDependencies = options.optionalDependencies ?? {};
+    this.devDependencies = options.devDependencies ?? {};
+    this.keywords = options.keywords ?? [];
+    this.scripts = options.scripts ?? {};
     this.selected = options.selected;
     this.dependencyNames = getWorkspaceDependencyNames(options);
   }
@@ -236,7 +235,7 @@ export class Workspace {
    * Get the local dependencies of the workspace (recursive).
    */
   readonly getLocalDependencies = (options?: WorkspaceLocalDependenciesOptions): Workspace[] => {
-    return getWorkspaceLocalDependencies(this, this.#context.workspaces.values(), options);
+    return getWorkspaceLocalDependencies(this, this.#workspaces.values(), options);
   };
 
   /**
@@ -304,7 +303,7 @@ export class Workspace {
       excludeDependencyNames.includes(this.name) || getGitIsClean(this.dir),
     ]).then((results) => results.every(Boolean));
 
-    this.#context.log.debug(`Workspace "${this.name}" clean=${isClean}`);
+    this.#log.debug(`Workspace "${this.name}" clean=${isClean}`);
 
     return isClean;
   };
@@ -325,7 +324,7 @@ export class Workspace {
       this.#gitHead,
     );
 
-    this.#context.log.debug(`Workspace "${this.name}" modified=${isModified}`);
+    this.#log.debug(`Workspace "${this.name}" modified=${isModified}`);
 
     return isModified;
   };
@@ -398,7 +397,7 @@ export class Workspace {
     const missing = await this.getMissingEntryPoints();
     const isBuilt = missing.length === 0;
 
-    this.#context.log.debug(`Workspace "${this.name}" built=${isBuilt}`);
+    this.#log.debug(`Workspace "${this.name}" built=${isBuilt}`);
 
     return isBuilt;
   };

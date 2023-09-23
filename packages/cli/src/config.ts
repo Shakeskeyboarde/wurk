@@ -32,7 +32,9 @@ export const loadConfig = memoize(async (): Promise<Config> => {
 
   const { version = '', description = '' } = packageJson;
   const filename = resolve(rootDir, 'package.json');
-  const rootPackageJson: PackageJson | undefined = await readJsonFile<PackageJson>(filename).catch(() => undefined);
+  const rootPackageJson = await readJsonFile<
+    PackageJson & { readonly werk?: { readonly commands?: Readonly<Record<string, string>> } }
+  >(filename).catch(() => undefined);
 
   return {
     version,

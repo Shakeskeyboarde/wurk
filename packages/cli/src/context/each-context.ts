@@ -40,7 +40,15 @@ export class EachContext<A extends CommanderArgs, O extends CommanderOptions, M>
     super({ ...superOptions, gitHead, gitFromRevision, saveAndRestoreFile });
 
     this.isParallel = isParallel;
-    this.workspace = new Workspace({ ...workspace, context: this, gitHead, gitFromRevision, saveAndRestoreFile });
+    this.workspace = new Workspace({
+      ...workspace,
+      log: this.log,
+      workspaces: this.workspaces,
+      gitHead,
+      gitFromRevision,
+      saveAndRestoreFile,
+      spawn: this.spawn,
+    });
     this.matrixValue = matrixValue;
   }
 

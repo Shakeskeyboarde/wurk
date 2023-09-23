@@ -85,13 +85,29 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
     this.commandMain = commandMain;
     this.args = args;
     this.opts = opts;
-    this.root = new Workspace({ ...root, context: this, gitHead, gitFromRevision, saveAndRestoreFile });
     this.workspaces = new Map(
       workspaces.map((workspace) => [
         workspace.name,
-        new Workspace({ ...workspace, context: this, gitHead, gitFromRevision, saveAndRestoreFile }),
+        new Workspace({
+          ...workspace,
+          log: this.log,
+          workspaces: this.workspaces,
+          gitHead,
+          gitFromRevision,
+          saveAndRestoreFile,
+          spawn: this.spawn,
+        }),
       ]),
     );
+    this.root = new Workspace({
+      ...root,
+      log: this.log,
+      workspaces: this.workspaces,
+      gitHead,
+      gitFromRevision,
+      saveAndRestoreFile,
+      spawn: this.spawn,
+    });
     this.isWorker = isWorker;
     this.workerData = workerData;
     this.#startWorker = startWorker;

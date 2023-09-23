@@ -1,34 +1,32 @@
-import { type IPackageJson as IPackageJsonBase, type IScriptsMap as IScriptsMapBase } from 'package-json-type';
-
-interface IScriptsMap extends IScriptsMapBase {
-  [key: string]: string;
-}
-
-type IndexType<T> = T extends Record<any, infer V> ? V : never;
-type OmitIndex<T> = {
-  [K in keyof T as string extends K ? never : number extends K ? never : symbol extends K ? never : K]: T[K];
-};
-type OmitWithIndex<T, K extends keyof OmitIndex<T>> = Omit<OmitIndex<T>, K> & Record<string, IndexType<T>>;
-type ReadonlyJson<T> = T extends (infer V)[]
-  ? readonly ReadonlyJson<V>[]
-  : T extends object
-  ? { +readonly [K in keyof T]: ReadonlyJson<T[K]> }
-  : T;
 type MutableJson<T> = T extends readonly (infer V)[]
   ? MutableJson<V>[]
   : T extends object
   ? { -readonly [K in keyof T]: MutableJson<T[K]> }
   : T;
 
-export interface PackageJson extends ReadonlyJson<OmitWithIndex<IPackageJsonBase, 'scripts'>> {
-  readonly scripts?: ReadonlyJson<IScriptsMap>;
-  readonly werk?: {
-    readonly commands?: {
-      readonly [key: string]: string;
-    };
-  };
+export interface PackageJsonBase {
+  readonly name?: string;
+  readonly description?: string;
+  readonly version?: string;
+  readonly private?: boolean;
+  readonly scripts?: Readonly<Record<string, string>>;
+  readonly man?: string | readonly string[];
+  readonly directories?: { readonly bin?: string; readonly man?: string };
+  readonly keywords?: readonly string[];
+  readonly type?: string;
+  readonly types?: string;
+  readonly bin?: string | Readonly<Record<string, string>>;
+  readonly main?: string;
+  readonly module?: string;
+  readonly exports?: string | Readonly<Record<string, string | Readonly<Record<string, string>>>>;
+  readonly dependencies?: Readonly<Record<string, string>>;
+  readonly peerDependencies?: Readonly<Record<string, string>>;
+  readonly optionalDependencies?: Readonly<Record<string, string>>;
+  readonly devDependencies?: Readonly<Record<string, string>>;
+}
+
+export interface PackageJson extends PackageJsonBase {
   readonly [key: string]: unknown;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
-export interface MutablePackageJson extends MutableJson<PackageJson> {}
+export type MutablePackageJson = MutableJson<PackageJson>;
