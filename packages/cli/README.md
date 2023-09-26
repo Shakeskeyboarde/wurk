@@ -11,7 +11,7 @@ Open-minded build tooling, with opinionated plugins.
   - [Official Commands](#official-commands)
   - [Custom Commands](#custom-commands)
 - [Command Line Options](#command-line-options)
-  - [Filtering Options](#filtering-options)
+  - [Selection Options](#selection-options)
   - [Parallelization Options](#parallelization-options)
   - [Logging Options](#logging-options)
   - [Git Options](#git-options)
@@ -23,12 +23,11 @@ Werk is a framework for creating build and build-related commands as [command pl
 - Workspaces
   - Information
   - Parallelization
-  - Filtering
+  - Selection
 - Helpers
   - Add command line options
   - Log with levels and formatting
   - Spawn processes
-  - Start threads
   - Manipulate `package.json` files
   - Look up registry metadata (NPM)
   - Detect changes (Git)
@@ -69,7 +68,7 @@ All commands are modular and must be installed individually. By itself, Werk can
 
 The following "official" commands are provided to get you started.
 
-- [list](https://www.npmjs.com/package/@werk/command-list): List workspaces as JSON with filtering applied.
+- [list](https://www.npmjs.com/package/@werk/command-list): List workspaces.
 - [run](https://www.npmjs.com/package/@werk/command-run): Run package scripts.
 - [exec](https://www.npmjs.com/package/@werk/command-exec): Run executables.
 - [build](https://www.npmjs.com/package/@werk/command-build): Build using auto-detected tools.
@@ -83,7 +82,7 @@ Run `npm i -D @werk/command-<name>` in your workspaces root to install these com
 
 [Learn how to create your own custom command plugins!](https://github.com/Shakeskeyboarde/werk/blob/main/packages/cli/README_CUSTOM_COMMANDS.md)
 
-Werk scans the `package.json` file in your repo root for command plugin package dependencies. By default, any package that start with `*/werk-command-`, `werk-command-` or `@werk/command-` will be loaded as a command plugin.
+Werk scans the `package.json` file in your repo root for command plugin package dependencies. By default, any packages that start with `*/werk-command-`, `werk-command-` or `@werk/command-` will be loaded as command plugins.
 
 You can also force command names to resolve to specific packages by mapping the command name to an arbitrary package name in your `package.json` file.
 
@@ -105,40 +104,16 @@ Werk has global options for selecting workspaces, parallelization, and output. T
 werk [werk-options...] <command> [command-options...]
 ```
 
-### Filtering Options
+### Selection Options
 
 Options which reduce the number of workspaces that are processed.
 
-- `-w, --workspace <name>`
-  - Include a workspace by name (repeatable).
-- `-k, --keyword <value>`
-  - Include workspaces with a matching keyword (repeatable).
-- `--include-workspace-root`
-  - Include the root work workspace.
-- `--not-workspace <name>`
-  - Exclude a workspace by name (repeatable).
-- `--not-keyword <value>`
-  - Exclude workspaces with a matching keyword (repeatable).
-- `--not-private`
-  - Exclude private workspaces.
-- `--not-public`
-  - Exclude public workspaces.
-- `--not-published`
-  - Exclude published workspaces.
-- `--not-unpublished`
-  - Exclude published workspaces.
-- `--not-modified`
-  - Exclude modified workspaces.
-- `--not-unmodified`
-  - Exclude unmodified workspaces.
+- `-w, --workspace <patterns>`
+  - Select workspaces by name (glob, csv, repeatable).
+- `--include-root-workspace`
+  - Include the root workspace in the selection. _This is strongly discouraged due to the potential for unexpected behavior!_
 - `--no-dependencies`
-  - Do not include dependencies when selecting workspaces.
-
-By default, all workspaces are included. If the `--workspace` or `--keyword` options are used, then only workspaces matching any of the given workspace names or keywords will included.
-
-From the included workspaces, any matching a `--not-*` options will be excluded. You an consider "not" to be synonym for "exclude".
-
-And finally, unless the `--no-dependencies` option is used, any dependencies of included workspaces will be also be included, even if they were removed by a `--not-*` option.
+  - Do not automatically include dependencies of selected workspaces.
 
 **Note:** It is entirely up to each command to honor the "selected" workspaces. They are strongly encouraged to do so, but may choose not to if it doesn't make sense to the command.
 

@@ -1,14 +1,13 @@
 # Werk Custom Commands
 
 - [Implementing Commands](#implementing-commands)
-  - [Command Requirements](#command-requirements)
   - [Command Hooks](#command-hooks)
   - [Hook Contexts](#hook-contexts)
   - [Log](#log)
   - [Workspaces](#workspaces)
+  - [Workspace References](#workspace-references)
 - [Command Line Parsing](#command-line-parsing)
 - [Spawning Processes](#spawning-processes)
-- [Starting Threads](#starting-threads)
 - [Patching Workspace `package.json` Files](#patching-workspace-packagejson-files)
 - [Publishing Commands](#publishing-commands)
 
@@ -22,7 +21,6 @@ Import the `@werk/cli` package and use the `createCommand` function to define yo
 import { createCommand } from '@werk/cli';
 
 export default createCommand({
-  packageManager: ['npm'],
   config: (commander) => commander,
   before: async (context) => {},
   each: async (context) => {},
@@ -32,12 +30,6 @@ export default createCommand({
 ```
 
 You can also copy the [template](https://github.com/Shakeskeyboarde/werk/blob/main/template) into your own repo to get started.
-
-### Command Requirements
-
-The following properties define requirements for the command (all optional).
-
-- `packageManager`: Package managers supported by the command, or false if the command does not depend on any package manager. Defaults to `['npm']`.
 
 ### Command Hooks
 
@@ -57,21 +49,18 @@ If you set `process.exitCode` to a number (including zero) in any hook, the comm
 A context object is passed to all hooks, _except for `config`_ which only receives a Commander instance to configure. The properties attached to contexts are as follows.
 
 - `log`: A logger which should be preferred over `console.*` logging.
-- `commandMain` (**before**, **each**, **after**): Main filename of the command package.
-- `rootDir`: Absolute path of the workspaces root.
 - `args`: Positional arguments parsed from command line.
 - `opts`: Named options parsed from the command line.
 - `root` (**before**, **each**, **after**): The workspaces root [workspace](#workspaces).
 - `workspaces` (**before**, **each**, **after**): A map (by name) of all [workspaces](#workspaces).
 - `workspace` (**each**): The current [workspace](#workspaces).
 - `forceWait()` (**before**): Force dependent workspaces to wait for their dependencies (ie. ignore the CLI `--no-wait` option).
-- `saveAndRestoreFile(filename)` (**before**, **each**, **after**): Save the contents of a file and restore it after the command completes.
 - `spawn(cmd, args?, options?)`: Spawn a process. The working directory will be the workspaces (monorepo) root.
-- `startWorker(data?)` (**before**, **each**, **after**): Re-runs the current hook in a [worker thread](https://nodejs.org/api/worker_threads.html).
+- `saveAndRestoreFile(...pathParts)` (**before**, **each**, **after**): Save the contents of a file and restore it after the command completes. If multiple path parts are given, they will be resolved into a single path.
 - `isParallel` (**each**): True if the command is running in parallel mode.
-- `isWorker` (**before**, **each**, **after**): True if the hook is running in a worker thread.
-- `workerData` (**before**, **each**, **after**): Data passed to the `startWorker(data?)` function, or undefined if `isWorker` is false.
 - `exitCode` (**cleanup**): Exit code of the command.
+
+**Note:** Context operations (eg. `spawn`, `saveAndRestoreFile`) are always relative to the root workspace, NOT the current workspace!
 
 ### Log
 
@@ -98,32 +87,36 @@ No hard wrapping is ever added.
 
 ### Workspaces
 
-The `context.workspaces` and `context.workspace` properties contain instances of the `Workspace` class. These instances provide informational properties and helper methods for interacting with workspaces.
+The `context.root`, `context.workspaces`, and `context.workspace` properties contain instances of the `Workspace` class. These instances provide informational properties and helper methods for interacting with workspaces.
 
 **Normalized package properties:**
 
-- `name`
-- `version`
 - `private`
+- `name`
+- `description`
+- `version`
+- `scripts`
+- `keywords`
 - `type`
+- `files`
+- `directories`
+- `man`
 - `types`
 - `bin`
 - `main`
 - `module`
 - `exports`
-- `directories`
-- `man`
 - `dependencies`
 - `peerDependencies`
 - `optionalDependencies`
 - `devDependencies`
-- `keywords`.
 
 **Generated properties:**
 
 - `dir`: Absolute root directory of the workspace.
 - `selected`: True if the workspace matched the Werk [global options](README.md#command-line-options).
-- `dependencyNames`: A set of the unique (deduplicated) dependency names collected from all of the dependency maps.
+- `localDependencies`: Map of local dependency [workspace references](#workspace-references) (by name). This includes direct and indirect dependencies.
+- `localDependents`: Map of local dependent [workspace references](#workspace-references) (by name). This includes direct and indirect dependents.
 
 **Package methods:**
 
@@ -133,18 +126,26 @@ The `context.workspaces` and `context.workspace` properties contain instances of
 
 **Metadata methods:**
 
-- `getLocalDependencies({ scopes? }?)`: Gets the workspaces which are local dependencies of this workspace. If `scopes` is not specified, dependencies from all scopes are returned.
+- `getNpmMetadata()`: Returns NPM registry metadata for the current version of the workspace.
 - `getNpmIsPublished()`: Returns true if the current workspace name and version are published to the registry.
-- `getGitIsRepo()`: Return true if the workspace directory is only a shallow Git checkout.
-- `getGitIsShallow()`: Returns true if the workspace root directory is part of a git repository.
-- `getGitHead()`: Gets the Git head commit hash. Returns undefined outside of a Git repo unless the `--git-head` global option is not set.
-- `getGitFromRevision()`: Gets the "from" revision which should be used for detecting changes. Returns undefined outside of a Git repo, if the `--git-from-revision` options is not set.
-- `getGitIsClean(options?)`: Returns true if the workspace's git working tree is clean. Returns true outside of a Git repo.
-- `getIsModified(options?)`: Returns true if the workspace is not published, or there are uncommitted changes. Otherwise, it returns true if the workspace is part of a Git repo, and the diff of the "from" revision and the head commit is not empty.
+- `getNpmHead()`: Returns the "from" revision which should be used for detecting changes. Returns undefined if no published commit can be resolved from an NPM registry and the `--git-from-revision` option is not set.
+- `getGitIsRepo()`: Returns true if the workspace root directory is part of a git repository.
+- `getGitIsShallow()`: Return true if the workspace directory is only a shallow Git checkout.
+- `getGitHead()`: Returns the hash of the most recent commit which modified the workspace directory. Returns undefined outside of a Git repo unless the `--git-head` global option is not set.
+- `getGitIsDirty()`: Returns true if the workspace's git working tree is dirty. Returns false outside of a Git repo.
+- `getIsModified()`: Returns true if the workspace NPM published head and Git head commits are both resolved and do not match.
 - `getEntryPoints()`: List all the files which are considered entry points for the workspace.
-- `getIsBuilt()`: Returns true if the workspace entry points exist.
+- `getMissingEntryPoints()`: List of all the workspace entry points that are missing.
 
 **Note:** If the workspace is not part of a Git repository, the workspace will read as clean and unmodified.
+
+### Workspace References
+
+The `workspace.localDependencies` and `workspace.localDependents` properties contain instances of `WorkspaceReference` interface. These instances provide informational properties about the related workspace.
+
+- `workspace`: The referenced [workspace](#workspaces).
+- `isDirect`: True if the reference is direct (ie. listed in the `package.json` file), rather than indirect (ie. a dependency of a dependency).
+- `type`: The type of reference (ie. `prod`, `peer`, `optional`, or `dev`).
 
 ## Command Line Parsing
 
@@ -285,49 +286,6 @@ result.failed;
 ```
 
 The synchronous result doesn't include the `childProcess` or `stdin`.
-
-## Starting Threads
-
-The `before`, `each`, and `after` hooks can spawn a copies of themselves in worker threads by calling the `context.startWorker(workerData?)` function.
-
-**Note:** Using this helper is optional. However, please consider creating and using a new `Log` instance in alternatively created threads.
-
-The simplest case is to always run a hook in a separate thread.
-
-```ts
-export default createCommand({
-  each: async (context): Promise<void> => {
-    if (await context.startWorker()) return;
-
-    // Do stuff in the worker thread.
-  },
-});
-```
-
-If the `context.startWorker()` function is called from the main thread, it starts a worker thread and returns true. If it's called from a worker thread, it does nothing and returns false.
-
-You can pass data to the worker thread. The data must be compatible with the [Structured Clone](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm) algorithm.
-
-```ts
-if (await context.startWorker({ timestamp: Data.now() })) {
-  return;
-}
-
-context.log.info(`Current Timestamp: ${context.workerData.timestamp}`);
-```
-
-If you need access to the [NodeJS Worker](https://nodejs.org/api/worker_threads.html#class-worker) instance (eg. for messaging), it is attached to the returned promise.
-
-```ts
-const workerPromise = context.startWorker();
-
-if (workerPromise.isStarted) {
-  workerPromise.worker.on('message', handleMessage);
-}
-
-// Don't forget to await the promise.
-await workerPromise;
-```
 
 ## Patching Workspace `package.json` Files
 

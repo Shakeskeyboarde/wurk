@@ -82,16 +82,16 @@ const loadCommandPlugin = async (
 };
 
 export const loadCommandPlugins = async (
-  config: Pick<Config, 'rootPackage' | 'commandPackageIds'>,
+  config: Pick<Config, 'rawRootWorkspace' | 'commandPackageIds'>,
   parentCommander: CustomCommander,
 ): Promise<CommandPlugin[]> => {
   const resolved = new Map(Object.entries(config.commandPackageIds));
 
   Object.keys({
-    ...config.rootPackage.dependencies,
-    ...config.rootPackage.devDependencies,
-    ...config.rootPackage.peerDependencies,
-    ...config.rootPackage.optionalDependencies,
+    ...config.rawRootWorkspace.dependencies,
+    ...config.rawRootWorkspace.devDependencies,
+    ...config.rawRootWorkspace.peerDependencies,
+    ...config.rawRootWorkspace.optionalDependencies,
   })
     .sort()
     .forEach((packageId) => {
@@ -105,7 +105,7 @@ export const loadCommandPlugins = async (
 
   return await Promise.all(
     [...resolved.entries()].map(async ([name, packageId]) => {
-      return await loadCommandPlugin(config.rootPackage.dir, parentCommander, name, packageId);
+      return await loadCommandPlugin(config.rawRootWorkspace.dir, parentCommander, name, packageId);
     }),
   );
 };

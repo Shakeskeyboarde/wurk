@@ -12,6 +12,9 @@ export { Log } from './utils/log.js';
 export { type MutablePackageJson, type PackageJson } from './utils/package-json.js';
 export { type Spawn, type SpawnOptions, type SpawnPromise } from './utils/spawn.js';
 export { type SpawnSync, type SpawnSyncOptions, type SpawnSyncResult } from './utils/spawn-sync.js';
-export { type WorkerPromise } from './utils/start-worker.js';
-export { type WorkspaceLocalDependenciesOptions } from './workspace/get-workspace-local-dependencies.js';
-export { type EntryPoint, type Workspace } from './workspace/workspace.js';
+export {
+  type Workspace,
+  WorkspaceDependencyScope,
+  type WorkspaceEntryPoint,
+  type WorkspaceReference,
+} from './workspace/workspace.js';

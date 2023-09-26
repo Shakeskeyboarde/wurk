@@ -1,12 +1,23 @@
 #!/usr/bin/env node
 import assert from 'node:assert';
-import { resolve } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
 
-import { getNpmWorkspacesRoot } from './npm/get-npm-workspaces-root.js';
+const findRoot = async (current = process.cwd()): Promise<string> => {
+  return await readFile(resolve(current, 'package.json'), 'utf-8')
+    .then<Record<string, any>>(JSON.parse)
+    .catch(() => undefined)
+    .then((packageJson) => {
+      if (packageJson?.workspaces) return current;
+      const parent = dirname(current);
+      if (parent === current) throw new Error('Could not find root workspace.');
+      return findRoot(parent);
+    });
+};
 
-await getNpmWorkspacesRoot()
-  .then(async (root) => {
-    const { main } = await import(resolve(root, 'node_modules', '@werk/cli', 'lib', 'main.js'));
+await findRoot()
+  .then(async (rootDir) => {
+    const { main } = await import(resolve(rootDir, 'node_modules', '@werk/cli', 'lib', 'main.js'));
     assert(typeof main === 'function');
     return main;
   })

@@ -1,41 +1,20 @@
+import { cpSync, mkdtempSync, rmSync } from 'node:fs';
+import { relative, resolve } from 'node:path';
+
 import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
+import { type ReadonlyEnhancedMap } from '../utils/enhanced-map.js';
 import { spawn, type SpawnOptions, type SpawnPromise } from '../utils/spawn.js';
-import { type WorkspacePartialOptions } from '../workspace/get-workspaces.js';
-import { Workspace } from '../workspace/workspace.js';
+import { type Workspace } from '../workspace/workspace.js';
 import { BaseContext, type BaseContextOptions } from './base-context.js';
 
 export interface BaseAsyncContextOptions<A extends CommanderArgs, O extends CommanderOptions>
-  extends BaseContextOptions {
-  readonly commandMain: string;
-  readonly args: A;
-  readonly opts: O;
-  readonly root: WorkspacePartialOptions;
-  readonly workspaces: readonly WorkspacePartialOptions[];
-  readonly gitHead: string | undefined;
-  readonly gitFromRevision: string | undefined;
-  readonly isWorker: boolean;
-  readonly workerData: unknown;
-  readonly saveAndRestoreFile: (filename: string) => Promise<void>;
-  readonly startWorker: (data?: any) => Promise<boolean>;
+  extends BaseContextOptions<A, O> {
+  readonly root: Workspace;
+  readonly workspaces: ReadonlyEnhancedMap<string, Workspace>;
 }
 
-export abstract class BaseAsyncContext<A extends CommanderArgs, O extends CommanderOptions> extends BaseContext {
-  #startWorker: (data?: any) => Promise<boolean>;
-
-  /**
-   * The command entrypoint filename.
-   */
-  readonly commandMain: string;
-
-  /**
-   * Arguments parsed from the command line.
-   */
-  readonly args: A;
-
-  /**
-   * Options parsed from the command line.
-   */
-  readonly opts: O;
+export abstract class BaseAsyncContext<A extends CommanderArgs, O extends CommanderOptions> extends BaseContext<A, O> {
+  #tempDir: string | undefined;
 
   /**
    * The workspaces root workspace.
@@ -46,74 +25,16 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
    * Map of all NPM workspaces in order of interdependency (dependencies
    * before dependents).
    */
-  readonly workspaces: ReadonlyMap<string, Workspace>;
+  readonly workspaces: ReadonlyEnhancedMap<string, Workspace>;
 
-  /**
-   * True if the command is running in a worker thread.
-   */
-  readonly isWorker: boolean;
+  constructor({ log, args, opts, root, workspaces }: BaseAsyncContextOptions<A, O>) {
+    super({ log, args, opts });
 
-  /**
-   * Value passed to the `worker(filename, data)` method.
-   */
-  readonly workerData: any;
-
-  /**
-   * Absolute path of the workspaces root.
-   */
-  get rootDir(): string {
-    return this.root.dir;
-  }
-
-  constructor({
-    log,
-    commandMain,
-    args,
-    opts,
-    root,
-    workspaces,
-    gitHead,
-    gitFromRevision,
-    isWorker,
-    workerData,
-    packageManager,
-    saveAndRestoreFile,
-    startWorker,
-  }: BaseAsyncContextOptions<A, O>) {
-    super({ log, packageManager });
-
-    this.commandMain = commandMain;
-    this.args = args;
-    this.opts = opts;
-    this.workspaces = new Map(
-      workspaces.map((workspace) => [
-        workspace.name,
-        new Workspace({
-          ...workspace,
-          log: this.log,
-          workspaces: this.workspaces,
-          gitHead,
-          gitFromRevision,
-          saveAndRestoreFile,
-          spawn: this.spawn,
-        }),
-      ]),
-    );
-    this.root = new Workspace({
-      ...root,
-      log: this.log,
-      workspaces: this.workspaces,
-      gitHead,
-      gitFromRevision,
-      saveAndRestoreFile,
-      spawn: this.spawn,
-    });
-    this.isWorker = isWorker;
-    this.workerData = workerData;
-    this.#startWorker = startWorker;
+    this.root = root;
+    this.workspaces = workspaces;
 
     this.spawn = this.spawn.bind(this);
-    this.startWorker = this.startWorker.bind(this);
+    this.saveAndRestoreFile = this.saveAndRestoreFile.bind(this);
   }
 
   /**
@@ -127,11 +48,51 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
     return spawn(cmd, args, { cwd: this.root.dir, log: this.log, ...options });
   }
 
-  /**
-   * Returns false if already running in a worker thread. Creating nested
-   * worker threads is not supported.
-   */
-  async startWorker(data?: any): Promise<boolean> {
-    return await this.#startWorker(data);
+  saveAndRestoreFile(...pathParts: string[]): void {
+    if (!this.#tempDir) {
+      const dir = (this.#tempDir = mkdtempSync('werk-save-and-restore-'));
+
+      this.onDestroy(() => {
+        rmSync(dir, { recursive: true, force: true });
+      });
+    }
+
+    const from = resolve(this.root.dir, ...pathParts);
+    const to = resolve(this.#tempDir, relative(this.root.dir, from));
+
+    try {
+      // Copy it to the temp directory.
+      cpSync(from, to, {
+        errorOnExist: true,
+        preserveTimestamps: true,
+        verbatimSymlinks: true,
+      });
+
+      // Copy it back to the original location.
+      this.onDestroy(() => {
+        cpSync(to, from, {
+          force: true,
+          preserveTimestamps: true,
+          verbatimSymlinks: true,
+        });
+      });
+    } catch (error) {
+      if (error instanceof Error && 'code' in error) {
+        if (error.code === 'ENOENT') {
+          /*
+           * File does not exist, so the restore action will be to delete
+           * it if it exists later.
+           */
+          this.onDestroy(() => {
+            rmSync(from, { force: true });
+          });
+        } else if (error.code === 'EEXIST') {
+          // Already saved.
+          return;
+        }
+      }
+
+      throw error;
+    }
   }
 }

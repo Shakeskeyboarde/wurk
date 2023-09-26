@@ -6,6 +6,5 @@ export const getGitIsShallow = async (dir: string): Promise<boolean> => {
     capture: true,
   })
     .getOutput('utf-8')
-    .then((output) => output !== 'false')
-    .catch(() => false);
+    .then((output) => output !== 'false');
 };

@@ -2,40 +2,27 @@ import { type CommanderArgs, type CommanderOptions } from '../commander/commande
 import { type SpawnSync, spawnSync } from '../utils/spawn-sync.js';
 import { BaseContext, type BaseContextOptions } from './base-context.js';
 
-export interface CleanupContextOptions<A extends CommanderArgs, O extends CommanderOptions> extends BaseContextOptions {
+export interface CleanupContextOptions<A extends CommanderArgs, O extends CommanderOptions>
+  extends BaseContextOptions<A, O> {
   readonly rootDir: string;
-  readonly args: A;
-  readonly opts: O;
   readonly exitCode: number;
 }
 
-export class CleanupContext<A extends CommanderArgs, O extends CommanderOptions> extends BaseContext {
+export class CleanupContext<A extends CommanderArgs, O extends CommanderOptions> extends BaseContext<A, O> {
   /**
    * Absolute path of the workspaces root.
    */
   readonly rootDir: string;
 
   /**
-   * Arguments parsed from the command line.
-   */
-  readonly args: A;
-
-  /**
-   * Options parsed from the command line.
-   */
-  readonly opts: O;
-
-  /**
    * Exit code set by the command.
    */
   readonly exitCode: number;
 
-  constructor({ log, rootDir, args, opts, exitCode, packageManager }: CleanupContextOptions<A, O>) {
-    super({ log, packageManager });
+  constructor({ log, args, opts, rootDir, exitCode }: CleanupContextOptions<A, O>) {
+    super({ log, args, opts });
 
     this.rootDir = rootDir;
-    this.args = args;
-    this.opts = opts;
     this.exitCode = exitCode;
   }
 

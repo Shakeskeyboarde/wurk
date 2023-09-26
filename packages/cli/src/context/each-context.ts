@@ -1,13 +1,12 @@
 import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
 import { type Spawn } from '../utils/spawn.js';
-import { type WorkspacePartialOptions } from '../workspace/get-workspaces.js';
-import { Workspace } from '../workspace/workspace.js';
+import { type Workspace } from '../workspace/workspace.js';
 import { BaseAsyncContext, type BaseAsyncContextOptions } from './base-async-context.js';
 
 export interface EachContextOptions<A extends CommanderArgs, O extends CommanderOptions, M>
   extends BaseAsyncContextOptions<A, O> {
   readonly isParallel: boolean;
-  readonly workspace: WorkspacePartialOptions;
+  readonly workspace: Workspace;
   readonly matrixValue: M;
 }
 
@@ -28,27 +27,11 @@ export class EachContext<A extends CommanderArgs, O extends CommanderOptions, M>
    */
   readonly matrixValue: M;
 
-  constructor({
-    isParallel,
-    workspace,
-    matrixValue,
-    gitHead,
-    gitFromRevision,
-    saveAndRestoreFile,
-    ...superOptions
-  }: EachContextOptions<A, O, M>) {
-    super({ ...superOptions, gitHead, gitFromRevision, saveAndRestoreFile });
+  constructor({ isParallel, workspace, matrixValue, ...superOptions }: EachContextOptions<A, O, M>) {
+    super(superOptions);
 
     this.isParallel = isParallel;
-    this.workspace = new Workspace({
-      ...workspace,
-      log: this.log,
-      workspaces: this.workspaces,
-      gitHead,
-      gitFromRevision,
-      saveAndRestoreFile,
-      spawn: this.spawn,
-    });
+    this.workspace = workspace;
     this.matrixValue = matrixValue;
   }
 

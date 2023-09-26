@@ -5,19 +5,15 @@ export interface LogOptions {
   readonly prefix: boolean;
 }
 
+export interface SelectMatcher {
+  readonly match: (value: string) => boolean;
+  readonly isSelected: boolean;
+}
+
 export interface SelectOptions {
-  readonly withDependencies: boolean;
-  readonly includeWorkspaces: readonly string[];
-  readonly includeKeywords: readonly string[];
-  readonly includeRoot: boolean;
-  readonly excludeWorkspaces: readonly string[];
-  readonly excludeKeywords: readonly string[];
-  readonly excludePrivate: boolean;
-  readonly excludePublic: boolean;
-  readonly excludePublished: boolean;
-  readonly excludeUnpublished: boolean;
-  readonly excludeModified: boolean;
-  readonly excludeUnmodified: boolean;
+  readonly workspace: readonly SelectMatcher[];
+  readonly includeRootWorkspace: boolean;
+  readonly dependencies: boolean;
 }
 
 export interface RunOptions {

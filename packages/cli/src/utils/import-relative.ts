@@ -1,5 +1,8 @@
 import { readFile } from 'node:fs/promises';
+import { isBuiltin } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
+
+import { satisfies } from 'semver';
 
 import { type PackageJson } from './package-json.js';
 
@@ -8,6 +11,10 @@ interface Options {
    * Starting directory for import resolution. Defaults to `process.cwd()`.
    */
   dir?: string;
+  /**
+   * Semver version range to match. Defaults to `*`.
+   */
+  version?: string;
 }
 
 export interface ResolvedImport<TExports extends Record<string, any> = Record<string, unknown>> {
@@ -23,13 +30,16 @@ export interface ResolvedImport<TExports extends Record<string, any> = Record<st
  */
 export const importRelative = async <TExports extends Record<string, any> = Record<string, unknown>>(
   name: string,
-  { dir = process.cwd() }: Options = {},
+  { dir = process.cwd(), version }: Options = {},
 ): Promise<ResolvedImport<TExports>> => {
   const match = name.match(/^((?:@[^/]*\/)?[^/]*)(\/.*)?$/u);
 
-  if (!match) return await import(name);
+  if (!match) throw new Error(`Relatively importing non-bare specifier "${name}" is not supported.`);
 
   const id = match[1]!;
+
+  if (isBuiltin(id)) throw new Error(`Relatively importing built-in module "${id}" is not supported.`);
+
   const pathPart = match[2] ? `./${match[2]}` : '.';
   const next = async (current: string): Promise<ResolvedImport<TExports>> => {
     const packageDir = resolve(current, 'node_modules', id);
@@ -71,12 +81,25 @@ export const importRelative = async <TExports extends Record<string, any> = Reco
         if (resolved == null) {
           const parentDir = dirname(current);
 
-          if (parentDir === current) throw new Error('Module not found.');
+          if (parentDir === current) throw new Error(`Package "${id}" not found.`);
 
           return await next(parentDir);
         }
 
-        const exports = await import(join(packageDir, resolved.entry));
+        if (version) {
+          if (!resolved.packageJson.version) {
+            throw new Error(`Package "${id}" has no version.`);
+          }
+
+          if (!satisfies(resolved.packageJson.version, version)) {
+            throw new Error(
+              `Package ${id}" version "${resolved.packageJson.version}" does not satisfy range "${version}".`,
+            );
+          }
+        }
+
+        const entryPath = join(packageDir, resolved.entry);
+        const exports = await import(entryPath);
 
         return { dir: packageDir, exports, ...resolved };
       });
