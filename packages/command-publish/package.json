@@ -39,7 +39,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@types/tar-stream": "^2.2.3",
+    "@types/tar-stream": "^3.1.0",
     "@werk/cli": "^7.0.5",
     "tar-stream": "^3.1.6"
   }

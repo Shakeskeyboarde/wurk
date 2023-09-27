@@ -1,4 +1,4 @@
-import TestSvg from './test.svg';
+import TestSvg from './test.svg?react';
 
 export const Component = (): JSX.Element => {
   return (

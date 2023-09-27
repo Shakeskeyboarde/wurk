@@ -32,13 +32,13 @@
     "access": "public"
   },
   "dependencies": {
-    "@types/semver": "^7.5.2",
+    "@types/semver": "^7.5.3",
     "@werk/cli": "^7.0.5",
     "semver": "^7.5.4"
   },
   "devDependencies": {
     "vite": "^4.4.9",
     "vite-plugin-checker": "^0.6.2",
-    "vite-plugin-dts": "^3.5.3"
+    "vite-plugin-dts": "^3.6.0"
   }
 }

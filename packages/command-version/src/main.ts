@@ -1,6 +1,14 @@
+/* eslint-disable max-lines */
 import assert from 'node:assert';
 
-import { createCommand, type Log, type PackageJson, type Spawn, type Workspace } from '@werk/cli';
+import {
+  createCommand,
+  type Log,
+  type PackageJson,
+  type Spawn,
+  type Workspace,
+  WorkspaceDependencyScope,
+} from '@werk/cli';
 import { parse, type ReleaseType, SemVer } from 'semver';
 
 import { getBumpedVersion } from './get-bumped-version.js';
@@ -74,14 +82,14 @@ export default createCommand({
     }
   },
 
-  each: async ({ log, args, opts, workspace, spawn }) => {
+  each: async ({ log, args, opts, workspace, spawn, saveAndRestoreFile }) => {
     const [spec] = args;
     const { note = [], preid, changelog, dryRun = false } = opts;
 
     let version = '';
     let changes: readonly Change[] = [];
 
-    if (workspace.selected) {
+    if (workspace.isSelected) {
       const isCurrentVersionPrerelease = Boolean(parse(workspace.version)?.prerelease?.length);
 
       assert(
@@ -93,7 +101,7 @@ export default createCommand({
         [version, changes] = getExplicitVersion(spec);
       } else if (spec !== 'auto') {
         [version, changes] = getBumpVersion(spec, preid, workspace);
-      } else if (!workspace.private) {
+      } else if (!workspace.isPrivate) {
         [version, changes] = await getAutoVersion(log, workspace, spawn);
       }
     }
@@ -117,7 +125,7 @@ export default createCommand({
      * This will cause the current workspace to be republished with the
      * updated dependencies.
      */
-    if (!workspace.private && dependencyUpdates && !version) {
+    if (!workspace.isPrivate && dependencyUpdates && !version) {
       version = getIncrementedVersion(workspace.version).format();
       changes = [...changes, { type: ChangeType.note, message: 'Updated local dependencies.' }];
     }
@@ -142,8 +150,8 @@ export default createCommand({
 
     workspaceChanges.set(workspace.name, async () => {
       if (dryRun) {
-        await workspace.saveAndRestoreFile('package.json');
-        await workspace.saveAndRestoreFile('CHANGELOG.md');
+        saveAndRestoreFile(workspace.dir, 'package.json');
+        saveAndRestoreFile(workspace.dir, 'CHANGELOG.md');
       }
 
       if (isPackageUpdated) {
@@ -201,22 +209,23 @@ const getAutoVersion = async (
   workspace: Workspace,
   spawn: Spawn,
 ): Promise<[version: string, changes: readonly Change[]]> => {
-  const [isRepo, isClean] = await Promise.all([
-    await workspace.getGitIsRepo(),
-    await workspace.getGitIsClean({
-      includeDependencyScopes: ['dependencies', 'peerDependencies', 'optionalDependencies'],
-      excludeDependencyNames: [...workspaceChanges.keys()],
-    }),
-  ]);
+  const isRepo = await workspace.getGitIsRepo();
 
   assert(isRepo, 'Auto versioning requires a Git repository.');
 
-  if (!isClean) {
+  const [isDirty, dirtyDependencies] = await Promise.all([
+    workspace.getGitIsDirty(),
+    workspace.localDependencies
+      .filter((dependency) => dependency.scope !== WorkspaceDependencyScope.dev)
+      .filterAsync((dependency) => dependency.workspace.getGitIsDirty()),
+  ]);
+
+  if (isDirty || dirtyDependencies.size) {
     log.warn('Auto versioning requires a clean Git working tree.');
     return [workspace.version, []];
   }
 
-  const fromRevision = await workspace.getGitFromRevision();
+  const fromRevision = await workspace.getNpmHead();
 
   if (!fromRevision) {
     log.warn('Unable to determine a "from" Git revision. Using previous commit only.');
@@ -255,10 +264,7 @@ const getDependencyUpdates = (log: Log, workspace: Workspace): PackageJson | und
 
       const newDepRange = `${prefix}${depVersion}`;
 
-      packagePatch = {
-        ...packagePatch,
-        [scope]: { ...packagePatch?.[scope], [depName]: newDepRange },
-      };
+      packagePatch = { ...packagePatch, [scope]: { ...packagePatch?.[scope], [depName]: newDepRange } };
 
       log.debug(`Updating "${depName}" to "${newDepRange}" in workspace "${workspace.name}".`);
     }

@@ -2,7 +2,15 @@ import assert from 'node:assert';
 import { stat } from 'node:fs/promises';
 import { relative, resolve } from 'node:path';
 
-import { type EntryPoint, type Log, type MutablePackageJson, type Spawn, type Workspace } from '@werk/cli';
+import {
+  type EachContext,
+  type Log,
+  type MutablePackageJson,
+  type Spawn,
+  type Workspace,
+  WorkspaceDependencyScope,
+  type WorkspaceEntryPoint,
+} from '@werk/cli';
 
 interface publishFromFilesystemOptions {
   log: Log;
@@ -14,7 +22,9 @@ interface publishFromFilesystemOptions {
     readonly dryRun?: true;
   };
   workspace: Workspace;
-  spawn: Spawn;
+  workspaces: ReadonlyMap<string, Workspace>;
+  spawn: EachContext<any, any, any>['spawn'];
+  saveAndRestoreFile: EachContext<any, any, any>['saveAndRestoreFile'];
 }
 
 const published = new Set<string>();
@@ -24,18 +34,20 @@ export const publishFromFilesystem = async ({
   opts,
   workspace,
   spawn,
+  saveAndRestoreFile,
 }: publishFromFilesystemOptions): Promise<boolean> => {
   const { toArchive = false, tag, otp, removePackageFields = [], dryRun = false } = opts;
   const isShallow = await workspace.getGitIsShallow();
 
   assert(!isShallow, `Publishing is not allowed from a shallow Git repository.`);
 
-  const [isPublished, modifiedDependencies, isChangeLogOutdated] = await Promise.all([
+  const [isPublished, blockingDependencies, isChangeLogOutdated] = await Promise.all([
     workspace.getNpmIsPublished(),
-    workspace.getModifiedLocalDependencies({
-      includeDependencyScopes: ['dependencies', 'peerDependencies', 'optionalDependencies'],
-      excludeDependencyNames: [...published],
-    }),
+    workspace.localDependencies
+      .filter((dependency) => dependency.isDirect)
+      .filter((dependency) => dependency.scope !== WorkspaceDependencyScope.dev)
+      .filter((dependency) => !published.has(dependency.workspace.name))
+      .filterAsync((dependency) => dependency.workspace.getIsModified()),
     getIsChangeLogOutdated(log, workspace, spawn),
   ]);
 
@@ -47,12 +59,12 @@ export const publishFromFilesystem = async ({
     return false;
   }
 
-  if (modifiedDependencies.length) {
+  if (blockingDependencies.size) {
     log.warn(
       `Not publishing workspace "${
         workspace.name
-      }" because it has modified and unpublished local dependencies.${modifiedDependencies.map(
-        ({ name }) => `\n  - ${name}`,
+      }" because it has modified and unpublished local dependencies.${blockingDependencies.map(
+        (blockingDependency) => `\n  - ${blockingDependency.workspace.name}`,
       )}`,
     );
 
@@ -63,17 +75,19 @@ export const publishFromFilesystem = async ({
     log.warn(`Workspace "${workspace.name}" changelog was not updated in the last commit. It may be outdated.`);
   }
 
-  const [isClean, missing, missingPacked] = await Promise.all([
-    workspace.getGitIsClean({
-      includeDependencyScopes: ['dependencies', 'peerDependencies', 'optionalDependencies'],
-      excludeDependencyNames: [...published],
-    }),
+  const [isDirty, dirtyDependencies, missing, missingPacked] = await Promise.all([
+    workspace.getGitIsDirty(),
+    workspace.localDependencies
+      .filter((dependency) => dependency.scope !== WorkspaceDependencyScope.dev)
+      .filterAsync((dependency) => dependency.workspace.getGitIsDirty()),
     workspace.getMissingEntryPoints(),
     getMissingPackFiles(workspace, spawn),
   ]);
 
-  if (!isClean) {
-    log.warn(`Not publishing workspace "${workspace.name}" because it has uncommitted changes.`);
+  if (isDirty || dirtyDependencies.size) {
+    log.warn(
+      `Not publishing workspace "${workspace.name}" because it or one of its dependencies has a dirty working tree.`,
+    );
 
     return false;
   }
@@ -105,19 +119,18 @@ export const publishFromFilesystem = async ({
    * (file:) and wildcard versions should not be published to the
    * registry.
    */
-  for (const scope of ['dependencies', 'peerDependencies', 'optionalDependencies'] as const) {
-    const dependencies = workspace.getLocalDependencies({ scopes: [scope] });
+  workspace.localDependencies.forEach((dependency) => {
+    const { name, version } = dependency.workspace;
 
-    for (const dependency of dependencies) {
-      // Try to match the existing version range prefix, or default to "^".
-      const rangePrefix = workspace[scope][dependency.name]?.match(/^([~^]|>=?)?[a-zA-Z\d.-]+$/u)?.[1] ?? '^';
+    for (const scope of ['dependencies', 'peerDependencies', 'optionalDependencies'] as const) {
+      if (!(name in workspace[scope])) continue;
 
-      dependenciesPatch[scope] = {
-        ...dependenciesPatch[scope],
-        [dependency.name]: `${rangePrefix}${dependency.version}`,
-      };
+      const range = workspace[scope][name]!;
+      const rangePrefix = range.match(/^([~^]|>=?)?[a-zA-Z\d.-]+$/u)?.[1] ?? '^';
+
+      dependenciesPatch[scope] = { ...dependenciesPatch[scope], [name]: `${rangePrefix}${version}` };
     }
-  }
+  });
 
   const removeFieldPatches: Record<string, unknown>[] = removePackageFields.map((field) => {
     const parts = field.split('.').reverse();
@@ -138,7 +151,8 @@ export const publishFromFilesystem = async ({
   const gitHead = await workspace.getGitHead();
   const gitHeadPatch = { gitHead };
 
-  await workspace.saveAndRestoreFile('package.json');
+  saveAndRestoreFile(workspace.dir, 'package.json');
+
   await workspace.patchPackageJson(dependenciesPatch, ...removeFieldPatches, gitHeadPatch);
   await spawn(
     'npm',
@@ -161,10 +175,10 @@ export const publishFromFilesystem = async ({
 
 const getIsChangeLogOutdated = async (
   log: Log,
-  workspace: Pick<Workspace, 'name' | 'dir' | 'getGitLastChangeCommit' | 'getGitIsRepo'>,
+  workspace: Pick<Workspace, 'name' | 'dir' | 'getGitHead' | 'getGitIsRepo'>,
   spawn: Spawn,
 ): Promise<boolean> => {
-  const [lastCommit, isRepo] = await Promise.all([workspace.getGitLastChangeCommit(), workspace.getGitIsRepo()]);
+  const [lastCommit, isRepo] = await Promise.all([workspace.getGitHead(), workspace.getGitIsRepo()]);
 
   log.debug(`Workspace "${workspace.name}" lastCommit=${lastCommit} isRepo=${isRepo}`);
 
@@ -206,7 +220,7 @@ const getIsChangeLogOutdated = async (
 const getMissingPackFiles = async (
   workspace: Pick<Workspace, 'name' | 'dir' | 'getEntryPoints'>,
   spawn: Spawn,
-): Promise<EntryPoint[]> => {
+): Promise<WorkspaceEntryPoint[]> => {
   const packJson = await spawn('npm', ['pack', '--dry-run', '--json'], {
     cwd: workspace.dir,
     capture: true,

@@ -1,6 +1,6 @@
 # Werk List Command
 
-List workspaces as JSON with filtering applied.
+List workspaces.
 
 [![npm](https://img.shields.io/npm/v/@werk/command-list?label=NPM)](https://www.npmjs.com/package/@werk/command-list)
 [![werk](https://img.shields.io/npm/v/@werk/cli?label=Werk&color=purple)](https://www.npmjs.com/package/@werk/cli)

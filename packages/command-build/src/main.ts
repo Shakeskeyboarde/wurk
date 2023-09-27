@@ -31,7 +31,7 @@ export default createCommand({
 
     const { watch = false, vite = false, abortOnFailure = false } = opts;
 
-    if (!workspace.selected) return;
+    if (!workspace.isSelected) return;
 
     const isBuilt = await build({ log, workspace, root, watch: false, vite, spawn });
 

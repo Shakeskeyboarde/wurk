@@ -2,8 +2,8 @@ import { createCommand } from '@werk/cli';
 
 export default createCommand({
   each: async ({ log, workspace, spawn }) => {
-    // Honor the Werk global options for filtering.
-    if (!workspace.selected) return;
+    // Honor the Werk global options for selection.
+    if (!workspace.isSelected) return;
 
     log.info(`Git status for workspace "${workspace.name}".`);
 

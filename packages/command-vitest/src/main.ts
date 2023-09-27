@@ -5,8 +5,6 @@ import { resolve } from 'node:path';
 import { createCommand, findAsync } from '@werk/cli';
 
 export default createCommand({
-  packageManager: false,
-
   config: (commander) => {
     return commander
       .argument('[args...]', 'Arguments to pass to Vitest.')
@@ -36,11 +34,10 @@ export default createCommand({
     } else {
       const tempDir = resolve(root.dir, 'node_modules', '.werk-command-vitest');
       const filename = resolve(tempDir, 'vitest.workspace.json');
-      const workspaceNames = await Promise.all(
-        Array.from(workspaces.values())
-          .filter(({ selected }) => selected)
-          .map(({ dir }) => isVitestConfigFound(dir).then((isConfigured) => (isConfigured ? dir : undefined))),
-      ).then((results) => results.filter((result): result is string => Boolean(result)));
+      const workspaceNames = await workspaces
+        .filter(({ isSelected }) => isSelected)
+        .mapAsync(({ dir }) => isVitestConfigFound(dir).then((isConfigured) => (isConfigured ? dir : undefined)))
+        .then((results) => results.filter((result): result is string => Boolean(result)));
 
       assert(workspaceNames.length, 'No Vitest configurations found.');
 

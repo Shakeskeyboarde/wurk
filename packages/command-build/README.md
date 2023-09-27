@@ -53,13 +53,19 @@ When library mode is enabled, bundling is disabled (ie. "preserve modules"), _un
 The following plugins are used in the default configuration, _if they are dev dependencies of the workspace._
 
 - `@vitejs/plugin-react`
+  - Version: ^4.0.4
 - `vite-plugin-bin`
+  - Version: ^1.0.1
 - `vite-plugin-checker`
+  - Version: >=0.6.2 <1
 - `vite-plugin-dts`
+  - Version: ^3.5.3
 - `vite-plugin-refresh`
+  - Version: ^1.0.3
 - `vite-plugin-svgr`
+  - Version: ^4.0.0
 
-#### Checker
+#### Plugin: Checker
 
 The checker plugin will enable Typescript and ESLint checking based on the workspace configuration.
 
@@ -67,28 +73,6 @@ Typescript checking is enabled if Typescript is dev dependency of the root (or c
 current workspace.
 
 ESlint checking is enabled if ESLint is a dev dependency of the root (or current) workspace, and the current workspace `package.json` has an `eslint` script. _ESLint checking as part of the build process is not recommended, because it should probably be considered testing._
-
-#### SVGR
-
-The default configuration for `vite-plugin-svgr` provides the SVG react component as the default export (not a named export). The following type declaration is required for TypeScript to allow SVG imports.
-
-```ts
-declare module '*.svg' {
-  import { type ComponentType, type SVGProps } from 'react';
-  const ReactComponent: ComponentType<SVGProps<SVGElement>>;
-  export default ReactComponent;
-}
-```
-
-With the above declaration, SVGs can be imported and used as follows. All SVG element props are supported.
-
-```ts
-import MySvg from './my-svg.svg';
-
-const MyComponent = (): JSX.Element => {
-  return <MySvg />
-};
-```
 
 ### Mode: `rollup`
 

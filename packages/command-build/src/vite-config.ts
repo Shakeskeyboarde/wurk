@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/consistent-type-imports */
 import { readFile, stat } from 'node:fs/promises';
+import { isBuiltin } from 'node:module';
 import { dirname, join, relative, resolve } from 'node:path';
 
-import { findAsync, importRelative } from '@werk/cli';
+import { findAsync, importRelative, ResolvedImport } from '@werk/cli';
 import { type ConfigEnv, type LibraryFormats, type PluginOption, type UserConfig } from 'vite';
 import { type default as CheckerType } from 'vite-plugin-checker';
+import { type default as DtsType } from 'vite-plugin-dts';
 
 interface Plugins {
   '@vitejs/plugin-react': typeof import('@vitejs/plugin-react');
@@ -72,17 +74,28 @@ export const getViteConfig = async (
 
   const tryPlugin = async <TName extends keyof Plugins>(
     name: TName,
-    args?: Parameters<Plugins[TName]['default']> | (() => Promise<Parameters<Plugins[TName]['default']> | undefined>),
+    options: {
+      args?:
+        | Parameters<Plugins[TName]['default']>
+        | ((
+            resolved: ResolvedImport<Plugins[TName]>,
+          ) =>
+            | Promise<Parameters<Plugins[TName]['default']> | undefined>
+            | Parameters<Plugins[TName]['default']>
+            | undefined);
+      version?: string;
+    } = {},
   ): Extract<PluginOption, Promise<any>> => {
     if (plugins?.[name] === false || !packageJson?.devDependencies?.[name]) return undefined;
 
-    const result = await importRelative<Plugins[TName]>(name, { dir: packageRoot });
+    const { args, version } = options;
+    const resolved = await importRelative<Plugins[TName]>(name, { dir: packageRoot, version });
 
     logger.info(`vite using optional plugin "${name}".`);
 
-    const resolvedArgs = ((typeof args === 'function' ? await args() : args) ?? []) as [any];
+    const resolvedArgs = ((typeof args === 'function' ? await args(resolved) : args) ?? []) as [any];
 
-    return { ...result.exports.default(...resolvedArgs) };
+    return { ...resolved.exports.default(...resolvedArgs) };
   };
 
   const getCheckerConfig = async (): Promise<Parameters<typeof CheckerType>> => {
@@ -111,6 +124,17 @@ export const getViteConfig = async (
     ];
   };
 
+  const getDtsConfig = (): Parameters<typeof DtsType> => {
+    return [
+      {
+        entryRoot: 'src',
+        copyDtsFiles: true,
+        include: ['src'],
+        exclude: ['**/*.test.*', '**/*.spec.*', '**/*.stories.*'],
+      },
+    ];
+  };
+
   if (lib) {
     const { entry = [], formats = [], preserveModules = true } = lib;
 
@@ -123,33 +147,21 @@ export const getViteConfig = async (
       )}`,
     );
 
-    const external: RegExp[] = [/^node:/u];
-    const deps = Object.keys({
+    const externalIds = Object.keys({
       ...packageJson.dependencies,
       ...packageJson.peerDependencies,
       ...packageJson.optionalDependencies,
       ...(preserveModules ? packageJson.devDependencies : undefined),
     });
 
-    if (deps.length) {
-      external.push(new RegExp(`^(?:${deps.join('|')})(?:/|$)`, 'u'));
-    }
-
     return {
       root: packageRoot,
       plugins: [
-        tryPlugin('vite-plugin-checker', getCheckerConfig),
-        tryPlugin('vite-plugin-svgr', [{ exportAsDefault: true, svgrOptions: { exportType: 'default' } } as any]),
-        tryPlugin('@vitejs/plugin-react'),
-        tryPlugin('vite-plugin-dts', [
-          {
-            entryRoot: 'src',
-            copyDtsFiles: true,
-            include: ['src'],
-            exclude: ['**/*.test.*', '**/*.spec.*', '**/*.stories.*'],
-          },
-        ]),
-        tryPlugin('vite-plugin-bin'),
+        tryPlugin('vite-plugin-checker', { version: '>=0.6.2 <1', args: getCheckerConfig }),
+        tryPlugin('vite-plugin-svgr', { version: '^4.0.0' }),
+        tryPlugin('@vitejs/plugin-react', { version: '^4.0.4' }),
+        tryPlugin('vite-plugin-dts', { version: '^3.5.3', args: getDtsConfig }),
+        tryPlugin('vite-plugin-bin', { version: '^1.0.1' }),
       ],
       build: {
         target: 'esnext',
@@ -162,8 +174,10 @@ export const getViteConfig = async (
           fileName: '[name]',
         },
         rollupOptions: {
-          external,
           output: { preserveModules },
+          external: (id) => {
+            return isBuiltin(id) || externalIds.some((xid) => id === xid || id.startsWith(`${xid}/`));
+          },
           // See: https://github.com/vitejs/vite-plugin-react/issues/137
           onwarn: (warning, warn) => {
             if (warning.code !== 'MODULE_LEVEL_DIRECTIVE') warn(warning);
@@ -177,10 +191,10 @@ export const getViteConfig = async (
 
   return {
     plugins: [
-      tryPlugin('vite-plugin-checker', getCheckerConfig),
-      tryPlugin('vite-plugin-svgr', [{ exportAsDefault: true, svgrOptions: { exportType: 'default' } } as any]),
-      tryPlugin('@vitejs/plugin-react'),
-      tryPlugin('vite-plugin-refresh'),
+      tryPlugin('vite-plugin-checker', { version: '>=0.6.2 <1', args: getCheckerConfig }),
+      tryPlugin('vite-plugin-svgr', { version: '^4.0.0' }),
+      tryPlugin('@vitejs/plugin-react', { version: '^4.0.4' }),
+      tryPlugin('vite-plugin-refresh', { version: '^1.0.3' }),
     ],
     build: {
       target: 'esnext',

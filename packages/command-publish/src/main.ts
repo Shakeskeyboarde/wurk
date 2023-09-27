@@ -39,12 +39,12 @@ export default createCommand({
   each: async (context) => {
     const { log, opts, workspace } = context;
 
-    if (workspace.private) {
+    if (workspace.isPrivate) {
       log.verbose(`Not publishing workspace "${workspace.name}" because it is private.`);
       return;
     }
 
-    if (!workspace.selected) {
+    if (!workspace.isSelected) {
       log.verbose(`Not publishing workspace "${workspace.name}" because it is not selected.`);
       return;
     }

@@ -10,7 +10,7 @@ export default createCommand({
   },
 
   each: async ({ log, isParallel, args, workspace, spawn }) => {
-    if (!workspace.selected) return;
+    if (!workspace.isSelected) return;
 
     const inheritStreams = !log.prefix && !isParallel;
 
