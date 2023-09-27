@@ -138,6 +138,18 @@ export class Workspace {
   readonly devDependencies: Readonly<Record<string, string>>;
 
   /**
+   * Local dependency workspace references. Dependencies are workspaces
+   * that this workspace depends on.
+   */
+  readonly localDependencies: ReadonlyEnhancedMap<string, WorkspaceReference>;
+
+  /**
+   * Local dependent workspace references. Dependents are workspaces that
+   * depend this workspace.
+   */
+  readonly localDependents: ReadonlyEnhancedMap<string, WorkspaceReference>;
+
+  /**
    * Absolute path of the workspace directory.
    */
   readonly dir: string;
@@ -160,18 +172,6 @@ export class Workspace {
    * their own selection logic.
    */
   isSelected: boolean;
-
-  /**
-   * Local dependency workspace references. Dependencies are workspaces
-   * that this workspace depends on.
-   */
-  readonly localDependencies: ReadonlyEnhancedMap<string, WorkspaceReference>;
-
-  /**
-   * Local dependent workspace references. Dependents are workspaces that
-   * depend this workspace.
-   */
-  readonly localDependents: ReadonlyEnhancedMap<string, WorkspaceReference>;
 
   constructor(options: WorkspaceOptions) {
     this.#gitHead = options.gitHead;
@@ -198,10 +198,10 @@ export class Workspace {
     this.peerDependencies = options.peerDependencies ?? {};
     this.optionalDependencies = options.optionalDependencies ?? {};
     this.devDependencies = options.devDependencies ?? {};
-    this.dir = options.dir;
-    this.isSelected = options.isSelected;
     this.localDependencies = options.localDependencies;
     this.localDependents = options.localDependents;
+    this.dir = options.dir;
+    this.isSelected = options.isSelected;
   }
 
   /**

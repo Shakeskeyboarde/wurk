@@ -110,10 +110,10 @@ Options which reduce the number of workspaces that are processed.
 
 - `-w, --workspace <patterns>`
   - Select workspaces by name (glob, csv, repeatable).
-- `--include-root-workspace`
-  - Include the root workspace in the selection. _This is strongly discouraged due to the potential for unexpected behavior!_
 - `--no-dependencies`
   - Do not automatically include dependencies of selected workspaces.
+- `--include-root-workspace`
+  - Include the root workspace in the selection. _This is strongly discouraged due to the potential for unexpected behavior!_
 
 **Note:** It is entirely up to each command to honor the "selected" workspaces. They are strongly encouraged to do so, but may choose not to if it doesn't make sense to the command.
 

@@ -91,7 +91,6 @@ The `context.root`, `context.workspaces`, and `context.workspace` properties con
 
 **Normalized package properties:**
 
-- `private`
 - `name`
 - `description`
 - `version`
@@ -110,13 +109,15 @@ The `context.root`, `context.workspaces`, and `context.workspace` properties con
 - `peerDependencies`
 - `optionalDependencies`
 - `devDependencies`
+- `isPrivate`
 
 **Generated properties:**
 
-- `dir`: Absolute root directory of the workspace.
-- `selected`: True if the workspace matched the Werk [global options](README.md#command-line-options).
 - `localDependencies`: Map of local dependency [workspace references](#workspace-references) (by name). This includes direct and indirect dependencies.
 - `localDependents`: Map of local dependent [workspace references](#workspace-references) (by name). This includes direct and indirect dependents.
+- `dir`: Absolute root directory of the workspace.
+- `isRoot`: True if the workspace is the root workspace.
+- `isSelected`: True if the workspace matched the Werk [global options](README.md#command-line-options). _This property is mutable._
 
 **Package methods:**
 
@@ -145,7 +146,7 @@ The `workspace.localDependencies` and `workspace.localDependents` properties con
 
 - `workspace`: The referenced [workspace](#workspaces).
 - `isDirect`: True if the reference is direct (ie. listed in the `package.json` file), rather than indirect (ie. a dependency of a dependency).
-- `type`: The type of reference (ie. `prod`, `peer`, `optional`, or `dev`).
+- `scope`: The scope of reference (ie. production, peer, optional, or development).
 
 ## Command Line Parsing
 
