@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "test-vite-bundle",
+  "name": "test-vite-lib-bundle",
   "description": "Testing the build command vite library mode with bundling",
   "type": "module",
   "types": "./lib/bundle.d.ts",

@@ -11,7 +11,8 @@
     "@types/react-dom": "^18.2.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "test-vite-lib": "*"
+    "test-vite-lib": "*",
+    "test-vite-lib-bundle": "*"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.1.0",

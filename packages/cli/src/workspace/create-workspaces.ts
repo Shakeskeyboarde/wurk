@@ -128,7 +128,7 @@ export const createWorkspaces = ({
         if (!dependency) return;
 
         edges.localDependencies.set(node.workspace.name, [
-          ...(edges.localDependencies.get(id) ?? []),
+          ...(edges.localDependencies.get(node.workspace.name) ?? []),
           { node: dependency, scope },
         ]);
         edges.localDependents.set(dependency.workspace.name, [
@@ -157,9 +157,13 @@ export const createWorkspaces = ({
       try {
         const isDirect = visited.length === 1;
 
+        // Dev dependencies cannot be transitive.
         if (!isDirect && rootScope === WorkspaceDependencyScope.dev) return;
 
         const existing = root[type].get(child.workspace.name);
+
+        // Already added with an equal or greater scope.
+        if (existing && existing.scope >= rootScope) return;
 
         root[type].set(child.workspace.name, {
           workspace: child.workspace,
@@ -167,10 +171,7 @@ export const createWorkspaces = ({
           isDirect,
         });
 
-        // Already added with an equal or greater scope.
-        if (existing && existing.scope >= rootScope) return;
-
-        edges[type].get(child.workspace.name)?.forEach((edge) => next(edge.node, rootScope));
+        edges[type].get(child.workspace.name)?.forEach(({ node }) => next(node, rootScope));
       } finally {
         visited.pop();
       }
