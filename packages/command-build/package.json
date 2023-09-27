@@ -1,7 +1,7 @@
 {
   "name": "@werk/command-build",
   "description": "Build packages.",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-build/README.md",
@@ -49,7 +49,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@werk/cli": "^8.0.0"
+    "@werk/cli": "^8.0.1"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.1.0",

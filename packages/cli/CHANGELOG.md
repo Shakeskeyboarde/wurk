@@ -1,3 +1,9 @@
+## 8.0.1 (2023-09-26)
+
+### Bug Fixes
+
+- Bug in local dependency enumeration. (57c5ba1)
+
 # 8.0.0 (2023-09-26)
 
 ### Breaking Changes
