@@ -1,3 +1,9 @@
+## 8.0.2 (2023-09-26)
+
+### Bug Fixes
+
+- Prefer direct over transitive in local references. (41e578a)
+
 ## 8.0.1 (2023-09-26)
 
 ### Bug Fixes

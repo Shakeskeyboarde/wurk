@@ -1,7 +1,7 @@
 {
   "name": "@werk/command-run",
   "description": "Run package scripts.",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-run/README.md",
@@ -35,7 +35,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@werk/cli": "^8.0.1"
+    "@werk/cli": "^8.0.2"
   },
   "devDependencies": {
     "vite": "^4.4.9",
