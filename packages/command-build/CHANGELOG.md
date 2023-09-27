@@ -1,3 +1,9 @@
+## 2.1.0 (2023-09-26)
+
+### Features
+
+- Update for CLI changes. (01eeb5f)
+
 ## 2.0.10 (2023-09-22)
 
 ### Improvements

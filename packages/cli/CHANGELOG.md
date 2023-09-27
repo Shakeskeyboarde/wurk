@@ -1,3 +1,9 @@
+# 8.0.0 (2023-09-26)
+
+### Breaking Changes
+
+- Major refactoring and selection options simplification. (39d52e3)
+
 ## 7.0.5 (2023-09-22)
 
 ### Chores

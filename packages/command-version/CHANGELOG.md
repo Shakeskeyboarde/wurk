@@ -1,3 +1,13 @@
+## 3.2.0 (2023-09-26)
+
+### Features
+
+- Update for CLI changes. (01eeb5f)
+
+### Bug Fixes
+
+- Incorrect parsing of commit message subject and body. (54f243d)
+
 ## 3.1.14 (2023-09-22)
 
 ### Notes
