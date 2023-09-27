@@ -162,8 +162,12 @@ export const createWorkspaces = ({
 
         const existing = root[type].get(child.workspace.name);
 
-        // Already added with an equal or greater scope.
-        if (existing && existing.scope >= rootScope) return;
+        if (existing) {
+          // Already added with a greater scope.
+          if (existing.scope > rootScope) return;
+          // Prefer direct over transitive.
+          if (existing.scope === rootScope && !isDirect) return;
+        }
 
         root[type].set(child.workspace.name, {
           workspace: child.workspace,

@@ -1,3 +1,5 @@
+import { foo } from 'test-vite-lib-bundle';
+
 import TestSvg from './test.svg?react';
 
 export const Component = (): JSX.Element => {
@@ -5,6 +7,7 @@ export const Component = (): JSX.Element => {
     <div>
       SVG:
       <TestSvg style={{ height: '2em', verticalAlign: 'middle' }} />
+      {foo}
     </div>
   );
 };
