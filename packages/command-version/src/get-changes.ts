@@ -91,25 +91,25 @@ export const getChanges = async (
     { capture: true },
   ).getStdout('utf-8');
 
-  const entries = [...text.matchAll(/\0{3}([^\0]*)\0{2}([^\0]*)\0{3}$/gmu)].flatMap(([, hash, message]) => {
-    if (!hash || !message) return [];
+  const entries = [...text.matchAll(/\0{3}(.*?)\0{2}([^\n]*?)(?:\r?\n(.*?))?\0{3}/gsu)].flatMap(
+    ([, hash = '', subject = '', body = '']) => {
+      hash = hash.trim();
+      subject = subject.trim();
+      body = body.trim();
 
-    let [subject, body = ''] = message.split(/\0{2}/u, 2);
+      if (!hash || !subject) return [];
 
-    hash = hash?.trim();
-    subject = subject?.trim();
-    body = body.trim();
-
-    if (!subject) return [];
-
-    return { hash, subject, body };
-  });
+      return { hash, subject, body };
+    },
+  );
 
   let changes: Change[] = entries
     .flatMap(({ hash, subject, body }): Change[] => {
       const subjectMatch = subject.match(/^\s*([a-z-]+)\s*(?:\((.*?)\)\s*)?(?:!\s*)?:(.*)$/iu);
 
       if (!subjectMatch) {
+        console.log('subject', subject);
+        console.log('body', body);
         isConventional = false;
         return [];
       }
