@@ -1,3 +1,9 @@
+## 1.4.4 (2023-09-29)
+
+### Bug Fixes
+
+- Incorrect package github urls. (35b2a89)
+
 ## 1.4.3 (2023-09-28)
 
 ### Notes

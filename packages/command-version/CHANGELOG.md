@@ -1,3 +1,9 @@
+## 3.3.1 (2023-09-29)
+
+### Bug Fixes
+
+- Incorrect package github urls. (35b2a89)
+
 ## 3.3.0 (2023-09-29)
 
 ### Features

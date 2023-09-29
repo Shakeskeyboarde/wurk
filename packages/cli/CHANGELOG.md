@@ -1,3 +1,13 @@
+## 8.0.5 (2023-09-29)
+
+### Documentation
+
+- Add depcheck command to official command lists. (b16a401)
+
+### Chores
+
+- Remove unused deps. (59f3da8)
+
 ## 8.0.4 (2023-09-29)
 
 ### Documentation
