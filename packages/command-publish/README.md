@@ -15,15 +15,13 @@ npm i -D @werk/command-publish
 
 ## Publish Workspaces
 
-The state of the monorepo is [validated](#validation) before publishing. Publishing workspaces with local dependencies is always dependent on the local dependency workspaces also being published successfully, even if the Werk `--no-wait` option is set.
-
-The workspaces root `build` script is run before publishing, if it is present.
+Before publishing, the state of the monorepo is [validated](#validation), and the root workspace `build` script is run (if present).
 
 ```sh
 werk publish
 ```
 
-The packages to be published can be limited using [Werk global options](https://www.npmjs.com/package/@werk/cli#command-line-options). Selected workspaces will still be checked for publishability, and may be skipped if they are not publishable.
+The packages to be published can be limited using [Werk global selection options](https://www.npmjs.com/package/@werk/cli#global-selection-options). Selected workspaces will still be checked for publishability, and may be skipped if they are not publishable.
 
 ```sh
 werk -w my-workspace publish

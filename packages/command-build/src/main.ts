@@ -22,10 +22,6 @@ export default createCommand({
       .option('--abort-on-failure', 'Abort on the first build failure.');
   },
 
-  before: async ({ forceWait }) => {
-    forceWait();
-  },
-
   each: async ({ opts, log, root, workspace, spawn }) => {
     if (isAborted) return;
 

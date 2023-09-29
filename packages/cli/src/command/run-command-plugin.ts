@@ -20,7 +20,7 @@ export const runCommandPlugin = async (
   globalOpts: GlobalOptions,
   plugin: CommandPlugin,
 ): Promise<void> => {
-  let isWaitForced = false;
+  let isWaitingEnabled = true;
 
   const destroy: (() => void)[] = [];
   const { command, commander } = plugin;
@@ -85,7 +85,7 @@ export const runCommandPlugin = async (
     opts,
     root,
     workspaces,
-    forceWait: () => (isWaitForced = true),
+    onWaitForDependencies: (enabled) => (isWaitingEnabled = enabled),
   });
 
   destroy.unshift(() => beforeContext.destroy());
@@ -94,7 +94,7 @@ export const runCommandPlugin = async (
 
   if (process.exitCode != null) return;
 
-  const { concurrency, wait } = run;
+  const { concurrency } = run;
   const prefix = logOptions.prefix && isMonorepo;
   const semaphore = concurrency > 0 ? new Semaphore(concurrency) : null;
   const promises = new Map<string, Promise<any>>();
@@ -105,7 +105,7 @@ export const runCommandPlugin = async (
     const prefixColor = PREFIX_COLORS[prefixColorIndex++ % PREFIX_COLORS.length] as PrefixColor;
     const formatPrefix = (value: string): string => chalk.bold(chalk[`${prefixColor}Bright`](value));
 
-    if (wait || isWaitForced) {
+    if (isWaitingEnabled) {
       await workspace.localDependencies.mapAsync(
         (dependency) => dependency.isDirect && promises.get(dependency.workspace.name),
       );

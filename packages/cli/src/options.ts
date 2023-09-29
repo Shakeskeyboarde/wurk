@@ -18,7 +18,6 @@ export interface SelectOptions {
 
 export interface RunOptions {
   readonly concurrency: number;
-  readonly wait: boolean;
 }
 
 export interface GitOptions {

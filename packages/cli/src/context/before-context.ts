@@ -3,19 +3,24 @@ import { BaseAsyncContext, type BaseAsyncContextOptions } from './base-async-con
 
 export interface BeforeContextOptions<A extends CommanderArgs, O extends CommanderOptions>
   extends BaseAsyncContextOptions<A, O> {
-  readonly forceWait: () => void;
+  readonly onWaitForDependencies: (enabled: boolean) => void;
 }
 
 export class BeforeContext<A extends CommanderArgs, O extends CommanderOptions> extends BaseAsyncContext<A, O> {
   /**
-   * Force dependent workspaces to wait for their dependencies (ie. ignore
-   * the CLI `--no-wait` option).
+   * Enable or disable waiting for dependent workspace processing to
+   * complete before processing dependent workspaces. The default is
+   * `true`, which will ensure a dependent's dependencies are are
+   * processed before the dependent itself is processed.
+   *
+   * Commands should generally only set this option when they are not
+   * making any changes (ie. readonly, immutable).
    */
-  readonly forceWait: () => void;
+  readonly setWaitForDependencies: (enabled?: boolean) => void;
 
-  constructor({ forceWait, ...superOptions }: BeforeContextOptions<A, O>) {
+  constructor({ onWaitForDependencies, ...superOptions }: BeforeContextOptions<A, O>) {
     super(superOptions);
 
-    this.forceWait = forceWait;
+    this.setWaitForDependencies = (enabled = true) => onWaitForDependencies(enabled);
   }
 }

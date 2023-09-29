@@ -1,5 +1,9 @@
 # Werk Custom Commands
 
+- [Philosophy](#philosophy)
+  - [Low-configuration](#low-configuration)
+  - [Auto-detection](#auto-detection)
+  - [Auto-backoff](#auto-backoff)
 - [Implementing Commands](#implementing-commands)
   - [Command Hooks](#command-hooks)
   - [Hook Contexts](#hook-contexts)
@@ -10,6 +14,41 @@
 - [Spawning Processes](#spawning-processes)
 - [Patching Workspace `package.json` Files](#patching-workspace-packagejson-files)
 - [Publishing Commands](#publishing-commands)
+
+## Philosophy
+
+Werk is a framework for creating custom build and project management commands. As a command creator, you will benefit from a well defined lifecycle, easy access to workspace information, and helpful utilities. The improved developer experience in turn helps give users a higher baseline level of consistency and quality.
+
+### Low-configuration
+
+Choosing a Werk command to run should be 95% of the configuration required to accomplish a goal (eg. building a project). In order to achieve this, commands should follow these guidelines.
+
+- Do one thing well.
+- Be opinionated in how you do the thing.
+- Avoid required options, arguments, or file based configuration.
+
+This is important for a monorepo, because any configuration is almost certain to be multiplied by the number of workspaces. If I have the option of trying to write configuration for 10 workspaces, or choosing a different command that just works, I would rather choose a different command.
+
+### Auto-detection
+
+Sometimes, the scope of the "one thing" a command does is fairly broad, because it can't reasonably be narrowed. When this is the case, then the command should try to detect the correct method to use based on what dependencies are installed in a workspace, the package configuration, or the presence of certain files.
+
+The [build](https://www.npmjs.com/package/@werk/command-build) command is a good example of this. It does one thing, but there are lots of ways to build. Building can't easily be broken into multiple commands, because (in a monorepo) workspaces are frequently interdependent, which means they need to be built in a specific order. So, the `build` command knows how to build in several different ways. It detects what build tools and configurations to use based on the dev dependencies of the workspace, the entrypoints defined in the package configuration, and the presence of configuration files.
+
+### Auto-backoff
+
+Commands should make life easier. One thing that doesn't make life easier, is having to work around a command that is doing more than you want it to.
+
+For instance, if a command uses a 3rd party tool that requires a configuration, then it may include or generate the configuration as needed. However, if the configuration already exists in the workspace, then it should use that configuration instead.
+
+There are cases where specific configuration options are required for a command to do its job correctly. In these cases, a command should take one or more of the following approaches.
+
+- Skip the workspace if there's no way to work with the custom configuration.
+- Allow users to extend the automatic configuration in their own custom configuration.
+- Read the custom configuration and adapt to it.
+- Extend the custom configuration and override specific options only if absolutely necessary, and warn the user that it's happening.
+
+Again, the [build](https://www.npmjs.com/package/@werk/command-build) command is a good example. If `vite` is a dev dependency of the workspace, but there is no Vite configuration file, then it will use its own built-in configuration. However, if a custom Vite configuration is present, it is used. The built-in configuration can be extended by importing `@werk/command-build/config`.
 
 ## Implementing Commands
 
@@ -54,7 +93,7 @@ A context object is passed to all hooks, _except for `config`_ which only receiv
 - `root` (**before**, **each**, **after**): The workspaces root [workspace](#workspaces).
 - `workspaces` (**before**, **each**, **after**): A map (by name) of all [workspaces](#workspaces).
 - `workspace` (**each**): The current [workspace](#workspaces).
-- `forceWait()` (**before**): Force dependent workspaces to wait for their dependencies (ie. ignore the CLI `--no-wait` option).
+- `setWaitForDependencies()` (**before**): Force dependent workspaces to wait for their dependencies.
 - `spawn(cmd, args?, options?)`: Spawn a process. The working directory will be the workspaces (monorepo) root.
 - `saveAndRestoreFile(...pathParts)` (**before**, **each**, **after**): Save the contents of a file and restore it after the command completes. If multiple path parts are given, they will be resolved into a single path.
 - `isParallel` (**each**): True if the command is running in parallel mode.
@@ -117,10 +156,11 @@ The `context.root`, `context.workspaces`, and `context.workspace` properties con
 - `localDependents`: Map of local dependent [workspace references](#workspace-references) (by name). This includes direct and indirect dependents.
 - `dir`: Absolute root directory of the workspace.
 - `isRoot`: True if the workspace is the root workspace.
-- `isSelected`: True if the workspace matched the Werk [global options](README.md#command-line-options). _This property is mutable._
+- `isSelected`: True if the workspace matched the [Werk global selection options](README.md#global-selection-options). _This property is mutable._
 
 **Package methods:**
 
+- `import(id)`: Dynamically import an optional dependency, _relative to the workspace directory._
 - `readPackageJson()`: Reads the workspace `package.json` file.
 - `writePackageJson(json)`: Writes the workspace `package.json` file.
 - `patchPackageJson(patchFn)`: Applies a deeply merged patch to the workspace `package.json` file.

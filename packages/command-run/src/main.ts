@@ -17,6 +17,19 @@ export default createCommand({
       .allowUnknownOption();
   },
 
+  before: async ({ args, setWaitForDependencies }) => {
+    const [scripts] = args;
+
+    if (scripts === 'start') {
+      /*
+       * The start script is special, in that it should generally be run
+       * in all workspaces simultaneously, regardless of workspace
+       * interdependency.
+       */
+      setWaitForDependencies(false);
+    }
+  },
+
   each: async ({ log, isParallel, args, workspace, spawn }) => {
     if (!workspace.isSelected) return;
 

@@ -74,9 +74,7 @@ export default createCommand({
       .passThroughOptions();
   },
 
-  before: async ({ log, args, opts, forceWait }) => {
-    forceWait();
-
+  before: async ({ log, args, opts }) => {
     if (opts.preid && (args[0] instanceof SemVer || !args[0].startsWith('pre'))) {
       log.warn('Using --preid only has an effect with "pre*" bump types');
     }

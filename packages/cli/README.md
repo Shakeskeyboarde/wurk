@@ -1,68 +1,102 @@
 # Werk
 
-Open-minded build tooling, with opinionated plugins.
+Werk is "low-configuration" build and project tooling. It's not zero configuration, because that implies more assumptions than can reasonably be made about any project. But, simply choosing the correct Werk command should be all the configuration you need in most cases.
+
+Let's get to werk!
 
 [![npm](https://img.shields.io/npm/v/@werk/cli?label=NPM)](https://www.npmjs.com/package/@werk/cli)
 
-- [Features](#features)
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
-- [Command Plugins](#command-plugins)
+  - [Start a new monorepo.](#start-a-new-monorepo)
+  - [Step 1: Create the monorepo root.](#step-1-create-the-monorepo-root)
+  - [Step 2: Change to the monorepo root directory.](#step-2-change-to-the-monorepo-root-directory)
+  - [Step 3: Add the first monorepo workspace.](#step-3-add-the-first-monorepo-workspace)
+  - [Step 4: Install the Werk `build` command.](#step-4-install-the-werk-build-command)
+  - [Step 5: Run the Werk `build` command.](#step-5-run-the-werk-build-command)
+- [Commands](#commands)
   - [Official Commands](#official-commands)
-  - [Custom Commands](#custom-commands)
-- [Command Line Options](#command-line-options)
-  - [Selection Options](#selection-options)
-  - [Parallelization Options](#parallelization-options)
-  - [Logging Options](#logging-options)
-  - [Git Options](#git-options)
-
-## Features
-
-Werk is a framework for creating build and build-related commands as [command plugins](#custom-commands). Command implementors benefit from a well defined lifecycle, contextual information, and utilities. Command users can expect a baseline level of consistency and quality.
-
-- Workspaces
-  - Information
-  - Parallelization
-  - Selection
-- Helpers
-  - Add command line options
-  - Log with levels and formatting
-  - Spawn processes
-  - Manipulate `package.json` files
-  - Look up registry metadata (NPM)
-  - Detect changes (Git)
+  - [Command Discovery](#command-discovery)
+- [Options](#options)
+  - [Global Selection Options](#global-selection-options)
+  - [Global Parallelization Options](#global-parallelization-options)
+  - [Global Logging Options](#global-logging-options)
+  - [Global Git Options](#global-git-options)
 
 ## Prerequisites
 
-Werk supports projects based on NPM (version 8+). There are no current plans to support other package managers.
-
-Git is used if available, but is not required. If Git is not available, Werk will not be able to detect changes.
+- [Node.js](https://nodejs.org/) (version 18+) is required.
+- [NPM](https://www.npmjs.com/) (version 8+) is required.
+- [Git](https://git-scm.com/) is optional, but strongly recommended.
+- [Typescript](https://www.typescriptlang.org/) is optional, but strongly recommended.
 
 ## Getting Started
 
-Install Werk globally so you can use the `werk` command anywhere and without `npx`. Don't worry, the global install will delegate to the locally installed version of Werk in your projects.
+Install the Werk CLI globally. Global installs might be scary, but don't worry, Werk always delegates to the locally installed version of itself in your projects. The global install is just an easy way of making the `werk` command accessible anywhere without using `npx`.
 
 ```sh
-npm i -g @werk/cli
+npm install --global @werk/cli
 ```
 
-All [commands](#official-commands) are modular and must be installed separately. Install them locally (not globally) in the root package of your repository.
+(Optional) Test it out by calling the `werk` command with no arguments. You should see a message about using the "globally installed" version of Werk, and then usage (help) text.
+
+### Start a new monorepo.
+
+For simplicity, let's start a new monorepo project. Monorepos can even be useful with small projects that have only a single workspace. It's not any more complex than a single package, and it will be easier to add more packages later if necessary.
+
+### Step 1: Create the monorepo root.
+
+For simplicity, we will use the [create-minimal-monorepo](https://www.npmjs.com/package/create-minimal-monorepo) which runs a handful of commands that almost every project needs to run. See its documentation for more information. You can also create it by hand if you prefer. Just make sure it has a `package.json` file with a `workspaces` definition.
 
 ```sh
-npm i -D @werk/command-list
+npm init minimal-monorepo -- my-project
 ```
 
-**Note:** Because Werk command packages should depend on the `@werk/cli` package, you have effectively pinned your project to a specific version of Werk (it's a feature)!
+### Step 2: Change to the monorepo root directory.
 
-Now, the `list` command is available.
+This is simple, but important. From here on, assume any commands are run from the monorepo root directory.
 
 ```sh
-werk list
+cd my-project
 ```
 
-## Command Plugins
+### Step 3: Add the first monorepo workspace.
 
-All commands are modular and must be installed individually. By itself, Werk can only print its own help text.
+Let's make a simple library package. Again, we're using an init script ([create-minimal-workspace](https://www.npmjs.com/package/create-minimal-monorepo)) to keep it simple. You can check its documentation for more information.
+
+```sh
+npm init minimal-workspace -- packages/my-lib
+```
+
+You can edit the `src` later to add the real library implementation.For now, we should be able to continue with without modifying any source files.
+
+### Step 4: Install the Werk `build` command.
+
+What!? The `build` command has to be installed? Yes, because Werk is extensible and modular, following in the footsteps of great tools like [Vite](https://vitejs.dev/), [Rollup](https://rollupjs.org/), and [ESLint](https://eslint.org/). All commands are separate packages, and which ones you choose to install and use is completely up to you. This is how we achieve "low-config" while still allowing complete flexibility. You can even build your own custom commands!
+
+```sh
+npm install --save-dev @werk/command-build
+```
+
+The `build` command is one of several [Official Werk Commands](#official-commands) which are maintained as part of the Werk project itself. But, these are special only in that they had to exist to make Werk useful at the beginning. You can also search the NPM registry for keyword `werk-command` to find other commands that have been published by the community.
+
+(Optional) Test it out by running the `werk build --help` command to see the command's help text.
+
+### Step 5: Run the Werk `build` command.
+
+Drumroll, please...
+
+```sh
+werk build
+```
+
+Congratulations! Your library is built 🎉. If you want to publish it, you can continue by following the instructions of the Werk [publish](https://www.npmjs.com/package/@werk/command-publish) command.
+
+## Commands
+
+Werk is made up of commands which you must install separately. In monorepos, they must be installed in the root workspace.
+
+[Learn how to create your own custom command plugins!](https://github.com/Shakeskeyboarde/werk/blob/main/packages/cli/README_CUSTOM_COMMANDS.md)
 
 ### Official Commands
 
@@ -76,13 +110,11 @@ The following "official" commands are provided to get you started.
 - [version](https://www.npmjs.com/package/@werk/command-version): Update versions.
 - [publish](https://www.npmjs.com/package/@werk/command-publish): Publish packages.
 
-Run `npm i -D @werk/command-<name>` in your workspaces root to install these commands.
+Run `npm install --save-dev @werk/command-<name>` in your workspaces root to install any of these commands.
 
-### Custom Commands
+### Command Discovery
 
-[Learn how to create your own custom command plugins!](https://github.com/Shakeskeyboarde/werk/blob/main/packages/cli/README_CUSTOM_COMMANDS.md)
-
-Werk scans the `package.json` file in your repo root for command plugin package dependencies. By default, any packages that start with `*/werk-command-`, `werk-command-` or `@werk/command-` will be loaded as command plugins.
+When Werk starts, it scans the `package.json` file in your repo root for command plugin dependencies. By default, any package that starts with `*/werk-command-`, `werk-command-` or `@werk/command-` will be loaded as a command plugin.
 
 You can also force command names to resolve to specific packages by mapping the command name to an arbitrary package name in your `package.json` file.
 
@@ -96,15 +128,15 @@ You can also force command names to resolve to specific packages by mapping the 
 }
 ```
 
-## Command Line Options
+## Options
 
 Werk has global options for selecting workspaces, parallelization, and output. These global options _MUST_ come before the command name, or they will be passed through to the command and not handled by Werk.
 
 ```sh
-werk [werk-options...] <command> [command-options...]
+werk [global-options] <command> [command-options]
 ```
 
-### Selection Options
+### Global Selection Options
 
 Options which reduce the number of workspaces that are processed.
 
@@ -113,31 +145,30 @@ Options which reduce the number of workspaces that are processed.
 - `--no-dependencies`
   - Do not automatically include dependencies of selected workspaces.
 - `--include-root-workspace`
-  - Include the root workspace in the selection. _This is strongly discouraged due to the potential for unexpected behavior!_
+  - Include the root workspace in the selection. _This is strongly discouraged due to the potential for unexpected behaviors like accidental recursion!_
 
 **Note:** It is entirely up to each command to honor the "selected" workspaces. They are strongly encouraged to do so, but may choose not to if it doesn't make sense to the command.
 
-### Parallelization Options
+### Global Parallelization Options
 
 - `-p, --parallel`
   - Process workspaces in parallel.
+  - This option implies the `--concurrency=auto` option.
 - `-c, --concurrency <count>`
-  - Set the number workspaces to process in parallel (number or "all"). If not set, the number of CPU cores + 1 will be used.
-- `--no-wait`
-  - Do not wait for workspace dependencies to finish processing before processing dependents.
+  - Set the number workspaces to process in parallel. The count can be a number, "auto", or "all". The default is is "auto", which is equivalent to one greater than the number of CPU cores (cores + 1).
+  - This option implies the `--parallel` option.
 
 By default, workspaces are processed serially. This is generally the slowest option, but also the safest.
 
-### Logging Options
+### Global Logging Options
 
 - `-l, --loglevel <level>`
   - Set the log level (`silent`, `error`, `warn`, `info`, `notice`, `verbose`, or `silly`). The default is `info`.
+  - Log level can also be set using the `WERK_LOG_LEVEL` environment variable. This option takes precedence over the environment variable.
 - `--no-prefix`
   - Do not add prefixes to command output.
 
-The log level can also be set using the `WERK_LOG_LEVEL` environment variable. The command line option takes precedence over the environment variable.
-
-### Git Options
+### Global Git Options
 
 - `--git-head <sha>`
   - Provide a default Git "HEAD" commit in non-Git environments. This has no effect if Git is available.

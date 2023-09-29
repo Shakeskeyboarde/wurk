@@ -7,6 +7,7 @@ import { getGitIsRepo } from '../git/get-git-is-repo.js';
 import { getGitIsShallow } from '../git/get-git-is-shallow.js';
 import { getNpmMetadata, type NpmMetadata } from '../npm/get-npm-metadata.js';
 import { type ReadonlyEnhancedMap } from '../utils/enhanced-map.js';
+import { importRelative } from '../utils/import-relative.js';
 import { memoize } from '../utils/memoize.js';
 import { type PackageExportsMap, type PackageJson, type PackageJsonKnown } from '../utils/package-json.js';
 import { patchJsonFile } from '../utils/patch-json-file.js';
@@ -166,7 +167,7 @@ export class Workspace {
 
   /**
    * True if the workspace matches the
-   * [Werk global options](https://www.npmjs.com/package/@werk/cli#command-line-options).
+   * [Werk global selection options](https://www.npmjs.com/package/@werk/cli#global-selection-options).
    *
    * **Note:** This property is mutable so that command plugins can apply
    * their own selection logic.
@@ -203,6 +204,30 @@ export class Workspace {
     this.dir = options.dir;
     this.isSelected = options.isSelected;
   }
+
+  /**
+   * Dynamic import relative to the workspace directory, instead of to
+   * the current file. This method should be used to import optional
+   * command dependencies, because it allows per-workspace package
+   * installation. An `undefined` value is returned if the import cannot
+   * be resolved.
+   *
+   * The `version` argument can be a semver range, just like a dependency
+   * in your `package.json` file.
+   *
+   * **Note:** There's no way to infer the type of the imported module.
+   * However, Typescript type imports are not emitted in compiled code,
+   * so you can safely import the module type, and then use this method
+   * to import the implementation.
+   */
+  readonly import = async <TExports extends Record<string, any> = Record<string, unknown>>(
+    id: string,
+    version?: string,
+  ): Promise<TExports | undefined> => {
+    return await importRelative<TExports>(id, { dir: this.dir, version })
+      .then((value) => value.exports)
+      .catch(() => undefined);
+  };
 
   /**
    * Read the `package.json` file from the workspace directory.

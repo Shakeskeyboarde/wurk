@@ -1,11 +1,4 @@
-.*
-!.gitignore
-!.github
-!.npmrc
-!.eslintrc.*
-!.prettierrc.*
-!.terraform.lock.hcl
-
+.vscode
 node_modules
 lib
 out

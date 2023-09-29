@@ -84,11 +84,15 @@ const mainAsync = async (args: string[]): Promise<void> => {
     .option('-p, --parallel', 'Process workspaces in parallel.')
     .addOption(
       commander
-        .createOption('-c, --concurrency <count>', 'Number workspaces to process in parallel (number or "all").')
+        .createOption(
+          '-c, --concurrency <count>',
+          'Number workspaces to process in parallel (<number>, "auto", "all").',
+        )
         .argParser((value) => {
+          if (value === 'auto') return undefined;
           if (value === 'all') return -1;
           const count = Number(value);
-          assert(!Number.isNaN(count), new Error('Concurrency count must be a number or "all".'));
+          assert(!Number.isNaN(count), new Error('Concurrency count must be a number, "auto", or "all".'));
           assert(count > 0, new Error('Concurrency count must be greater than 0.'));
           return count;
         })
@@ -107,7 +111,6 @@ const mainAsync = async (args: string[]): Promise<void> => {
     )
     .option('--include-root-workspace', 'Include the root workspace in the selection.')
     .option('--no-dependencies', 'Do not automatically include dependencies of selected workspaces.')
-    .option('--no-wait', 'No waiting for dependency processing to complete.')
     .option('--no-prefix', 'No output prefixes.')
     .option('--git-head <sha>', 'Set a default head commit hash for non-Git environments.')
     .option('--git-from-revision <rev>', 'Set the revision used for detecting modifications.')
@@ -131,7 +134,6 @@ const mainAsync = async (args: string[]): Promise<void> => {
       },
       run: {
         concurrency: opts.parallel ? opts.concurrency ?? cpus().length + 1 : 1,
-        wait: opts.wait,
       },
       git: {
         gitHead: opts.gitHead,
