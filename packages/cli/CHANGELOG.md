@@ -1,3 +1,9 @@
+## 8.0.4 (2023-09-29)
+
+### Documentation
+
+- Readme updates. (b1de209)
+
 ## 8.0.3 (2023-09-28)
 
 ### Documentation

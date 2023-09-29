@@ -1,3 +1,9 @@
+## 3.3.0 (2023-09-29)
+
+### Features
+
+- Don't bump dependency versions when only the patch increases. (dc1e57b)
+
 ## 3.2.3 (2023-09-28)
 
 ### Improvements
