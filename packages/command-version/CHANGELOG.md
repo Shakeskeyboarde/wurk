@@ -1,3 +1,9 @@
+## 3.3.2 (2023-09-29)
+
+### Bug Fixes
+
+- Include patches in dependency updates if the version is updated due to other changes. (e4c9cb5)
+
 ## 3.3.1 (2023-09-29)
 
 ### Bug Fixes
