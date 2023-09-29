@@ -211,6 +211,13 @@ const getAutoVersion = async (
 
   assert(isRepo, 'Auto versioning requires a Git repository.');
 
+  const fromRevision = await workspace.getNpmHead();
+
+  if (!fromRevision) {
+    log.debug('Unable to determine a "from" Git revision. Assuming initial release.');
+    return [workspace.version, []];
+  }
+
   const [isDirty, dirtyDependencies] = await Promise.all([
     workspace.getGitIsDirty(),
     workspace.localDependencies
@@ -221,12 +228,6 @@ const getAutoVersion = async (
   if (isDirty || dirtyDependencies.size) {
     log.warn('Auto versioning requires a clean Git working tree.');
     return [workspace.version, []];
-  }
-
-  const fromRevision = await workspace.getNpmHead();
-
-  if (!fromRevision) {
-    log.warn('Unable to determine a "from" Git revision. Using previous commit only.');
   }
 
   const [changes, isConventional] = await getChanges(fromRevision ?? 'HEAD~1', workspace.dir, spawn);
