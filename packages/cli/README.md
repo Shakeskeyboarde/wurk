@@ -8,7 +8,6 @@ Let's get to werk!
 
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
-  - [Start a new monorepo.](#start-a-new-monorepo)
   - [Step 1: Create the monorepo root.](#step-1-create-the-monorepo-root)
   - [Step 2: Change to the monorepo root directory.](#step-2-change-to-the-monorepo-root-directory)
   - [Step 3: Add the first monorepo workspace.](#step-3-add-the-first-monorepo-workspace)
@@ -40,13 +39,9 @@ npm install --global @werk/cli
 
 (Optional) Test it out by calling the `werk` command with no arguments. You should see a message about using the "globally installed" version of Werk, and then usage (help) text.
 
-### Start a new monorepo.
-
-For simplicity, let's start a new monorepo project. Monorepos can even be useful with small projects that have only a single workspace. It's not any more complex than a single package, and it will be easier to add more packages later if necessary.
-
 ### Step 1: Create the monorepo root.
 
-For simplicity, we will use the [create-minimal-monorepo](https://www.npmjs.com/package/create-minimal-monorepo) which runs a handful of commands that almost every project needs to run. See its documentation for more information. You can also create it by hand if you prefer. Just make sure it has a `package.json` file with a `workspaces` definition.
+For simplicity, let's start a new monorepo project using [create-minimal-monorepo](https://www.npmjs.com/package/create-minimal-monorepo). Monorepos can even be useful with small projects that have only a single workspace. It's not any more complex than a single package, and it will be easier to add more packages later if necessary.
 
 ```sh
 npm init minimal-monorepo -- my-project
@@ -62,7 +57,7 @@ cd my-project
 
 ### Step 3: Add the first monorepo workspace.
 
-Let's make a simple library package. Again, we're using an init script ([create-minimal-workspace](https://www.npmjs.com/package/create-minimal-monorepo)) to keep it simple. You can check its documentation for more information.
+Again, we're using an init script to keep it simple, this time ([create-minimal-workspace](https://www.npmjs.com/package/create-minimal-monorepo)).
 
 ```sh
 npm init minimal-workspace -- packages/my-lib
@@ -72,7 +67,7 @@ You can edit the `src` later to add the real library implementation.For now, we 
 
 ### Step 4: Install the Werk `build` command.
 
-What!? The `build` command has to be installed? Yes, because Werk is extensible and modular, following in the footsteps of great tools like [Vite](https://vitejs.dev/), [Rollup](https://rollupjs.org/), and [ESLint](https://eslint.org/). All commands are separate packages, and which ones you choose to install and use is completely up to you. This is how we achieve "low-config" while still allowing complete flexibility. You can even build your own custom commands!
+What!? The `build` command has to be installed? Yes, because Werk is extensible and modular, following in the footsteps of great tools like [Vite](https://vitejs.dev/), [Rollup](https://rollupjs.org/), and [ESLint](https://eslint.org/). All commands are separate packages, and which ones you choose to install and use is completely up to you. This is how we achieve "low-config" while still allowing complete flexibility. You can even build your own [custom commands](https://github.com/Shakeskeyboarde/werk/blob/main/packages/cli/README_CUSTOM_COMMANDS.md)!
 
 ```sh
 npm install --save-dev @werk/command-build
@@ -90,7 +85,7 @@ Drumroll, please...
 werk build
 ```
 
-Congratulations! Your library is built 🎉. If you want to publish it, you can continue by following the instructions of the Werk [publish](https://www.npmjs.com/package/@werk/command-publish) command.
+Congratulations! Your monorepo is built 🎉. If you want to publish it, you can continue by following the instructions of the Werk [publish](https://www.npmjs.com/package/@werk/command-publish) command.
 
 ## Commands
 
