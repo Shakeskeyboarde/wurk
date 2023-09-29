@@ -1,3 +1,9 @@
+## 1.0.2 (2023-09-29)
+
+### Documentation
+
+- Fix readme title. (dc4eb03)
+
 ## 1.0.1 (2023-09-29)
 
 ### Improvements
