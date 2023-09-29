@@ -1,0 +1,44 @@
+{
+  "name": "@werk/command-depcheck",
+  "description": "Check for unused production dependencies.",
+  "version": "1.0.0",
+  "license": "ISC",
+  "author": "Chris Ackerman <chris@topher.land>",
+  "keywords": [
+    "werk-command",
+    "depcheck",
+    "dependency",
+    "dependencies",
+    "checker"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Shakeskeyboarde/werk",
+    "directory": "packages/command-depcheck"
+  },
+  "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/command-depcheck/README.md",
+  "type": "module",
+  "scripts": {},
+  "files": [
+    "lib",
+    "CHANGELOG.md"
+  ],
+  "types": "./lib/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@werk/cli": "^8.0.3"
+  },
+  "devDependencies": {
+    "vite": "^4.4.9",
+    "vite-plugin-checker": "^0.6.2",
+    "vite-plugin-dts": "^3.6.0"
+  }
+}
