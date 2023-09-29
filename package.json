@@ -2,6 +2,11 @@
   "private": true,
   "name": "root",
   "license": "ISC",
+  "author": "Chris Ackerman <chris@topher.land>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shakeskeyboarde/werk.git"
+  },
   "type": "module",
   "scripts": {
     "lint": "eslint 'packages/*/src/**/*.{js,cjs,ts,tsx}'",

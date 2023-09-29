@@ -4,11 +4,11 @@
   "version": "2.2.3",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
-  "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-publish/README.md",
+  "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/command-publish/README.md",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Shakeskeyboarde/werk.git",
-    "directory": "packages/werk-command-publish"
+    "directory": "packages/command-publish"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json"

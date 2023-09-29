@@ -4,11 +4,11 @@
   "version": "3.3.0",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
-  "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/werk-command-version/README.md",
+  "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/command-version/README.md",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Shakeskeyboarde/werk.git",
-    "directory": "packages/werk-command-version"
+    "directory": "packages/command-version"
   },
   "type": "module",
   "types": "./lib/main.d.ts",
