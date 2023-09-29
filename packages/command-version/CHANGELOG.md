@@ -1,3 +1,13 @@
+## 3.2.3 (2023-09-28)
+
+### Improvements
+
+- Auto versioning assumes initial release when no NPM head is detected. (0bd135c)
+
+### Documentation
+
+- Major rewrite of the readme files. (19021fe)
+
 ## 3.2.2 (2023-09-26)
 
 ### Notes

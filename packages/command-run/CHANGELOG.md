@@ -1,3 +1,9 @@
+## 3.2.3 (2023-09-28)
+
+### Documentation
+
+- Major rewrite of the readme files. (19021fe)
+
 ## 3.2.2 (2023-09-26)
 
 ### Notes
