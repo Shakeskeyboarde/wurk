@@ -1,4 +1,5 @@
 import { readdir, readFile } from 'node:fs/promises';
+import { join, relative } from 'node:path';
 
 import { createCommand } from '@werk/cli';
 
@@ -25,7 +26,7 @@ export default createCommand({
   config: (commander) => {
     return commander.option('--fix', 'Remove unused dependencies.');
   },
-  each: async ({ log, workspace, opts, spawn }) => {
+  each: async ({ log, root, workspace, opts, spawn }) => {
     const filenames = await getFilenames(workspace.dir);
     const isReact = filenames.some((filename) => /\.(?:jsx|tsx)$/u.test(filename));
     const unused = new Set(
@@ -66,7 +67,12 @@ export default createCommand({
     }
 
     if (!opts.fix) {
-      log.info(`Unused dependencies:${[...unused].reduce((result, dependency) => `${result}\n  - ${dependency}`, '')}`);
+      log.info(
+        `Unused dependencies in "${join(relative(root.dir, workspace.dir), 'package.json')}":${[...unused].reduce(
+          (result, dependency) => `${result}\n  - ${dependency}`,
+          '',
+        )}`,
+      );
       exitCode ||= 1;
       return;
     }
@@ -80,7 +86,10 @@ export default createCommand({
       });
 
       log.info(
-        `Removed dependencies:${[...unused].reduce((result, dependency) => `${result}\n  - ${dependency}`, '')}`,
+        `Removed dependencies from "${join(relative(root.dir, workspace.dir), 'package.json')}":${[...unused].reduce(
+          (result, dependency) => `${result}\n  - ${dependency}`,
+          '',
+        )}`,
       );
     });
   },
