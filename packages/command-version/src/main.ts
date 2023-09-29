@@ -98,7 +98,10 @@ export default createCommand({
     }
 
     const packagePatches: PackageJson[] = [];
-    const dependencyUpdates = getDependencyUpdates(log, workspace);
+    const dependencyUpdates = getDependencyUpdates(log, workspace, {
+      // Include patches if the workspace version is already updated.
+      includePatches: Boolean(version),
+    });
 
     if (dependencyUpdates) {
       packagePatches.push(dependencyUpdates);
