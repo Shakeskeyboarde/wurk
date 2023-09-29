@@ -1,4 +1,4 @@
-# command-depcheck
+# Werk Depcheck Command
 
 Check for unused production dependencies.
 
