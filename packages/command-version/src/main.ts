@@ -1,19 +1,14 @@
 /* eslint-disable max-lines */
 import assert from 'node:assert';
 
-import {
-  createCommand,
-  type Log,
-  type PackageJson,
-  type Spawn,
-  type Workspace,
-  WorkspaceDependencyScope,
-} from '@werk/cli';
-import { parse, type ReleaseType, SemVer } from 'semver';
+import { createCommand, type PackageJson } from '@werk/cli';
+import { diff, parse, type ReleaseType, SemVer } from 'semver';
 
+import { getAutoVersion } from './get-auto-version.js';
 import { getBumpedVersion } from './get-bumped-version.js';
-import { getChangeVersion } from './get-change-version.js';
-import { type Change, ChangeType, getChanges } from './get-changes.js';
+import { type Change, ChangeType } from './get-changes.js';
+import { addUpdate, getDependencyUpdates, getUpdateNames } from './get-dependency-updates.js';
+import { getExplicitVersion } from './get-explicit-version.js';
 import { getIncrementedVersion } from './get-incremented-version.js';
 import { writeChangelog } from './write-changelog.js';
 
@@ -28,7 +23,6 @@ const BUMP_TYPE = [
   'auto',
 ] as const satisfies readonly (ReleaseType | 'auto')[];
 
-const workspaceVersionUpdates = new Map<string, string>();
 const workspaceChanges = new Map<string, () => Promise<void>>();
 
 export default createCommand({
@@ -81,27 +75,26 @@ export default createCommand({
   },
 
   each: async ({ log, args, opts, workspace, spawn, saveAndRestoreFile }) => {
+    if (!workspace.isSelected) return;
+
     const [spec] = args;
     const { note = [], preid, changelog, dryRun = false } = opts;
+    const isCurrentVersionPrerelease = Boolean(parse(workspace.version)?.prerelease?.length);
+
+    assert(
+      !isCurrentVersionPrerelease || (typeof spec === 'string' && spec.startsWith('pre')),
+      `Workspace "${workspace.name}" cannot be bumped to a non-prerelease version.`,
+    );
 
     let version = '';
     let changes: readonly Change[] = [];
 
-    if (workspace.isSelected) {
-      const isCurrentVersionPrerelease = Boolean(parse(workspace.version)?.prerelease?.length);
-
-      assert(
-        !isCurrentVersionPrerelease || (typeof spec === 'string' && spec.startsWith('pre')),
-        `Workspace "${workspace.name}" cannot be bumped to a non-prerelease version.`,
-      );
-
-      if (spec instanceof SemVer) {
-        [version, changes] = getExplicitVersion(spec);
-      } else if (spec !== 'auto') {
-        [version, changes] = getBumpVersion(spec, preid, workspace);
-      } else if (!workspace.isPrivate) {
-        [version, changes] = await getAutoVersion(log, workspace, spawn);
-      }
+    if (spec instanceof SemVer) {
+      [version, changes] = getExplicitVersion(spec);
+    } else if (spec !== 'auto') {
+      [version, changes] = getBumpedVersion(workspace.version, spec, preid);
+    } else if (!workspace.isPrivate) {
+      [version, changes] = await getAutoVersion(log, workspace, spawn);
     }
 
     const packagePatches: PackageJson[] = [];
@@ -128,10 +121,10 @@ export default createCommand({
       changes = [...changes, { type: ChangeType.note, message: 'Updated local dependencies.' }];
     }
 
-    const isVersionUpdated = Boolean(version) && version !== workspace.version;
+    const releaseType = version ? diff(workspace.version, version) : null;
 
-    if (isVersionUpdated) {
-      workspaceVersionUpdates.set(workspace.name, version);
+    if (releaseType) {
+      addUpdate(workspace.name, version);
       packagePatches.push({ version: version });
       log.notice(`Updating workspace "${workspace.name}" version from "${workspace.version}" to "${version}".`);
     }
@@ -142,7 +135,7 @@ export default createCommand({
     }
 
     const isPackageUpdated = Boolean(packagePatches.length);
-    const isChangeLogUpdated = Boolean(isVersionUpdated && changelog && changes.length);
+    const isChangeLogUpdated = Boolean(releaseType && changelog && changes.length);
 
     if (!isPackageUpdated && !isChangeLogUpdated) return;
 
@@ -177,97 +170,11 @@ export default createCommand({
       await change();
     }
 
-    if (workspaceVersionUpdates.size) {
+    const updatedNames = getUpdateNames();
+
+    if (updatedNames.length) {
       // Update the package lock file.
-      await spawn('npm', ['update', ...workspaceVersionUpdates.keys()], { errorEcho: true });
+      await spawn('npm', ['update', ...updatedNames], { errorEcho: true });
     }
   },
 });
-
-const getExplicitVersion = (spec: SemVer): [version: string, changes: readonly Change[], allowBump: boolean] => {
-  const version = spec.format();
-  const changes = [{ type: ChangeType.note, message: `Updated to version "${version}".` }];
-
-  return [version, changes, false];
-};
-
-const getBumpVersion = (
-  spec: ReleaseType,
-  preid: string | undefined,
-  workspace: Workspace,
-): [version: string, changes: readonly Change[], allowBump: boolean] => {
-  const version = getBumpedVersion(workspace.version, spec, preid).format();
-  const changes = [{ type: ChangeType.note, message: `Updated to version "${version}".` }];
-
-  return [version, changes, false];
-};
-
-const getAutoVersion = async (
-  log: Log,
-  workspace: Workspace,
-  spawn: Spawn,
-): Promise<[version: string, changes: readonly Change[]]> => {
-  const isRepo = await workspace.getGitIsRepo();
-
-  assert(isRepo, 'Auto versioning requires a Git repository.');
-
-  const fromRevision = await workspace.getNpmHead();
-
-  if (!fromRevision) {
-    log.debug('Unable to determine a "from" Git revision. Assuming initial release.');
-    return [workspace.version, []];
-  }
-
-  const [isDirty, dirtyDependencies] = await Promise.all([
-    workspace.getGitIsDirty(),
-    workspace.localDependencies
-      .filter((dependency) => dependency.scope !== WorkspaceDependencyScope.dev)
-      .filterAsync((dependency) => dependency.workspace.getGitIsDirty()),
-  ]);
-
-  if (isDirty || dirtyDependencies.size) {
-    log.warn('Auto versioning requires a clean Git working tree.');
-    return [workspace.version, []];
-  }
-
-  const [changes, isConventional] = await getChanges(fromRevision ?? 'HEAD~1', workspace.dir, spawn);
-
-  if (!isConventional) {
-    log.warn(`Workspace "${workspace.name}" has non-conventional commits.`);
-  }
-
-  const version = getChangeVersion(workspace.version, changes);
-
-  return [version, changes];
-};
-
-const getDependencyUpdates = (log: Log, workspace: Workspace): PackageJson | undefined => {
-  let packagePatch: PackageJson | undefined;
-
-  for (const scope of ['dependencies', 'peerDependencies', 'optionalDependencies', 'devDependencies'] as const) {
-    for (const [depName, depRange] of Object.entries(workspace[scope])) {
-      const depVersion = workspaceVersionUpdates.get(depName);
-
-      // No update for this dependency.
-      if (!depVersion) continue;
-
-      // Not an updatable range.
-      if (depRange === '*' || depRange === 'x' || depRange.startsWith('file:')) continue;
-
-      const prefix = depRange.match(/^([=^~]|>=?)?\d+(?:\.\d+(?:\.\d+(?:-[^\s|=<>^~]*)?)?)?$/u)?.[1];
-
-      if (prefix == null) {
-        log.warn(`Dependency "${depName}@${depRange}" in workspace "${workspace.name}" is too complex to update.`);
-        continue;
-      }
-
-      const newDepRange = `${prefix}${depVersion}`;
-
-      packagePatch = { ...packagePatch, [scope]: { ...packagePatch?.[scope], [depName]: newDepRange } };
-
-      log.debug(`Updating "${depName}" to "${newDepRange}" in workspace "${workspace.name}".`);
-    }
-
-    return packagePatch;
-  }
-};

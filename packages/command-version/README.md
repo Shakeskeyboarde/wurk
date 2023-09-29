@@ -11,24 +11,16 @@ Update versions.
 npm i -D @werk/command-version
 ```
 
-## Set Version
+## Set Versions
 
 ```sh
-# In all workspaces
 werk version 1.2.3
-
-# Only in a specific workspace
-werk -w my-workspace version 1.2.3
 ```
 
 ## Bump Versions
 
 ```sh
-# In all workspaces
 werk version patch
-
-# Only in modified workspaces
-werk --not-unmodified version patch
 ```
 
 This command is using the [semver](https://www.npmjs.com/package/semver#functions) package `inc()` function.
@@ -68,14 +60,8 @@ This will also update the `CHANGELOG.md` file, unless the `--no-changelog` flag 
 
 ## Dependents
 
-When a workspace version is updated, any dependent workspaces will also be updated so that they have a minimum dependency on the new version, and the dependent's version will also be _minimally_ (prerelease or patch number) bumped.
-
-This is important because testing is (usually) done against local versions of dependencies. So, when a dependency is updated, the dependent is only really _guaranteed_ to work with the new version of the dependency. This is explicitly the case for major version changes.
-
-Of course, if your versioning hygiene is good, then dependents should continue to work through patch and minor updates. But, it's a good idea to test them and update their minimum versions anyway.
+When a workspace version update is _greater than a patch,_ any dependent workspaces will also be updated so that they have a minimum dependency on the new version, and the dependent's version will also be _minimally_ (prerelease or patch number) bumped.
 
 ## Graduating Prereleases
 
-When the current version is a prerelease, the `version` command will refuse to bump the version to a non-prerelease version. This is to prevent accidentally releasing a prerelease version. Explicitly [setting the version](#set-version) will still work, but manual intervention of some kind is required.
-
-In the case of the [auto bump command](#bump-versions-automatically), you can restore the versions to their original (or latest) non-prerelease values, and then perform the automatic bump. This will ensure that all changes in the prerelease are accounted for in the version and in the changelog. Your mileage may vary depending on your prerelease workflow.
+When the current version is a prerelease, the `version` command will refuse to bump the version to a non-prerelease version. This is to prevent accidentally releasing a prerelease version. You need to explicitly [set](#set-versions) or [bump](#bump-versions) the version to a non-prerelease in this case.
