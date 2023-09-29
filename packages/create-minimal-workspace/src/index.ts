@@ -2,7 +2,7 @@
 import assert from 'node:assert';
 import { existsSync } from 'node:fs';
 import { cp, mkdir, writeFile } from 'node:fs/promises';
-import { basename, relative, resolve } from 'node:path';
+import { basename, posix, relative, resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 
 import { execa } from 'execa';
@@ -42,6 +42,17 @@ const isLibrary = await rl
   .then((answer) => !answer || /^y(?:es)?$/u.test(answer));
 
 const rootDir = resolve(root.realpath || root.path);
+const repositoryDirectory = relative(rootDir, dir);
+const repository =
+  typeof root.repository === 'object' && root.repository != null
+    ? {
+        ...root.repository,
+        directory: repositoryDirectory,
+      }
+    : undefined;
+const homepage = repository?.url?.startsWith('https://github.com')
+  ? repository.url.replace(/\.git|\/$/u, '') + posix.join('/blob/main', repositoryDirectory, 'README.md')
+  : undefined;
 const isTypescript = Object.keys({ ...root.devDependencies }).includes('typescript');
 const sourceDir = isTypescript ? 'lib' : 'src';
 const types = isTypescript ? './lib/index.d.ts' : undefined;
@@ -49,15 +60,10 @@ const packageJson = {
   name: basename(dir),
   description: description || undefined,
   version: '1.0.0',
-  author: root.author,
   license: root.license,
-  repository:
-    typeof root.repository === 'object' && root.repository != null
-      ? {
-          ...root.repository,
-          directory: relative(rootDir, dir),
-        }
-      : undefined,
+  author: root.author,
+  repository,
+  homepage,
   type: 'module',
   scripts: {},
   ...(isLibrary
