@@ -1,5 +1,5 @@
 import { readdir, readFile } from 'node:fs/promises';
-import { join, relative } from 'node:path';
+import { dirname, join, relative, resolve } from 'node:path';
 
 import { createCommand } from '@werk/cli';
 
@@ -19,6 +19,36 @@ const getTypesName = (name: string): string => {
   return parts.length === 1 ? `@types/${parts[0]}` : `@types/${parts[0]}__${parts[1]}`;
 };
 
+const getPackageJson = async (dir: string, name: string): Promise<{ peerDependencies?: Record<string, string> }> => {
+  return await readFile(resolve(dir, 'node_modules', name, 'package.json'), 'utf-8')
+    .then<{ peerDependencies?: Record<string, string> }>(JSON.parse)
+    .catch(() => {
+      const parent = dirname(dir);
+      if (parent !== dir) return getPackageJson(parent, name);
+      return {};
+    });
+};
+
+const peersCache = new Map<string, Promise<string[]>>();
+
+const getPeers = async (dir: string, ...names: string[]): Promise<string[]> => {
+  const promises = [...names].map((name) => {
+    let promise = peersCache.get(name);
+
+    if (!promise) {
+      promise = getPackageJson(dir, name)
+        .then((packageJson) => (packageJson.peerDependencies ? Object.keys(packageJson.peerDependencies) : []))
+        .catch((): string[] => []);
+
+      peersCache.set(name, promise);
+    }
+
+    return promise;
+  });
+
+  return await Promise.all(promises).then((results) => [...new Set(results.flatMap((result) => result))]);
+};
+
 let promise = Promise.resolve();
 let exitCode = 0;
 
@@ -29,18 +59,36 @@ export default createCommand({
   each: async ({ log, root, workspace, opts, spawn }) => {
     const filenames = await getFilenames(workspace.dir);
     const isReact = filenames.some((filename) => /\.(?:jsx|tsx)$/u.test(filename));
-    const unused = new Set(
+    const dependencies = new Set(
       Object.keys({
         ...workspace.dependencies,
         ...workspace.peerDependencies,
         ...workspace.optionalDependencies,
       }),
     );
+    const unused = new Set(dependencies);
+    const used = new Set<string>();
+    const add = (name: string): string[] => {
+      const result: string[] = [];
 
-    if (isReact) {
-      unused.delete('react');
-      unused.delete('@types/react');
-    }
+      if (unused.delete(name)) {
+        used.add(name);
+        result.push(name);
+      }
+
+      if (!name.startsWith('@types/')) {
+        const typesName = getTypesName(name);
+
+        if (unused.delete(typesName)) {
+          used.add(name);
+          result.push(typesName);
+        }
+      }
+
+      return result;
+    };
+
+    if (isReact) add('react');
 
     /**
      * Remove all dependencies that appear to be used in a source file.
@@ -54,17 +102,34 @@ export default createCommand({
           'u',
         );
 
-        if (pattern.test(content)) {
-          unused.delete(dependency);
-
-          if (!dependency.startsWith('@types/')) {
-            unused.delete(getTypesName(dependency));
-          }
-        }
+        if (pattern.test(content)) add(dependency);
       }
 
       if (unused.size === 0) return;
     }
+
+    const addPeers = async (...names: string[]): Promise<void> => {
+      if (names.length === 0) return;
+
+      const peers = await getPeers(workspace.dir, ...names);
+
+      if (peers.length === 0) return;
+
+      await Promise.all(
+        peers.map(async (peer) => {
+          const added = add(peer);
+          /*
+           * Recursive because an unused dependency might actually be
+           * the peer of an installed peer.
+           */
+          await addPeers(...added);
+        }),
+      );
+    };
+
+    await addPeers(...used);
+
+    if (unused.size === 0) return;
 
     if (!opts.fix) {
       log.info(
