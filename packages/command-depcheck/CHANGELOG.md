@@ -1,3 +1,9 @@
+## 1.0.3 (2023-09-29)
+
+### Improvements
+
+- Include peer dependencies when determining if a dependency is used. (3e3c707)
+
 ## 1.0.2 (2023-09-29)
 
 ### Documentation
