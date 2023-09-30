@@ -21,7 +21,22 @@ process.on('unhandledRejection', (error) => {
 let [dir = '.'] = process.argv.slice(2);
 
 dir = resolve(dir);
+
 assert(!existsSync(resolve(dir, 'package.json')), 'The target directory already has a package.json file.');
+
+const ghUser = await execa('gh', ['api', 'user'])
+  .then((result): { login: string; html_url: string; name: string; email: string } => JSON.parse(result.stdout))
+  .catch(() => undefined);
+const gitName =
+  ghUser?.name ||
+  (await execa('git', ['config', '--get', 'user.name'])
+    .then((result) => result.stdout)
+    .catch(() => undefined));
+const gitEmail =
+  ghUser?.email ||
+  (await execa('git', ['config', '--get', 'user.email'])
+    .then((result) => result.stdout)
+    .catch(() => undefined));
 
 const rl = createInterface({
   input: process.stdin,
@@ -29,20 +44,28 @@ const rl = createInterface({
 });
 
 const description = await rl.question('Description? ');
-const author = await rl.question('Author Name? ');
-const email = await rl.question('Author Email? ');
-const license = await rl.question('License? ');
-const gitRepo = await rl.question('Git Repo (shorthand allowed)? ');
+const author = gitName || (await rl.question('Author Name? '));
+const email = gitEmail || (await rl.question('Author Email? '));
 
+const license = await rl.question('License? ');
 const licenseText =
-  license &&
-  getLicense(license, {
-    author,
-    name: author,
-    email,
-    year: new Date().getFullYear().toString(10),
-  });
+  license === 'UNLICENSED'
+    ? author
+      ? `Copyright © ${new Date().getFullYear()} ${author}\n`
+      : undefined
+    : license &&
+      getLicense(license, {
+        author,
+        name: author,
+        email,
+        year: new Date().getFullYear().toString(10),
+      });
+
+const gitRepo = ghUser?.html_url
+  ? `${ghUser.html_url}/${basename(dir)}`
+  : await rl.question('Git Repo (shorthand allowed)? ');
 const gitRepoParsed = gitRepo ? gitUrlParse(gitRepo) : undefined;
+
 const packageJson = {
   private: true,
   name: 'root',
@@ -136,10 +159,10 @@ if (isTypescript) {
     { flag: 'wx' },
   ).catch(() => undefined);
 
-  await execa('npm', ['install', '--silent', '--save-dev', 'typescript'], {
-    stdio: 'inherit',
-    reject: false,
-  });
+  await execa('npm', ['install', '--save-dev', 'typescript'], { stdio: 'ignore', reject: false });
+  await execa('git', ['init'], { stdio: 'ignore', reject: false });
+  await execa('git', ['add', '.'], { stdio: 'ignore', reject: false });
+  await execa('git', ['commit', '-m', 'chore: Initial commit.'], { stdio: 'ignore', reject: false });
 }
 
 rl.close();
