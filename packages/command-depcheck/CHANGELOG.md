@@ -1,3 +1,9 @@
+## 1.0.4 (2023-09-30)
+
+### Improvements
+
+- Match bare imports. (7bfe3d9)
+
 ## 1.0.3 (2023-09-29)
 
 ### Improvements
