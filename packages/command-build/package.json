@@ -57,6 +57,7 @@
     "vite-plugin-checker": "^0.6.2",
     "vite-plugin-dts": "^3.6.0",
     "vite-plugin-refresh": "^1.0.3",
+    "vite-plugin-rewrite-all": "^1.0.1",
     "vite-plugin-svgr": "^4.0.0"
   }
 }

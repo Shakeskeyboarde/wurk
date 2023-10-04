@@ -15,6 +15,7 @@ interface Plugins {
   'vite-plugin-dts': typeof import('vite-plugin-dts');
   'vite-plugin-refresh': typeof import('vite-plugin-refresh');
   'vite-plugin-svgr': typeof import('vite-plugin-svgr');
+  'vite-plugin-rewrite-all': typeof import('vite-plugin-rewrite-all');
 }
 
 export interface ViteConfigOptions {
@@ -195,6 +196,7 @@ export const getViteConfig = async (
       tryPlugin('vite-plugin-svgr', { version: '^4.0.0' }),
       tryPlugin('@vitejs/plugin-react', { version: '^4.0.4' }),
       tryPlugin('vite-plugin-refresh', { version: '^1.0.3' }),
+      tryPlugin('vite-plugin-rewrite-all', { version: '^1.0.1' }),
     ],
     build: {
       target: 'esnext',

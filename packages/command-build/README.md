@@ -64,6 +64,8 @@ The following plugins are used in the default configuration, _if they are dev de
   - Version: ^1.0.3
 - `vite-plugin-svgr`
   - Version: ^4.0.0
+- `vite-plugin-rewrite-all`
+  - Version: ^1.0.1
 
 #### Plugin: Checker
 
