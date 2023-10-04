@@ -1,3 +1,9 @@
+## 2.1.5 (2023-10-04)
+
+### Improvements
+
+- Add support for vite-plugin-rewrite-all. (47e10d7)
+
 ## 2.1.4 (2023-09-29)
 
 ### Bug Fixes
