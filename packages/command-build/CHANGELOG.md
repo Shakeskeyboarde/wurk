@@ -1,3 +1,9 @@
+## 2.1.6 (2023-10-07)
+
+### Chores
+
+- Add start alias to the build command. (81e22c9)
+
 ## 2.1.5 (2023-10-04)
 
 ### Improvements
