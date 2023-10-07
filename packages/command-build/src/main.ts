@@ -12,6 +12,7 @@ let isAborted = false;
 export default createCommand({
   config: (commander) => {
     return commander
+      .alias('start')
       .addHelpText(
         'after',
         'Auto detects and uses common tools and opinionated configurations for near-zero configuration.',
@@ -19,7 +20,14 @@ export default createCommand({
       .option('-w, --watch', 'Continuously build on source code changes and start development servers.')
       .addOption(commander.createOption('-s, --start', 'Alias for the --watch option.').implies({ watch: true }))
       .option('--vite', 'Use Vite for all builds instead of auto-detecting.')
-      .option('--abort-on-failure', 'Abort on the first build failure.');
+      .option('--abort-on-failure', 'Abort on the first build failure.')
+      .hook('preAction', (cmd) => {
+        const commandName = cmd.parent!.args[0];
+
+        if (commandName === 'start' && cmd.getOptionValue('watch') == null) {
+          cmd.setOptionValue('watch', true);
+        }
+      });
   },
 
   each: async ({ opts, log, root, workspace, spawn }) => {
