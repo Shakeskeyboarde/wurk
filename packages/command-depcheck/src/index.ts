@@ -98,7 +98,7 @@ export default createCommand({
 
       for (const dependency of unused) {
         const pattern = new RegExp(
-          `\\b(?:require|^import)\\((['"\`])${dependency}(?:\\1|/)|(?:\\bfrom|^import)\\s+(['"\`])${dependency}(?:\\2|/)`,
+          `\\b(?:require|import)\\((['"\`])${dependency}(?:\\1|/)|(?:\\bfrom|^import)\\s+(['"\`])${dependency}(?:\\2|/)`,
           'mu',
         );
 
