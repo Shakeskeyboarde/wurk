@@ -1,3 +1,9 @@
+## 8.0.6 (2023-10-10)
+
+### Bug Fixes
+
+- Ignore entrypoints with wildcards. (1662c9a)
+
 ## 8.0.5 (2023-09-29)
 
 ### Documentation

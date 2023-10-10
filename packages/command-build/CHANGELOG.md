@@ -1,3 +1,9 @@
+## 2.1.7 (2023-10-10)
+
+### Improvements
+
+- Only add output package.json if output type and package type mismatch. (37e1a1f)
+
 ## 2.1.6 (2023-10-07)
 
 ### Chores
