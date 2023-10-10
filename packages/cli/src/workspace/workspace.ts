@@ -370,14 +370,18 @@ export class Workspace {
 
   /**
    * Return a list of all the workspace entry points that are missing.
+   *
+   * **Note:** Entry points which include a wildcard are ignored.
    */
   readonly getMissingEntryPoints = async (): Promise<WorkspaceEntryPoint[]> => {
     const values = this.getEntryPoints();
     const sparse = await Promise.all(
       values.map((value) =>
-        stat(value.filename)
-          .then(() => undefined)
-          .catch(() => value),
+        value.filename.includes('*')
+          ? undefined
+          : stat(value.filename)
+              .then(() => undefined)
+              .catch(() => value),
       ),
     );
 
