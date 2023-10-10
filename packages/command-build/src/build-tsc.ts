@@ -108,7 +108,15 @@ export const buildTsc = async ({
 
       if (!noEmit && !emitDeclarationOnly && isEsm != null && resolve(outDir, workspace.dir) !== '') {
         await mkdir(outDir, { recursive: true });
-        await writeFile(resolve(outDir, 'package.json'), JSON.stringify({ type: isEsmConfig ? 'module' : 'commonjs' }));
+
+        const type = isEsmConfig ? 'module' : 'commonjs';
+
+        if (type !== workspace.type) {
+          await writeFile(
+            resolve(outDir, 'package.json'),
+            JSON.stringify({ type: isEsmConfig ? 'module' : 'commonjs' }),
+          );
+        }
       }
 
       return await spawn('tsc', ['-p', filename, watch && '--watch'], {
