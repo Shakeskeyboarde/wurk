@@ -1,3 +1,9 @@
+## 8.0.7 (2023-11-17)
+
+### Chores
+
+- Update deps. (a4edbac)
+
 ## 8.0.6 (2023-10-10)
 
 ### Bug Fixes

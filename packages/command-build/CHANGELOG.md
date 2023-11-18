@@ -1,3 +1,9 @@
+## 2.1.8 (2023-11-17)
+
+### Chores
+
+- Update deps. (a4edbac)
+
 ## 2.1.7 (2023-10-10)
 
 ### Improvements

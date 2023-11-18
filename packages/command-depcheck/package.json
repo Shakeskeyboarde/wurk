@@ -1,7 +1,7 @@
 {
   "name": "@werk/command-depcheck",
   "description": "Check for unused production dependencies.",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "license": "ISC",
   "author": "Chris Ackerman <chris@topher.land>",
   "keywords": [
@@ -34,7 +34,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@werk/cli": "^8.0.3"
+    "@werk/cli": "^8.0.7"
   },
   "devDependencies": {
     "vite": "^5.0.0",

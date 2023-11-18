@@ -1,3 +1,9 @@
+## 1.4.5 (2023-11-17)
+
+### Chores
+
+- Update deps. (a4edbac)
+
 ## 1.4.4 (2023-09-29)
 
 ### Bug Fixes

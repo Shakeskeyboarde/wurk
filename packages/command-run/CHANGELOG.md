@@ -1,3 +1,9 @@
+## 3.2.5 (2023-11-17)
+
+### Chores
+
+- Update deps. (a4edbac)
+
 ## 3.2.4 (2023-09-29)
 
 ### Bug Fixes
