@@ -161,10 +161,10 @@ const readTsConfig = async (
     configModule === 'commonjs'
       ? false
       : configModule.startsWith('es')
-      ? true
-      : configModule.startsWith('node')
-      ? workspace.type === 'module'
-      : null;
+        ? true
+        : configModule.startsWith('node')
+          ? workspace.type === 'module'
+          : null;
 
   return { noEmit, emitDeclarationOnly, outDir, isEsmConfig };
 };

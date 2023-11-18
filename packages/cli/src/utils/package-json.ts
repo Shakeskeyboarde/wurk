@@ -1,8 +1,8 @@
 type MutableJson<T> = T extends readonly (infer V)[]
   ? MutableJson<V>[]
   : T extends object
-  ? { -readonly [K in keyof T]: MutableJson<T[K]> }
-  : T;
+    ? { -readonly [K in keyof T]: MutableJson<T[K]> }
+    : T;
 
 export interface PackageExportsMap {
   readonly [key: string]: string | PackageExportsMap;
