@@ -1,3 +1,9 @@
+# 9.0.0 (2023-11-19)
+
+### Breaking Changes
+
+- Remove --git-head command line option. The current head cannot be overridden. (d3ffcff)
+
 ## 8.0.7 (2023-11-17)
 
 ### Chores

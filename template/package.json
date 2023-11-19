@@ -22,7 +22,7 @@
     "werk-command"
   ],
   "dependencies": {
-    "@werk/cli": "^8.0.3"
+    "@werk/cli": "^9.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.9.1",

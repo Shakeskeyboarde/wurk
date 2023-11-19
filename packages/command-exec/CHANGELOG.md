@@ -1,3 +1,9 @@
+## 1.4.6 (2023-11-19)
+
+### Notes
+
+- Updated local dependencies.
+
 ## 1.4.5 (2023-11-17)
 
 ### Chores

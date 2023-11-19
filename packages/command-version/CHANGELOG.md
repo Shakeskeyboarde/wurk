@@ -1,3 +1,9 @@
+## 3.3.4 (2023-11-19)
+
+### Bug Fixes
+
+- Conventional commit detection. (1b672ae)
+
 ## 3.3.3 (2023-11-17)
 
 ### Chores
