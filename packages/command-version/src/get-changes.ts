@@ -105,11 +105,9 @@ export const getChanges = async (
 
   let changes: Change[] = entries
     .flatMap(({ hash, subject, body }): Change[] => {
-      const subjectMatch = subject.match(/^\s*([a-z-]+)\s*(?:\((.*?)\)\s*)?(?:!\s*)?:(.*)$/iu);
+      const subjectMatch = subject.match(/^\s*([a-z][a-z- ]+(?<=[a-z]))\s*(?:\((.*?)\)\s*)?(?:!\s*)?:(.*)$/iu);
 
       if (!subjectMatch) {
-        console.log('subject', subject);
-        console.log('body', body);
         isConventional = false;
         return [];
       }
