@@ -29,13 +29,12 @@ export const runCommandPlugin = async (
   const { rawRootWorkspace, rawWorkspaces } = globalConfig;
   const { log: logOptions, git, select, run } = globalOpts;
   const isMonorepo = rawWorkspaces.length > 1;
-  const { gitHead, gitFromRevision } = git;
+  const { gitFromRevision } = git;
   const workspaceMatchers = [...select.workspace].reverse();
   const [root, workspaces] = createWorkspaces({
     rawRootWorkspace: rawRootWorkspace,
     rawWorkspaces: rawWorkspaces,
     includeRootWorkspace: select.includeRootWorkspace,
-    gitHead: gitHead,
     gitFromRevision: gitFromRevision,
   });
 

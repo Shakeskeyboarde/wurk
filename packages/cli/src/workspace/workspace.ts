@@ -8,6 +8,7 @@ import { getGitIsShallow } from '../git/get-git-is-shallow.js';
 import { getNpmMetadata, type NpmMetadata } from '../npm/get-npm-metadata.js';
 import { type ReadonlyEnhancedMap } from '../utils/enhanced-map.js';
 import { importRelative } from '../utils/import-relative.js';
+import { log } from '../utils/log.js';
 import { memoize } from '../utils/memoize.js';
 import { type PackageExportsMap, type PackageJson, type PackageJsonKnown } from '../utils/package-json.js';
 import { patchJsonFile } from '../utils/patch-json-file.js';
@@ -40,12 +41,10 @@ export interface WorkspaceOptions extends Omit<PackageJsonKnown, 'private'> {
   readonly isSelected: boolean;
   readonly localDependencies: ReadonlyEnhancedMap<string, WorkspaceReference>;
   readonly localDependents: ReadonlyEnhancedMap<string, WorkspaceReference>;
-  readonly gitHead: string | undefined;
   readonly gitFromRevision: string | undefined;
 }
 
 export class Workspace {
-  readonly #gitHead: string | undefined;
   readonly #gitFromRevision: string | undefined;
 
   /**
@@ -175,7 +174,6 @@ export class Workspace {
   isSelected: boolean;
 
   constructor(options: WorkspaceOptions) {
-    this.#gitHead = options.gitHead;
     this.#gitFromRevision = options.gitFromRevision;
 
     this.isSelected = options.isSelected;
@@ -303,13 +301,10 @@ export class Workspace {
   /**
    * Get the hash of the most recent commit which modified the workspace
    * directory. This may not actually be HEAD if the workspace directory
-   * directory was not modified in the current HEAD commit.
-   *
-   * A default can be set for non-Git environments using the `--git-head`
-   * command line option.
+   * was not modified in the current HEAD commit.
    */
   readonly getGitHead = memoize(async (): Promise<string | undefined> => {
-    return ((await this.getGitIsRepo()) ? await getGitHead(this.dir) : undefined) ?? this.#gitHead;
+    return (await this.getGitIsRepo()) ? await getGitHead(this.dir) : undefined;
   });
 
   /**
@@ -320,14 +315,21 @@ export class Workspace {
   });
 
   /**
-   * Return true if the NPM published head and the current Git head
-   * commits are both resolved and do not match.
+   * Try to detect changes using git commits, and fall back to assuming
+   * modifications if that doesn't work.
+   *
+   * Return true if the NPM published head commit and the current Git
+   * head commit do not match, or if the directory is not part of a Git
+   * working tree, or if no published head commit is available.
    *
    * **Note:** This method will throw an error if the Git repository is
    * a shallow clone!
    */
   readonly getIsModified = memoize(async (): Promise<boolean> => {
-    if (!(await this.getGitIsRepo())) return false;
+    if (!(await this.getGitIsRepo())) {
+      log.debug(`Couldn't detect Git repository for ${this.name}. Assuming modified.`);
+      return true;
+    }
 
     if (await this.getGitIsShallow()) {
       throw new Error(`Cannot detect modifications because the Git repository is shallow.`);
@@ -335,8 +337,14 @@ export class Workspace {
 
     const [from, to] = await Promise.all([this.getNpmHead(), this.getGitHead()]);
 
-    if (from == null) return false; // Couldn't find the published head.
-    if (to == null) return false; // Couldn't find the current head.
+    if (from == null) {
+      log.debug(`Couldn't find the published head for ${this.name}. Assuming modified.`);
+      return true;
+    }
+    if (to == null) {
+      log.debug(`Couldn't find the current head for ${this.name}. Assuming modified.`);
+      return true;
+    }
 
     return from !== to;
   });

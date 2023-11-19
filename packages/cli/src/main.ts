@@ -112,7 +112,6 @@ const mainAsync = async (args: string[]): Promise<void> => {
     .option('--include-root-workspace', 'Include the root workspace in the selection.')
     .option('--no-dependencies', 'Do not automatically include dependencies of selected workspaces.')
     .option('--no-prefix', 'No output prefixes.')
-    .option('--git-head <sha>', 'Set a default head commit hash for non-Git environments.')
     .option('--git-from-revision <rev>', 'Set the revision used for detecting modifications.')
     .version(globalConfig.version, '-v, --version', 'Display the current version.');
 
@@ -136,7 +135,6 @@ const mainAsync = async (args: string[]): Promise<void> => {
         concurrency: opts.parallel ? opts.concurrency ?? cpus().length + 1 : 1,
       },
       git: {
-        gitHead: opts.gitHead,
         gitFromRevision: opts.gitFromRevision,
       },
     };

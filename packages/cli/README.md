@@ -166,7 +166,5 @@ By default, workspaces are processed serially. This is generally the slowest opt
 
 ### Global Git Options
 
-- `--git-head <sha>`
-  - Provide a default Git "HEAD" commit in non-Git environments. This has no effect if Git is available.
 - `--git-from-revision <rev>`
   - Use a specific Git revision when detecting modifications. If not specified, it will be detected from the registry metadata of the current version.

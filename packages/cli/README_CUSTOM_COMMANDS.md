@@ -171,10 +171,10 @@ The `context.root`, `context.workspaces`, and `context.workspace` properties con
 - `getNpmIsPublished()`: Returns true if the current workspace name and version are published to the registry.
 - `getNpmHead()`: Returns the "from" revision which should be used for detecting changes. Returns undefined if no published commit can be resolved from an NPM registry and the `--git-from-revision` option is not set.
 - `getGitIsRepo()`: Returns true if the workspace root directory is part of a git repository.
-- `getGitIsShallow()`: Return true if the workspace directory is only a shallow Git checkout.
-- `getGitHead()`: Returns the hash of the most recent commit which modified the workspace directory. Returns undefined outside of a Git repo unless the `--git-head` global option is not set.
+- `getGitIsShallow()`: Return true if the workspace directory is only a shallow Git checkout. Returns false outside of a Git repo.
+- `getGitHead()`: Returns the hash of the most recent commit which modified the workspace directory. Returns undefined outside of a Git repo.
 - `getGitIsDirty()`: Returns true if the workspace's git working tree is dirty. Returns false outside of a Git repo.
-- `getIsModified()`: Returns true if the workspace NPM published head and Git head commits are both resolved and do not match.
+- `getIsModified()`: Returns true if the workspace's published commit and current commit are different, or if one or both commits cannot be detected (eg. not a Git repo).
 - `getEntryPoints()`: List all the files which are considered entry points for the workspace.
 - `getMissingEntryPoints()`: List of all the workspace entry points that are missing.
 

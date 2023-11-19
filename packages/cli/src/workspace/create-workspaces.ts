@@ -23,7 +23,6 @@ interface Options {
   readonly rawRootWorkspace: RawWorkspace;
   readonly rawWorkspaces: readonly RawWorkspace[];
   readonly includeRootWorkspace: boolean;
-  readonly gitHead: string | undefined;
   readonly gitFromRevision: string | undefined;
 }
 
@@ -51,7 +50,6 @@ const createNode = (
     isPrivate,
   }: RawWorkspace,
   isRoot: boolean,
-  gitHead: string | undefined,
   gitFromRevision: string | undefined,
 ): Node => {
   const localDependencies = new EnhancedMap<string, WorkspaceReference>();
@@ -79,7 +77,6 @@ const createNode = (
     isPrivate,
     isRoot,
     isSelected: false,
-    gitHead,
     gitFromRevision,
     localDependencies,
     localDependents,
@@ -92,14 +89,13 @@ export const createWorkspaces = ({
   rawRootWorkspace,
   rawWorkspaces,
   includeRootWorkspace,
-  gitHead,
   gitFromRevision,
 }: Options): [root: Workspace, workspaces: ReadonlyEnhancedMap<string, Workspace>] => {
   // Create graph nodes.
 
-  const rootNode = createNode(rawRootWorkspace, true, gitHead, gitFromRevision);
+  const rootNode = createNode(rawRootWorkspace, true, gitFromRevision);
   const nodes = new EnhancedMap<string, Node>(
-    rawWorkspaces.map((rawWorkspace) => [rawWorkspace.name, createNode(rawWorkspace, false, gitHead, gitFromRevision)]),
+    rawWorkspaces.map((rawWorkspace) => [rawWorkspace.name, createNode(rawWorkspace, false, gitFromRevision)]),
   );
 
   if (includeRootWorkspace) {

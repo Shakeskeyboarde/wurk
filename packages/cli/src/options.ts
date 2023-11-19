@@ -22,7 +22,6 @@ export interface RunOptions {
 
 export interface GitOptions {
   readonly gitFromRevision: string | undefined;
-  readonly gitHead: string | undefined;
 }
 
 export interface GlobalOptions {
