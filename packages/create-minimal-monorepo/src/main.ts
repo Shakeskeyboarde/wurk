@@ -140,15 +140,16 @@ if (isTypescript) {
         compilerOptions: {
           module: 'NodeNext',
           target: 'ES2022',
-          allowJs: true,
+          lib: ['ES2022'],
+          types: [],
           strict: true,
           skipLibCheck: true,
-          esModuleInterop: true,
           isolatedModules: true,
           forceConsistentCasingInFileNames: true,
           noUncheckedIndexedAccess: true,
-          declaration: true,
-          sourceMap: true,
+          esModuleInterop: true,
+          allowJs: true,
+          checkJs: true,
           noEmit: true,
         },
         exclude: ['node_modules', 'lib', 'dist', 'out', 'coverage'],
@@ -160,9 +161,10 @@ if (isTypescript) {
   ).catch(() => undefined);
 
   await execa('npm', ['install', '--save-dev', 'typescript'], { stdio: 'ignore', reject: false });
-  await execa('git', ['init'], { stdio: 'ignore', reject: false });
-  await execa('git', ['add', '.'], { stdio: 'ignore', reject: false });
-  await execa('git', ['commit', '-m', 'chore: Initial commit.'], { stdio: 'ignore', reject: false });
 }
+
+await execa('git', ['init'], { stdio: 'ignore', reject: false });
+await execa('git', ['add', '.'], { stdio: 'ignore', reject: false });
+await execa('git', ['commit', '-m', 'Initial commit.'], { stdio: 'ignore', reject: false });
 
 rl.close();

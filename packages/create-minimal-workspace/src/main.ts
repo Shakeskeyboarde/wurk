@@ -113,10 +113,9 @@ if (isTypescript && existsSync(resolve(rootDir, 'tsconfig.json'))) {
         extends: relative(dir, resolve(rootDir, 'tsconfig.json')),
         compilerOptions: {
           rootDir: '.',
-          outDir: 'lib',
         },
-        include: ['src'],
-        exclude: ['**/__**/*', '*.test.*', '*.spec.*', '*.stories.*'],
+        include: ['.'],
+        exclude: ['node_modules', 'out', 'lib', 'dist', 'coverage'],
       },
       null,
       2,
