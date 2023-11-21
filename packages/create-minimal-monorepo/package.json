@@ -4,7 +4,7 @@
   "version": "1.0.2",
   "license": "ISC",
   "type": "module",
-  "bin": "./lib/index.js",
+  "bin": "./lib/main.js",
   "devDependencies": {
     "vite": "^5.0.0",
     "vite-plugin-bin": "^1.0.1"

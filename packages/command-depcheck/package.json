@@ -23,11 +23,11 @@
     "lib",
     "CHANGELOG.md"
   ],
-  "types": "./lib/index.d.ts",
+  "types": "./lib/command.d.ts",
   "exports": {
     ".": {
-      "types": "./lib/index.d.ts",
-      "default": "./lib/index.js"
+      "types": "./lib/command.d.ts",
+      "default": "./lib/command.js"
     }
   },
   "publishConfig": {

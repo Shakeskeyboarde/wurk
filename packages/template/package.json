@@ -12,10 +12,10 @@
     "directory": "packages/template"
   },
   "type": "module",
-  "types": "./lib/main.d.ts",
+  "types": "./lib/command.d.ts",
   "exports": {
-    "types": "./lib/main.d.ts",
-    "default": "./lib/main.js"
+    "types": "./lib/command.d.ts",
+    "default": "./lib/command.js"
   },
   "files": [
     "CHANGELOG.md",
