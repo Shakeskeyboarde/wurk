@@ -21,3 +21,9 @@ npm i -D @werk/command-vitest
 # werk vitest [args...]
 werk vitest run
 ```
+
+By default, this will also run the `build` script from the root `package.json` file (if present), before running vitest. To skip building, use the `--no-build` option.
+
+```sh
+werk vitest run --no-build
+```

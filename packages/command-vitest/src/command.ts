@@ -9,8 +9,8 @@ export default createCommand({
     return commander
       .argument('[args...]', 'Arguments to pass to Vitest.')
       .helpOption(false)
-      .option('-h, --help')
-      .passThroughOptions()
+      .option('--no-build', 'Skip building before testing.')
+      .option('-h, --help', 'Print Vitest help.')
       .allowExcessArguments()
       .allowUnknownOption();
   },
@@ -18,12 +18,23 @@ export default createCommand({
   before: async ({ log, args, opts, root, workspaces, spawn }) => {
     const [vitestArgs] = args;
 
+    if (opts.build) {
+      const isBuilt = await spawn('npm', ['run', '--if-present', 'build'], {
+        input: 'inherit',
+        echo: 'inherit',
+        errorReturn: true,
+        errorSetExitCode: true,
+      }).succeeded();
+
+      if (!isBuilt) return;
+    }
+
     if (opts.help) {
       await spawn('vitest', ['--help', ...vitestArgs], {
         input: 'inherit',
         echo: 'inherit',
-        errorSetExitCode: true,
         errorReturn: true,
+        errorSetExitCode: true,
       });
 
       return;
