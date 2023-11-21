@@ -27,6 +27,7 @@ export default createCommand({
   before: async ({ opts, root, spawn }) => {
     if (!opts.fromArchive && opts.build && root.scripts.build != null) {
       await spawn('npm', ['run', '--if-present', 'build'], {
+        input: 'inherit',
         echo: 'inherit',
         errorReturn: true,
         errorSetExitCode: true,
