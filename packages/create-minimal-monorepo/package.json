@@ -1,7 +1,7 @@
 {
   "name": "create-minimal-monorepo",
   "description": "Create the bare minimum monorepo project.",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "ISC",
   "type": "module",
   "bin": "./lib/main.js",

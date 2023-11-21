@@ -1,3 +1,10 @@
+## 1.0.4 (2023-11-21)
+
+### Chores
+
+- Minor improvements to npm init templates. (1e5691c)
+- Rename entry files. (e3b082d)
+
 ## 1.0.3 (2023-11-17)
 
 ### Chores

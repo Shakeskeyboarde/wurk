@@ -1,3 +1,9 @@
+## 3.3.5 (2023-11-21)
+
+### Chores
+
+- Rename entry files. (e3b082d)
+
 ## 3.3.4 (2023-11-19)
 
 ### Bug Fixes

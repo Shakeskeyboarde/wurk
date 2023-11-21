@@ -1,3 +1,10 @@
+## 2.2.7 (2023-11-21)
+
+### Chores
+
+- Build command also inherits input stream. (b14a309)
+- Rename entry files. (e3b082d)
+
 ## 2.2.6 (2023-11-19)
 
 ### Notes

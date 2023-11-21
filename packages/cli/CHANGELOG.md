@@ -1,3 +1,9 @@
+## 9.0.1 (2023-11-21)
+
+### Improvements
+
+- Add &#96;LICENSE&#96; file to workspace entrypoints. (4d2f689)
+
 # 9.0.0 (2023-11-19)
 
 ### Breaking Changes

@@ -1,3 +1,10 @@
+## 1.3.7 (2023-11-21)
+
+### Chores
+
+- Build before running tests. (db44546)
+- Rename entry files. (e3b082d)
+
 ## 1.3.6 (2023-11-19)
 
 ### Notes
