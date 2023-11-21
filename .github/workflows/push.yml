@@ -35,8 +35,8 @@ jobs:
       - name: Test
         run: |
           npm run lint
-          werk depcheck
-          werk vitest run --no-build
+          npx @werk/cli depcheck
+          npx @werk/cli vitest run --no-build
 
       - name: Publish
         run: |
