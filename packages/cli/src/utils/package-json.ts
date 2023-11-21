@@ -13,12 +13,13 @@ export interface PackageJsonKnown {
   readonly name?: string;
   readonly description?: string;
   readonly version?: string;
+  readonly license?: string;
   readonly scripts?: Readonly<Record<string, string>>;
   readonly keywords?: readonly string[];
-  readonly type?: string;
   readonly files?: readonly string[];
   readonly directories?: { readonly bin?: string; readonly man?: string };
   readonly man?: string | readonly string[];
+  readonly type?: string;
   readonly types?: string;
   readonly bin?: string | Readonly<Record<string, string>>;
   readonly main?: string;

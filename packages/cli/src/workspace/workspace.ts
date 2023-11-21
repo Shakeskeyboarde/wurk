@@ -23,7 +23,7 @@ export enum WorkspaceDependencyScope {
 }
 
 export interface WorkspaceEntryPoint {
-  readonly type: 'types' | 'bin' | 'main' | 'module' | 'exports' | 'man';
+  readonly type: 'license' | 'types' | 'bin' | 'main' | 'module' | 'exports' | 'man';
   readonly filename: string;
 }
 
@@ -63,6 +63,11 @@ export class Workspace {
   readonly version: string;
 
   /**
+   * The SPDX license identifier from the workspace `package.json` file.
+   */
+  readonly license: string | undefined;
+
+  /**
    * Scripts from the workspace `package.json` file.
    */
   readonly scripts: Readonly<Record<string, string>>;
@@ -71,11 +76,6 @@ export class Workspace {
    * Keywords from the workspace `package.json` file.
    */
   readonly keywords: readonly string[];
-
-  /**
-   * Type from the workspace `package.json` file.
-   */
-  readonly type: 'module' | 'commonjs';
 
   /**
    * File patterns to be included in the package bundle.
@@ -91,6 +91,11 @@ export class Workspace {
    * Man from the workspace `package.json` file.
    */
   readonly man: readonly string[];
+
+  /**
+   * Type from the workspace `package.json` file.
+   */
+  readonly type: 'module' | 'commonjs';
 
   /**
    * Types from the workspace `package.json` file.
@@ -180,8 +185,9 @@ export class Workspace {
     this.isRoot = options.isRoot;
     this.isPrivate = options.isPrivate ?? false;
     this.name = options.name;
-    this.version = options.version ?? '0.0.0';
     this.description = options.description;
+    this.version = options.version ?? '0.0.0';
+    this.license = options.license;
     this.scripts = options.scripts ?? {};
     this.keywords = options.keywords ?? [];
     this.files = options.files ?? [];
@@ -365,6 +371,10 @@ export class Workspace {
         Object.values(value).forEach((subValue) => addEntryPoints(type, subValue));
       }
     };
+
+    if (this.license) {
+      addEntryPoints('license', 'LICENSE');
+    }
 
     addEntryPoints('types', this.types);
     addEntryPoints('bin', [this.bin, this.directories.bin]);
