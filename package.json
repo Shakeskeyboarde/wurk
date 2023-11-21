@@ -11,7 +11,7 @@
   "scripts": {
     "lint": "eslint --max-warnings=0 .",
     "build": "npm -ws --if-present run build && npm update --silent @werk/cli && werk -p build",
-    "test": "npm run lint -- --max-warnings=0 && werk vitest run && werk depcheck",
+    "test": "npm run lint && npm run build && werk depcheck && werk vitest run --no-build",
     "clean": "rm -rf out **/out lib **/lib",
     "modernize": "npx npm-check-updates@latest -i --workspaces --root --format group",
     "start": "echo 'building...' && ( npm --quiet run build &>/dev/null || ( echo 'build failed' && exit 1 ) ) && echo 'starting...\\n' && werk"
