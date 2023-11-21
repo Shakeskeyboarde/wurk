@@ -33,7 +33,10 @@ jobs:
           npx @werk/cli publish --no-build --to-archive
 
       - name: Test
-        run: npm test
+        run: |
+          npm run lint
+          werk depcheck
+          werk vitest run --no-build
 
       - name: Publish
         run: |
