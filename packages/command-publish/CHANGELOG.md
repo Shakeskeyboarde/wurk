@@ -1,3 +1,9 @@
+## 2.2.8 (2023-11-21)
+
+### Bug Fixes
+
+- **cli,build,publish:** Add missing typescript declarations. (da5fe66)
+
 ## 2.2.7 (2023-11-21)
 
 ### Chores

@@ -1,3 +1,13 @@
+## 9.0.2 (2023-11-21)
+
+### Bug Fixes
+
+- **cli,build,publish:** Add missing typescript declarations. (da5fe66)
+
+### Chores
+
+- Update deps. (f10dddf)
+
 ## 9.0.1 (2023-11-21)
 
 ### Improvements

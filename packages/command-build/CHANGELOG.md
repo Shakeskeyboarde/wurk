@@ -1,3 +1,13 @@
+## 2.1.11 (2023-11-21)
+
+### Bug Fixes
+
+- **cli,build,publish:** Add missing typescript declarations. (da5fe66)
+
+### Chores
+
+- Update deps. (f10dddf)
+
 ## 2.1.10 (2023-11-21)
 
 ### Chores
