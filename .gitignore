@@ -5,6 +5,7 @@ out
 dist
 coverage
 
+.DS_Store
 *.log
 *.tar
 *.gz

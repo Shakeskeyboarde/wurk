@@ -58,6 +58,7 @@
     "vite-plugin-dts": "^3.6.3",
     "vite-plugin-refresh": "^1.0.3",
     "vite-plugin-rewrite-all": "^1.0.2",
-    "vite-plugin-svgr": "^4.2.0"
+    "vite-plugin-svgr": "^4.2.0",
+    "vite-plugin-zip-pack": "^1.0.6"
   }
 }

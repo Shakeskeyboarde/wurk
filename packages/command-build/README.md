@@ -66,6 +66,8 @@ The following plugins are used in the default configuration, _if they are dev de
   - Version: ^4.0.0
 - `vite-plugin-rewrite-all`
   - Version: ^1.0.1
+- `vite-plugin-zip-pack`
+  - Version: ^1.0.6
 
 #### Plugin: Checker
 
@@ -75,6 +77,10 @@ Typescript checking is enabled if Typescript is dev dependency of the root (or c
 current workspace.
 
 ESlint checking is enabled if ESLint is a dev dependency of the root (or current) workspace, and the current workspace `package.json` has an `eslint` script. _ESLint checking as part of the build process is not recommended, because it should probably be considered testing._
+
+#### Plugin: Zip Pack
+
+The zip pack plugin will generate a zip file from either the `dist` or `lib` directory, depending on whether library mode is enabled. The zip file will be written to `out/dist.zip` or `out/lib.zip`.
 
 ### Mode: `rollup`
 
