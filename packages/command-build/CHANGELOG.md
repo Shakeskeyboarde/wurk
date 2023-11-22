@@ -1,3 +1,9 @@
+## 2.2.0 (2023-11-22)
+
+### Features
+
+- Add vite-plugin-zip-pack support. (382c327)
+
 ## 2.1.11 (2023-11-21)
 
 ### Bug Fixes
