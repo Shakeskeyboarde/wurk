@@ -1,3 +1,9 @@
+## 1.0.10 (2023-11-27)
+
+### Bug Fixes
+
+- @types/<name> is detected as unused if the <name> dependency isn't also present. (a365791)
+
 ## 1.0.9 (2023-11-21)
 
 ### Chores
