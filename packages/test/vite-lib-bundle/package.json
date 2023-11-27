@@ -28,5 +28,8 @@
     "vite-plugin-checker": "^0.6.2",
     "vite-plugin-dts": "^3.6.3",
     "vite-plugin-svgr": "^4.2.0"
+  },
+  "dependencies": {
+    "@types/aws-lambda": "^8.10.129"
   }
 }

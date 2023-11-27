@@ -1,2 +1,2 @@
-export * from './bar.js';
 export * from './foo.js';
+export * from './handler.js';

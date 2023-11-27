@@ -91,6 +91,17 @@ export default createCommand({
     if (isReact) add('react');
 
     /**
+     * Convert all "@types/*" dependencies to their non-types equivalent,
+     * because "@types/*" will never be imported directly.
+     */
+    for (const dependency of unused) {
+      if (dependency.startsWith('@types/')) {
+        unused.delete(dependency);
+        unused.add(dependency.replace(/^@types\//u, ''));
+      }
+    }
+
+    /**
      * Remove all dependencies that appear to be used in a source file.
      */
     for (const filename of filenames) {

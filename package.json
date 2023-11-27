@@ -32,7 +32,7 @@
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.5",
     "@types/eslint": "^8.44.7",
-    "@types/node": "^20.9.3",
+    "@types/node": "^20.10.0",
     "@vitest/coverage-v8": "^0.34.6",
     "@werk/command-build": "*",
     "@werk/command-depcheck": "*",
@@ -45,7 +45,7 @@
     "eslint": "^8.54.0",
     "eslint-config-rational": "^3.0.9",
     "prettier": "^3.1.0",
-    "rollup": "^4.5.1",
+    "rollup": "^4.6.0",
     "typescript": "^5.3.2",
     "vitest": "^0.34.6"
   },
