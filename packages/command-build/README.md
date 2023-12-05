@@ -8,7 +8,7 @@ Build with near-zero-configuration using common tools and opinionated configurat
 ## Install
 
 ```sh
-npm i -D @werk/command-exec
+npm i -D @werk/command-build
 ```
 
 ## Build
@@ -29,16 +29,26 @@ A build mode will be selected automatically in the following order, based on the
 
 - `script`: Run the workspace build script.
   - A `build` script (or `start` when the `--start` option is set) is present in the workspace `package.json` file.
-- `vite`: Build using Vite.
-  - The `--vite` flag is set, an `index.html` or `vite.config.*` is present in the package root, or `vite` is present the `package.json` file's `devDependencies`.
 - `rollup`: Build using Rollup.
   - A `rollup.config.*` present in the package root.
+- `vite`: Build using Vite.
+  - The `--vite` option is set.
+  - An `index.html` or `vite.config.*` is present in the package root.
+  - All of the following are true:
+    - An `exports`, `module`, `main`, `bin`, or `types` entry is present in the `package.json` file.
+    - Vite is a dev dependency of the current workspace
 - `tsc`: Build using the TypeScript compiler.
-  - Typescript is a dev dependency of the root or current workspace.
+  - All of the following are true:
+    - An `exports`, `module`, `main`, `bin`, or `types` entry is present in the `package.json` file.
+    - Typescript is a dev dependency of the root or current workspace.
 
 ### Mode: `script`
 
 Runs the `build` script from the workspace `package.json` file. If the `--start` flag is set, then the `start` script will be run after building.
+
+### Mode: `rollup`
+
+Uses the `rollup.config.*` file in the workspace.
 
 ### Mode: `vite`
 
@@ -48,7 +58,7 @@ The `--vite` option can be used to force this mode, because it should actually w
 
 If no configuration exists, a default configuration will be used. Under the default configuration, library mode is enabled if the `package.json` file contains `bin`, `main`, or `exports` entry points. CommonJS and/or ESModule output is determined automatically.
 
-When library mode is enabled, bundling is disabled (ie. "preserve modules"), _unless_ a library entrypoint is named `bundle.*`. Disabling bundling means that one output file per-input file is generated, which is useful for tree-shaking.
+When library mode is enabled, bundling is disabled (ie. "preserve modules"), _unless_ any package entry (`exports`, `module`, `main`, `bin`, or `types`) is named `bundle.*`. Disabling bundling means that one output file per-input file is generated, which is useful for tree-shaking.
 
 The following plugins are used in the default configuration, _if they are dev dependencies of the workspace._
 
@@ -82,10 +92,6 @@ ESlint checking is enabled if ESLint is a dev dependency of the root (or current
 
 The zip pack plugin will generate a zip file from either the `dist` or `lib` directory, depending on whether library mode is enabled. The zip file will be written to `out/dist.zip` or `out/lib.zip`.
 
-### Mode: `rollup`
-
-Uses the `rollup.config.*` file in the workspace.
-
 ### Mode: `tsc`
 
 Builds once for every `tsconfig.*build*.json` file found in the workspace. If no matching build configuration files are present, then temporary configurations will be generated.
@@ -94,7 +100,7 @@ This mode is the default even though it doesn't support bundling and is not part
 
 Generated configurations write output to the `lib` directory. CommonJS and/or ESModule output is determined automatically.
 
-Generated configurations will extends a `tsconfig.json` file in the workspace or the workspaces root.
+Generated configurations will extend a `tsconfig.json` file in the workspace or the workspaces root.
 
 **Note:** A simple `package.json` file will also be written to each output directory, as long as it's not the workspace root. This package file contains only the [type](https://nodejs.org/api/packages.html#type) directive, set to the value which matches the TypeScript configuration (`module` or `commonjs`).
 

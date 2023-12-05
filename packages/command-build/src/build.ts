@@ -47,45 +47,49 @@ const isLibPackage = (packageJson: Record<string, unknown>): boolean => {
   return Boolean(packageJson.exports || packageJson.main || packageJson.module || packageJson.types || packageJson.bin);
 };
 
-export const build = async ({ log, root, workspace, watch, vite, spawn }: BuildOptions): Promise<boolean | null> => {
+export const build = async ({
+  log,
+  root,
+  workspace,
+  watch,
+  vite: forceVite,
+  spawn,
+}: BuildOptions): Promise<boolean | null> => {
   const scriptName = watch ? 'start' : 'build';
+  const isScriptPresent = workspace.scripts[scriptName] != null;
 
-  if (
-    !vite &&
-    workspace.scripts[scriptName] != null &&
-    /*
-     * Avoid infinite recursion if this is a root workspace script
-     * and the root workspace is included.
-     */
-    (process.env.npm_command !== 'run-script' || process.env.npm_lifecycle_event !== scriptName)
-  ) {
+  if (isScriptPresent) {
     return await buildScript({ log, workspace, scriptName, spawn });
   }
 
+  const rollupConfig = await detectRollup(workspace);
+
+  if (rollupConfig) {
+    return await buildRollup({ log, workspace, watch, ...rollupConfig, spawn });
+  }
+
   const [packageJson, rootPackageJson] = await Promise.all([workspace.readPackageJson(), root.readPackageJson()]);
-  const [isVite, isRollup] = await Promise.all([detectVite(workspace, packageJson), detectRollup(workspace)]);
+  const viteConfig = await detectVite(workspace, packageJson);
   const isLib = isLibPackage(packageJson);
-  const isTypescript = Boolean(packageJson.dependencies?.typescript || rootPackageJson.devDependencies?.typescript);
   const isEsm = isLib && isEsmPackage(packageJson);
   const isCjs = isLib && isCjsPackage(packageJson);
 
-  if (isVite || vite)
+  if (viteConfig || forceVite) {
     return await buildVite({
       log,
       workspace,
       watch,
       isEsm: isLib && isEsm,
       isCjs: isLib && isCjs,
-      ...(isVite || {
+      ...(viteConfig || {
         isIndexHtmlPresent: false,
         customConfigFile: undefined,
       }),
       spawn,
     });
-
-  if (isRollup) {
-    return await buildRollup({ log, workspace, watch, ...isRollup, spawn });
   }
+
+  const isTypescript = Boolean(packageJson.dependencies?.typescript || rootPackageJson.devDependencies?.typescript);
 
   if (isTypescript && isLib) {
     return await buildTsc({ log, root, workspace, watch, isEsm, isCjs, spawn });
