@@ -10,9 +10,6 @@
     "url": "git+https://github.com/Shakeskeyboarde/werk.git",
     "directory": "packages/command-publish"
   },
-  "scripts": {
-    "build": "tsc -p tsconfig.build.json"
-  },
   "type": "module",
   "types": "./lib/command.d.ts",
   "exports": {
@@ -39,10 +36,13 @@
     "access": "public"
   },
   "devDependencies": {
-    "@werk/command-build": "*"
+    "@types/tar-stream": "^3.1.3",
+    "@werk/command-build": "*",
+    "vite": "^5.0.2",
+    "vite-plugin-checker": "^0.6.2",
+    "vite-plugin-dts": "^3.6.3"
   },
   "dependencies": {
-    "@types/tar-stream": "^3.1.3",
     "@werk/cli": "^9.0.2",
     "tar-stream": "^3.1.6"
   }
