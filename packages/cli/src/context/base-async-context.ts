@@ -68,6 +68,8 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
         verbatimSymlinks: true,
       });
 
+      this.log.debug(`Marked "${from}" for restoration.`);
+
       // Copy it back to the original location.
       this.onDestroy(() => {
         cpSync(to, from, {
@@ -79,6 +81,8 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
     } catch (error) {
       if (error instanceof Error && 'code' in error) {
         if (error.code === 'ENOENT') {
+          this.log.debug(`Marked "${from}" for deletion.`);
+
           /*
            * File does not exist, so the restore action will be to delete
            * it if it exists later.

@@ -64,12 +64,13 @@ export default createCommand({
       )
       .option('-p, --preid <id>', 'Add an identifier to prerelease bumps.')
       .option('--no-changelog', 'Do not generate changelogs.')
-      .option('--dry-run', 'Display proposed version changes without writing files.')
-      .passThroughOptions();
+      .option('--dry-run', 'Display proposed version changes without writing files.');
   },
 
   before: async ({ log, args, opts }) => {
-    if (opts.preid && (args[0] instanceof SemVer || !args[0].startsWith('pre'))) {
+    const { preid } = opts;
+
+    if (preid && (args[0] instanceof SemVer || !args[0].startsWith('pre'))) {
       log.warn('Using --preid only has an effect with "pre*" bump types');
     }
   },
