@@ -33,6 +33,12 @@ const LOG_LEVEL_DEFAULT: LogLevel =
 const onceCache = new Set<string>();
 
 export const parseLogLevel = (value: string): LogLevel => {
+  switch (value) {
+    case 'debug':
+      value = 'verbose' satisfies keyof typeof LOG_LEVEL_VALUES;
+      break;
+  }
+
   assert(
     value in LOG_LEVEL_VALUES,
     new Error(`Log level must be one of: ${Object.keys(LOG_LEVEL_VALUES).join(', ')}.`),
