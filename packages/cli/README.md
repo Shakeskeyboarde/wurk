@@ -101,6 +101,7 @@ The following "official" commands are provided to get you started.
 - [run](https://www.npmjs.com/package/@werk/command-run): Run package scripts.
 - [exec](https://www.npmjs.com/package/@werk/command-exec): Run executables.
 - [build](https://www.npmjs.com/package/@werk/command-build): Build using auto-detected tools.
+- [clean](https://www.npmjs.com/package/@werk/command-clean): Remove build output files.
 - [vitest](https://www.npmjs.com/package/@werk/command-vitest): Run Vitest using its built-in workspaces support.
 - [depcheck](https://www.npmjs.com/package/@werk/command-depcheck): Check for unused production dependencies.
 - [version](https://www.npmjs.com/package/@werk/command-version): Update versions.
