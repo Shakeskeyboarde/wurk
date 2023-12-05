@@ -3,6 +3,13 @@ import assert from 'node:assert';
 import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 
+if (process.env.WERK_CLI) {
+  // Werk is never allowed to call itself.
+  process.exit(0);
+}
+
+process.env.WERK_CLI = 'true';
+
 const findRoot = async (current = process.cwd()): Promise<string> => {
   return await readFile(resolve(current, 'package.json'), 'utf-8')
     .then<Record<string, any>>(JSON.parse)
