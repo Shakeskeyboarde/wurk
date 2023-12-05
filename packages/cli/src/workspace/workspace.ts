@@ -215,13 +215,18 @@ export class Workspace {
    * Remove files and directories from the workspace which are ignored by
    * Git, _except_ for `node_modules` and dot-files (eg. `.gitignore`, `.vscode`, etc.).
    */
-  readonly clean = async (): Promise<void> => {
+  readonly clean = async (): Promise<string[]> => {
     const ignored = await this.getGitIgnored();
     const promises = ignored.map(async (filename) => {
-      await rm(resolve(this.dir, filename), { force: true, recursive: true });
+      const fullFilename = resolve(this.dir, filename);
+
+      log.debug(`Removing ignored file: ${fullFilename}`);
+      await rm(fullFilename, { force: true, recursive: true });
     });
 
     await Promise.all(promises);
+
+    return ignored;
   };
 
   /**
@@ -334,7 +339,11 @@ export class Workspace {
    * array if the workspace directory is not part of a Git repository.
    */
   readonly getGitIgnored = async (options?: GitIgnoredOptions): Promise<string[]> => {
-    return (await this.getGitIsRepo()) ? await getGitIgnored(this.dir, options) : [];
+    const ignored = (await this.getGitIsRepo()) ? await getGitIgnored(this.dir, options) : [];
+
+    log.debug(`Git ignored files:${ignored.map((file) => `\n  - ${file}`).join('')}`);
+
+    return ignored;
   };
 
   /**

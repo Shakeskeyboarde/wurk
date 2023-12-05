@@ -1,4 +1,7 @@
+import { relative, resolve } from 'node:path';
+
 import { spawn } from '../utils/spawn.js';
+import { getGitRoot } from './get-git-root.js';
 
 export interface GitIgnoredOptions {
   readonly includeNodeModules?: boolean;
@@ -9,20 +12,28 @@ export const getGitIgnored = async (
   dir: string,
   { includeNodeModules = false, includeDotFiles = false }: GitIgnoredOptions = {},
 ): Promise<string[]> => {
-  const text = await spawn('git', ['status', '--ignored', '--porcelain', dir], {
-    cwd: dir,
-    capture: true,
-  }).getStdout('utf-8');
+  const [gitRoot, gitIgnoredText] = await Promise.all([
+    await getGitRoot(dir),
+    await spawn('git', ['status', '--ignored', '--porcelain', dir], {
+      cwd: dir,
+      capture: true,
+    }).getStdout('utf-8'),
+  ]);
 
-  let files = text.trim().replace(/^!! */gmu, '').split(/\r?\n/u).filter(Boolean);
+  let ignored = gitIgnoredText.split(/\r?\n/u).flatMap((line): [string] | [] => {
+    const match = line.match(/^!! (.*)$/u);
+    return match ? [match[1]!] : [];
+  });
 
   if (!includeNodeModules) {
-    files = files.filter((file) => !/(?:^|[\\/])node_modules(?:[\\/]|$)/u.test(file));
+    ignored = ignored.filter((file) => !/(?:^|[\\/])node_modules(?:[\\/]|$)/u.test(file));
   }
 
   if (!includeDotFiles) {
-    files = files.filter((file) => !/(?:^|[\\/])\./u.test(file));
+    ignored = ignored.filter((file) => !/(?:^|[\\/])\./u.test(file));
   }
 
-  return files;
+  ignored = ignored.map((file) => relative(dir, resolve(gitRoot, file)));
+
+  return ignored;
 };
