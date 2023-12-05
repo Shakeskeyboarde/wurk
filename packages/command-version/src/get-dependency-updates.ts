@@ -2,7 +2,7 @@ import { type Log, type PackageJson, type Workspace } from '@werk/cli';
 import { minVersion, satisfies } from 'semver';
 
 interface Options {
-  includePatches?: boolean;
+  strict?: boolean;
 }
 
 const dependencyUpdates = new Map<string, { version: string }>();
@@ -18,7 +18,7 @@ export const getUpdateNames = (): readonly string[] => {
 export const getDependencyUpdates = (
   log: Log,
   workspace: Workspace,
-  { includePatches = false }: Options = {},
+  { strict = false }: Options = {},
 ): PackageJson | undefined => {
   let packagePatch: PackageJson | undefined;
 
@@ -40,11 +40,7 @@ export const getDependencyUpdates = (
        * The dependency update is too small to matter and the current
        * range already satisfies it.
        */
-      if (
-        !includePatches &&
-        satisfies(update.version, depRange) &&
-        satisfies(update.version, `~${minVersion(depRange)}`)
-      ) {
+      if (!strict && satisfies(update.version, depRange) && satisfies(update.version, `~${minVersion(depRange)}`)) {
         continue;
       }
 

@@ -75,43 +75,44 @@ export default createCommand({
   },
 
   each: async ({ log, args, opts, workspace, spawn, saveAndRestoreFile }) => {
-    if (!workspace.isSelected) return;
-
-    const [spec] = args;
     const { note = [], preid, changelog, dryRun = false } = opts;
-    const isCurrentVersionPrerelease = Boolean(parse(workspace.version)?.prerelease?.length);
-
-    assert(
-      !isCurrentVersionPrerelease || (typeof spec === 'string' && spec.startsWith('pre')),
-      `Workspace "${workspace.name}" cannot be bumped to a non-prerelease version.`,
-    );
 
     let version = '';
     let changes: readonly Change[] = [];
 
-    if (spec instanceof SemVer) {
-      [version, changes] = getExplicitVersion(spec);
-    } else if (spec !== 'auto') {
-      [version, changes] = getBumpedVersion(workspace.version, spec, preid);
-    } else if (!workspace.isPrivate) {
-      [version, changes] = await getAutoVersion(log, workspace, spawn);
+    if (workspace.isSelected) {
+      const [spec] = args;
+      const isCurrentVersionPrerelease = Boolean(parse(workspace.version)?.prerelease?.length);
+
+      assert(
+        !isCurrentVersionPrerelease || (typeof spec === 'string' && spec.startsWith('pre')),
+        `Workspace "${workspace.name}" cannot be bumped to a non-prerelease version.`,
+      );
+
+      if (spec instanceof SemVer) {
+        [version, changes] = getExplicitVersion(spec);
+      } else if (spec !== 'auto') {
+        [version, changes] = getBumpedVersion(workspace.version, spec, preid);
+      } else if (!workspace.isPrivate) {
+        [version, changes] = await getAutoVersion(log, workspace, spawn);
+      }
     }
 
     const packagePatches: PackageJson[] = [];
     const dependencyUpdates = getDependencyUpdates(log, workspace, {
-      // Include patches if the workspace version is already updated.
-      includePatches: Boolean(version),
+      /*
+       * If the workspace is private or the version is updated, then
+       * also include dependencies where the updated version still
+       * satisfies the current version range spec.
+       */
+      strict: workspace.isPrivate || Boolean(version),
     });
-
-    if (dependencyUpdates) {
-      packagePatches.push(dependencyUpdates);
-      log.debug(`Updating workspace "${workspace.name}" dependencies.`);
-    }
 
     /*
      * Increment the version of this workspace (the dependent) if all of
      * the following are true.
      *
+     * - Selected.
      * - Non-private.
      * - Any dependencies have been updated.
      * - Version hasn't already been updated due to other changes.
@@ -119,9 +120,14 @@ export default createCommand({
      * This will cause the current workspace to be republished with the
      * updated dependencies.
      */
-    if (!workspace.isPrivate && dependencyUpdates && !version) {
+    if (workspace.isSelected && !workspace.isPrivate && dependencyUpdates && !version) {
       version = getIncrementedVersion(workspace.version).format();
       changes = [...changes, { type: ChangeType.note, message: 'Updated local dependencies.' }];
+    }
+
+    if (dependencyUpdates) {
+      packagePatches.push(dependencyUpdates);
+      log.debug(`Updating workspace "${workspace.name}" dependencies.`);
     }
 
     const releaseType = version ? diff(workspace.version, version) : null;
