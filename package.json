@@ -12,7 +12,7 @@
     "clean": "rm -rf '**/@(out|lib)' '!**/node_modules/**' &>/dev/null",
     "lint": "eslint --max-warnings=0 .",
     "build": "npm -ws --if-present run build && npm update --silent @werk/cli && werk -p build",
-    "test": "npm run clean && npm run lint && werk depcheck && npm run build && werk vitest run --no-build",
+    "test": "npm run clean && npm run lint && npm run build && werk depcheck && werk vitest run --no-build",
     "start": "npm run clean && npm run build && clear && werk",
     "modernize": "npx npm-check-updates@latest -i --workspaces --root --format group"
   },
@@ -35,6 +35,7 @@
     "@types/node": "^20.10.0",
     "@vitest/coverage-v8": "^0.34.6",
     "@werk/command-build": "*",
+    "@werk/command-clean": "*",
     "@werk/command-depcheck": "*",
     "@werk/command-exec": "*",
     "@werk/command-list": "*",
