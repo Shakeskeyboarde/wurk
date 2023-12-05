@@ -1,7 +1,9 @@
-import { stat } from 'node:fs/promises';
+/* eslint-disable max-lines */
+import { rm, stat } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import { getGitHead } from '../git/get-git-head.js';
+import { getGitIgnored, type GitIgnoredOptions } from '../git/get-git-ignored.js';
 import { getGitIsDirty } from '../git/get-git-is-dirty.js';
 import { getGitIsRepo } from '../git/get-git-is-repo.js';
 import { getGitIsShallow } from '../git/get-git-is-shallow.js';
@@ -210,6 +212,19 @@ export class Workspace {
   }
 
   /**
+   * Remove files and directories from the workspace which are ignored by
+   * Git, _except_ for `node_modules` and dot-files (eg. `.gitignore`, `.vscode`, etc.).
+   */
+  readonly clean = async (): Promise<void> => {
+    const ignored = await this.getGitIgnored();
+    const promises = ignored.map(async (filename) => {
+      await rm(resolve(this.dir, filename), { force: true, recursive: true });
+    });
+
+    await Promise.all(promises);
+  };
+
+  /**
    * Dynamic import relative to the workspace directory, instead of to
    * the current file. This method should be used to import optional
    * command dependencies, because it allows per-workspace package
@@ -314,6 +329,15 @@ export class Workspace {
   });
 
   /**
+   * Get a list of all the files in the workspace directory which are
+   * ignored by Git (`.gitignore`). This method will return an empty
+   * array if the workspace directory is not part of a Git repository.
+   */
+  readonly getGitIgnored = async (options?: GitIgnoredOptions): Promise<string[]> => {
+    return (await this.getGitIsRepo()) ? await getGitIgnored(this.dir, options) : [];
+  };
+
+  /**
    * Return true if the Git working tree is dirty.
    */
   readonly getGitIsDirty = memoize(async (): Promise<boolean> => {
@@ -360,7 +384,7 @@ export class Workspace {
    * `package.json` file. These are the files that should be built and
    * published with the package.
    */
-  readonly getEntryPoints = memoize((): readonly WorkspaceEntryPoint[] => {
+  readonly getEntryPoints = (): readonly WorkspaceEntryPoint[] => {
     const entryPoints: WorkspaceEntryPoint[] = [];
     const addEntryPoints = (type: WorkspaceEntryPoint['type'], value: unknown): void => {
       if (typeof value === 'string') {
@@ -384,7 +408,7 @@ export class Workspace {
     addEntryPoints('man', [this.man, this.directories.man]);
 
     return entryPoints;
-  });
+  };
 
   /**
    * Return a list of all the workspace entry points that are missing.

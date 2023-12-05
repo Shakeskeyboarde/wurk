@@ -158,9 +158,13 @@ The `context.root`, `context.workspaces`, and `context.workspace` properties con
 - `isRoot`: True if the workspace is the root workspace.
 - `isSelected`: True if the workspace matched the [Werk global selection options](README.md#global-selection-options). _This property is mutable._
 
+**Utility methods:**
+
+- `clean()`: Remove files and directories from the workspace which are ignored by Git, _except_ for `node_modules` and dot-files (eg. `.gitignore`, `.vscode`, etc.).
+- `import(id)`: Dynamically import an optional dependency, _relative to the workspace directory._
+
 **Package methods:**
 
-- `import(id)`: Dynamically import an optional dependency, _relative to the workspace directory._
 - `readPackageJson()`: Reads the workspace `package.json` file.
 - `writePackageJson(json)`: Writes the workspace `package.json` file.
 - `patchPackageJson(patchFn)`: Applies a deeply merged patch to the workspace `package.json` file.
@@ -173,6 +177,7 @@ The `context.root`, `context.workspaces`, and `context.workspace` properties con
 - `getGitIsRepo()`: Returns true if the workspace root directory is part of a git repository.
 - `getGitIsShallow()`: Return true if the workspace directory is only a shallow Git checkout. Returns false outside of a Git repo.
 - `getGitHead()`: Returns the hash of the most recent commit which modified the workspace directory. Returns undefined outside of a Git repo.
+- `getGitIgnored(options?)`: Returns a list of files which are ignored by the workspace's gitignore rules. Returns an empty list outside of a Git repo.
 - `getGitIsDirty()`: Returns true if the workspace's git working tree is dirty. Returns false outside of a Git repo.
 - `getIsModified()`: Returns true if the workspace's published commit and current commit are different, or if one or both commits cannot be detected (eg. not a Git repo).
 - `getEntryPoints()`: List all the files which are considered entry points for the workspace.
