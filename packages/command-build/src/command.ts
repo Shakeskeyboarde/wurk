@@ -21,6 +21,7 @@ export default createCommand({
       .addOption(commander.createOption('-s, --start', 'Alias for the --watch option.').implies({ watch: true }))
       .option('--vite', 'Use Vite for all builds instead of auto-detecting.')
       .option('--abort-on-failure', 'Abort on the first build failure.')
+      .option('--no-clean', 'Do not clean the build directory before building.')
       .hook('preAction', (cmd) => {
         const commandName = cmd.parent!.args[0];
 
@@ -33,11 +34,11 @@ export default createCommand({
   each: async ({ opts, log, root, workspace, spawn }) => {
     if (isAborted) return;
 
-    const { watch = false, vite = false, abortOnFailure = false } = opts;
+    const { watch = false, vite = false, abortOnFailure = false, clean } = opts;
 
     if (!workspace.isSelected) return;
 
-    const isBuilt = await build({ log, workspace, root, watch: false, vite, spawn });
+    const isBuilt = await build({ log, workspace, root, watch: false, vite, clean, spawn });
 
     if (isBuilt) {
       const missing = await workspace.getMissingEntryPoints();
@@ -57,7 +58,7 @@ export default createCommand({
     }
 
     if (watch) {
-      startCallbacks.push(() => build({ log, workspace, root, watch: true, vite, spawn }));
+      startCallbacks.push(() => build({ log, workspace, root, watch: true, vite, clean: false, spawn }));
     }
   },
 

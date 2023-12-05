@@ -18,6 +18,7 @@ interface BuildViteOptions {
   readonly log: Log;
   readonly workspace: Workspace;
   readonly watch: boolean;
+  readonly clean: boolean;
   readonly isEsm: boolean;
   readonly isCjs: boolean;
   readonly isIndexHtmlPresent: boolean;
@@ -36,6 +37,7 @@ export const buildVite = async ({
   isCjs,
   isIndexHtmlPresent,
   customConfigFile,
+  clean,
   spawn,
 }: BuildViteOptions): Promise<boolean | null> => {
   let isLib = false;
@@ -85,7 +87,7 @@ export const buildVite = async ({
       env = {
         VITE_WERK_OPTIONS: JSON.stringify({
           outDir: outSubDir ? `lib/${outSubDir}` : 'lib',
-          emptyOutDir: !watchArg,
+          emptyOutDir: !watchArg && clean,
           lib: {
             entry: inputs,
             format: lib.format,

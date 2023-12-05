@@ -14,6 +14,7 @@ interface BuildOptions {
   root: Workspace;
   watch: boolean;
   vite: boolean;
+  clean: boolean;
   spawn: Spawn;
 }
 
@@ -53,18 +54,24 @@ export const build = async ({
   workspace,
   watch,
   vite: forceVite,
+  clean,
   spawn,
 }: BuildOptions): Promise<boolean | null> => {
   const scriptName = watch ? 'start' : 'build';
   const isScriptPresent = workspace.scripts[scriptName] != null;
+  const maybeClean = async (): Promise<void> => {
+    if (clean) await workspace.clean();
+  };
 
   if (isScriptPresent) {
+    await maybeClean();
     return await buildScript({ log, workspace, scriptName, spawn });
   }
 
   const rollupConfig = await detectRollup(workspace);
 
   if (rollupConfig) {
+    await maybeClean();
     return await buildRollup({ log, workspace, watch, ...rollupConfig, spawn });
   }
 
@@ -75,10 +82,12 @@ export const build = async ({
   const isCjs = isLib && isCjsPackage(packageJson);
 
   if (viteConfig || forceVite) {
+    await maybeClean();
     return await buildVite({
       log,
       workspace,
       watch,
+      clean,
       isEsm: isLib && isEsm,
       isCjs: isLib && isCjs,
       ...(viteConfig || {
@@ -92,6 +101,7 @@ export const build = async ({
   const isTypescript = Boolean(packageJson.dependencies?.typescript || rootPackageJson.devDependencies?.typescript);
 
   if (isTypescript && isLib) {
+    await maybeClean();
     return await buildTsc({ log, root, workspace, watch, isEsm, isCjs, spawn });
   }
 
