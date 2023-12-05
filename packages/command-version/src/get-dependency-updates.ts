@@ -36,22 +36,24 @@ export const getDependencyUpdates = (
        */
       if (depRange === '*' || depRange === 'x' || depRange.startsWith('file:')) continue;
 
+      const prefix = depRange.match(/^([=^~]|>=?)?\d+(?:\.\d+(?:\.\d+(?:-[^\s|=<>^~]*)?)?)?$/u)?.[1] ?? '^';
+      const newDepRange = `${prefix}${update.version}`;
+
       /*
        * The dependency update is too small to matter and the current
        * range already satisfies it.
        */
       if (!strict && satisfies(update.version, depRange) && satisfies(update.version, `~${minVersion(depRange)}`)) {
+        log.debug(
+          `Skipping inconsequential update "${depName}@${depRange}" to "${newDepRange} in workspace "${workspace.name}".`,
+        );
         continue;
       }
 
-      const prefix = depRange.match(/^([=^~]|>=?)?\d+(?:\.\d+(?:\.\d+(?:-[^\s|=<>^~]*)?)?)?$/u)?.[1] ?? '^';
-      const newDepRange = `${prefix}${update.version}`;
-
-      packagePatch = { ...packagePatch, [scope]: { ...packagePatch?.[scope], [depName]: newDepRange } };
-
       log.debug(`Updating "${depName}@${depRange}" to "${newDepRange}" in workspace "${workspace.name}".`);
+      packagePatch = { ...packagePatch, [scope]: { ...packagePatch?.[scope], [depName]: newDepRange } };
     }
-
-    return packagePatch;
   }
+
+  return packagePatch;
 };
