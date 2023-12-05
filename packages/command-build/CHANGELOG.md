@@ -1,3 +1,10 @@
+## 3.0.1 (2023-12-05)
+
+### Improvements
+
+- Add pre-build clean step. (be0590f)
+- Detect Rollup before Vite. (6a107d5)
+
 # 3.0.0 (2023-12-04)
 
 ### Breaking Changes

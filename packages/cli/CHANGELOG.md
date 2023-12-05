@@ -1,3 +1,10 @@
+## 9.0.4 (2023-12-05)
+
+### Improvements
+
+- Add workspace &#96;clean()&#96; and &#96;getGitIgnored()&#96; methods. (2a533fb)
+- Prevent Werk from running itself. (222a3c1)
+
 ## 9.0.3 (2023-12-04)
 
 ### Bug Fixes
