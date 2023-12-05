@@ -64,11 +64,15 @@ export const buildVite = async ({
 
   if (customConfigFile) {
     configs.push({ configFile: customConfigFile });
-  } else if (isLib) {
+  } else {
     const autoConfigFile = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'config', 'vite.config.mts');
 
-    if (isEsm) configs.push({ configFile: autoConfigFile, lib: { format: 'es', isMultiTarget: isCjs } });
-    if (isCjs) configs.push({ configFile: autoConfigFile, lib: { format: 'cjs', isMultiTarget: isEsm } });
+    if (isLib) {
+      if (isEsm) configs.push({ configFile: autoConfigFile, lib: { format: 'es', isMultiTarget: isCjs } });
+      if (isCjs) configs.push({ configFile: autoConfigFile, lib: { format: 'cjs', isMultiTarget: isEsm } });
+    } else {
+      configs.push({ configFile: autoConfigFile });
+    }
   }
 
   const build = async ({ configFile, lib }: BuildConfig): Promise<boolean> => {
