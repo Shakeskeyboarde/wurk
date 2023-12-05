@@ -1,3 +1,9 @@
+## 1.0.5 (2023-12-05)
+
+### Bug Fixes
+
+- Build order by adding dev dependencies on Werk commands where necessary. (f15deb4)
+
 ## 1.0.4 (2023-11-21)
 
 ### Chores

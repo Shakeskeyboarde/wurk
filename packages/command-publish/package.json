@@ -1,7 +1,7 @@
 {
   "name": "@werk/command-publish",
   "description": "Publish packages.",
-  "version": "2.2.8",
+  "version": "2.2.9",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/command-publish/README.md",
@@ -43,7 +43,7 @@
     "vite-plugin-dts": "^3.6.3"
   },
   "dependencies": {
-    "@werk/cli": "^9.0.2",
+    "@werk/cli": "^9.0.5",
     "tar-stream": "^3.1.6"
   }
 }

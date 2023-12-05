@@ -1,3 +1,13 @@
+## 9.0.5 (2023-12-05)
+
+### Bug Fixes
+
+- Git ignored files should be relative to the workspace directory.Ï (26fb8db)
+
+### Documentation
+
+- Add clean to official plugins list. (f44e0e1)
+
 ## 9.0.4 (2023-12-05)
 
 ### Improvements

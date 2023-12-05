@@ -1,3 +1,13 @@
+## 1.0.11 (2023-12-05)
+
+### Bug Fixes
+
+- Build order by adding dev dependencies on Werk commands where necessary. (f15deb4)
+
+### Chores
+
+- Remove unnecessary exports "." path qualifier. (6b166d2)
+
 ## 1.0.10 (2023-11-27)
 
 ### Bug Fixes

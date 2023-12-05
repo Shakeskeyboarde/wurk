@@ -1,7 +1,7 @@
 {
   "name": "create-minimal-workspace",
   "description": "Create the bare minimum monorepo workspace project.",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "license": "ISC",
   "type": "module",
   "bin": "./lib/main.js",

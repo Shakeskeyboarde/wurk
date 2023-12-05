@@ -1,3 +1,9 @@
+## 3.0.2 (2023-12-05)
+
+### Bug Fixes
+
+- Should build vite web bundle without a custom config. (61eb60e)
+
 ## 3.0.1 (2023-12-05)
 
 ### Improvements
