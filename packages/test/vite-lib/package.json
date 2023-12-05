@@ -3,18 +3,27 @@
   "name": "test-vite-lib",
   "description": "Testing the build command vite library mode",
   "type": "module",
-  "types": "./lib/index.d.ts",
-  "main": "./lib/index.cjs",
+  "types": "./lib/esm/index.d.ts",
   "exports": {
     ".": {
-      "types": "./lib/index.d.ts",
-      "require": "./lib/index.cjs",
-      "default": "./lib/index.js"
+      "require": {
+        "types": "./lib/cjs/index.d.ts",
+        "default": "./lib/cjs/index.cjs"
+      },
+      "import": {
+        "types": "./lib/esm/index.d.ts",
+        "default": "./lib/esm/index.js"
+      }
     },
     "./component": {
-      "types": "./lib/component.d.ts",
-      "require": "./lib/component.cjs",
-      "default": "./lib/component.js"
+      "require": {
+        "types": "./lib/cjs/foo/component.d.ts",
+        "default": "./lib/cjs/foo/component.cjs"
+      },
+      "import": {
+        "types": "./lib/esm/foo/component.d.ts",
+        "default": "./lib/esm/foo/component.js"
+      }
     }
   },
   "dependencies": {

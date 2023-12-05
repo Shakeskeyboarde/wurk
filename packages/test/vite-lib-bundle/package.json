@@ -3,23 +3,37 @@
   "name": "test-vite-lib-bundle",
   "description": "Testing the build command vite library mode with bundling",
   "type": "module",
-  "types": "./lib/bundle.d.ts",
-  "main": "./lib/bundle.cjs",
+  "types": "./lib/esm/bundle.d.ts",
   "exports": {
     ".": {
-      "types": "./lib/bundle.d.ts",
-      "require": "./lib/bundle.cjs",
-      "default": "./lib/bundle.js"
+      "require": {
+        "types": "./lib/cjs/bundle.d.ts",
+        "default": "./lib/cjs/bundle.cjs"
+      },
+      "import": {
+        "types": "./lib/esm/bundle.d.ts",
+        "default": "./lib/esm/bundle.js"
+      }
     },
     "./sub": {
-      "types": "./lib/foo.d.ts",
-      "require": "./lib/foo.cjs",
-      "default": "./lib/foo.js"
+      "require": {
+        "types": "./lib/cjs/foo.d.ts",
+        "default": "./lib/cjs/foo.cjs"
+      },
+      "import": {
+        "types": "./lib/esm/foo.d.ts",
+        "default": "./lib/esm/foo.js"
+      }
     },
     "./svg": {
-      "types": "./lib/test.d.ts",
-      "require": "./lib/test.cjs",
-      "default": "./lib/test.js"
+      "require": {
+        "types": "./lib/cjs/test.d.ts",
+        "default": "./lib/cjs/test.cjs"
+      },
+      "import": {
+        "types": "./lib/esm/test.d.ts",
+        "default": "./lib/esm/test.js"
+      }
     }
   },
   "devDependencies": {

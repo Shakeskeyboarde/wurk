@@ -1,25 +1,37 @@
-/* eslint-disable @typescript-eslint/consistent-type-imports */
+/* eslint-disable max-lines */
 import { readFile, stat } from 'node:fs/promises';
 import { isBuiltin } from 'node:module';
 import { dirname, join, relative, resolve } from 'node:path';
 
-import { findAsync, importRelative, ResolvedImport } from '@werk/cli';
-import { type ConfigEnv, type LibraryFormats, type Plugin, type PluginOption, type UserConfig } from 'vite';
+import type PluginReact from '@vitejs/plugin-react';
+import { findAsync, importRelative, type ResolvedImport } from '@werk/cli';
+import type { ConfigEnv, LibraryFormats, Plugin, PluginOption, UserConfig } from 'vite';
+import type PluginBin from 'vite-plugin-bin';
+import type { default as PluginChecker } from 'vite-plugin-checker';
+import type PluginDts from 'vite-plugin-dts';
+import type PluginRefresh from 'vite-plugin-refresh';
+import type PluginRewriteAll from 'vite-plugin-rewrite-all';
+import type PluginSvgr from 'vite-plugin-svgr';
+import type PluginZipPack from 'vite-plugin-zip-pack';
 
 interface Plugins {
-  '@vitejs/plugin-react': typeof import('@vitejs/plugin-react');
-  'vite-plugin-bin': typeof import('vite-plugin-bin');
-  'vite-plugin-checker': typeof import('vite-plugin-checker');
-  'vite-plugin-dts': typeof import('vite-plugin-dts');
-  'vite-plugin-refresh': typeof import('vite-plugin-refresh');
-  'vite-plugin-svgr': typeof import('vite-plugin-svgr');
-  'vite-plugin-rewrite-all': typeof import('vite-plugin-rewrite-all');
-  'vite-plugin-zip-pack': typeof import('vite-plugin-zip-pack');
+  '@vitejs/plugin-react': { default: typeof PluginReact };
+  'vite-plugin-bin': { default: typeof PluginBin };
+  'vite-plugin-checker': { default: typeof PluginChecker };
+  'vite-plugin-dts': { default: typeof PluginDts };
+  'vite-plugin-refresh': { default: typeof PluginRefresh };
+  'vite-plugin-svgr': { default: typeof PluginSvgr };
+  'vite-plugin-rewrite-all': { default: typeof PluginRewriteAll };
+  'vite-plugin-zip-pack': { default: typeof PluginZipPack.default };
 }
 
 type PluginPromise = Promise<false | Plugin | PluginOption[] | null | undefined>;
 
 export interface ViteConfigOptions {
+  /**
+   * Output directory for build. Defaults to "dist".
+   */
+  outDir?: string;
   /**
    * Empty the output directory before building. Defaults to true.
    */
@@ -36,7 +48,7 @@ export interface ViteConfigOptions {
      * Library formats (eg. "es", "cjs") to build. Defaults to
      * `["es", "cjs"]`.
      */
-    formats?: LibraryFormats[];
+    format?: LibraryFormats;
     /**
      * Preserve modules directory structure (ie. disable bundling).
      * Defaults to true.
@@ -63,7 +75,7 @@ const readPackage = async (
 
 export const getViteConfig = async (
   env: ConfigEnv,
-  { emptyOutDir = true, lib, plugins }: ViteConfigOptions = {},
+  { outDir = 'dist', emptyOutDir = true, lib, plugins }: ViteConfigOptions = {},
 ): Promise<UserConfig> => {
   // eslint-disable-next-line import/no-extraneous-dependencies
   const vite = await import('vite');
@@ -133,7 +145,7 @@ export const getViteConfig = async (
   };
 
   if (lib) {
-    const { entry = [], formats = [], preserveModules = true } = lib;
+    const { entry = [], format = 'es', preserveModules = true } = lib;
 
     if (entry.length === 0) entry.push(resolve(packageRoot, 'src/index.ts'));
 
@@ -151,37 +163,58 @@ export const getViteConfig = async (
       ...(preserveModules ? packageJson.devDependencies : undefined),
     });
 
+    // eslint-disable-next-line import/no-extraneous-dependencies
+    const { default: ts } = await import('typescript');
+
     return {
       root: packageRoot,
       plugins: [
         tryPluginChecker(),
         tryPlugin('vite-plugin-svgr', { version: '^4.0.0' }),
         tryPlugin('@vitejs/plugin-react', { version: '^4.0.4' }),
-        tryPlugin('vite-plugin-dts', {
-          version: '^3.5.3',
-          args: [
-            {
-              entryRoot: 'src',
-              copyDtsFiles: true,
-              include: ['src'],
-              exclude: ['**/*.test.*', '**/*.spec.*', '**/*.stories.*'],
-            },
-          ],
-        }),
+        format == 'es' || format == 'cjs'
+          ? tryPlugin('vite-plugin-dts', {
+              version: '^3.5.3',
+              args: [
+                {
+                  entryRoot: 'src',
+                  compilerOptions:
+                    format === 'cjs'
+                      ? {
+                          module: ts.ModuleKind.CommonJS,
+                          moduleResolution: ts.ModuleResolutionKind.Node10,
+                        }
+                      : {
+                          module: ts.ModuleKind.ESNext,
+                          moduleResolution: ts.ModuleResolutionKind.Bundler,
+                        },
+                  copyDtsFiles: true,
+                  include: ['src'],
+                  exclude: ['**/*.test.*', '**/*.spec.*', '**/*.stories.*'],
+                },
+              ],
+            })
+          : null,
         tryPlugin('vite-plugin-bin', { version: '^1.0.1' }),
         tryPlugin('vite-plugin-zip-pack', {
           version: '^1.0.6',
-          args: [{ inDir: 'lib', outDir: 'out', outFileName: 'lib.zip' }],
+          args: [
+            {
+              inDir: outDir,
+              outDir: 'out',
+              outFileName: `${outDir.replace(/^[\\/]+|[\\/]+$/gu, '').replace(/[\\/:]+/gu, '-')}.zip`,
+            },
+          ],
         }),
       ],
       build: {
         target: 'esnext',
-        outDir: 'lib',
+        outDir,
         emptyOutDir,
         sourcemap: true,
         lib: {
           entry,
-          formats,
+          formats: [format],
           fileName: '[name]',
         },
         rollupOptions: {
@@ -209,12 +242,18 @@ export const getViteConfig = async (
       tryPlugin('vite-plugin-rewrite-all', { version: '^1.0.1' }),
       tryPlugin('vite-plugin-zip-pack', {
         version: '^1.0.6',
-        args: [{ inDir: 'dist', outDir: 'out', outFileName: 'dist.zip' }],
+        args: [
+          {
+            inDir: outDir,
+            outDir: 'out',
+            outFileName: `${outDir.replace(/^[\\/]+|[\\/]+$/gu, '').replace(/[\\/:]+/gu, '-')}.zip`,
+          },
+        ],
       }),
     ],
     build: {
       target: 'esnext',
-      outDir: 'dist',
+      outDir,
       emptyOutDir,
       rollupOptions: {
         // See: https://github.com/vitejs/vite-plugin-react/issues/137

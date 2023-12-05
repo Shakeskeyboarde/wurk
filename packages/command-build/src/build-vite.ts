@@ -2,9 +2,17 @@ import { stat } from 'node:fs/promises';
 import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { findAsync, type Log, type Spawn, type Workspace } from '@werk/cli';
+import { findAsync, Log, type Spawn, type Workspace } from '@werk/cli';
 
 import { type ViteConfigOptions } from './vite-config.js';
+
+interface BuildConfig {
+  readonly configFile: string;
+  readonly lib?: {
+    readonly format: 'es' | 'cjs';
+    readonly isMultiTarget?: boolean;
+  };
+}
 
 interface BuildViteOptions {
   readonly log: Log;
@@ -18,7 +26,7 @@ interface BuildViteOptions {
 }
 
 const START_DELAY_SECONDS = 10;
-const DEFAULT_CONFIG_FILE = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'config', 'vite.config.mts');
+const ENTRY_POINT_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.svg'];
 
 export const buildVite = async ({
   log,
@@ -46,71 +54,104 @@ export const buildVite = async ({
   const watchArg = isLib && watch ? '--watch' : null;
   const hostArg = !isLib && watch ? '--host' : null;
 
-  log.notice(
-    `${watch ? 'Starting' : 'Building'} workspace "${workspace.name}" using Vite${
-      commandArg === 'serve' ? ` (${START_DELAY_SECONDS} second delay)` : ''
-    }.`,
-  );
-
   if (commandArg === 'serve') {
     await new Promise((res) => setTimeout(res, START_DELAY_SECONDS * 1000));
   }
 
-  const env: NodeJS.ProcessEnv = {};
+  const configs: BuildConfig[] = [];
 
-  if (isLib && !customConfigFile) {
-    const outputs = workspace.getEntryPoints();
-    const basenames = [
-      ...new Set(
-        outputs.flatMap(({ filename }) => {
-          const match = relative(resolve(workspace.dir, 'lib'), filename).match(/^(.*)\.[cm]?js$/u);
-          return match ? [resolve(workspace.dir, 'src', match[1]!)] : [];
-        }),
-      ),
-    ];
+  if (customConfigFile) {
+    configs.push({ configFile: customConfigFile });
+  } else if (isLib) {
+    const autoConfigFile = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'config', 'vite.config.mts');
 
-    const entry = [
-      ...new Set(
-        await Promise.all(
-          basenames.map((value) => {
-            return findAsync(
-              ['.ts', '.tsx', '.js', '.jsx', '.svg'].map((ext) => `${value}${ext}`),
-              (filename) =>
-                stat(filename)
-                  .then((stats) => stats.isFile())
-                  .catch(() => false),
-            );
-          }),
-        ),
-      ),
-    ].filter((filename): filename is string => Boolean(filename));
-
-    if (entry.length === 0) {
-      log.warn(`No entry points found in workspace "${workspace.name}".`);
-      return null;
-    }
-
-    const preserveModules = entry.every((filename) =>
-      /[\\/]src[\\/][^\\/]+(?<![\\/]bundle)\.[^\\/.]+$/u.test(filename),
-    );
-
-    const config: ViteConfigOptions = {
-      emptyOutDir: !watchArg,
-      lib: {
-        entry,
-        formats: isEsm ? (isCjs ? ['es', 'cjs'] : ['es']) : isCjs ? ['cjs'] : ['es', 'cjs'],
-        preserveModules,
-      },
-    };
-
-    env.VITE_WERK_OPTIONS = JSON.stringify(config);
+    if (isEsm) configs.push({ configFile: autoConfigFile, lib: { format: 'es', isMultiTarget: isCjs } });
+    if (isCjs) configs.push({ configFile: autoConfigFile, lib: { format: 'cjs', isMultiTarget: isEsm } });
   }
 
-  return await spawn('vite', [commandArg, watchArg, hostArg, `--config=${customConfigFile ?? DEFAULT_CONFIG_FILE}`], {
-    cwd: workspace.dir,
-    echo: true,
-    errorReturn: true,
-    errorSetExitCode: true,
-    env,
-  }).succeeded();
+  const build = async ({ configFile, lib }: BuildConfig): Promise<boolean> => {
+    let env: Record<string, string> | undefined;
+    let spawnLog = log;
+
+    if (lib) {
+      const inputs = await getInputs(workspace);
+      const isBundle = isBundleInputPresent(inputs);
+      const outSubDir = lib?.isMultiTarget ? (lib.format === 'es' ? 'esm' : lib.format) : undefined;
+
+      if (outSubDir) {
+        spawnLog = new Log({ ...log, prefix: `${log.prefix}(${outSubDir})` });
+      }
+
+      env = {
+        VITE_WERK_OPTIONS: JSON.stringify({
+          outDir: outSubDir ? `lib/${outSubDir}` : 'lib',
+          emptyOutDir: !watchArg,
+          lib: {
+            entry: inputs,
+            format: lib.format,
+            preserveModules: !isBundle,
+          },
+        } as ViteConfigOptions),
+      };
+    }
+
+    return await spawn('vite', [commandArg, watchArg, hostArg, `--config=${configFile}`], {
+      log: spawnLog,
+      cwd: workspace.dir,
+      echo: true,
+      errorReturn: true,
+      errorSetExitCode: true,
+      env,
+    }).succeeded();
+  };
+
+  if (watch) {
+    log.notice(`Starting workspace "${workspace.name}" using Vite.`);
+
+    return await Promise.all(configs.map(build)).then((results) => results.every(Boolean));
+  }
+
+  log.notice(`Building workspace "${workspace.name}" using Vite.`);
+
+  for (const config of configs) {
+    const isSuccess = await build(config);
+
+    if (!isSuccess) return false;
+  }
+
+  return true;
+};
+
+const getInputs = async (workspace: Workspace): Promise<string[]> => {
+  const outputs = workspace.getEntryPoints();
+  const basenames = [
+    ...new Set(
+      outputs.flatMap(({ filename }) => {
+        const match = relative(resolve(workspace.dir, 'lib'), filename).match(/^(.*)\.[cm]?js$/u);
+        return match ? [resolve(workspace.dir, 'src', match[1]!.replace(/(?:cjs|esm)[\\/]/u, ''))] : [];
+      }),
+    ),
+  ];
+
+  const inputs = [
+    ...new Set(
+      await Promise.all(
+        basenames.map((value) => {
+          return findAsync(
+            ENTRY_POINT_EXTENSIONS.map((ext) => `${value}${ext}`),
+            (filename) =>
+              stat(filename)
+                .then((stats) => stats.isFile())
+                .catch(() => false),
+          );
+        }),
+      ),
+    ),
+  ].filter((filename): filename is string => Boolean(filename));
+
+  return inputs;
+};
+
+const isBundleInputPresent = (inputs: string[]): boolean => {
+  return inputs.some((input) => /(?:^|[\\/])bundle\.[^\\/.]+$/u.test(input));
 };

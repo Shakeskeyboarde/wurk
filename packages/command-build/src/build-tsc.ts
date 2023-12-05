@@ -98,38 +98,45 @@ export const buildTsc = async ({
     }
   }
 
-  log.notice(`${watch ? 'Starting' : 'Building'} workspace "${workspace.name}" using TypeScript.`);
+  const build = async (filename: string): Promise<boolean> => {
+    const name = basename(filename).replace(/^tsconfig\.|\.json$/gu, '');
+    const subLog = new Log({ ...log, prefix: `${log.prefix}(${name})` });
+    const { noEmit, emitDeclarationOnly, outDir, isEsmConfig } = await readTsConfig(filename, workspace, spawn);
 
-  const results = await Promise.all(
-    tsBuildConfigs.map(async (filename) => {
-      const name = basename(filename).replace(/^tsconfig\.|\.json$/gu, '');
-      const subLog = new Log({ ...log, prefix: `${log.prefix}(${name})` });
-      const { noEmit, emitDeclarationOnly, outDir, isEsmConfig } = await readTsConfig(filename, workspace, spawn);
+    if (!noEmit && !emitDeclarationOnly && isEsm != null && resolve(outDir, workspace.dir) !== '') {
+      await mkdir(outDir, { recursive: true });
 
-      if (!noEmit && !emitDeclarationOnly && isEsm != null && resolve(outDir, workspace.dir) !== '') {
-        await mkdir(outDir, { recursive: true });
+      const type = isEsmConfig ? 'module' : 'commonjs';
 
-        const type = isEsmConfig ? 'module' : 'commonjs';
-
-        if (type !== workspace.type) {
-          await writeFile(
-            resolve(outDir, 'package.json'),
-            JSON.stringify({ type: isEsmConfig ? 'module' : 'commonjs' }),
-          );
-        }
+      if (type !== workspace.type) {
+        await writeFile(resolve(outDir, 'package.json'), JSON.stringify({ type: isEsmConfig ? 'module' : 'commonjs' }));
       }
+    }
 
-      return await spawn('tsc', ['-p', filename, watch && '--watch'], {
-        cwd: workspace.dir,
-        echo: true,
-        errorSetExitCode: true,
-        errorReturn: true,
-        log: subLog,
-      }).succeeded();
-    }),
-  );
+    return await spawn('tsc', ['-p', filename, watch && '--watch'], {
+      cwd: workspace.dir,
+      echo: true,
+      errorSetExitCode: true,
+      errorReturn: true,
+      log: subLog,
+    }).succeeded();
+  };
 
-  return results.every(Boolean);
+  if (watch) {
+    log.notice(`Starting workspace "${workspace.name}" using TypeScript.`);
+
+    return await Promise.all(tsBuildConfigs.map(build)).then((results) => results.every(Boolean));
+  }
+
+  log.notice(`Building workspace "${workspace.name}" using TypeScript.`);
+
+  for (const filename of tsBuildConfigs) {
+    const isSuccess = await build(filename);
+
+    if (!isSuccess) return false;
+  }
+
+  return true;
 };
 
 const readTsConfig = async (

@@ -17,12 +17,34 @@ interface BuildOptions {
   spawn: Spawn;
 }
 
+const hasDeepKey = (obj: unknown, ...keys: string[]): boolean => {
+  if (typeof obj !== 'object' || obj == null) return false;
+
+  for (const [key, value] of Object.entries(obj)) {
+    if (keys.includes(key)) return true;
+    if (hasDeepKey(value, ...keys)) return true;
+  }
+
+  return false;
+};
+
 const isEsmPackage = (packageJson: Record<string, unknown>): boolean => {
-  return Boolean(packageJson.exports || (packageJson.bin && packageJson.type === 'module'));
+  if (packageJson.type === 'module') return true;
+  if (packageJson.module) return true;
+  if (hasDeepKey(packageJson.exports, 'import')) return true;
+
+  return false;
 };
 
 const isCjsPackage = (packageJson: Record<string, unknown>): boolean => {
-  return Boolean(packageJson.main || (packageJson.bin && (!packageJson.type || packageJson.type === 'commonjs')));
+  if (packageJson.type === 'commonjs' || !packageJson.type) return true;
+  if (hasDeepKey(packageJson.exports, 'require')) return true;
+
+  return false;
+};
+
+const isLibPackage = (packageJson: Record<string, unknown>): boolean => {
+  return Boolean(packageJson.exports || packageJson.main || packageJson.module || packageJson.types || packageJson.bin);
 };
 
 export const build = async ({ log, root, workspace, watch, vite, spawn }: BuildOptions): Promise<boolean | null> => {
@@ -42,17 +64,18 @@ export const build = async ({ log, root, workspace, watch, vite, spawn }: BuildO
 
   const [packageJson, rootPackageJson] = await Promise.all([workspace.readPackageJson(), root.readPackageJson()]);
   const [isVite, isRollup] = await Promise.all([detectVite(workspace, packageJson), detectRollup(workspace)]);
-  const isTypescript = Boolean(packageJson.devDependencies?.typescript || rootPackageJson.devDependencies?.typescript);
-  const isEsm = isEsmPackage(packageJson);
-  const isCjs = isCjsPackage(packageJson);
+  const isLib = isLibPackage(packageJson);
+  const isTypescript = Boolean(packageJson.dependencies?.typescript || rootPackageJson.devDependencies?.typescript);
+  const isEsm = isLib && isEsmPackage(packageJson);
+  const isCjs = isLib && isCjsPackage(packageJson);
 
-  if (vite || isVite)
+  if (isVite || vite)
     return await buildVite({
       log,
       workspace,
       watch,
-      isEsm,
-      isCjs,
+      isEsm: isLib && isEsm,
+      isCjs: isLib && isCjs,
       ...(isVite || {
         isIndexHtmlPresent: false,
         customConfigFile: undefined,
@@ -60,9 +83,13 @@ export const build = async ({ log, root, workspace, watch, vite, spawn }: BuildO
       spawn,
     });
 
-  if (isRollup) return await buildRollup({ log, workspace, watch, ...isRollup, spawn });
+  if (isRollup) {
+    return await buildRollup({ log, workspace, watch, ...isRollup, spawn });
+  }
 
-  if (isTypescript) return await buildTsc({ log, root, workspace, watch, isEsm, isCjs, spawn });
+  if (isTypescript && isLib) {
+    return await buildTsc({ log, root, workspace, watch, isEsm, isCjs, spawn });
+  }
 
   return null;
 };
