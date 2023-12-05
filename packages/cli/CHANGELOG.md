@@ -1,3 +1,13 @@
+## 9.0.3 (2023-12-04)
+
+### Bug Fixes
+
+- **version:** Commander passThroughOptions should not be set. (17d772a)
+
+### Improvements
+
+- Allow 'debug' log level alias for 'verbose'. (3c5e7a2)
+
 ## 9.0.2 (2023-11-21)
 
 ### Bug Fixes

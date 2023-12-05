@@ -1,3 +1,11 @@
+## 3.3.7 (2023-12-04)
+
+### Bug Fixes
+
+- Commander passThroughOptions should not be set. (17d772a)
+- Not updating dev, optional, or peer dependency versions. (b10091c)
+- Update dependency versions even if workspaces are not selected. (d3e53b0)
+
 ## 3.3.6 (2023-11-21)
 
 ### Chores

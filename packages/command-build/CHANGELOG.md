@@ -1,3 +1,9 @@
+# 3.0.0 (2023-12-04)
+
+### Breaking Changes
+
+- Vite library output to lib/esm and lib/cjs when ESM and CJS entry points are detected (multi-target build). (0f7b015)
+
 ## 2.2.0 (2023-11-22)
 
 ### Features
