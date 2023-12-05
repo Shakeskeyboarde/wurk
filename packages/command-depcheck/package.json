@@ -25,10 +25,8 @@
   ],
   "types": "./lib/command.d.ts",
   "exports": {
-    ".": {
-      "types": "./lib/command.d.ts",
-      "default": "./lib/command.js"
-    }
+    "types": "./lib/command.d.ts",
+    "default": "./lib/command.js"
   },
   "publishConfig": {
     "access": "public"
