@@ -3,5 +3,8 @@
   "name": "test-rollup",
   "description": "Testing the build command rollup mode",
   "type": "module",
-  "dependencies": {}
+  "dependencies": {},
+  "devDependencies": {
+    "@werk/command-build": "*"
+  }
 }

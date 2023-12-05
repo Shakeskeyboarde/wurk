@@ -9,11 +9,11 @@
   },
   "type": "module",
   "scripts": {
-    "clean": "rm -rf '**/@(out|lib)' '!**/node_modules/**' &>/dev/null",
     "lint": "eslint --max-warnings=0 .",
     "build": "npm -ws --if-present run build && npm update --silent @werk/cli && werk -p build",
     "test": "npm run clean && npm run lint && npm run build && werk depcheck && werk vitest run --no-build",
-    "start": "npm run clean && npm run build && clear && werk",
+    "start": "npm run build && clear && werk",
+    "clean": "npm start -- clean",
     "modernize": "npx npm-check-updates@latest -i --workspaces --root --format group"
   },
   "workspaces": [

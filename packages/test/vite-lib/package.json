@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.0",
+    "@werk/command-build": "*",
     "vite": "^5.0.2",
     "vite-plugin-checker": "^0.6.2",
     "vite-plugin-dts": "^3.6.3",

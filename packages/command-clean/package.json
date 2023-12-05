@@ -1,6 +1,6 @@
 {
   "name": "@werk/command-clean",
-  "description": "Remove package build output files.",
+  "description": "Remove build output files.",
   "version": "1.0.0",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
@@ -38,6 +38,7 @@
     "@werk/cli": "^9.0.4"
   },
   "devDependencies": {
+    "@werk/command-build": "*",
     "vite": "^5.0.2",
     "vite-plugin-checker": "^0.6.2",
     "vite-plugin-dts": "^3.6.3"

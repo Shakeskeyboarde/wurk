@@ -6,6 +6,7 @@
   "type": "module",
   "bin": "./lib/main.js",
   "devDependencies": {
+    "@werk/command-build": "*",
     "vite": "^5.0.2",
     "vite-plugin-bin": "^1.0.2"
   },
