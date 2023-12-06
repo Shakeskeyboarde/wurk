@@ -60,7 +60,7 @@ export default createCommand({
     } else if (isWorkspacePublished == null) {
       workspace.setStatus('skipped', 'already published');
     } else {
-      workspace.setStatus('warning');
+      workspace.setStatus('warning', 'not published');
     }
   },
 });
