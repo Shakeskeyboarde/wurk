@@ -1,6 +1,10 @@
 import { Transform, type TransformCallback } from 'node:stream';
 import { StringDecoder } from 'node:string_decoder';
 
+import getAnsiRegex from 'ansi-regex';
+
+const ANSI_REGEXP = getAnsiRegex();
+
 export class LogStream extends Transform {
   readonly #decoder = new StringDecoder('utf-8');
 
@@ -39,7 +43,13 @@ export class LogStream extends Transform {
   _transform(chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback): void {
     if (chunk.length === 0) return;
 
-    this.#buffer += this.#decoder.write(chunk);
+    this.#buffer += this.#decoder
+      .write(chunk)
+      /*
+       * Removes ANSI escape codes because lines with different (unterminated)
+       * formatting might be interleaved due to multi-threading.
+       */
+      .replace(ANSI_REGEXP, '');
 
     // Flush completed lines if the buffer is getting too big.
     if (this.#buffer.length > 40_000) this.#send(false);
@@ -77,7 +87,7 @@ export class LogStream extends Transform {
     let lastIndex = 0;
 
     while ((line = rx.exec(value))) {
-      this.push((line[1] ?? '') + '\n');
+      this.push(line[1]!);
       lastIndex = rx.lastIndex;
     }
 
