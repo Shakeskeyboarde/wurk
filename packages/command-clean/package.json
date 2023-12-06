@@ -1,7 +1,7 @@
 {
   "name": "@werk/command-clean",
   "description": "Remove build output files.",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/command-clean/README.md",
@@ -33,7 +33,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@werk/cli": "^9.0.5"
+    "@werk/cli": "^9.1.0"
   },
   "devDependencies": {
     "@werk/command-build": "*",

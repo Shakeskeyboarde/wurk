@@ -1,3 +1,19 @@
+## 3.3.9 (2023-12-06)
+
+### Bug Fixes
+
+- Restore package-lock.json on dry run. (30e1872)
+
+### Improvements
+
+- Add release message. (d003ba2)
+- Status handling. (724b06f)
+
+### Chores
+
+- Remove unnecessary log message on no-updates (handled by summary). (afa5e26)
+- Use workspace status. (10c5e0e)
+
 ## 3.3.8 (2023-12-05)
 
 ### Bug Fixes

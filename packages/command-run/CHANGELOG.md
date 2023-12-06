@@ -1,3 +1,9 @@
+## 3.2.10 (2023-12-06)
+
+### Notes
+
+- Updated local dependencies.
+
 ## 3.2.9 (2023-12-05)
 
 ### Bug Fixes

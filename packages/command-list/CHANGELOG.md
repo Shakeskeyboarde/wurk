@@ -1,3 +1,10 @@
+## 1.3.10 (2023-12-06)
+
+### Chores
+
+- Rename log.write to log.print. (b78e0b7)
+- Use &#96;log.write()&#96; method. (2e0243f)
+
 ## 1.3.9 (2023-12-05)
 
 ### Bug Fixes

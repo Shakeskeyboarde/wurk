@@ -1,3 +1,9 @@
+## 1.0.12 (2023-12-06)
+
+### Notes
+
+- Updated local dependencies.
+
 ## 1.0.11 (2023-12-05)
 
 ### Bug Fixes

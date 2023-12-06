@@ -1,3 +1,23 @@
+## 9.1.0 (2023-12-06)
+
+### Features
+
+- Add workspace status and command summary. (90a64c9)
+
+### Bug Fixes
+
+- Shouldn't fail on saveAndRestore if file doesn't exist. (303f509)
+
+### Improvements
+
+- Add ansi reset at the end of log messages as a precaution against dangling styles. (24908d2)
+- Allow log messages to contain ansi colors. (59df362)
+- saveAndRestore is a no-op if the path has already been saved. (fffa987)
+
+### Chores
+
+- Rename log.write to log.print. (b78e0b7)
+
 ## 9.0.5 (2023-12-05)
 
 ### Bug Fixes

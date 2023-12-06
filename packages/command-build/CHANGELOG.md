@@ -1,3 +1,9 @@
+## 3.0.3 (2023-12-06)
+
+### Chores
+
+- Use workspace status. (5acabae)
+
 ## 3.0.2 (2023-12-05)
 
 ### Bug Fixes

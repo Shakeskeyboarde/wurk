@@ -1,3 +1,19 @@
+## 2.2.10 (2023-12-06)
+
+### Bug Fixes
+
+- Forgot to call setPrintSummary(). (c114279)
+
+### Improvements
+
+- Add detail to 'warning' status. (e3699dc)
+- Skipped (already published) status when version is already published. (a621625)
+- Remove log message when there's nothing to publish (already handled by summary). (ea8cf36)
+
+### Chores
+
+- Use workspace status. (2dccbe2)
+
 ## 2.2.9 (2023-12-05)
 
 ### Bug Fixes
