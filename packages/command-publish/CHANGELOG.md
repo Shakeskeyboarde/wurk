@@ -1,3 +1,9 @@
+## 2.2.11 (2023-12-06)
+
+### Improvements
+
+- Add archive detail to status. (e17e3dd)
+
 ## 2.2.10 (2023-12-06)
 
 ### Bug Fixes

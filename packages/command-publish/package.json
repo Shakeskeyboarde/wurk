@@ -1,7 +1,7 @@
 {
   "name": "@werk/command-publish",
   "description": "Publish packages.",
-  "version": "2.2.10",
+  "version": "2.2.11",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/command-publish/README.md",
