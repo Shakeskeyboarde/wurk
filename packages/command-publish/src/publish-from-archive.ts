@@ -37,7 +37,7 @@ export const publishFromArchive = async (options: PublishFromArchiveOptions): Pr
     return false;
   }
 
-  log.notice(`Publishing workspace "${workspace.name}@${workspace.version}" from archive.`);
+  log.info(`Publishing workspace "${workspace.name}@${workspace.version}" from archive.`);
 
   const tmpDir = resolve(workspace.dir, `.${randomUUID()}.tmp`);
   const tmpFilename = resolve(tmpDir, basename(filename));

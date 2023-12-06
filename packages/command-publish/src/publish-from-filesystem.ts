@@ -110,7 +110,7 @@ export const publishFromFilesystem = async ({
     );
   }
 
-  log.notice(`Publishing workspace "${workspace.name}@${workspace.version}"${opts.toArchive ? ' to archive' : ''}.`);
+  log.info(`Publishing workspace "${workspace.name}@${workspace.version}"${opts.toArchive ? ' to archive' : ''}.`);
 
   const dependenciesPatch: MutablePackageJson = {};
 

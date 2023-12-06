@@ -48,10 +48,17 @@ export default createCommand({
       return;
     }
 
-    if (opts.fromArchive) {
-      isPublished = (await publishFromArchive(context)) || isPublished;
+    workspace.setStatus('pending');
+
+    const isWorkspacePublished = opts.fromArchive
+      ? await publishFromArchive(context)
+      : await publishFromFilesystem(context);
+
+    if (isWorkspacePublished) {
+      workspace.setStatus('success', `${workspace.version}`);
+      isPublished = isWorkspacePublished;
     } else {
-      isPublished = (await publishFromFilesystem(context)) || isPublished;
+      workspace.setStatus('skipped');
     }
   },
 
