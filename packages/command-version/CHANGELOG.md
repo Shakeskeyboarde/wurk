@@ -1,3 +1,9 @@
+## 3.3.10 (2023-12-06)
+
+### Bug Fixes
+
+- commit message should be printed as a notice. (ef3569f)
+
 ## 3.3.9 (2023-12-06)
 
 ### Bug Fixes

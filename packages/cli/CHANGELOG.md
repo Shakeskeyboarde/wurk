@@ -1,3 +1,13 @@
+## 9.1.1 (2023-12-06)
+
+### Bug Fixes
+
+- Summary should be printed to stderr. (a02ad34)
+
+### Chores
+
+- Logged notices should not be colored. (48b7692)
+
 ## 9.1.0 (2023-12-06)
 
 ### Features
