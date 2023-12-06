@@ -57,6 +57,8 @@ export default createCommand({
 
     if (isWorkspacePublished) {
       workspace.setStatus('success', `${workspace.version}`);
+    } else if (isWorkspacePublished == null) {
+      workspace.setStatus('skipped', 'already published');
     } else {
       workspace.setStatus('warning');
     }

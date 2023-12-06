@@ -35,7 +35,7 @@ export const publishFromFilesystem = async ({
   workspace,
   spawn,
   saveAndRestoreFile,
-}: publishFromFilesystemOptions): Promise<boolean> => {
+}: publishFromFilesystemOptions): Promise<boolean | null> => {
   const { toArchive = false, tag, otp, removePackageFields = [], dryRun = false } = opts;
   const isShallow = await workspace.getGitIsShallow();
 
@@ -56,7 +56,7 @@ export const publishFromFilesystem = async ({
       `Not publishing workspace "${workspace.name}@${workspace.version}" because the version is already published.`,
     );
 
-    return false;
+    return null;
   }
 
   if (blockingDependencies.size) {
