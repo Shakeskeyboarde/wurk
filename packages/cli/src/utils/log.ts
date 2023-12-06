@@ -129,21 +129,28 @@ export class Log {
       this.#write(process.stdout, message);
     }
   };
+
   /**
-   * Alias for `info`, printed in green to stderr.
+   * Print an undecorated message to stdout, regardless of log level.
    */
-  readonly success = (message?: unknown): void => {
-    if (this.isLevel(LOG_LEVEL_VALUES.info)) {
-      this.#write(process.stderr, message, chalk.greenBright);
-    }
+  readonly print = (message: unknown): void => {
+    this.stdout.write(stringify(message) + '\n');
   };
 
   /**
-   * Print a bright message to stderr.
+   * Print an emphasized message to stderr.
    */
   readonly notice = (message?: unknown): void => {
     if (this.isLevel(LOG_LEVEL_VALUES.notice)) {
       this.#write(process.stderr, message, chalk.whiteBright);
+    }
+  };
+  /**
+   * Alias for `notice`, printed in green.
+   */
+  readonly success = (message?: unknown): void => {
+    if (this.isLevel(LOG_LEVEL_VALUES.info)) {
+      this.#write(process.stderr, message, chalk.greenBright);
     }
   };
 
@@ -183,13 +190,6 @@ export class Log {
     if (this.isLevel(LOG_LEVEL_VALUES.error)) {
       this.#write(process.stderr, message, chalk.redBright, true);
     }
-  };
-
-  /**
-   * Write a message to stdout regardless of log level.
-   */
-  readonly write = (message: unknown): void => {
-    this.stdout.write(stringify(message) + '\n');
   };
 
   readonly flush = (): void => {
