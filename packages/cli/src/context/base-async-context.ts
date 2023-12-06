@@ -15,6 +15,7 @@ export interface BaseAsyncContextOptions<A extends CommanderArgs, O extends Comm
 
 export abstract class BaseAsyncContext<A extends CommanderArgs, O extends CommanderOptions> extends BaseContext<A, O> {
   #tempDir: string | undefined;
+  readonly #saved = new Set<string>();
 
   /**
    * The workspaces root workspace.
@@ -58,6 +59,9 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
     }
 
     const from = resolve(this.root.dir, ...pathParts);
+
+    if (this.#saved.has(from)) return;
+
     const to = resolve(this.#tempDir, relative(this.root.dir, from));
 
     try {
@@ -79,26 +83,23 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
         });
       });
     } catch (error) {
-      if (error instanceof Error && 'code' in error) {
-        if (error.code === 'ENOENT') {
-          this.log.debug(`Marked "${from}" for deletion.`);
+      if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+        this.log.debug(`Marked "${from}" for deletion.`);
 
-          /*
-           * File does not exist, so the restore action will be to delete
-           * it if it exists later.
-           */
-          this.onDestroy(() => {
-            rmSync(from, { force: true });
-          });
+        /*
+         * File does not exist, so the restore action will be to delete
+         * it if it exists later.
+         */
+        this.onDestroy(() => {
+          rmSync(from, { force: true });
+        });
 
-          return;
-        } else if (error.code === 'EEXIST') {
-          // Already saved.
-          return;
-        }
+        return;
       }
 
       throw error;
     }
+
+    this.#saved.add(from);
   }
 }
