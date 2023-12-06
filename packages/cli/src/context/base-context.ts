@@ -41,6 +41,7 @@ export abstract class BaseContext<A extends CommanderArgs, O extends CommanderOp
         this.log.error(error);
       }
     });
+    this.log.flush();
   }
 
   protected onDestroy(callback: () => void): void {

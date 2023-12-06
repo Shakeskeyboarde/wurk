@@ -32,8 +32,21 @@ const LOG_LEVEL_DEFAULT: LogLevel =
 
 const onceCache = new Set<string>();
 
+const stringify = (message: unknown): string => {
+  return String(
+    message instanceof Error ? (process.env.DEBUG ? message.stack ?? message : message.message) : message ?? '',
+  );
+};
+
+const stripColors = (message: string): string => {
+  return message.replace(ANSI_REGEXP, '');
+};
+
 export const parseLogLevel = (value: string): LogLevel => {
   switch (value) {
+    case 'trace':
+      value = 'silly' satisfies keyof typeof LOG_LEVEL_VALUES;
+      break;
     case 'debug':
       value = 'verbose' satisfies keyof typeof LOG_LEVEL_VALUES;
       break;
@@ -77,11 +90,16 @@ export class Log {
     return Log.#level;
   }
 
+  readonly isLevel = (level: LogLevel | number): boolean => {
+    const value = typeof level === 'number' ? level : LOG_LEVEL_VALUES[level];
+    return value <= this.level.value;
+  };
+
   /**
    * Print a dimmed message to stderr.
    */
   readonly silly = (message?: unknown): void => {
-    if (LOG_LEVEL_VALUES.silly <= this.level.value) {
+    if (this.isLevel(LOG_LEVEL_VALUES.silly)) {
       this.#write(process.stderr, message, chalk.dim);
     }
   };
@@ -94,7 +112,7 @@ export class Log {
    * Print a dimmed message to stderr.
    */
   readonly verbose = (message?: unknown): void => {
-    if (LOG_LEVEL_VALUES.verbose <= this.level.value) {
+    if (this.isLevel(LOG_LEVEL_VALUES.verbose)) {
       this.#write(process.stderr, message, chalk.dim);
     }
   };
@@ -107,8 +125,16 @@ export class Log {
    * Print an undecorated message to stdout.
    */
   readonly info = (message?: unknown): void => {
-    if (LOG_LEVEL_VALUES.info <= this.level.value) {
+    if (this.isLevel(LOG_LEVEL_VALUES.info)) {
       this.#write(process.stdout, message);
+    }
+  };
+  /**
+   * Alias for `info`, printed in green to stderr.
+   */
+  readonly success = (message?: unknown): void => {
+    if (this.isLevel(LOG_LEVEL_VALUES.info)) {
+      this.#write(process.stderr, message, chalk.greenBright);
     }
   };
 
@@ -116,7 +142,7 @@ export class Log {
    * Print a bright message to stderr.
    */
   readonly notice = (message?: unknown): void => {
-    if (LOG_LEVEL_VALUES.notice <= this.level.value) {
+    if (this.isLevel(LOG_LEVEL_VALUES.notice)) {
       this.#write(process.stderr, message, chalk.whiteBright);
     }
   };
@@ -125,7 +151,7 @@ export class Log {
    * Print a yellow message to stderr.
    */
   readonly warn = (message?: unknown): void => {
-    if (LOG_LEVEL_VALUES.warn <= this.level.value) {
+    if (this.isLevel(LOG_LEVEL_VALUES.warn)) {
       this.#write(process.stderr, message, chalk.yellowBright);
     }
   };
@@ -135,7 +161,7 @@ export class Log {
    * been printed before.
    */
   readonly warnOnce = (message?: unknown): void => {
-    if (LOG_LEVEL_VALUES.warn <= this.level.value) {
+    if (this.isLevel(LOG_LEVEL_VALUES.warn)) {
       this.#write(process.stderr, message, chalk.yellowBright, true);
     }
   };
@@ -144,7 +170,7 @@ export class Log {
    * Print a red message to stderr.
    */
   readonly error = (message?: unknown): void => {
-    if (LOG_LEVEL_VALUES.error <= this.level.value) {
+    if (this.isLevel(LOG_LEVEL_VALUES.error)) {
       this.#write(process.stderr, message, chalk.redBright);
     }
   };
@@ -154,9 +180,21 @@ export class Log {
    * printed before.
    */
   readonly errorOnce = (message?: unknown): void => {
-    if (LOG_LEVEL_VALUES.error <= this.level.value) {
+    if (this.isLevel(LOG_LEVEL_VALUES.error)) {
       this.#write(process.stderr, message, chalk.redBright, true);
     }
+  };
+
+  /**
+   * Write a message to stdout regardless of log level.
+   */
+  readonly write = (message: unknown): void => {
+    this.stdout.write(stringify(message) + '\n');
+  };
+
+  readonly flush = (): void => {
+    (this.stdout as LogStream).flush();
+    (this.stderr as LogStream).flush();
   };
 
   readonly #write = (
@@ -165,9 +203,7 @@ export class Log {
     formatLine?: (message: string) => string,
     once = false,
   ): void => {
-    const string = String(
-      message instanceof Error ? (process.env.DEBUG ? message.stack ?? message : message.message) : message ?? '',
-    );
+    const string = stringify(message);
 
     if (once) {
       if (onceCache.has(string)) return;
@@ -185,7 +221,7 @@ export class Log {
      * (unterminated) formatting might be interleaved due to
      * multi-threading.
      */
-    line = line.replace(ANSI_REGEXP, '');
+    line = stripColors(line);
 
     if (this.prefix.length) {
       /*

@@ -9,6 +9,7 @@ import { EachContext } from '../context/each-context.js';
 import { type GlobalOptions } from '../options.js';
 import { log } from '../utils/log.js';
 import { createWorkspaces } from '../workspace/create-workspaces.js';
+import { type WorkspaceStatus } from '../workspace/workspace.js';
 import { type CommandPlugin } from './load-command-plugins.js';
 
 type PrefixColor = (typeof PREFIX_COLORS)[number];
@@ -20,10 +21,12 @@ export const runCommandPlugin = async (
   globalOpts: GlobalOptions,
   plugin: CommandPlugin,
 ): Promise<void> => {
+  let isAborted = false;
   let isWaitingEnabled = true;
+  let isPrintSummaryEnabled = false;
 
   const destroy: (() => void)[] = [];
-  const { command, commander } = plugin;
+  const { command, commander, commandName } = plugin;
   const args = commander.processedArgs;
   const opts = commander.opts();
   const { rawRootWorkspace, rawWorkspaces } = globalConfig;
@@ -31,11 +34,14 @@ export const runCommandPlugin = async (
   const isMonorepo = rawWorkspaces.length > 1;
   const { gitFromRevision } = git;
   const workspaceMatchers = [...select.workspace].reverse();
+  const statuses = new Map<string, { status: WorkspaceStatus; detail: string | undefined }>();
+
   const [root, workspaces] = createWorkspaces({
     rawRootWorkspace: rawRootWorkspace,
     rawWorkspaces: rawWorkspaces,
     includeRootWorkspace: select.includeRootWorkspace,
     gitFromRevision: gitFromRevision,
+    onStatus: (name, status, detail) => statuses.set(name, { status, detail }),
   });
 
   workspaces.forEach((workspace) => {
@@ -60,6 +66,13 @@ export const runCommandPlugin = async (
     });
   }
 
+  workspaces.forEach((workspace) => {
+    statuses.set(workspace.name, {
+      status: 'skipped',
+      detail: undefined,
+    });
+  });
+
   process.on('exit', (exitCode) => {
     const context = new CleanupContext({
       log: undefined,
@@ -72,10 +85,59 @@ export const runCommandPlugin = async (
     command.cleanup(context);
     context.destroy();
     destroy.forEach((callback) => callback());
+    log.flush();
+
+    if (isPrintSummaryEnabled && statuses.size && log.isLevel('notice')) {
+      const isVerbose = log.isLevel('verbose');
+
+      console.log(`${commandName} summary:`);
+
+      for (const [key, value] of statuses.entries()) {
+        const workspace = workspaces.get(key);
+
+        if (!workspace?.isSelected && !isVerbose) continue;
+
+        let statusText: string;
+
+        switch (value.status) {
+          case 'success':
+            statusText = chalk.greenBright('success');
+            break;
+          case 'warning':
+            statusText = chalk.yellowBright('warning');
+            break;
+          case 'pending':
+          case 'failure':
+            statusText = chalk.redBright('failure');
+            break;
+          default:
+            statusText = chalk.dim(value.status);
+            break;
+        }
+
+        console.log(`  ${key}: ${statusText}${value.detail ? chalk.dim(` (${value.detail})`) : ''}`);
+      }
+    }
+
+    if (process.exitCode) {
+      if (!isAborted) {
+        log.error(`${commandName} failure.`);
+      }
+    } else {
+      log.success(`${commandName} success.`);
+    }
+
+    log.flush();
   });
 
   ['uncaughtException', 'unhandledRejection', 'SIGINT', 'SIGTERM', 'SIGUSR1', 'SIGUSR2'].forEach((event) => {
-    process.on(event, () => process.exit(process.exitCode || 1));
+    process.on(event, () => {
+      if ((event === 'SIGINT' || event === 'SIGTERM') && !process.exitCode) {
+        isAborted = true;
+      }
+
+      process.exit(process.exitCode || 1);
+    });
   });
 
   const beforeContext = new BeforeContext({
@@ -85,6 +147,7 @@ export const runCommandPlugin = async (
     root,
     workspaces,
     onWaitForDependencies: (enabled) => (isWaitingEnabled = enabled),
+    onPrintSummary: (enabled) => (isPrintSummaryEnabled = enabled),
   });
 
   destroy.unshift(() => beforeContext.destroy());
@@ -130,6 +193,14 @@ export const runCommandPlugin = async (
 
           destroy.unshift(() => eachContext.destroy());
           await command.each(eachContext);
+        } catch (error) {
+          const status = statuses.get(workspace.name);
+
+          if (status?.status !== 'failure') {
+            statuses.set(workspace.name, { status: 'failure', detail: undefined });
+          }
+
+          throw error;
         } finally {
           semaphore?.release();
         }

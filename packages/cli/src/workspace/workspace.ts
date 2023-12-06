@@ -17,6 +17,8 @@ import { patchJsonFile } from '../utils/patch-json-file.js';
 import { readJsonFile } from '../utils/read-json-file.js';
 import { writeJsonFile } from '../utils/write-json-file.js';
 
+export type WorkspaceStatus = 'pending' | 'skipped' | 'success' | 'failure' | 'warning';
+
 export enum WorkspaceDependencyScope {
   dev = 0,
   optional = 1,
@@ -44,9 +46,11 @@ export interface WorkspaceOptions extends Omit<PackageJsonKnown, 'private'> {
   readonly localDependencies: ReadonlyEnhancedMap<string, WorkspaceReference>;
   readonly localDependents: ReadonlyEnhancedMap<string, WorkspaceReference>;
   readonly gitFromRevision: string | undefined;
+  readonly onStatus: (name: string, status: WorkspaceStatus, detail?: string) => void;
 }
 
 export class Workspace {
+  readonly #onStatus: (name: string, status: WorkspaceStatus, detail?: string) => void;
   readonly #gitFromRevision: string | undefined;
 
   /**
@@ -181,6 +185,7 @@ export class Workspace {
   isSelected: boolean;
 
   constructor(options: WorkspaceOptions) {
+    this.#onStatus = options.onStatus;
     this.#gitFromRevision = options.gitFromRevision;
 
     this.isSelected = options.isSelected;
@@ -437,5 +442,17 @@ export class Workspace {
     );
 
     return sparse.filter((value): value is WorkspaceEntryPoint => Boolean(value));
+  };
+
+  /**
+   * Set the workspace status.
+   *
+   * Calling this method more than once on the same workspace will
+   * replace the previous status. The status is only reported if the
+   * `before` command hook enabled summary printing by calling the
+   * `context.setPrintSummary()` method.
+   */
+  readonly setStatus = (status: WorkspaceStatus, detail?: string): void => {
+    this.#onStatus(this.name, status, detail);
   };
 }

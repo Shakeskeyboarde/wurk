@@ -1,6 +1,6 @@
 import { EnhancedMap, type ReadonlyEnhancedMap } from '../utils/enhanced-map.js';
 import { type PackageJsonKnown } from '../utils/package-json.js';
-import { Workspace, WorkspaceDependencyScope, type WorkspaceReference } from './workspace.js';
+import { Workspace, WorkspaceDependencyScope, type WorkspaceReference, type WorkspaceStatus } from './workspace.js';
 
 export interface RawWorkspace extends Omit<PackageJsonKnown, 'private'> {
   readonly name: string;
@@ -24,6 +24,7 @@ interface Options {
   readonly rawWorkspaces: readonly RawWorkspace[];
   readonly includeRootWorkspace: boolean;
   readonly gitFromRevision: string | undefined;
+  readonly onStatus: (name: string, status: WorkspaceStatus, detail: string | undefined) => void;
 }
 
 const createNode = (
@@ -52,6 +53,7 @@ const createNode = (
   }: RawWorkspace,
   isRoot: boolean,
   gitFromRevision: string | undefined,
+  onStatus: (name: string, status: WorkspaceStatus, detail: string | undefined) => void,
 ): Node => {
   const localDependencies = new EnhancedMap<string, WorkspaceReference>();
   const localDependents = new EnhancedMap<string, WorkspaceReference>();
@@ -80,6 +82,7 @@ const createNode = (
     isRoot,
     isSelected: false,
     gitFromRevision,
+    onStatus,
     localDependencies,
     localDependents,
   });
@@ -92,12 +95,16 @@ export const createWorkspaces = ({
   rawWorkspaces,
   includeRootWorkspace,
   gitFromRevision,
+  onStatus,
 }: Options): [root: Workspace, workspaces: ReadonlyEnhancedMap<string, Workspace>] => {
   // Create graph nodes.
 
-  const rootNode = createNode(rawRootWorkspace, true, gitFromRevision);
+  const rootNode = createNode(rawRootWorkspace, true, gitFromRevision, onStatus);
   const nodes = new EnhancedMap<string, Node>(
-    rawWorkspaces.map((rawWorkspace) => [rawWorkspace.name, createNode(rawWorkspace, false, gitFromRevision)]),
+    rawWorkspaces.map((rawWorkspace) => [
+      rawWorkspace.name,
+      createNode(rawWorkspace, false, gitFromRevision, onStatus),
+    ]),
   );
 
   if (includeRootWorkspace) {

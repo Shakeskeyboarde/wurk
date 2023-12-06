@@ -94,6 +94,7 @@ A context object is passed to all hooks, _except for `config`_ which only receiv
 - `workspaces` (**before**, **each**, **after**): A map (by name) of all [workspaces](#workspaces).
 - `workspace` (**each**): The current [workspace](#workspaces).
 - `setWaitForDependencies()` (**before**): Force dependent workspaces to wait for their dependencies.
+- `setPrintSummary()` (**before**): Print a workspace status summary after the command completes.
 - `spawn(cmd, args?, options?)`: Spawn a process. The working directory will be the workspaces (monorepo) root.
 - `saveAndRestoreFile(...pathParts)` (**before**, **each**, **after**): Save the contents of a file and restore it after the command completes. If multiple path parts are given, they will be resolved into a single path.
 - `isParallel` (**each**): True if the command is running in parallel mode.
@@ -111,6 +112,7 @@ The `context.log` should be used for all logging. Please don't use the global `c
 - `notice`: Print a bold log message to stderr. This is intended for messages that need to stand out a little, and are possibly unexpected.
 - `warn`: Print a yellow log message to stderr. This is intended for problems that are not immediate failures, but may indicate something unexpected or incorrect.
 - `error`: Print a red log message to stderr. This is intended for things that are definitely wrong, and are probably immediate failures.
+- `write`: Print a message to stdout, regardless of the current log level. This is intended for informational commands, where the command has no purpose but to print a message.
 - `stdout`: Writable stream which can be used for piping.
 - `stderr`: Writable stream which can be used for piping.
 - `level`: The current log level (eg. `info`).
@@ -182,6 +184,7 @@ The `context.root`, `context.workspaces`, and `context.workspace` properties con
 - `getIsModified()`: Returns true if the workspace's published commit and current commit are different, or if one or both commits cannot be detected (eg. not a Git repo).
 - `getEntryPoints()`: List all the files which are considered entry points for the workspace.
 - `getMissingEntryPoints()`: List of all the workspace entry points that are missing.
+- `setStatus(status, detail?)`: Set the workspace status which will be printed if summary printing is enabled (See the `before` hook context `setPrintSummary()` method). Set the status to `pending` before starting work that may throw errors. If the status is pending at the end of the command, it will be changed to `failed`.
 
 **Note:** If the workspace is not part of a Git repository, the workspace will read as clean and unmodified.
 

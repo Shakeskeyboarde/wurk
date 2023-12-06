@@ -88,7 +88,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions, M> {
     if (!this.#before) return;
 
     return await this.#before(context).catch((error) => {
-      context.log.error(error instanceof Error ? error.message : `${error}`);
+      context.log.error(error);
       process.exitCode = process.exitCode || 1;
     });
   };
@@ -99,7 +99,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions, M> {
     if (!this.#each) return;
 
     await this.#each(context).catch((error) => {
-      context.log.error(error instanceof Error ? error.message : `${error}`);
+      context.log.error(error);
       process.exitCode = process.exitCode || 1;
     });
   };
@@ -110,7 +110,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions, M> {
     if (!this.#after) return;
 
     await this.#after(context).catch((error) => {
-      context.log.error(error instanceof Error ? error.message : `${error}`);
+      context.log.error(error);
       process.exitCode = process.exitCode || 1;
     });
   };
@@ -123,7 +123,7 @@ export class Command<A extends CommanderArgs, O extends CommanderOptions, M> {
     try {
       this.#cleanup(context);
     } catch (error) {
-      context.log.error(error instanceof Error ? error.message : `${error}`);
+      context.log.error(error);
       process.exitCode = process.exitCode || 1;
     }
   };

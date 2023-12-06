@@ -23,13 +23,16 @@ export class LogStream extends Transform {
       this.write.call(this, ...(args as Parameters<this['write']>));
     }
 
-    this.#send(true);
-
     /*
      * We don't want to call super.end() because log streams may be
      * re-piped, and therefore should never really end.
      */
 
+    return this.flush();
+  }
+
+  flush(): this {
+    this.#send(true);
     return this;
   }
 
@@ -52,12 +55,12 @@ export class LogStream extends Transform {
   }
 
   _flush(callback: TransformCallback): void {
-    this.#send(true);
+    this.flush();
     callback();
   }
 
   _destroy(error: Error | null, callback: (error: Error | null) => void): void {
-    this.#send(true);
+    this.flush();
     process.removeListener('exit', this.#onExit);
     process.setMaxListeners(process.getMaxListeners() - 1);
     super._destroy(error, callback);
