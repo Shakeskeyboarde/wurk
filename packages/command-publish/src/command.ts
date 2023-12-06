@@ -3,8 +3,6 @@ import { createCommand } from '@werk/cli';
 import { publishFromArchive } from './publish-from-archive.js';
 import { publishFromFilesystem } from './publish-from-filesystem.js';
 
-let isPublished = false;
-
 export default createCommand({
   config: (commander) => {
     return commander
@@ -40,13 +38,14 @@ export default createCommand({
   each: async (context) => {
     const { log, opts, workspace } = context;
 
-    if (workspace.isPrivate) {
-      log.verbose(`Not publishing workspace "${workspace.name}" because it is private.`);
+    if (!workspace.isSelected) {
+      log.verbose(`Not publishing workspace "${workspace.name}" because it is not selected.`);
       return;
     }
 
-    if (!workspace.isSelected) {
-      log.verbose(`Not publishing workspace "${workspace.name}" because it is not selected.`);
+    if (workspace.isPrivate) {
+      log.verbose(`Not publishing workspace "${workspace.name}" because it is private.`);
+      workspace.setStatus('skipped', 'private');
       return;
     }
 
@@ -58,15 +57,8 @@ export default createCommand({
 
     if (isWorkspacePublished) {
       workspace.setStatus('success', `${workspace.version}`);
-      isPublished = isWorkspacePublished;
     } else {
-      workspace.setStatus('skipped');
-    }
-  },
-
-  after: async ({ log }) => {
-    if (!isPublished) {
-      log.info('No publishable packages found.');
+      workspace.setStatus('warning');
     }
   },
 });
