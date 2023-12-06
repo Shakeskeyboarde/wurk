@@ -11,11 +11,11 @@ export const addUpdate = (name: string, version: string): void => {
   dependencyUpdates.set(name, { version });
 };
 
-export const getUpdateNames = (): readonly string[] => {
-  return [...dependencyUpdates.keys()];
+export const getUpdates = (): Map<string, { version: string }> => {
+  return new Map(Array.from(dependencyUpdates.entries()).map(([name, { version }]) => [name, { version }]));
 };
 
-export const getDependencyUpdates = (
+export const getUpdatePatches = (
   log: Log,
   workspace: Workspace,
   { strict = false }: Options = {},

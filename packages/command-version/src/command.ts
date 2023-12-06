@@ -2,14 +2,15 @@
 import assert from 'node:assert';
 
 import { createCommand, type PackageJson } from '@werk/cli';
+import chalk from 'chalk';
 import { diff, parse, type ReleaseType, SemVer } from 'semver';
 
 import { getAutoVersion } from './get-auto-version.js';
 import { getBumpedVersion } from './get-bumped-version.js';
 import { type Change, ChangeType } from './get-changes.js';
-import { addUpdate, getDependencyUpdates, getUpdateNames } from './get-dependency-updates.js';
 import { getExplicitVersion } from './get-explicit-version.js';
 import { getIncrementedVersion } from './get-incremented-version.js';
+import { addUpdate, getUpdatePatches, getUpdates } from './updates.js';
 import { writeChangelog } from './write-changelog.js';
 
 const BUMP_TYPE = [
@@ -104,7 +105,7 @@ export default createCommand({
     }
 
     const packagePatches: PackageJson[] = [];
-    const dependencyUpdates = getDependencyUpdates(log, workspace, {
+    const dependencyPatches = getUpdatePatches(log, workspace, {
       /*
        * If the workspace is private or the version is updated, then
        * also include dependencies where the updated version still
@@ -112,6 +113,11 @@ export default createCommand({
        */
       strict: workspace.isPrivate || Boolean(version),
     });
+
+    if (dependencyPatches) {
+      packagePatches.push(dependencyPatches);
+      log.debug(`Updating workspace "${workspace.name}" dependencies.`);
+    }
 
     /*
      * Increment the version of this workspace (the dependent) if all of
@@ -125,14 +131,9 @@ export default createCommand({
      * This will cause the current workspace to be republished with the
      * updated dependencies.
      */
-    if (workspace.isSelected && !workspace.isPrivate && dependencyUpdates && !version) {
+    if (workspace.isSelected && !workspace.isPrivate && dependencyPatches && !version) {
       version = getIncrementedVersion(workspace.version).format();
       changes = [...changes, { type: ChangeType.note, message: 'Updated local dependencies.' }];
-    }
-
-    if (dependencyUpdates) {
-      packagePatches.push(dependencyUpdates);
-      log.debug(`Updating workspace "${workspace.name}" dependencies.`);
     }
 
     const releaseType = version ? diff(workspace.version, version) : null;
@@ -173,7 +174,7 @@ export default createCommand({
       if (releaseType) {
         workspace.setStatus('success', `${workspace.version} -> ${version}`);
       } else {
-        workspace.setStatus('skipped', dependencyUpdates ? 'dependencies updated' : undefined);
+        workspace.setStatus('skipped', dependencyPatches ? 'dependencies updated' : undefined);
       }
 
       if (isChangeLogUpdated) {
@@ -187,20 +188,28 @@ export default createCommand({
     });
   },
 
-  after: async ({ opts, spawn, saveAndRestoreFile }) => {
+  after: async ({ log, opts, spawn, saveAndRestoreFile }) => {
     for (const change of workspaceChanges.values()) {
       await change();
     }
 
-    const updatedNames = getUpdateNames();
+    const updates = getUpdates();
 
-    if (updatedNames.length) {
+    if (updates.size) {
+      const updatedNames = Array.from(updates.keys());
+
       if (opts.dryRun) {
         saveAndRestoreFile('package-lock.json');
       }
 
       // Update the package lock file.
       await spawn('npm', ['update', ...updatedNames], { errorEcho: true });
+
+      const releaseMessage = Array.from(updates.entries())
+        .map(([name, { version }]) => `${name.replace(/^@.*\//u, '')}@${version}`)
+        .join(', ');
+
+      log.print(`version commit message: ${chalk.blue(releaseMessage)}`);
     }
   },
 });
