@@ -132,11 +132,11 @@ export class Log {
   };
 
   /**
-   * Print an emphasized message to stderr.
+   * Print an uncolored message to stderr.
    */
   readonly notice = (message?: unknown): void => {
     if (this.isLevel(LOG_LEVEL_VALUES.notice)) {
-      process.stderr.write(`${this.#prefix}${chalk.whiteBright(stringify(message))}`);
+      process.stderr.write(`${this.#prefix}${stringify(message)}`);
     }
   };
 

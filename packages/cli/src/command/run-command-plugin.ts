@@ -87,7 +87,7 @@ export const runCommandPlugin = async (
     destroy.forEach((callback) => callback());
     log.flush();
 
-    if (isPrintSummaryEnabled && statuses.size && log.isLevel('notice')) {
+    if (isPrintSummaryEnabled && statuses.size) {
       const isVerbose = log.isLevel('verbose');
       const statusMessages = Array.from(statuses.entries())
         .flatMap(([key, value]): string[] => {
@@ -117,7 +117,7 @@ export const runCommandPlugin = async (
         })
         .join('');
 
-      log.printErr(`${commandName} summary:${statusMessages}`);
+      log.notice(`${commandName} summary:${statusMessages}`);
     }
 
     if (process.exitCode) {

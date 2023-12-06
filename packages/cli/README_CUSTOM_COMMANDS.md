@@ -108,12 +108,12 @@ The `context.log` should be used for all logging. Please don't use the global `c
 
 - `silly`: Print a dimmed log message to stderr. This is intended to be useful only to developers.
 - `verbose`: Print a dimmed log message to stderr. This is intended to help users do their own troubleshooting.
-- `info`: Print an undecorated log message to stdout. This is intended for informational details about the progress or results of a command.
-- `notice`: Print a bold log message to stderr. This is intended for messages that need to stand out a little, and are possibly unexpected.
+- `info`: Print an uncolored log message to stdout. This is intended for informational details about the progress or results of a command.
+- `notice`: Print an uncolored log message to stderr. This is intended for messages that are important, but not necessarily problems.
 - `warn`: Print a yellow log message to stderr. This is intended for problems that are not immediate failures, but may indicate something unexpected or incorrect.
 - `error`: Print a red log message to stderr. This is intended for things that are definitely wrong, and are probably immediate failures.
-- `print`: Print a message to stdout, regardless of the current log level. This is intended for informational commands, where the command has no purpose but to print a message.
-- `printErr`: Print a message to stderr, regardless of the current log level. This is intended for informational commands, where the command has no purpose but to print a message, which may need to be piped to a target separate from `print` and `info` messages.
+- `print`: Print an uncolored message to stdout, regardless of the current log level. This is intended for informational commands, where the command has no purpose but to print a message.
+- `printErr`: Print an uncolored message to stderr, regardless of the current log level. This is intended for informational commands, where the command has no purpose but to print a message, which may need to be piped to a target separate from `print` and `info` messages.
 - `stdout`: Writable stream which can be used for piping.
 - `stderr`: Writable stream which can be used for piping.
 - `level`: The current log level (eg. `info`).
