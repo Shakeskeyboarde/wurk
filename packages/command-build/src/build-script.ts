@@ -9,7 +9,7 @@ interface BuildScriptOptions {
 export const buildScript = async (options: BuildScriptOptions): Promise<boolean> => {
   const { log, workspace, scriptName, spawn } = options;
 
-  log.notice(`${scriptName === 'start' ? 'Starting' : 'Building'} workspace "${workspace.name}" using package script.`);
+  log.info(`${scriptName === 'start' ? 'Starting' : 'Building'} workspace "${workspace.name}" using package script.`);
 
   return await spawn('npm', ['run', '--if-present', scriptName], {
     cwd: workspace.dir,

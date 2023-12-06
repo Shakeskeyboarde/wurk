@@ -15,7 +15,7 @@ export const buildRollup = async ({
   customConfigFile,
   spawn,
 }: BuildRollupOptions): Promise<boolean> => {
-  log.notice(`${watch ? 'Starting' : 'Building'} workspace "${workspace.name}" using Rollup.`);
+  log.info(`${watch ? 'Starting' : 'Building'} workspace "${workspace.name}" using Rollup.`);
 
   return await spawn(
     'rollup',

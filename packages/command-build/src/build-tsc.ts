@@ -123,12 +123,12 @@ export const buildTsc = async ({
   };
 
   if (watch) {
-    log.notice(`Starting workspace "${workspace.name}" using TypeScript.`);
+    log.info(`Starting workspace "${workspace.name}" using TypeScript.`);
 
     return await Promise.all(tsBuildConfigs.map(build)).then((results) => results.every(Boolean));
   }
 
-  log.notice(`Building workspace "${workspace.name}" using TypeScript.`);
+  log.info(`Building workspace "${workspace.name}" using TypeScript.`);
 
   for (const filename of tsBuildConfigs) {
     const isSuccess = await build(filename);

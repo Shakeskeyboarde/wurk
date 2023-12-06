@@ -31,6 +31,10 @@ export default createCommand({
       });
   },
 
+  before: async ({ setPrintSummary }) => {
+    setPrintSummary();
+  },
+
   each: async ({ opts, log, root, workspace, spawn }) => {
     if (isAborted) return;
 
@@ -38,12 +42,19 @@ export default createCommand({
 
     if (!workspace.isSelected) return;
 
+    workspace.setStatus('pending');
+
     const isBuilt = await build({ log, workspace, root, watch: false, vite, clean, spawn });
 
-    if (isBuilt) {
+    if (isBuilt == null) {
+      workspace.setStatus('skipped', 'no matching build mode');
+    } else if (isBuilt) {
+      workspace.setStatus('success');
+
       const missing = await workspace.getMissingEntryPoints();
 
       if (missing.length) {
+        workspace.setStatus('warning', 'missing entry points');
         log.warn(
           `Workspace "${workspace.name}" is missing the following entry points:${missing.reduce(
             (result, { type, filename }) => `${result}\n  - ${relative(workspace.dir, filename)} (${type})`,
@@ -53,8 +64,12 @@ export default createCommand({
       }
 
       updateRequired.add(workspace.name);
-    } else if (isBuilt != null && abortOnFailure) {
-      isAborted = true;
+    } else {
+      workspace.setStatus('failure');
+
+      if (abortOnFailure) {
+        isAborted = true;
+      }
     }
 
     if (watch) {

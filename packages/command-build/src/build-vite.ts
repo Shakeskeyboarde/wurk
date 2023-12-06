@@ -112,12 +112,12 @@ export const buildVite = async ({
   };
 
   if (watch) {
-    log.notice(`Starting workspace "${workspace.name}" using Vite.`);
+    log.info(`Starting workspace "${workspace.name}" using Vite.`);
 
     return await Promise.all(configs.map(build)).then((results) => results.every(Boolean));
   }
 
-  log.notice(`Building workspace "${workspace.name}" using Vite.`);
+  log.info(`Building workspace "${workspace.name}" using Vite.`);
 
   for (const config of configs) {
     const isSuccess = await build(config);
