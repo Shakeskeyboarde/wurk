@@ -183,7 +183,7 @@ export default createCommand({
     });
   },
 
-  after: async ({ spawn }) => {
+  after: async ({ opts, spawn, saveAndRestoreFile }) => {
     for (const change of workspaceChanges.values()) {
       await change();
     }
@@ -191,6 +191,10 @@ export default createCommand({
     const updatedNames = getUpdateNames();
 
     if (updatedNames.length) {
+      if (opts.dryRun) {
+        saveAndRestoreFile('package-lock.json');
+      }
+
       // Update the package lock file.
       await spawn('npm', ['update', ...updatedNames], { errorEcho: true });
     }
