@@ -38,7 +38,7 @@ const stringify = (message: unknown): string => {
     message instanceof Error ? (process.env.DEBUG ? message.stack ?? message : message.message) : message ?? '',
   );
 
-  return ANSI_NEWLINE_ENDING_REGEXP.test(text) ? text : text + '\n';
+  return (ANSI_NEWLINE_ENDING_REGEXP.test(text) ? text : text + '\n') + '\u001B[0m';
 };
 
 export const parseLogLevel = (value: string): LogLevel => {
