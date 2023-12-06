@@ -56,7 +56,10 @@ export default createCommand({
       : await publishFromFilesystem(context);
 
     if (isWorkspacePublished) {
-      workspace.setStatus('success', `${workspace.version}`);
+      workspace.setStatus(
+        'success',
+        `${workspace.version}${opts.toArchive ? ', to archive' : opts.fromArchive ? ', from archive' : ''}`,
+      );
     } else if (isWorkspacePublished == null) {
       workspace.setStatus('skipped', 'already published');
     } else {
