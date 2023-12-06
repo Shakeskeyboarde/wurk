@@ -209,7 +209,7 @@ export default createCommand({
         .map(([name, { version }]) => `${name.replace(/^@.*\//u, '')}@${version}`)
         .join(', ');
 
-      log.print(`version commit message: ${chalk.blue(releaseMessage)}`);
+      log.notice(`version commit message: ${chalk.blue(releaseMessage)}`);
     }
   },
 });
