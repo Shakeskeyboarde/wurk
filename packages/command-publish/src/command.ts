@@ -24,7 +24,9 @@ export default createCommand({
       .option('--dry-run', 'Perform a dry run for validation.');
   },
 
-  before: async ({ opts, root, spawn }) => {
+  before: async ({ opts, root, spawn, setPrintSummary }) => {
+    setPrintSummary();
+
     if (!opts.fromArchive && opts.build && root.scripts.build != null) {
       await spawn('npm', ['run', '--if-present', 'build'], {
         input: 'inherit',
