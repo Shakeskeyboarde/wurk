@@ -183,12 +183,7 @@ export default createCommand({
     });
   },
 
-  after: async ({ log, spawn }) => {
-    if (workspaceChanges.size === 0) {
-      log.info('No versions updated.');
-      return;
-    }
-
+  after: async ({ spawn }) => {
     for (const change of workspaceChanges.values()) {
       await change();
     }
