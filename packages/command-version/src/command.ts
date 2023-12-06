@@ -67,7 +67,9 @@ export default createCommand({
       .option('--dry-run', 'Display proposed version changes without writing files.');
   },
 
-  before: async ({ log, args, opts }) => {
+  before: async ({ log, args, opts, setPrintSummary }) => {
+    setPrintSummary();
+
     const { preid } = opts;
 
     if (preid && (args[0] instanceof SemVer || !args[0].startsWith('pre'))) {
@@ -76,6 +78,8 @@ export default createCommand({
   },
 
   each: async ({ log, args, opts, workspace, spawn, saveAndRestoreFile }) => {
+    workspace.setStatus('pending');
+
     const { note = [], preid, changelog, dryRun = false } = opts;
 
     let version = '';
@@ -136,7 +140,7 @@ export default createCommand({
     if (releaseType) {
       addUpdate(workspace.name, version);
       packagePatches.push({ version: version });
-      log.notice(`Updating workspace "${workspace.name}" version from "${workspace.version}" to "${version}".`);
+      log.info(`Updating workspace "${workspace.name}" version from "${workspace.version}" to "${version}".`);
     }
 
     // Add any additional changelog notes.
@@ -147,7 +151,10 @@ export default createCommand({
     const isPackageUpdated = Boolean(packagePatches.length);
     const isChangeLogUpdated = Boolean(releaseType && changelog && changes.length);
 
-    if (!isPackageUpdated && !isChangeLogUpdated) return;
+    if (!isPackageUpdated && !isChangeLogUpdated) {
+      workspace.setStatus('skipped');
+      return;
+    }
 
     workspaceChanges.set(workspace.name, async () => {
       if (dryRun) {
@@ -166,6 +173,12 @@ export default createCommand({
         if (!(await writeChangelog(workspace.name, workspace.dir, version, changes))) {
           log.warn(`Version "${version}" already exists in the workspace "${workspace.name}" changelog.`);
         }
+      }
+
+      if (releaseType) {
+        workspace.setStatus('success', `${workspace.version} -> ${version}`);
+      } else {
+        workspace.setStatus('skipped', dependencyUpdates ? 'dependencies updated' : undefined);
       }
     });
   },
