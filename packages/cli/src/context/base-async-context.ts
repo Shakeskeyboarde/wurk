@@ -90,6 +90,8 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
           this.onDestroy(() => {
             rmSync(from, { force: true });
           });
+
+          return;
         } else if (error.code === 'EEXIST') {
           // Already saved.
           return;
