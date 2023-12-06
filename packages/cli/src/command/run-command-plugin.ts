@@ -89,34 +89,35 @@ export const runCommandPlugin = async (
 
     if (isPrintSummaryEnabled && statuses.size && log.isLevel('notice')) {
       const isVerbose = log.isLevel('verbose');
+      const statusMessages = Array.from(statuses.entries())
+        .flatMap(([key, value]): string[] => {
+          const workspace = workspaces.get(key);
 
-      console.log(`${commandName} summary:`);
+          if (!workspace?.isSelected && !isVerbose) return [];
 
-      for (const [key, value] of statuses.entries()) {
-        const workspace = workspaces.get(key);
+          let statusMessage: string;
 
-        if (!workspace?.isSelected && !isVerbose) continue;
+          switch (value.status) {
+            case 'success':
+              statusMessage = chalk.greenBright('success');
+              break;
+            case 'warning':
+              statusMessage = chalk.yellowBright('warning');
+              break;
+            case 'pending':
+            case 'failure':
+              statusMessage = chalk.redBright('failure');
+              break;
+            default:
+              statusMessage = chalk.dim(value.status);
+              break;
+          }
 
-        let statusText: string;
+          return [`\n  ${key}: ${statusMessage}${value.detail ? chalk.dim(` (${value.detail})`) : ''}`];
+        })
+        .join('');
 
-        switch (value.status) {
-          case 'success':
-            statusText = chalk.greenBright('success');
-            break;
-          case 'warning':
-            statusText = chalk.yellowBright('warning');
-            break;
-          case 'pending':
-          case 'failure':
-            statusText = chalk.redBright('failure');
-            break;
-          default:
-            statusText = chalk.dim(value.status);
-            break;
-        }
-
-        console.log(`  ${key}: ${statusText}${value.detail ? chalk.dim(` (${value.detail})`) : ''}`);
-      }
+      log.printErr(`${commandName} summary:${statusMessages}`);
     }
 
     if (process.exitCode) {

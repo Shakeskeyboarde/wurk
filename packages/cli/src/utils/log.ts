@@ -199,6 +199,13 @@ export class Log {
    * Print an uncolored message to stdout, regardless of log level.
    */
   readonly print = (message: unknown): void => {
+    process.stdout.write(`${this.#prefix}${stringify(message)}`);
+  };
+
+  /**
+   * Print an uncolored message to stderr, regardless of log level.
+   */
+  readonly printErr = (message: unknown): void => {
     process.stderr.write(`${this.#prefix}${stringify(message)}`);
   };
 
