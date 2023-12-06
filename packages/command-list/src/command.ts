@@ -117,6 +117,6 @@ export default createCommand({
         };
       });
 
-    log.info(JSON.stringify(data, null, 2));
+    log.write(JSON.stringify(data, null, 2));
   },
 });
