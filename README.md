@@ -13,7 +13,7 @@ Start by reading about the [CLI](packages/cli/README.md), or learn how to build 
 - [@werk/command-run](packages/command-run/README.md): Run package scripts.
 - [@werk/command-exec](packages/command-exec/README.md): Run executables.
 - [@werk/command-build](packages/command-build/README.md): Build packages.
-- [@werk/command-build](packages/command-build/README.md): Remove build output files.
+- [@werk/command-clean](packages/command-clean/README.md): Remove build output files.
 - [@werk/command-vitest](packages/command-vitest/README.md): Run Vitest.
 - [@werk/command-depcheck](packages/command-depcheck/README.md): Check for unused production dependencies.
 - [@werk/command-version](packages/command-version/README.md): Update versions.
