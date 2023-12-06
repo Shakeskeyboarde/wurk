@@ -140,7 +140,7 @@ export default createCommand({
     if (releaseType) {
       addUpdate(workspace.name, version);
       packagePatches.push({ version: version });
-      log.info(`Updating workspace "${workspace.name}" version from "${workspace.version}" to "${version}".`);
+      log.debug(`Updating workspace "${workspace.name}" version from "${workspace.version}" to "${version}".`);
     }
 
     // Add any additional changelog notes.
@@ -151,12 +151,15 @@ export default createCommand({
     const isPackageUpdated = Boolean(packagePatches.length);
     const isChangeLogUpdated = Boolean(releaseType && changelog && changes.length);
 
+    workspace.setStatus('skipped');
+
     if (!isPackageUpdated && !isChangeLogUpdated) {
-      workspace.setStatus('skipped');
       return;
     }
 
     workspaceChanges.set(workspace.name, async () => {
+      workspace.setStatus('pending');
+
       if (dryRun) {
         saveAndRestoreFile(workspace.dir, 'package.json');
         saveAndRestoreFile(workspace.dir, 'CHANGELOG.md');
@@ -167,18 +170,19 @@ export default createCommand({
         await workspace.patchPackageJson(...packagePatches);
       }
 
+      if (releaseType) {
+        workspace.setStatus('success', `${workspace.version} -> ${version}`);
+      } else {
+        workspace.setStatus('skipped', dependencyUpdates ? 'dependencies updated' : undefined);
+      }
+
       if (isChangeLogUpdated) {
         log.debug(`Writing workspace "${workspace.name}" changelog.`);
 
         if (!(await writeChangelog(workspace.name, workspace.dir, version, changes))) {
           log.warn(`Version "${version}" already exists in the workspace "${workspace.name}" changelog.`);
+          workspace.setStatus('warning', 'changelog duplicate version');
         }
-      }
-
-      if (releaseType) {
-        workspace.setStatus('success', `${workspace.version} -> ${version}`);
-      } else {
-        workspace.setStatus('skipped', dependencyUpdates ? 'dependencies updated' : undefined);
       }
     });
   },
