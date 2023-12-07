@@ -18,12 +18,12 @@ interface BuildOptions {
   spawn: Spawn;
 }
 
-const hasDeepKey = (obj: unknown, ...keys: string[]): boolean => {
+const hasDeepProp = (obj: unknown, test: (key: string, value: unknown) => boolean): boolean => {
   if (typeof obj !== 'object' || obj == null) return false;
 
   for (const [key, value] of Object.entries(obj)) {
-    if (keys.includes(key)) return true;
-    if (hasDeepKey(value, ...keys)) return true;
+    if (test(key, value)) return true;
+    if (hasDeepProp(value, test)) return true;
   }
 
   return false;
@@ -32,14 +32,22 @@ const hasDeepKey = (obj: unknown, ...keys: string[]): boolean => {
 const isEsmPackage = (packageJson: Record<string, unknown>): boolean => {
   if (packageJson.type === 'module') return true;
   if (packageJson.module) return true;
-  if (hasDeepKey(packageJson.exports, 'import')) return true;
+  if (hasDeepProp(packageJson.exports, (key) => key === 'import')) return true;
+  if (hasDeepProp(packageJson.exports, (_, value) => typeof value === 'string' && value.endsWith('.mjs'))) return true;
+  if (typeof packageJson.main === 'string' && packageJson.main.endsWith('.mjs')) return true;
+  if (typeof packageJson.bin === 'string' && packageJson.bin.endsWith('.mjs')) return true;
+  if (hasDeepProp(packageJson.bin, (_, value) => typeof value === 'string' && value.endsWith('.mjs'))) return true;
 
   return false;
 };
 
 const isCjsPackage = (packageJson: Record<string, unknown>): boolean => {
   if (packageJson.type === 'commonjs' || !packageJson.type) return true;
-  if (hasDeepKey(packageJson.exports, 'require')) return true;
+  if (hasDeepProp(packageJson.exports, (key) => key === 'require')) return true;
+  if (hasDeepProp(packageJson.exports, (_, value) => typeof value === 'string' && value.endsWith('.cjs'))) return true;
+  if (typeof packageJson.main === 'string' && packageJson.main.endsWith('.cjs')) return true;
+  if (typeof packageJson.bin === 'string' && packageJson.bin.endsWith('.cjs')) return true;
+  if (hasDeepProp(packageJson.bin, (_, value) => typeof value === 'string' && value.endsWith('.cjs'))) return true;
 
   return false;
 };
