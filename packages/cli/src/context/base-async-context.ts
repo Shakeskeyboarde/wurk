@@ -3,7 +3,7 @@ import { relative, resolve } from 'node:path';
 
 import { type CommanderArgs, type CommanderOptions } from '../commander/commander.js';
 import { type ReadonlyEnhancedMap } from '../utils/enhanced-map.js';
-import { spawn, type SpawnOptions, type SpawnPromise } from '../utils/spawn.js';
+import { type Args, spawn, type SpawnOptions, type SpawnPromise } from '../utils/spawn.js';
 import { type Workspace } from '../workspace/workspace.js';
 import { BaseContext, type BaseContextOptions } from './base-context.js';
 
@@ -41,11 +41,7 @@ export abstract class BaseAsyncContext<A extends CommanderArgs, O extends Comman
   /**
    * Spawn a child process at the workspaces root.
    */
-  spawn(
-    cmd: string,
-    args?: readonly (string | number | false | null | undefined)[],
-    options?: SpawnOptions,
-  ): SpawnPromise {
+  spawn(cmd: string, args?: Args, options?: SpawnOptions): SpawnPromise {
     return spawn(cmd, args, { cwd: this.root.dir, log: this.log, ...options });
   }
 

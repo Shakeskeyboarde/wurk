@@ -5,7 +5,7 @@ import { npmRunPath } from 'npm-run-path';
 import { quote } from 'shell-quote';
 
 import { log as defaultLog } from './log.js';
-import { type SpawnOptions, type SpawnResult } from './spawn.js';
+import { type Args, getArgsArray, type SpawnOptions, type SpawnResult } from './spawn.js';
 
 export type SpawnSyncOptions = Pick<
   SpawnOptions,
@@ -16,7 +16,7 @@ export type SpawnSyncResult = Omit<SpawnResult, 'output'>;
 
 export const spawnSync = (
   cmd: string,
-  args: readonly (string | undefined | null)[] = [],
+  args: Args = [],
   {
     cwd,
     env = process.env,
@@ -28,7 +28,7 @@ export const spawnSync = (
     ...options
   }: SpawnSyncOptions = {},
 ): SpawnSyncResult => {
-  const args_ = args.filter((value): value is string => value != null);
+  const args_ = getArgsArray(args);
 
   let exitCode = 0;
   let error: unknown;

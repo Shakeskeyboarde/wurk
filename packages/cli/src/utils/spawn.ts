@@ -13,6 +13,8 @@ type GetOutput = {
   (encoding?: BufferEncoding): Promise<string | Buffer>;
 };
 
+export type Args = readonly (string | number | false | null | undefined | Args)[];
+
 export interface SpawnOptions {
   /**
    * Current working directory of the child process.
@@ -99,9 +101,18 @@ export interface SpawnPromise extends Promise<SpawnResult> {
   readonly failed: () => Promise<boolean>;
 }
 
+export const getArgsArray = (args: Args): string[] => {
+  return args.flatMap((value): string | string[] => {
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number') return value.toString(10);
+    if (Array.isArray(value)) return getArgsArray(value);
+    return [];
+  });
+};
+
 export const spawn = (
   cmd: string,
-  args: readonly (string | number | false | null | undefined)[] = [],
+  args: Args = [],
   {
     echo = false,
     capture = false,
@@ -116,9 +127,7 @@ export const spawn = (
     ...options
   }: SpawnOptions = {},
 ): SpawnPromise => {
-  const args_ = args.flatMap((value) =>
-    typeof value === 'string' ? value : typeof value === 'number' ? value.toString(10) : [],
-  );
+  const args_ = getArgsArray(args);
 
   assert(
     echo !== 'inherit' || (!capture && !stream),
