@@ -1,3 +1,9 @@
+## 9.1.3 (2023-12-07)
+
+### Bug Fixes
+
+- Recursion should be blocked per command. (0abd84c)
+
 ## 9.1.2 (2023-12-07)
 
 ### Improvements
