@@ -1,56 +1,13 @@
-import { readdir, readFile } from 'node:fs/promises';
-import { dirname, join, relative, resolve } from 'node:path';
+import fs from 'node:fs';
+import { join, relative } from 'node:path';
 
 import { createCommand } from '@werk/cli';
 
-const getFilenames = async (dir: string): Promise<string[]> => {
-  const entries = await readdir(dir, { withFileTypes: true });
-  const promises = entries.map(async (entry) => {
-    if (entry.isFile() && /\.(?:js|cjs|mjs|jsx|ts|mts|cts|tsx)$/u.test(entry.name)) return `${dir}/${entry.name}`;
-    if (entry.isDirectory() && entry.name !== 'node_modules') return await getFilenames(`${dir}/${entry.name}`);
-    return [];
-  });
-
-  return await Promise.all(promises).then((results) => results.flatMap((result) => result));
-};
-
-const getTypesName = (name: string): string => {
-  const parts = name.split('/', 2);
-  return parts.length === 1 ? `@types/${parts[0]}` : `@types/${parts[0]}__${parts[1]}`;
-};
-
-const getPackageJson = async (dir: string, name: string): Promise<{ peerDependencies?: Record<string, string> }> => {
-  return await readFile(resolve(dir, 'node_modules', name, 'package.json'), 'utf-8')
-    .then<{ peerDependencies?: Record<string, string> }>(JSON.parse)
-    .catch(() => {
-      const parent = dirname(dir);
-      if (parent !== dir) return getPackageJson(parent, name);
-      return {};
-    });
-};
-
-const peersCache = new Map<string, Promise<string[]>>();
-
-const getPeers = async (dir: string, ...names: string[]): Promise<string[]> => {
-  const promises = [...names].map((name) => {
-    let promise = peersCache.get(name);
-
-    if (!promise) {
-      promise = getPackageJson(dir, name)
-        .then((packageJson) => (packageJson.peerDependencies ? Object.keys(packageJson.peerDependencies) : []))
-        .catch((): string[] => []);
-
-      peersCache.set(name, promise);
-    }
-
-    return promise;
-  });
-
-  return await Promise.all(promises).then((results) => [...new Set(results.flatMap((result) => result))]);
-};
+import { DependencySet } from './dependency-set.js';
+import { getSourceFilenames } from './get-source-filenames.js';
 
 let npmUpdatePromise = Promise.resolve();
-let exitCode = 0;
+let isFailed = false;
 
 export default createCommand({
   config: (commander) => {
@@ -64,137 +21,105 @@ export default createCommand({
 
     workspace.setStatus('pending');
 
-    const dependencies = new Set(
+    const dependencies = new DependencySet(
+      workspace.dir,
       Object.keys({
         ...workspace.dependencies,
         ...workspace.peerDependencies,
         ...workspace.optionalDependencies,
       }),
     );
-    const unused = new Set(dependencies);
-    const used = new Set<string>();
-    const add = (name: string): string[] => {
-      const result: string[] = [];
-
-      if (unused.delete(name)) {
-        used.add(name);
-        result.push(name);
-      }
-
-      if (!name.startsWith('@types/')) {
-        const typesName = getTypesName(name);
-
-        if (unused.delete(typesName)) {
-          used.add(name);
-          result.push(typesName);
-        }
-      }
-
-      return result;
-    };
 
     if (!dependencies.size) {
       workspace.setStatus('success', 'no dependencies');
       return;
     }
 
-    const filenames = await getFilenames(workspace.dir);
+    const filenames = await getSourceFilenames(workspace.dir);
     const isReact = filenames.some((filename) => /\.(?:jsx|tsx)$/u.test(filename));
 
-    if (isReact) add('react');
-
-    /**
-     * Convert all "@types/*" dependencies to their non-types equivalent,
-     * because "@types/*" will never be imported directly.
-     */
-    for (const dependency of unused) {
-      if (dependency.startsWith('@types/')) {
-        unused.delete(dependency);
-        unused.add(dependency.replace(/^@types\//u, ''));
-      }
+    if (isReact) {
+      await dependencies.removedUsed('react');
     }
 
     /**
      * Remove all dependencies that appear to be used in a source file.
+     *
+     * Imports and requires are detected using a regular expression,
+     * rather than a full source code parser. This may detect usages that
+     * are not real (eg. commented out), but it is fast and good enough.
+     *
+     * Files are not read in parallel because some systems (Windows) are
+     * slow at parallel file access.
      */
     for (const filename of filenames) {
-      const content = await readFile(filename, 'utf-8');
-
-      for (const dependency of unused) {
-        const pattern = new RegExp(
-          `\\b(?:require|import)\\((['"\`])${dependency}(?:\\1|/)|(?:\\bfrom|^import)\\s+(['"\`])${dependency}(?:\\2|/)`,
-          'mu',
-        );
-
-        if (pattern.test(content)) add(dependency);
+      if (!dependencies.size) {
+        // All dependencies have been used.
+        break;
       }
 
-      if (!unused.size) {
-        workspace.setStatus('success');
-        return;
-      }
-    }
-
-    const addPeers = async (...names: string[]): Promise<void> => {
-      if (names.length === 0) return;
-
-      const peers = await getPeers(workspace.dir, ...names);
-
-      if (peers.length === 0) return;
+      const content = await fs.promises.readFile(filename, 'utf-8');
+      const matches = content.matchAll(
+        /\b(?:require|import)\(\s*(['"`])((?:@[\w.-]+\/)?[\w.-]+)(?:\1|\/)|(?:\bfrom|^import)\s+(['"`])((?:@[\w.-]+\/)?[\w.-]+)(?:\3|\/)/gmu,
+      );
 
       await Promise.all(
-        peers.map(async (peer) => {
-          const added = add(peer);
-          /*
-           * Recursive because an unused dependency might actually be
-           * the peer of an installed peer.
-           */
-          await addPeers(...added);
-        }),
+        Array.from(matches)
+          .map((match) => (match[2] || match[4])!)
+          .map((name) => dependencies.removedUsed(name)),
       );
-    };
+    }
 
-    await addPeers(...used);
-
-    if (!unused.size) {
+    if (!dependencies.size) {
       workspace.setStatus('success');
       return;
     }
 
     if (!opts.fix) {
       log.info(
-        `Unused dependencies in "${join(relative(root.dir, workspace.dir), 'package.json')}":${[...unused].reduce(
+        `Unused dependencies in "${join(relative(root.dir, workspace.dir), 'package.json')}":${[...dependencies].reduce(
           (result, dependency) => `${result}\n  - ${dependency}`,
           '',
         )}`,
       );
       workspace.setStatus('failure');
-      exitCode ||= 1;
+      isFailed = true;
+
       return;
     }
 
     /**
-     * Chaining the promise prevents npm update from running in parallel.
+     * Chaining the promise prevents npm update from running in parallel
+     * when workspaces are processed in parallel.
      */
-    npmUpdatePromise = npmUpdatePromise.then(async () => {
-      await spawn('npm', [!workspace.isRoot && ['-w', workspace.name], 'remove', ...unused], {
-        errorEcho: true,
-        errorReturn: true,
-        errorSetExitCode: true,
-      });
+    await (npmUpdatePromise = npmUpdatePromise
+      .catch(() => {
+        // Don't double throw error from other workspaces.
+      })
+      .then(async () => {
+        await spawn('npm', [!workspace.isRoot && ['-w', workspace.name], 'remove', ...dependencies], {
+          errorEcho: true,
+          errorReturn: true,
+          errorSetExitCode: true,
+        });
 
-      log.info(
-        `Removed dependencies from "${join(relative(root.dir, workspace.dir), 'package.json')}":${[...unused].reduce(
-          (result, dependency) => `${result}\n  - ${dependency}`,
-          '',
-        )}`,
-      );
-    });
+        log.info(
+          `Removed dependencies from "${join(relative(root.dir, workspace.dir), 'package.json')}":${[
+            ...dependencies,
+          ].reduce((result, dependency) => `${result}\n  - ${dependency}`, '')}`,
+        );
+      }));
 
-    await npmUpdatePromise;
     workspace.setStatus('success', 'fixed');
   },
   after: async () => {
-    process.exitCode ||= exitCode;
+    /**
+     * The exit code is not set in the `each` hook so that processing
+     * doesn't stop on the first workspace with a failure. But, it still
+     * needs to be set to a non-zero value if any workspace failed.
+     */
+    if (isFailed) {
+      process.exitCode ||= 1;
+    }
   },
 });
