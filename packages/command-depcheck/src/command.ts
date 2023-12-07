@@ -49,16 +49,21 @@ const getPeers = async (dir: string, ...names: string[]): Promise<string[]> => {
   return await Promise.all(promises).then((results) => [...new Set(results.flatMap((result) => result))]);
 };
 
-let promise = Promise.resolve();
+let npmUpdatePromise = Promise.resolve();
 let exitCode = 0;
 
 export default createCommand({
   config: (commander) => {
     return commander.option('--fix', 'Remove unused dependencies.');
   },
+  before: async ({ setPrintSummary }) => {
+    setPrintSummary();
+  },
   each: async ({ log, root, workspace, opts, spawn }) => {
-    const filenames = await getFilenames(workspace.dir);
-    const isReact = filenames.some((filename) => /\.(?:jsx|tsx)$/u.test(filename));
+    if (!workspace.isSelected) return;
+
+    workspace.setStatus('pending');
+
     const dependencies = new Set(
       Object.keys({
         ...workspace.dependencies,
@@ -88,6 +93,14 @@ export default createCommand({
       return result;
     };
 
+    if (!dependencies.size) {
+      workspace.setStatus('success', 'no dependencies');
+      return;
+    }
+
+    const filenames = await getFilenames(workspace.dir);
+    const isReact = filenames.some((filename) => /\.(?:jsx|tsx)$/u.test(filename));
+
     if (isReact) add('react');
 
     /**
@@ -116,7 +129,10 @@ export default createCommand({
         if (pattern.test(content)) add(dependency);
       }
 
-      if (unused.size === 0) return;
+      if (!unused.size) {
+        workspace.setStatus('success');
+        return;
+      }
     }
 
     const addPeers = async (...names: string[]): Promise<void> => {
@@ -140,7 +156,10 @@ export default createCommand({
 
     await addPeers(...used);
 
-    if (unused.size === 0) return;
+    if (!unused.size) {
+      workspace.setStatus('success');
+      return;
+    }
 
     if (!opts.fix) {
       log.info(
@@ -149,13 +168,16 @@ export default createCommand({
           '',
         )}`,
       );
+      workspace.setStatus('failure');
       exitCode ||= 1;
       return;
     }
 
-    promise = promise.then(async () => {
-      await spawn('npm', ['remove', ...unused], {
-        cwd: workspace.dir,
+    /**
+     * Chaining the promise prevents npm update from running in parallel.
+     */
+    npmUpdatePromise = npmUpdatePromise.then(async () => {
+      await spawn('npm', [!workspace.isRoot && ['-w', workspace.name], 'remove', ...unused], {
         errorEcho: true,
         errorReturn: true,
         errorSetExitCode: true,
@@ -168,6 +190,9 @@ export default createCommand({
         )}`,
       );
     });
+
+    await npmUpdatePromise;
+    workspace.setStatus('success', 'fixed');
   },
   after: async () => {
     process.exitCode ||= exitCode;
