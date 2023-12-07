@@ -1,3 +1,10 @@
+## 1.0.13 (2023-12-07)
+
+### Improvements
+
+- Performance. (b1e95f8)
+- Use Werk summary feature. (4c76e79)
+
 ## 1.0.12 (2023-12-06)
 
 ### Notes

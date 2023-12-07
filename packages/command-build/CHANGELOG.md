@@ -1,3 +1,10 @@
+## 3.0.4 (2023-12-07)
+
+### Improvements
+
+- Use -w flag with &#96;npm run&#96;, instead of changing the working directory. (02ffe16)
+- ESM and CJS entry point detection based on file extension (cjs, mjs). (cc95bf4)
+
 ## 3.0.3 (2023-12-06)
 
 ### Chores

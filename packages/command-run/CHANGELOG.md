@@ -1,3 +1,9 @@
+## 3.2.11 (2023-12-07)
+
+### Improvements
+
+- Use -w flag with &#96;npm run&#96;, instead of changing the working directory. (8adbbab)
+
 ## 3.2.10 (2023-12-06)
 
 ### Notes

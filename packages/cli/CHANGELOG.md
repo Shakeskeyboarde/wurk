@@ -1,3 +1,9 @@
+## 9.1.2 (2023-12-07)
+
+### Improvements
+
+- Allow nested arrays in spawn args. (d86d3c7)
+
 ## 9.1.1 (2023-12-06)
 
 ### Bug Fixes
