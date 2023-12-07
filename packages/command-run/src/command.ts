@@ -41,13 +41,16 @@ export default createCommand({
       .filter(Boolean);
 
     for (const script of scripts) {
-      await spawn('npm', ['run', '--if-present', script, '--', ...scriptArgs], {
-        cwd: workspace.dir,
-        input: inheritStreams ? 'inherit' : false,
-        echo: inheritStreams ? 'inherit' : true,
-        errorSetExitCode: true,
-        errorReturn: true,
-      });
+      await spawn(
+        'npm',
+        [!workspace.isRoot && ['-w', workspace.name], 'run', '--if-present', script, '--', ...scriptArgs],
+        {
+          input: inheritStreams ? 'inherit' : false,
+          echo: inheritStreams ? 'inherit' : true,
+          errorSetExitCode: true,
+          errorReturn: true,
+        },
+      );
 
       if (process.exitCode) return;
     }
