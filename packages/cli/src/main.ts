@@ -113,7 +113,19 @@ const mainAsync = async (args: string[]): Promise<void> => {
     .option('--no-dependencies', 'Do not automatically include dependencies of selected workspaces.')
     .option('--no-prefix', 'No output prefixes.')
     .option('--git-from-revision <rev>', 'Set the revision used for detecting modifications.')
-    .version(globalConfig.version, '-v, --version', 'Display the current version.');
+    .version(globalConfig.version, '-v, --version', 'Display the current version.')
+    .hook('preSubcommand', (_, subCommand) => {
+      const running = process.env.WERK_RUNNING_COMMANDS?.split(/\s*,\s*/u) ?? [];
+      const name = subCommand.name();
+
+      if (running.includes(name)) {
+        // Block commands from recursively calling themselves, even indirectly.
+        // eslint-disable-next-line unicorn/no-process-exit
+        process.exit(0);
+      }
+
+      process.env.WERK_RUNNING_COMMANDS = [...running, name].join(',');
+    });
 
   const plugins = await loadCommandPlugins(globalConfig, commander);
   const getGlobalOptions = (): GlobalOptions => {

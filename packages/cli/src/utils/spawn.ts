@@ -147,7 +147,6 @@ export const spawn = (
       ...process.env,
       ...env,
       PATH: npmRunPath({ cwd: options.cwd, path: env?.PATH ?? process.env.PATH }),
-      WERK_CLI: 'true',
     },
   });
   const stdout: Buffer[] = [];
