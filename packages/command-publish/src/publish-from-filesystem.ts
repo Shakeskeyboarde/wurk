@@ -222,6 +222,10 @@ const getMissingPackFiles = async (
   spawn: Spawn,
 ): Promise<WorkspaceEntryPoint[]> => {
   const packJson = await spawn('npm', ['pack', '--dry-run', '--json'], {
+    /**
+     * Must run in the workspace directory, rather than using the `-w`
+     * option, so that the archive is placed in the workspace directory.
+     */
     cwd: workspace.dir,
     capture: true,
   }).getJson<readonly { readonly files: readonly { readonly path: string }[] }[]>();
