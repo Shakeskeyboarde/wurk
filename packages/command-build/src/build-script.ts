@@ -11,8 +11,7 @@ export const buildScript = async (options: BuildScriptOptions): Promise<boolean>
 
   log.info(`${scriptName === 'start' ? 'Starting' : 'Building'} workspace "${workspace.name}" using package script.`);
 
-  return await spawn('npm', ['run', '--if-present', scriptName], {
-    cwd: workspace.dir,
+  return await spawn('npm', [!workspace.isRoot && ['-w', workspace.name], 'run', '--if-present', scriptName], {
     echo: true,
     errorReturn: true,
     errorSetExitCode: true,
