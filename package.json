@@ -31,9 +31,9 @@
   "engineStrict": true,
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.5",
-    "@types/eslint": "^8.44.7",
-    "@types/node": "^20.10.0",
-    "@vitest/coverage-v8": "^0.34.6",
+    "@types/eslint": "^8.44.8",
+    "@types/node": "^20.10.4",
+    "@vitest/coverage-v8": "^1.0.2",
     "@werk/command-build": "*",
     "@werk/command-clean": "*",
     "@werk/command-depcheck": "*",
@@ -43,12 +43,12 @@
     "@werk/command-run": "*",
     "@werk/command-version": "*",
     "@werk/command-vitest": "*",
-    "eslint": "^8.54.0",
+    "eslint": "^8.55.0",
     "eslint-config-rational": "^3.0.9",
     "prettier": "^3.1.0",
-    "rollup": "^4.6.0",
-    "typescript": "^5.3.2",
-    "vitest": "^0.34.6"
+    "rollup": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.0.2"
   },
   "werk": {
     "commands": {

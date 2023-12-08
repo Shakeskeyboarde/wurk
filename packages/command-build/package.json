@@ -52,10 +52,10 @@
     "@werk/cli": "^9.1.2"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.2.0",
+    "@vitejs/plugin-react": "^4.2.1",
     "vite-plugin-bin": "^1.0.2",
     "vite-plugin-checker": "^0.6.2",
-    "vite-plugin-dts": "^3.6.3",
+    "vite-plugin-dts": "^3.6.4",
     "vite-plugin-refresh": "^1.0.3",
     "vite-plugin-rewrite-all": "^1.0.2",
     "vite-plugin-svgr": "^4.2.0",

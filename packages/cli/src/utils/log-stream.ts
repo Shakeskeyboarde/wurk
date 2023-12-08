@@ -69,7 +69,7 @@ export class LogStream extends Transform {
     callback();
   }
 
-  _destroy(error: Error | null, callback: (error: Error | null) => void): void {
+  _destroy(...[error, callback]: Parameters<Transform['_destroy']>): void {
     this.flush();
     process.removeListener('exit', this.#onExit);
     process.setMaxListeners(process.getMaxListeners() - 1);

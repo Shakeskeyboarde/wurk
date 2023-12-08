@@ -27,16 +27,16 @@
     }
   },
   "dependencies": {
-    "@types/react": "^18.2.39",
+    "@types/react": "^18.2.42",
     "react": "^18.2.0",
     "test-vite-lib-bundle": "*"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.2.0",
+    "@vitejs/plugin-react": "^4.2.1",
     "@werk/command-build": "*",
-    "vite": "^5.0.2",
+    "vite": "^5.0.7",
     "vite-plugin-checker": "^0.6.2",
-    "vite-plugin-dts": "^3.6.3",
+    "vite-plugin-dts": "^3.6.4",
     "vite-plugin-svgr": "^4.2.0",
     "vite-plugin-zip-pack": "^1.0.6"
   }
