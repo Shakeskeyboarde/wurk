@@ -55,7 +55,7 @@ export const publishFromArchive = async (options: PublishFromArchiveOptions): Pr
     await rm(tmpDir, { recursive: true, force: true });
   }
 
-  workspace.setStatus('success');
+  workspace.setStatus('success', workspace.version);
 };
 
 const extractPackageJson = async (tgz: string, tmpDir: string): Promise<void> => {

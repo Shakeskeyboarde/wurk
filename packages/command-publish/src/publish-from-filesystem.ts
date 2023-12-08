@@ -163,6 +163,7 @@ export const publishFromFilesystem = async ({
   );
 
   published.add(workspace.name);
+  workspace.setStatus('success', workspace.version);
 };
 
 const getIsChangeLogOutdated = async (
