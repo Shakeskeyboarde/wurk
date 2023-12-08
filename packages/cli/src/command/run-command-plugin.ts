@@ -107,23 +107,22 @@ export const runCommandPlugin = async (
 
           if (!workspace?.isSelected && !isVerbose) return [];
 
-          const statusText = WorkspaceStatus[value.status];
           let statusMessage: string;
 
           switch (value.status) {
             case WorkspaceStatus.skipped:
-              statusMessage = chalk.dim(statusText);
+              statusMessage = chalk.dim('skipped');
               break;
             case WorkspaceStatus.success:
-              statusMessage = chalk.greenBright(statusText);
+              statusMessage = chalk.greenBright('success');
               break;
             case WorkspaceStatus.warning:
-              statusMessage = chalk.yellowBright(statusText);
+              statusMessage = chalk.yellowBright('warning');
               statusLogLevel = LogLevel.warn;
               break;
             case WorkspaceStatus.pending:
             case WorkspaceStatus.failure:
-              statusMessage = chalk.redBright(statusText);
+              statusMessage = chalk.redBright('failure');
               statusLogLevel = LogLevel.error;
               break;
           }
