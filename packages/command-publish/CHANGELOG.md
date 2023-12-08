@@ -1,3 +1,17 @@
+## 2.2.12 (2023-12-08)
+
+### Bug Fixes
+
+- Not setting success status when publishing from filesystem. (0db3a97)
+
+### Improvements
+
+- Logging. (0101607)
+
+### Chores
+
+- Update deps. (ecc22fa)
+
 ## 2.2.11 (2023-12-06)
 
 ### Improvements

@@ -1,3 +1,13 @@
+## 1.0.14 (2023-12-08)
+
+### Improvements
+
+- Logging. (0101607)
+
+### Chores
+
+- Update deps. (ecc22fa)
+
 ## 1.0.13 (2023-12-07)
 
 ### Improvements

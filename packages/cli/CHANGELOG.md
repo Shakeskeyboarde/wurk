@@ -1,3 +1,17 @@
+## 9.1.4 (2023-12-08)
+
+### Bug Fixes
+
+- Incorrect summary status (pending should be failure). (f8f0a29)
+
+### Improvements
+
+- Logging. (0101607)
+
+### Chores
+
+- Update deps. (ecc22fa)
+
 ## 9.1.3 (2023-12-07)
 
 ### Bug Fixes
