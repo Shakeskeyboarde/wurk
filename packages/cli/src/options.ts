@@ -1,7 +1,7 @@
-import { type LogLevel } from './utils/log.js';
+import { type LogLevelString } from './utils/log.js';
 
 export interface LogOptions {
-  readonly level: LogLevel;
+  readonly level: LogLevelString;
   readonly prefix: boolean;
 }
 

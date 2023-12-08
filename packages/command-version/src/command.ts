@@ -92,14 +92,17 @@ export default createCommand({
 
       assert(
         !isCurrentVersionPrerelease || (typeof spec === 'string' && spec.startsWith('pre')),
-        `Workspace "${workspace.name}" cannot be bumped to a non-prerelease version.`,
+        `Workspace cannot be bumped to a non-prerelease version.`,
       );
 
       if (spec instanceof SemVer) {
+        log.info(`Updating version to "${spec.format()}".`);
         [version, changes] = getExplicitVersion(spec);
       } else if (spec !== 'auto') {
+        log.info(`Updating ${spec} version.`);
         [version, changes] = getBumpedVersion(workspace.version, spec, preid);
       } else if (!workspace.isPrivate) {
+        log.info(`Updating version automatically.`);
         [version, changes] = await getAutoVersion(log, workspace, spawn);
       }
     }
@@ -116,7 +119,7 @@ export default createCommand({
 
     if (dependencyPatches) {
       packagePatches.push(dependencyPatches);
-      log.debug(`Updating workspace "${workspace.name}" dependencies.`);
+      log.info(`Updating local dependency versions.`);
     }
 
     /*
@@ -132,6 +135,7 @@ export default createCommand({
      * updated dependencies.
      */
     if (workspace.isSelected && !workspace.isPrivate && dependencyPatches && !version) {
+      log.info(`Incrementing version due to dependency updates.`);
       version = getIncrementedVersion(workspace.version).format();
       changes = [...changes, { type: ChangeType.note, message: 'Updated local dependencies.' }];
     }
@@ -141,7 +145,6 @@ export default createCommand({
     if (releaseType) {
       addUpdate(workspace.name, version);
       packagePatches.push({ version: version });
-      log.debug(`Updating workspace "${workspace.name}" version from "${workspace.version}" to "${version}".`);
     }
 
     // Add any additional changelog notes.
@@ -152,6 +155,15 @@ export default createCommand({
     const isPackageUpdated = Boolean(packagePatches.length);
     const isChangeLogUpdated = Boolean(releaseType && changelog && changes.length);
 
+    if (isChangeLogUpdated) {
+      log.info(`Updating changelog.`);
+    }
+
+    /**
+     * Skipped because the next thing is either returning due to no
+     * changes, or scheduling a task which will change the status back
+     * to pending when it starts.
+     */
     workspace.setStatus('skipped');
 
     if (!isPackageUpdated && !isChangeLogUpdated) {
@@ -167,7 +179,7 @@ export default createCommand({
       }
 
       if (isPackageUpdated) {
-        log.debug(`Writing workspace "${workspace.name}" package.`);
+        log.debug(`Writing package.`);
         await workspace.patchPackageJson(...packagePatches);
       }
 
@@ -178,10 +190,10 @@ export default createCommand({
       }
 
       if (isChangeLogUpdated) {
-        log.debug(`Writing workspace "${workspace.name}" changelog.`);
+        log.debug(`Writing changelog.`);
 
         if (!(await writeChangelog(workspace.name, workspace.dir, version, changes))) {
-          log.warn(`Version "${version}" already exists in the workspace "${workspace.name}" changelog.`);
+          log.warn(`Version "${version}" already exists in the changelog.`);
           workspace.setStatus('warning', 'changelog duplicate version');
         }
       }

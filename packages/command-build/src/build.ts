@@ -18,44 +18,6 @@ interface BuildOptions {
   spawn: Spawn;
 }
 
-const hasDeepProp = (obj: unknown, test: (key: string, value: unknown) => boolean): boolean => {
-  if (typeof obj !== 'object' || obj == null) return false;
-
-  for (const [key, value] of Object.entries(obj)) {
-    if (test(key, value)) return true;
-    if (hasDeepProp(value, test)) return true;
-  }
-
-  return false;
-};
-
-const isEsmPackage = (packageJson: Record<string, unknown>): boolean => {
-  if (packageJson.type === 'module') return true;
-  if (packageJson.module) return true;
-  if (hasDeepProp(packageJson.exports, (key) => key === 'import')) return true;
-  if (hasDeepProp(packageJson.exports, (_, value) => typeof value === 'string' && value.endsWith('.mjs'))) return true;
-  if (typeof packageJson.main === 'string' && packageJson.main.endsWith('.mjs')) return true;
-  if (typeof packageJson.bin === 'string' && packageJson.bin.endsWith('.mjs')) return true;
-  if (hasDeepProp(packageJson.bin, (_, value) => typeof value === 'string' && value.endsWith('.mjs'))) return true;
-
-  return false;
-};
-
-const isCjsPackage = (packageJson: Record<string, unknown>): boolean => {
-  if (packageJson.type === 'commonjs' || !packageJson.type) return true;
-  if (hasDeepProp(packageJson.exports, (key) => key === 'require')) return true;
-  if (hasDeepProp(packageJson.exports, (_, value) => typeof value === 'string' && value.endsWith('.cjs'))) return true;
-  if (typeof packageJson.main === 'string' && packageJson.main.endsWith('.cjs')) return true;
-  if (typeof packageJson.bin === 'string' && packageJson.bin.endsWith('.cjs')) return true;
-  if (hasDeepProp(packageJson.bin, (_, value) => typeof value === 'string' && value.endsWith('.cjs'))) return true;
-
-  return false;
-};
-
-const isLibPackage = (packageJson: Record<string, unknown>): boolean => {
-  return Boolean(packageJson.exports || packageJson.main || packageJson.module || packageJson.types || packageJson.bin);
-};
-
 export const build = async ({
   log,
   root,
@@ -64,11 +26,14 @@ export const build = async ({
   vite: forceVite,
   clean,
   spawn,
-}: BuildOptions): Promise<boolean | null> => {
+}: BuildOptions): Promise<boolean> => {
   const scriptName = watch ? 'start' : 'build';
   const isScriptPresent = workspace.scripts[scriptName] != null;
   const maybeClean = async (): Promise<void> => {
-    if (clean) await workspace.clean();
+    if (clean) {
+      log.info(`Cleaning workspace.`);
+      await workspace.clean();
+    }
   };
 
   if (isScriptPresent) {
@@ -113,7 +78,48 @@ export const build = async ({
     return await buildTsc({ log, root, workspace, watch, isEsm, isCjs, spawn });
   }
 
-  return null;
+  log.debug(`No suitable ${watch ? 'watch' : 'build'} mode detected.`);
+  workspace.setStatus('skipped', 'no build mode');
+
+  return true;
+};
+
+const hasDeepProp = (obj: unknown, test: (key: string, value: unknown) => boolean): boolean => {
+  if (typeof obj !== 'object' || obj == null) return false;
+
+  for (const [key, value] of Object.entries(obj)) {
+    if (test(key, value)) return true;
+    if (hasDeepProp(value, test)) return true;
+  }
+
+  return false;
+};
+
+const isEsmPackage = (packageJson: Record<string, unknown>): boolean => {
+  if (packageJson.type === 'module') return true;
+  if (packageJson.module) return true;
+  if (hasDeepProp(packageJson.exports, (key) => key === 'import')) return true;
+  if (hasDeepProp(packageJson.exports, (_, value) => typeof value === 'string' && value.endsWith('.mjs'))) return true;
+  if (typeof packageJson.main === 'string' && packageJson.main.endsWith('.mjs')) return true;
+  if (typeof packageJson.bin === 'string' && packageJson.bin.endsWith('.mjs')) return true;
+  if (hasDeepProp(packageJson.bin, (_, value) => typeof value === 'string' && value.endsWith('.mjs'))) return true;
+
+  return false;
+};
+
+const isCjsPackage = (packageJson: Record<string, unknown>): boolean => {
+  if (packageJson.type === 'commonjs' || !packageJson.type) return true;
+  if (hasDeepProp(packageJson.exports, (key) => key === 'require')) return true;
+  if (hasDeepProp(packageJson.exports, (_, value) => typeof value === 'string' && value.endsWith('.cjs'))) return true;
+  if (typeof packageJson.main === 'string' && packageJson.main.endsWith('.cjs')) return true;
+  if (typeof packageJson.bin === 'string' && packageJson.bin.endsWith('.cjs')) return true;
+  if (hasDeepProp(packageJson.bin, (_, value) => typeof value === 'string' && value.endsWith('.cjs'))) return true;
+
+  return false;
+};
+
+const isLibPackage = (packageJson: Record<string, unknown>): boolean => {
+  return Boolean(packageJson.exports || packageJson.main || packageJson.module || packageJson.types || packageJson.bin);
 };
 
 const detectVite = async (

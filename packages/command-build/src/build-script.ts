@@ -9,11 +9,20 @@ interface BuildScriptOptions {
 export const buildScript = async (options: BuildScriptOptions): Promise<boolean> => {
   const { log, workspace, scriptName, spawn } = options;
 
-  log.info(`${scriptName === 'start' ? 'Starting' : 'Building'} workspace "${workspace.name}" using package script.`);
+  log.info(`Running "${scriptName}" script.`);
+  workspace.setStatus('pending', `${scriptName} script`);
 
-  return await spawn('npm', [!workspace.isRoot && ['-w', workspace.name], 'run', '--if-present', scriptName], {
-    echo: true,
-    errorReturn: true,
-    errorSetExitCode: true,
-  }).succeeded();
+  const isSuccess = await spawn(
+    'npm',
+    [!workspace.isRoot && ['-w', workspace.name], 'run', '--if-present', scriptName],
+    {
+      echo: true,
+      errorReturn: true,
+      errorSetExitCode: true,
+    },
+  ).succeeded();
+
+  workspace.setStatus(isSuccess ? 'success' : 'failure', `${scriptName} script`);
+
+  return isSuccess;
 };

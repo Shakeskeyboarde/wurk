@@ -22,11 +22,13 @@ export default createCommand({
       .option('--dry-run', 'Perform a dry run for validation.');
   },
 
-  before: async ({ opts, root, spawn, setPrintSummary }) => {
+  before: async ({ log, opts, root, spawn, setPrintSummary }) => {
     setPrintSummary();
 
     if (!opts.fromArchive && opts.build && root.scripts.build != null) {
-      await spawn('npm', ['run', '--if-present', 'build'], {
+      log.info(`Running pre-publish build.`);
+
+      await spawn('npm', ['run', 'build'], {
         input: 'inherit',
         echo: 'inherit',
         errorReturn: true,
@@ -39,31 +41,18 @@ export default createCommand({
     const { log, opts, workspace } = context;
 
     if (!workspace.isSelected) {
-      log.verbose(`Not publishing workspace "${workspace.name}" because it is not selected.`);
+      log.verbose(`Skipping unselected workspace.`);
       return;
     }
 
     if (workspace.isPrivate) {
-      log.verbose(`Not publishing workspace "${workspace.name}" because it is private.`);
+      log.verbose(`Skipping private workspace.`);
       workspace.setStatus('skipped', 'private');
       return;
     }
 
     workspace.setStatus('pending');
 
-    const isWorkspacePublished = opts.fromArchive
-      ? await publishFromArchive(context)
-      : await publishFromFilesystem(context);
-
-    if (isWorkspacePublished) {
-      workspace.setStatus(
-        'success',
-        `${workspace.version}${opts.toArchive ? ', to archive' : opts.fromArchive ? ', from archive' : ''}`,
-      );
-    } else if (isWorkspacePublished == null) {
-      workspace.setStatus('skipped', 'already published');
-    } else {
-      workspace.setStatus('warning', 'not published');
-    }
+    return opts.fromArchive ? await publishFromArchive(context) : await publishFromFilesystem(context);
   },
 });

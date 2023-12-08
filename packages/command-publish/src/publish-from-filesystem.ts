@@ -35,7 +35,7 @@ export const publishFromFilesystem = async ({
   workspace,
   spawn,
   saveAndRestoreFile,
-}: publishFromFilesystemOptions): Promise<boolean | null> => {
+}: publishFromFilesystemOptions): Promise<void> => {
   const { toArchive = false, tag, otp, removePackageFields = [], dryRun = false } = opts;
   const isShallow = await workspace.getGitIsShallow();
 
@@ -52,27 +52,24 @@ export const publishFromFilesystem = async ({
   ]);
 
   if (isPublished) {
-    log.verbose(
-      `Not publishing workspace "${workspace.name}@${workspace.version}" because the version is already published.`,
-    );
+    log.verbose(`Skipping already published version.`);
+    workspace.setStatus('skipped', 'version exists');
 
-    return null;
+    return;
   }
 
-  if (blockingDependencies.size) {
-    log.warn(
-      `Not publishing workspace "${
-        workspace.name
-      }" because it has modified and unpublished local dependencies.${blockingDependencies.map(
-        (blockingDependency) => `\n  - ${blockingDependency.workspace.name}`,
-      )}`,
-    );
+  log.info(`Publishing v${workspace.version} from filesystem to ${opts.toArchive ? 'archive' : 'registry'}.`);
 
-    return false;
+  if (blockingDependencies.size) {
+    log.warn(`Skipping workspace with modified (and unpublished) local dependencies:`);
+    blockingDependencies.forEach((dependency) => log.warn(`  - ${dependency.workspace.name}`));
+    workspace.setStatus('warning', 'skipped, modified dependencies');
+
+    return;
   }
 
   if (isChangeLogOutdated) {
-    log.warn(`Workspace "${workspace.name}" changelog was not updated in the last commit. It may be outdated.`);
+    log.warn(`Workspace has commits after changelog update. Changelog may be outdated.`);
   }
 
   const [isDirty, dirtyDependencies, missing, missingPacked] = await Promise.all([
@@ -85,32 +82,29 @@ export const publishFromFilesystem = async ({
   ]);
 
   if (isDirty || dirtyDependencies.size) {
-    log.warn(
-      `Not publishing workspace "${workspace.name}" because it or one of its dependencies has a dirty working tree.`,
-    );
+    log.warn(`Skipping workspace with dirty local dependencies.`);
+    workspace.setStatus('warning', 'skipped, dirty dependencies');
 
-    return false;
+    return;
   }
 
   if (missing.length) {
-    throw new Error(
-      `Workspace "${workspace.name}" is missing the following entry points:${missing.reduce(
-        (result, { type, filename }) => `${result}\n  - ${relative(workspace.dir, filename)} (${type})`,
-        '',
-      )}`,
-    );
+    log.error(`Missing entry points:`);
+    missing.forEach(({ type, filename }) => log.error(`  - ${relative(workspace.dir, filename)} (${type})`));
+    workspace.setStatus('failure', 'entry points');
+    process.exitCode ||= 1;
+
+    return;
   }
 
   if (missingPacked.length) {
-    throw new Error(
-      `Workspace "${workspace.name}" packed archive is missing the following entry points:${missingPacked.reduce(
-        (result, { type, filename }) => `${result}\n  - ${relative(workspace.dir, filename)} (${type})`,
-        '',
-      )}`,
-    );
-  }
+    log.error(`Unpublished entry points:`);
+    missingPacked.forEach(({ type, filename }) => log.error(`  - ${relative(workspace.dir, filename)} (${type})`));
+    workspace.setStatus('failure', 'entry points');
+    process.exitCode ||= 1;
 
-  log.info(`Publishing workspace "${workspace.name}@${workspace.version}"${opts.toArchive ? ' to archive' : ''}.`);
+    return;
+  }
 
   const dependenciesPatch: MutablePackageJson = {};
 
@@ -169,8 +163,6 @@ export const publishFromFilesystem = async ({
   );
 
   published.add(workspace.name);
-
-  return true;
 };
 
 const getIsChangeLogOutdated = async (

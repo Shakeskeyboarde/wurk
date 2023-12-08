@@ -44,13 +44,11 @@ export const getUpdatePatches = (
        * range already satisfies it.
        */
       if (!strict && satisfies(update.version, depRange) && satisfies(update.version, `~${minVersion(depRange)}`)) {
-        log.debug(
-          `Skipping inconsequential update "${depName}@${depRange}" to "${newDepRange} in workspace "${workspace.name}".`,
-        );
+        log.debug(`Ignoring inconsequential dependency "${depName}" update (${depRange} -> ${newDepRange}).`);
         continue;
       }
 
-      log.debug(`Updating "${depName}@${depRange}" to "${newDepRange}" in workspace "${workspace.name}".`);
+      log.debug(`Updating dependency "${depName}" (${depRange} -> ${newDepRange}).`);
       packagePatch = { ...packagePatch, [scope]: { ...packagePatch?.[scope], [depName]: newDepRange } };
     }
   }

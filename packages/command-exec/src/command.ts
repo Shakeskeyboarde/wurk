@@ -12,6 +12,8 @@ export default createCommand({
   each: async ({ log, isParallel, args, workspace, spawn }) => {
     if (!workspace.isSelected) return;
 
+    log.info(`Executing "${args[0]}" command.`);
+
     const inheritStreams = !log.prefix && !isParallel;
 
     await spawn(...args, {

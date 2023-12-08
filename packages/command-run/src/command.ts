@@ -41,6 +41,13 @@ export default createCommand({
       .filter(Boolean);
 
     for (const script of scripts) {
+      if (workspace.scripts?.[script] == null) {
+        log.debug(`Skipping missing "${script}" script.`);
+        continue;
+      }
+
+      log.info(`Running "${script}" script.`);
+
       await spawn(
         'npm',
         [!workspace.isRoot && ['-w', workspace.name], 'run', '--if-present', script, '--', ...scriptArgs],

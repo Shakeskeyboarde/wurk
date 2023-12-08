@@ -19,6 +19,8 @@ export default createCommand({
     const [vitestArgs] = args;
 
     if (opts.build) {
+      log.info('Running pre-test build.');
+
       const isBuilt = await spawn('npm', ['run', '--if-present', 'build'], {
         input: 'inherit',
         echo: 'inherit',
@@ -40,8 +42,10 @@ export default createCommand({
       return;
     }
 
+    log.info('Testing with Vitest.');
+
     if (await isVitestWorkspaceConfigFound(root.dir)) {
-      log.warn('Preexisting Vitest workspace configuration found. Filter options will not apply.');
+      log.warn('Preexisting workspaces config found. Filter options will not apply.');
     } else {
       const tempDir = resolve(root.dir, 'node_modules', '.werk-command-vitest');
       const filename = resolve(tempDir, 'vitest.workspace.json');
@@ -50,7 +54,7 @@ export default createCommand({
         .mapAsync(({ dir }) => isVitestConfigFound(dir).then((isConfigured) => (isConfigured ? dir : undefined)))
         .then((results) => results.filter((result): result is string => Boolean(result)));
 
-      assert(workspaceNames.length, 'No Vitest configurations found.');
+      assert(workspaceNames.length, 'No configs found in any selected workspace.');
 
       await mkdir(tempDir, { recursive: true });
       await writeFile(filename, JSON.stringify(workspaceNames));

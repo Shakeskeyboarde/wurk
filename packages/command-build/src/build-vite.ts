@@ -39,7 +39,10 @@ export const buildVite = async ({
   customConfigFile,
   clean,
   spawn,
-}: BuildViteOptions): Promise<boolean | null> => {
+}: BuildViteOptions): Promise<boolean> => {
+  log.info(watch ? `Starting Vite in watch mode.` : `Building with Vite.`);
+  workspace.setStatus('pending', 'vite');
+
   let isLib = false;
 
   // eslint-disable-next-line import/no-extraneous-dependencies
@@ -63,8 +66,10 @@ export const buildVite = async ({
   const configs: BuildConfig[] = [];
 
   if (customConfigFile) {
+    log.info(`Using custom config file: ${customConfigFile}`);
     configs.push({ configFile: customConfigFile });
   } else {
+    log.info(`Using automatic config.`);
     const autoConfigFile = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'config', 'vite.config.mts');
 
     if (isLib) {
@@ -80,6 +85,8 @@ export const buildVite = async ({
     let spawnLog = log;
 
     if (lib) {
+      log.info(`Creating ${lib.format === 'es' ? 'ESM' : 'CommonJS'} library.`);
+
       const inputs = await getInputs(workspace);
       const isBundle = isBundleInputPresent(inputs);
       const outSubDir = lib?.isMultiTarget ? (lib.format === 'es' ? 'esm' : lib.format) : undefined;
@@ -99,6 +106,8 @@ export const buildVite = async ({
           },
         } as ViteConfigOptions),
       };
+    } else {
+      log.info(`Creating web application.`);
     }
 
     return await spawn('vite', [commandArg, watchArg, hostArg, `--config=${configFile}`], {
@@ -112,20 +121,22 @@ export const buildVite = async ({
   };
 
   if (watch) {
-    log.info(`Starting workspace "${workspace.name}" using Vite.`);
-
+    workspace.setStatus('success', 'vite');
     return await Promise.all(configs.map(build)).then((results) => results.every(Boolean));
   }
 
-  log.info(`Building workspace "${workspace.name}" using Vite.`);
+  let isSuccess = true;
 
   for (const config of configs) {
-    const isSuccess = await build(config);
-
-    if (!isSuccess) return false;
+    if (!(await build(config))) {
+      isSuccess = false;
+      break;
+    }
   }
 
-  return true;
+  workspace.setStatus(isSuccess ? 'success' : 'failure', 'vite');
+
+  return isSuccess;
 };
 
 const getInputs = async (workspace: Workspace): Promise<string[]> => {

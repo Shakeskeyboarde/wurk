@@ -18,7 +18,7 @@ interface PublishFromArchiveOptions {
   readonly spawn: Spawn;
 }
 
-export const publishFromArchive = async (options: PublishFromArchiveOptions): Promise<boolean> => {
+export const publishFromArchive = async (options: PublishFromArchiveOptions): Promise<void> => {
   const { log, opts, workspace, spawn } = options;
   const { tag, otp, dryRun = false } = opts;
   const filename = resolve(
@@ -30,14 +30,13 @@ export const publishFromArchive = async (options: PublishFromArchiveOptions): Pr
     .catch(() => false);
 
   if (!filenameExists) {
-    log.verbose(
-      `Not publishing workspace "${workspace.name}@${workspace.version}" because the archive file "${filename}" is missing.`,
-    );
+    log.verbose(`No workspace archive found.`);
+    workspace.setStatus('skipped', 'no archive');
 
-    return false;
+    return;
   }
 
-  log.info(`Publishing workspace "${workspace.name}@${workspace.version}" from archive.`);
+  log.info(`Publishing v${workspace.version} from archive to registry.`);
 
   const tmpDir = resolve(workspace.dir, `.${randomUUID()}.tmp`);
   const tmpFilename = resolve(tmpDir, basename(filename));
@@ -56,7 +55,7 @@ export const publishFromArchive = async (options: PublishFromArchiveOptions): Pr
     await rm(tmpDir, { recursive: true, force: true });
   }
 
-  return true;
+  workspace.setStatus('success');
 };
 
 const extractPackageJson = async (tgz: string, tmpDir: string): Promise<void> => {

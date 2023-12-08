@@ -7,9 +7,9 @@ import { BeforeContext } from '../context/before-context.js';
 import { CleanupContext } from '../context/cleanup-context.js';
 import { EachContext } from '../context/each-context.js';
 import { type GlobalOptions } from '../options.js';
-import { log } from '../utils/log.js';
+import { log, LogLevel } from '../utils/log.js';
 import { createWorkspaces } from '../workspace/create-workspaces.js';
-import { type WorkspaceStatus } from '../workspace/workspace.js';
+import { WorkspaceStatus } from '../workspace/workspace.js';
 import { type CommandPlugin } from './load-command-plugins.js';
 
 type PrefixColor = (typeof PREFIX_COLORS)[number];
@@ -68,7 +68,7 @@ export const runCommandPlugin = async (
 
   workspaces.forEach((workspace) => {
     statuses.set(workspace.name, {
-      status: 'skipped',
+      status: WorkspaceStatus.skipped,
       detail: undefined,
     });
   });
@@ -87,7 +87,19 @@ export const runCommandPlugin = async (
     destroy.forEach((callback) => callback());
     log.flush();
 
+    const statusOverall: WorkspaceStatus = Array.from(statuses.values()).reduce<WorkspaceStatus>(
+      (result, { status }) => {
+        return status > result ? status : result;
+      },
+      WorkspaceStatus.skipped,
+    );
+
+    if (statusOverall >= WorkspaceStatus.failure) {
+      process.exitCode ||= 1;
+    }
+
     if (isPrintSummaryEnabled && statuses.size) {
+      let statusLogLevel: LogLevel = LogLevel.notice;
       const isVerbose = log.isLevel('verbose');
       const statusMessages = Array.from(statuses.entries())
         .flatMap(([key, value]): string[] => {
@@ -95,21 +107,24 @@ export const runCommandPlugin = async (
 
           if (!workspace?.isSelected && !isVerbose) return [];
 
+          const statusText = WorkspaceStatus[value.status];
           let statusMessage: string;
 
           switch (value.status) {
-            case 'success':
-              statusMessage = chalk.greenBright('success');
+            case WorkspaceStatus.skipped:
+              statusMessage = chalk.dim(statusText);
               break;
-            case 'warning':
-              statusMessage = chalk.yellowBright('warning');
+            case WorkspaceStatus.success:
+              statusMessage = chalk.greenBright(statusText);
               break;
-            case 'pending':
-            case 'failure':
-              statusMessage = chalk.redBright('failure');
+            case WorkspaceStatus.warning:
+              statusMessage = chalk.yellowBright(statusText);
+              statusLogLevel = LogLevel.warn;
               break;
-            default:
-              statusMessage = chalk.dim(value.status);
+            case WorkspaceStatus.pending:
+            case WorkspaceStatus.failure:
+              statusMessage = chalk.redBright(statusText);
+              statusLogLevel = LogLevel.error;
               break;
           }
 
@@ -117,15 +132,17 @@ export const runCommandPlugin = async (
         })
         .join('');
 
-      log.notice(`${commandName} summary:${statusMessages}`);
+      if (log.isLevel(statusLogLevel)) {
+        log.printErr(`${commandName} summary:${statusMessages}`);
+      }
     }
 
-    if (process.exitCode) {
-      if (!isAborted) {
+    if (!isAborted) {
+      if (process.exitCode) {
         log.error(`${commandName} failure.`);
+      } else {
+        log.success(`${commandName} success.`);
       }
-    } else {
-      log.success(`${commandName} success.`);
     }
 
     log.flush();
@@ -197,8 +214,11 @@ export const runCommandPlugin = async (
         } catch (error) {
           const status = statuses.get(workspace.name);
 
-          if (status?.status !== 'failure') {
-            statuses.set(workspace.name, { status: 'failure', detail: undefined });
+          if (status?.status !== WorkspaceStatus.failure) {
+            statuses.set(workspace.name, {
+              status: WorkspaceStatus.failure,
+              detail: status?.status === WorkspaceStatus.pending ? status.detail : undefined,
+            });
           }
 
           throw error;

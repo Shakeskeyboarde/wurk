@@ -17,7 +17,15 @@ import { patchJsonFile } from '../utils/patch-json-file.js';
 import { readJsonFile } from '../utils/read-json-file.js';
 import { writeJsonFile } from '../utils/write-json-file.js';
 
-export type WorkspaceStatus = 'pending' | 'skipped' | 'success' | 'failure' | 'warning';
+export type WorkspaceStatusString = keyof typeof WorkspaceStatus;
+
+export enum WorkspaceStatus {
+  skipped = 0,
+  success = 1,
+  warning = 2,
+  failure = 3,
+  pending = 4,
+}
 
 export enum WorkspaceDependencyScope {
   dev = 0,
@@ -346,7 +354,8 @@ export class Workspace {
   readonly getGitIgnored = async (options?: GitIgnoredOptions): Promise<string[]> => {
     const ignored = (await this.getGitIsRepo()) ? await getGitIgnored(this.dir, options) : [];
 
-    log.debug(`Git ignored files:${ignored.map((file) => `\n  - ${file}`).join('')}`);
+    log.debug(`Git ignored files:`);
+    ignored.forEach((file) => log.debug(`  - ${file}`));
 
     return ignored;
   };
@@ -452,7 +461,7 @@ export class Workspace {
    * `before` command hook enabled summary printing by calling the
    * `context.setPrintSummary()` method.
    */
-  readonly setStatus = (status: WorkspaceStatus, detail?: string): void => {
-    this.#onStatus(this.name, status, detail);
+  readonly setStatus = (status: WorkspaceStatusString, detail?: string): void => {
+    this.#onStatus(this.name, WorkspaceStatus[status], detail);
   };
 }

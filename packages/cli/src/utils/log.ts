@@ -11,24 +11,23 @@ export interface LogOptions {
   formatPrefix?: (prefix: string) => string;
 }
 
-export type LogLevel = keyof typeof LOG_LEVEL_VALUES;
+export enum LogLevel {
+  silent = 0,
+  error = 10,
+  warn = 20,
+  notice = 30,
+  info = 40,
+  verbose = 50,
+  silly = 60,
+}
+
+export type LogLevelString = keyof typeof LogLevel;
 
 const ANSI_REGEXP = getAnsiRegex();
 const ANSI_NEWLINE_ENDING_REGEXP = new RegExp(`\\n(?:${ANSI_REGEXP.source})*$`, 'u');
-
-const LOG_LEVEL_VALUES = {
-  silent: 0,
-  error: 10,
-  warn: 20,
-  notice: 30,
-  info: 40,
-  verbose: 50,
-  silly: 60,
-} as const;
-
-const LOG_LEVEL_DEFAULT: LogLevel =
-  process.env.WERK_LOG_LEVEL && process.env.WERK_LOG_LEVEL in LOG_LEVEL_VALUES
-    ? (process.env.WERK_LOG_LEVEL as LogLevel)
+const LOG_LEVEL_DEFAULT: LogLevelString =
+  process.env.WERK_LOG_LEVEL && process.env.WERK_LOG_LEVEL in LogLevel
+    ? (process.env.WERK_LOG_LEVEL as LogLevelString)
     : 'warn';
 
 const occurrences = new Set<string>();
@@ -41,36 +40,33 @@ const stringify = (message: unknown): string => {
   return (ANSI_NEWLINE_ENDING_REGEXP.test(text) ? text : text + '\n') + '\u001B[0m';
 };
 
-export const parseLogLevel = (value: string): LogLevel => {
+export const parseLogLevel = (value: string): LogLevelString => {
   switch (value) {
     case 'trace':
-      value = 'silly' satisfies keyof typeof LOG_LEVEL_VALUES;
+      value = 'silly' satisfies LogLevelString;
       break;
     case 'debug':
-      value = 'verbose' satisfies keyof typeof LOG_LEVEL_VALUES;
+      value = 'verbose' satisfies LogLevelString;
       break;
   }
 
-  assert(
-    value in LOG_LEVEL_VALUES,
-    new Error(`Log level must be one of: ${Object.keys(LOG_LEVEL_VALUES).join(', ')}.`),
-  );
-  return value as LogLevel;
+  assert(value in LogLevel, new Error(`Log level must be one of: ${Object.keys(LogLevel).join(', ')}.`));
+  return value as LogLevelString;
 };
 
 export class Log {
-  static #level: { readonly name: LogLevel; readonly value: number } = {
+  static #level: { readonly name: LogLevelString; readonly value: number } = {
     name: LOG_LEVEL_DEFAULT,
-    value: LOG_LEVEL_VALUES[LOG_LEVEL_DEFAULT],
+    value: LogLevel[LOG_LEVEL_DEFAULT],
   };
 
-  static get level(): { readonly name: LogLevel; readonly value: number } {
+  static get level(): { readonly name: LogLevelString; readonly value: number } {
     return Log.#level;
   }
 
-  static setLevel(level: LogLevel): void {
+  static setLevel(level: LogLevelString): void {
     process.env.WERK_LOG_LEVEL = level;
-    Log.#level = { name: level, value: LOG_LEVEL_VALUES[level] };
+    Log.#level = { name: level, value: LogLevel[level] };
   }
 
   readonly #prefix: string;
@@ -87,12 +83,12 @@ export class Log {
     this.#prefix = this.prefix ? `${this.formatPrefix(this.prefix)}: ` : '';
   }
 
-  get level(): { readonly name: LogLevel; readonly value: number } {
+  get level(): { readonly name: LogLevelString; readonly value: number } {
     return Log.#level;
   }
 
-  readonly isLevel = (level: LogLevel | number): boolean => {
-    const value = typeof level === 'number' ? level : LOG_LEVEL_VALUES[level];
+  readonly isLevel = (level: LogLevelString | number): boolean => {
+    const value = typeof level === 'number' ? level : LogLevel[level];
     return value <= this.level.value;
   };
 
@@ -100,7 +96,7 @@ export class Log {
    * Print a dimmed message to stderr.
    */
   readonly silly = (message?: unknown): void => {
-    if (this.isLevel(LOG_LEVEL_VALUES.silly)) {
+    if (this.isLevel(LogLevel.silly)) {
       process.stderr.write(`${this.#prefix}${chalk.dim(stringify(message))}`);
     }
   };
@@ -113,7 +109,7 @@ export class Log {
    * Print a dimmed message to stderr.
    */
   readonly verbose = (message?: unknown): void => {
-    if (this.isLevel(LOG_LEVEL_VALUES.verbose)) {
+    if (this.isLevel(LogLevel.verbose)) {
       process.stderr.write(`${this.#prefix}${chalk.dim(stringify(message))}`);
     }
   };
@@ -126,7 +122,7 @@ export class Log {
    * Print an uncolored message to stdout.
    */
   readonly info = (message?: unknown): void => {
-    if (this.isLevel(LOG_LEVEL_VALUES.info)) {
+    if (this.isLevel(LogLevel.info)) {
       process.stderr.write(`${this.#prefix}${stringify(message)}`);
     }
   };
@@ -135,7 +131,7 @@ export class Log {
    * Print an uncolored message to stderr.
    */
   readonly notice = (message?: unknown): void => {
-    if (this.isLevel(LOG_LEVEL_VALUES.notice)) {
+    if (this.isLevel(LogLevel.notice)) {
       process.stderr.write(`${this.#prefix}${stringify(message)}`);
     }
   };
@@ -144,7 +140,7 @@ export class Log {
    * Alias for `notice`, printed in green.
    */
   readonly success = (message?: unknown): void => {
-    if (this.isLevel(LOG_LEVEL_VALUES.notice)) {
+    if (this.isLevel(LogLevel.notice)) {
       process.stderr.write(`${this.#prefix}${chalk.greenBright(stringify(message))}`);
     }
   };
@@ -153,7 +149,7 @@ export class Log {
    * Print a yellow message to stderr.
    */
   readonly warn = (message?: unknown): void => {
-    if (this.isLevel(LOG_LEVEL_VALUES.warn)) {
+    if (this.isLevel(LogLevel.warn)) {
       process.stderr.write(`${this.#prefix}${chalk.yellowBright(stringify(message))}`);
     }
   };
@@ -163,7 +159,7 @@ export class Log {
    * been printed before.
    */
   readonly warnOnce = (message?: unknown): void => {
-    if (this.isLevel(LOG_LEVEL_VALUES.warn)) {
+    if (this.isLevel(LogLevel.warn)) {
       const text = stringify(message);
 
       if (this.#isFirstOccurrence(text)) {
@@ -176,7 +172,7 @@ export class Log {
    * Print a red message to stderr.
    */
   readonly error = (message?: unknown): void => {
-    if (this.isLevel(LOG_LEVEL_VALUES.error)) {
+    if (this.isLevel(LogLevel.error)) {
       process.stderr.write(`${this.#prefix}${chalk.redBright(stringify(message))}`);
     }
   };
@@ -186,7 +182,7 @@ export class Log {
    * printed before.
    */
   readonly errorOnce = (message?: unknown): void => {
-    if (this.isLevel(LOG_LEVEL_VALUES.error)) {
+    if (this.isLevel(LogLevel.error)) {
       const text = stringify(message);
 
       if (this.#isFirstOccurrence(text)) {

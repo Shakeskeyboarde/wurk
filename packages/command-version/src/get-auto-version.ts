@@ -40,6 +40,8 @@ export const getAutoVersion = async (
     return [workspace.version, []];
   }
 
+  log.info('Detecting changes.');
+
   const [changes, isConventional] = await getChanges(fromRevision ?? 'HEAD~1', workspace.dir, spawn);
 
   if (!isConventional) {
@@ -61,9 +63,18 @@ export const getAutoVersion = async (
   }, VersionBump.none);
 
   // Return an empty version to allow for other versioning strategies.
-  if (bump === VersionBump.none) return ['', changes];
+  if (bump === VersionBump.none) {
+    log.info('No changes detected.');
+    return ['', changes];
+  }
 
   version.inc(bump === VersionBump.major ? 'major' : bump === VersionBump.minor ? 'minor' : 'patch').format();
+
+  log.info(
+    `${bump === VersionBump.major ? 'Major' : bump === VersionBump.minor ? 'Minor' : 'Patch'} changes detected.`,
+  );
+
+  log.info(`Bumping version to ${version.format()} (from ${workspace.version}).`);
 
   return [version.format(), changes];
 };

@@ -4,10 +4,8 @@ import { createCommand } from '@werk/cli';
 
 import { build } from './build.js';
 
-const startCallbacks: (() => Promise<boolean | null>)[] = [];
+const startCallbacks: (() => Promise<any>)[] = [];
 const updateRequired = new Set<string>();
-
-let isAborted = false;
 
 export default createCommand({
   config: (commander) => {
@@ -20,7 +18,6 @@ export default createCommand({
       .option('-w, --watch', 'Continuously build on source code changes and start development servers.')
       .addOption(commander.createOption('-s, --start', 'Alias for the --watch option.').implies({ watch: true }))
       .option('--vite', 'Use Vite for all builds instead of auto-detecting.')
-      .option('--abort-on-failure', 'Abort on the first build failure.')
       .option('--no-clean', 'Do not clean the build directory before building.')
       .hook('preAction', (cmd) => {
         const commandName = cmd.parent!.args[0];
@@ -31,49 +28,35 @@ export default createCommand({
       });
   },
 
-  before: async ({ setPrintSummary }) => {
-    setPrintSummary();
+  before: async ({ opts, setPrintSummary }) => {
+    setPrintSummary(!opts.watch);
   },
 
   each: async ({ opts, log, root, workspace, spawn }) => {
-    if (isAborted) return;
-
-    const { watch = false, vite = false, abortOnFailure = false, clean } = opts;
+    const { watch = false, vite = false, clean } = opts;
 
     if (!workspace.isSelected) return;
 
     workspace.setStatus('pending');
 
-    const isBuilt = await build({ log, workspace, root, watch: false, vite, clean, spawn });
+    const isSuccess = await build({ log, workspace, root, watch: false, vite, clean, spawn });
 
-    if (isBuilt == null) {
-      workspace.setStatus('skipped', 'no matching build mode');
-    } else if (isBuilt) {
-      workspace.setStatus('success');
-
+    if (isSuccess) {
       const missing = await workspace.getMissingEntryPoints();
 
       if (missing.length) {
-        workspace.setStatus('warning', 'missing entry points');
-        log.warn(
-          `Workspace "${workspace.name}" is missing the following entry points:${missing.reduce(
-            (result, { type, filename }) => `${result}\n  - ${relative(workspace.dir, filename)} (${type})`,
-            '',
-          )}`,
-        );
+        workspace.setStatus('warning', 'entry points');
+        log.warn(`Missing entry points:`);
+        missing.forEach(({ type, filename }) => log.warn(`  - ${relative(workspace.dir, filename)} (${type})`));
+      }
+
+      if (watch) {
+        startCallbacks.push(() => build({ log, workspace, root, watch: true, vite, clean: false, spawn }));
       }
 
       updateRequired.add(workspace.name);
     } else {
-      workspace.setStatus('failure');
-
-      if (abortOnFailure) {
-        isAborted = true;
-      }
-    }
-
-    if (watch) {
-      startCallbacks.push(() => build({ log, workspace, root, watch: true, vite, clean: false, spawn }));
+      process.exitCode ||= 1;
     }
   },
 

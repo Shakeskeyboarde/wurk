@@ -1,5 +1,4 @@
 import fs from 'node:fs';
-import { join, relative } from 'node:path';
 
 import { createCommand } from '@werk/cli';
 
@@ -16,9 +15,10 @@ export default createCommand({
   before: async ({ setPrintSummary }) => {
     setPrintSummary();
   },
-  each: async ({ log, root, workspace, opts, spawn }) => {
+  each: async ({ log, workspace, opts, spawn }) => {
     if (!workspace.isSelected) return;
 
+    log.info('Checking dependencies.');
     workspace.setStatus('pending');
 
     const dependencies = new DependencySet(
@@ -31,6 +31,7 @@ export default createCommand({
     );
 
     if (!dependencies.size) {
+      log.info(`No dependencies found.`);
       workspace.setStatus('success', 'no dependencies');
       return;
     }
@@ -41,6 +42,8 @@ export default createCommand({
     if (isReact) {
       await dependencies.removedUsed('react');
     }
+
+    log.info(`Scanning for imports and requires.`);
 
     /**
      * Remove all dependencies that appear to be used in a source file.
@@ -71,17 +74,14 @@ export default createCommand({
     }
 
     if (!dependencies.size) {
+      log.info(`All dependencies are used.`);
       workspace.setStatus('success');
       return;
     }
 
     if (!opts.fix) {
-      log.info(
-        `Unused dependencies in "${join(relative(root.dir, workspace.dir), 'package.json')}":${[...dependencies].reduce(
-          (result, dependency) => `${result}\n  - ${dependency}`,
-          '',
-        )}`,
-      );
+      log.error(`Unused dependencies:`);
+      Array.from(dependencies).forEach((dependency) => log.error(`  - ${dependency}`));
       workspace.setStatus('failure');
       isFailed = true;
 
@@ -97,19 +97,16 @@ export default createCommand({
         // Don't double throw error from other workspaces.
       })
       .then(async () => {
+        log.info(`Removing unused dependencies.`);
+
         await spawn('npm', [!workspace.isRoot && ['-w', workspace.name], 'remove', ...dependencies], {
           errorEcho: true,
           errorReturn: true,
           errorSetExitCode: true,
         });
-
-        log.info(
-          `Removed dependencies from "${join(relative(root.dir, workspace.dir), 'package.json')}":${[
-            ...dependencies,
-          ].reduce((result, dependency) => `${result}\n  - ${dependency}`, '')}`,
-        );
       }));
 
+    log.info(`All remaining dependencies are used.`);
     workspace.setStatus('success', 'fixed');
   },
   after: async () => {

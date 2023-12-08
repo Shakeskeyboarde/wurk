@@ -26,6 +26,9 @@ export const buildTsc = async ({
   isCjs,
   spawn,
 }: BuildTscOptions): Promise<boolean> => {
+  log.info(watch ? `Starting TypeScript compiler in watch mode.` : `Building with TypeScript compiler.`);
+  workspace.setStatus('pending', 'tsc');
+
   const tsBuildConfigs = await readdir(workspace.dir, { withFileTypes: true }).then((files) => {
     return files
       .filter((file) => file.isFile() && /^tsconfig\..*build.*\.json$/u.test(file.name))
@@ -108,6 +111,8 @@ export const buildTsc = async ({
 
       const type = isEsmConfig ? 'module' : 'commonjs';
 
+      log.info(`Creating ${isEsmConfig ? 'ESM' : 'CommonJS'} library.`);
+
       if (type !== workspace.type) {
         await writeFile(resolve(outDir, 'package.json'), JSON.stringify({ type: isEsmConfig ? 'module' : 'commonjs' }));
       }
@@ -123,20 +128,22 @@ export const buildTsc = async ({
   };
 
   if (watch) {
-    log.info(`Starting workspace "${workspace.name}" using TypeScript.`);
-
+    workspace.setStatus('success', 'tsc');
     return await Promise.all(tsBuildConfigs.map(build)).then((results) => results.every(Boolean));
   }
 
-  log.info(`Building workspace "${workspace.name}" using TypeScript.`);
+  let isSuccess = true;
 
   for (const filename of tsBuildConfigs) {
-    const isSuccess = await build(filename);
-
-    if (!isSuccess) return false;
+    if (!(await build(filename))) {
+      isSuccess = false;
+      break;
+    }
   }
 
-  return true;
+  workspace.setStatus(isSuccess ? 'success' : 'failure', 'tsc');
+
+  return isSuccess;
 };
 
 const readTsConfig = async (
