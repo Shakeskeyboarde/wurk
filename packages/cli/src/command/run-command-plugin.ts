@@ -1,5 +1,4 @@
 import { Sema as Semaphore } from 'async-sema';
-import chalk from 'chalk';
 
 import { type Config } from '../config.js';
 import { AfterContext } from '../context/after-context.js';
@@ -7,14 +6,13 @@ import { BeforeContext } from '../context/before-context.js';
 import { CleanupContext } from '../context/cleanup-context.js';
 import { EachContext } from '../context/each-context.js';
 import { type GlobalOptions } from '../options.js';
+import { Ansi, type AnsiColor } from '../utils/ansi.js';
 import { log, LogLevel } from '../utils/log.js';
 import { createWorkspaces } from '../workspace/create-workspaces.js';
 import { WorkspaceStatus } from '../workspace/workspace.js';
 import { type CommandPlugin } from './load-command-plugins.js';
 
-type PrefixColor = (typeof PREFIX_COLORS)[number];
-
-const PREFIX_COLORS = ['cyan', 'magenta', 'yellow', 'blue', 'green', 'red'] as const;
+const ANSI_COLORS = Object.keys(Ansi.color) as AnsiColor[];
 
 export const runCommandPlugin = async (
   globalConfig: Config,
@@ -111,36 +109,40 @@ export const runCommandPlugin = async (
 
           switch (value.status) {
             case WorkspaceStatus.skipped:
-              statusMessage = chalk.dim('skipped');
+              statusMessage = `${Ansi.dim}skipped${Ansi.reset}`;
               break;
             case WorkspaceStatus.success:
-              statusMessage = chalk.greenBright('success');
+              statusMessage = `${Ansi.color.green}success${Ansi.reset}`;
               break;
             case WorkspaceStatus.warning:
-              statusMessage = chalk.yellowBright('warning');
+              statusMessage = `${Ansi.color.yellow}warning${Ansi.reset}`;
               statusLogLevel = LogLevel.warn;
               break;
             case WorkspaceStatus.pending:
             case WorkspaceStatus.failure:
-              statusMessage = chalk.redBright('failure');
+              statusMessage = `${Ansi.color.red}failure${Ansi.reset}`;
               statusLogLevel = LogLevel.error;
               break;
           }
 
-          return [`\n  ${key}: ${statusMessage}${value.detail ? chalk.dim(` (${value.detail})`) : ''}`];
+          return [
+            `\n  ${key}: ${statusMessage}${
+              value.detail ? ` ${Ansi.reset}${Ansi.dim}(${value.detail})${Ansi.reset}` : ''
+            }`,
+          ];
         })
         .join('');
 
       if (log.isLevel(statusLogLevel)) {
-        log.printErr(`${commandName} summary:${statusMessages}`);
+        log.printErr(`${commandName} summary:${statusMessages}`, { prefix: false });
       }
     }
 
     if (!isAborted) {
       if (process.exitCode) {
-        log.error(`${commandName} failure.`);
+        log.error(`${commandName} failure.`, { prefix: false });
       } else {
-        log.success(`${commandName} success.`);
+        log.notice(`${commandName} success.`, { prefix: false, color: 'green' });
       }
     }
 
@@ -181,8 +183,7 @@ export const runCommandPlugin = async (
   let prefixColorIndex = 0;
 
   for (const workspace of workspaces.values()) {
-    const prefixColor = PREFIX_COLORS[prefixColorIndex++ % PREFIX_COLORS.length] as PrefixColor;
-    const formatPrefix = (value: string): string => chalk.bold(chalk[`${prefixColor}Bright`](value));
+    const prefixColor = ANSI_COLORS[prefixColorIndex++ % ANSI_COLORS.length]!;
 
     if (isWaitingEnabled) {
       await workspace.localDependencies.mapAsync(
@@ -199,7 +200,7 @@ export const runCommandPlugin = async (
 
           const eachContext = new EachContext({
             isParallel: concurrency !== 1,
-            log: { prefix: prefix ? workspace.name : undefined, formatPrefix },
+            log: { prefixText: prefix ? workspace.name : undefined, prefixColor },
             args,
             opts,
             root,

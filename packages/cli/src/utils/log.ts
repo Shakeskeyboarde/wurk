@@ -1,14 +1,19 @@
 import assert from 'node:assert';
 import { type Writable } from 'node:stream';
 
-import getAnsiRegex from 'ansi-regex';
-import chalk from 'chalk';
-
+import { Ansi, type AnsiColor } from './ansi.js';
 import { LogStream } from './log-stream.js';
 
 export interface LogOptions {
-  prefix?: string;
-  formatPrefix?: (prefix: string) => string;
+  readonly prefixText?: string;
+  readonly prefixColor?: AnsiColor | null;
+}
+
+export interface LogPrintOptions {
+  readonly once?: boolean;
+  readonly prefix?: boolean;
+  readonly style?: 'dim' | 'bold';
+  readonly color?: AnsiColor | null;
 }
 
 export enum LogLevel {
@@ -23,8 +28,6 @@ export enum LogLevel {
 
 export type LogLevelString = keyof typeof LogLevel;
 
-const ANSI_REGEXP = getAnsiRegex();
-const ANSI_NEWLINE_ENDING_REGEXP = new RegExp(`\\n(?:${ANSI_REGEXP.source})*$`, 'u');
 const LOG_LEVEL_DEFAULT: LogLevelString =
   process.env.WERK_LOG_LEVEL && process.env.WERK_LOG_LEVEL in LogLevel
     ? (process.env.WERK_LOG_LEVEL as LogLevelString)
@@ -32,12 +35,12 @@ const LOG_LEVEL_DEFAULT: LogLevelString =
 
 const occurrences = new Set<string>();
 
-const stringify = (message: unknown): string => {
-  const text = String(
-    message instanceof Error ? (process.env.DEBUG ? message.stack ?? message : message.message) : message ?? '',
-  );
+const getErrorText = (error: Error): string => {
+  return process.env.DEBUG ? error.stack ?? String(error) : error.message;
+};
 
-  return (ANSI_NEWLINE_ENDING_REGEXP.test(text) ? text : text + '\n') + '\u001B[0m';
+const getMessage = (value: unknown): string => {
+  return value == null ? '' : value instanceof Error ? getErrorText(value) : String(value);
 };
 
 export const parseLogLevel = (value: string): LogLevelString => {
@@ -69,18 +72,20 @@ export class Log {
     Log.#level = { name: level, value: LogLevel[level] };
   }
 
-  readonly #prefix: string;
-  readonly stdout: Writable = new LogStream();
-  readonly stderr: Writable = new LogStream();
+  readonly stdout: LogStream = new LogStream();
+  readonly stderr: LogStream = new LogStream();
+  readonly prefixText: string;
+  readonly prefixColor: AnsiColor | null | undefined;
   readonly prefix: string;
-  readonly formatPrefix: (prefix: string) => string;
 
-  constructor({ prefix = '', formatPrefix = identity }: LogOptions = {}) {
-    this.stdout.on('data', this.#onData.bind(this, process.stdout));
-    this.stderr.on('data', this.#onData.bind(this, process.stderr));
-    this.prefix = prefix;
-    this.formatPrefix = formatPrefix;
-    this.#prefix = this.prefix ? `${this.formatPrefix(this.prefix)}: ` : '';
+  constructor({ prefixText: prefix = '', prefixColor }: LogOptions = {}) {
+    this.stdout.on('data', this.#onStreamData.bind(this, process.stdout));
+    this.stderr.on('data', this.#onStreamData.bind(this, process.stderr));
+    this.prefixText = Ansi.strip(prefix);
+    this.prefixColor = prefixColor;
+    this.prefix = this.prefixText
+      ? `${Ansi.bold}${this.prefixColor ? Ansi.color[this.prefixColor] : ''}${this.prefixText}${Ansi.reset}: `
+      : '';
   }
 
   get level(): { readonly name: LogLevelString; readonly value: number } {
@@ -95,10 +100,8 @@ export class Log {
   /**
    * Print a dimmed message to stderr.
    */
-  readonly silly = (message?: unknown): void => {
-    if (this.isLevel(LogLevel.silly)) {
-      process.stderr.write(`${this.#prefix}${chalk.dim(stringify(message))}`);
-    }
+  readonly silly = (value?: unknown, options?: LogPrintOptions): void => {
+    this._print(process.stderr, LogLevel.silly, value, { style: 'dim', ...options });
   };
   /**
    * Alias for `silly`.
@@ -108,10 +111,8 @@ export class Log {
   /**
    * Print a dimmed message to stderr.
    */
-  readonly verbose = (message?: unknown): void => {
-    if (this.isLevel(LogLevel.verbose)) {
-      process.stderr.write(`${this.#prefix}${chalk.dim(stringify(message))}`);
-    }
+  readonly verbose = (value?: unknown, options?: LogPrintOptions): void => {
+    this._print(process.stderr, LogLevel.verbose, value, { style: 'dim', ...options });
   };
   /**
    * Alias for `verbose`.
@@ -121,93 +122,84 @@ export class Log {
   /**
    * Print an uncolored message to stdout.
    */
-  readonly info = (message?: unknown): void => {
-    if (this.isLevel(LogLevel.info)) {
-      process.stderr.write(`${this.#prefix}${stringify(message)}`);
-    }
+  readonly info = (value?: unknown, options?: LogPrintOptions): void => {
+    this._print(process.stdout, LogLevel.info, value, options);
   };
 
   /**
    * Print an uncolored message to stderr.
    */
-  readonly notice = (message?: unknown): void => {
-    if (this.isLevel(LogLevel.notice)) {
-      process.stderr.write(`${this.#prefix}${stringify(message)}`);
-    }
-  };
-
-  /**
-   * Alias for `notice`, printed in green.
-   */
-  readonly success = (message?: unknown): void => {
-    if (this.isLevel(LogLevel.notice)) {
-      process.stderr.write(`${this.#prefix}${chalk.greenBright(stringify(message))}`);
-    }
+  readonly notice = (value?: unknown, options?: LogPrintOptions): void => {
+    this._print(process.stderr, LogLevel.notice, value, options);
   };
 
   /**
    * Print a yellow message to stderr.
    */
-  readonly warn = (message?: unknown): void => {
-    if (this.isLevel(LogLevel.warn)) {
-      process.stderr.write(`${this.#prefix}${chalk.yellowBright(stringify(message))}`);
-    }
-  };
-
-  /**
-   * Print a yellow message to stderr, but only if the message has not
-   * been printed before.
-   */
-  readonly warnOnce = (message?: unknown): void => {
-    if (this.isLevel(LogLevel.warn)) {
-      const text = stringify(message);
-
-      if (this.#isFirstOccurrence(text)) {
-        process.stderr.write(`${this.#prefix}${chalk.yellowBright(text)}`);
-      }
-    }
+  readonly warn = (value?: unknown, options?: LogPrintOptions): void => {
+    this._print(process.stderr, LogLevel.warn, value, { color: 'yellow', ...options });
   };
 
   /**
    * Print a red message to stderr.
    */
-  readonly error = (message?: unknown): void => {
-    if (this.isLevel(LogLevel.error)) {
-      process.stderr.write(`${this.#prefix}${chalk.redBright(stringify(message))}`);
-    }
+  readonly error = (value?: unknown, options?: LogPrintOptions): void => {
+    this._print(process.stderr, LogLevel.warn, value, { color: 'red', ...options });
   };
 
   /**
-   * Print a red message to stderr, but only if the message has not been
-   * printed before.
+   * Print a message to stdout, regardless of log level.
    */
-  readonly errorOnce = (message?: unknown): void => {
-    if (this.isLevel(LogLevel.error)) {
-      const text = stringify(message);
+  readonly print = (value?: unknown, options?: LogPrintOptions): void => {
+    this._print(process.stdout, LogLevel.silent, value, options);
+  };
 
-      if (this.#isFirstOccurrence(text)) {
-        process.stderr.write(`${this.#prefix}${chalk.redBright(text)}`);
+  /**
+   * Print a message to stderr, regardless of log level.
+   */
+  readonly printErr = (value?: unknown, options?: LogPrintOptions): void => {
+    this._print(process.stderr, LogLevel.silent, value, options);
+  };
+
+  /**
+   * Call the flush methods on `this.stdout` and `this.stderr`.
+   */
+  readonly flush = (): void => {
+    this.stdout.flush();
+    this.stderr.flush();
+  };
+
+  /**
+   * _This method is intended for internal use._
+   *
+   * All logged and streamed data is passed through this method.
+   *
+   * @protected
+   */
+  readonly _print = (
+    stream: Writable,
+    level: LogLevel,
+    value: unknown,
+    { once = false, prefix = true, color, style }: LogPrintOptions = {},
+  ): void => {
+    if (this.isLevel(level)) {
+      const text = getMessage(value);
+
+      if (!once || this.#isFirstOccurrence(text)) {
+        stream.write(
+          `${prefix ? this.prefix : ''}${color ? Ansi.color[color] : ''}${style ? Ansi[style] : ''}${text}${
+            Ansi.reset
+          }\n`,
+        );
       }
     }
   };
 
-  /**
-   * Print an uncolored message to stdout, regardless of log level.
-   */
-  readonly print = (message: unknown): void => {
-    process.stdout.write(`${this.#prefix}${stringify(message)}`);
-  };
+  readonly #onStreamData = (stream: Writable, line: string): void => {
+    // Omit blank lines when prefixing is enabled.
+    if (!line && this.prefixText) return;
 
-  /**
-   * Print an uncolored message to stderr, regardless of log level.
-   */
-  readonly printErr = (message: unknown): void => {
-    process.stderr.write(`${this.#prefix}${stringify(message)}`);
-  };
-
-  readonly flush = (): void => {
-    (this.stdout as LogStream).flush();
-    (this.stderr as LogStream).flush();
+    this._print(stream, LogLevel.silent, line);
   };
 
   readonly #isFirstOccurrence = (message: string): boolean => {
@@ -219,15 +211,6 @@ export class Log {
 
     return true;
   };
-
-  readonly #onData = (stream: Writable, line: string): void => {
-    // Omit blank lines when prefixing is enabled.
-    if (!line && this.prefix) return;
-
-    stream.write(`${this.#prefix}${line}\n`);
-  };
 }
-
-const identity = <T>(value: T): T => value;
 
 export const log = new Log();

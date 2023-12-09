@@ -106,26 +106,18 @@ A context object is passed to all hooks, _except for `config`_ which only receiv
 
 The `context.log` should be used for all logging. Please don't use the global `console` object.
 
-- `silly`: Print a dimmed log message to stderr. This is intended to be useful only to developers.
-- `verbose`: Print a dimmed log message to stderr. This is intended to help users do their own troubleshooting.
-- `info`: Print an uncolored log message to stdout. This is intended for informational details about the progress or results of a command.
-- `notice`: Print an uncolored log message to stderr. This is intended for messages that are important, but not necessarily problems.
-- `warn`: Print a yellow log message to stderr. This is intended for problems that are not immediate failures, but may indicate something unexpected or incorrect.
-- `error`: Print a red log message to stderr. This is intended for things that are definitely wrong, and are probably immediate failures.
-- `print`: Print an uncolored message to stdout, regardless of the current log level. This is intended for informational commands, where the command has no purpose but to print a message.
-- `printErr`: Print an uncolored message to stderr, regardless of the current log level. This is intended for informational commands, where the command has no purpose but to print a message, which may need to be piped to a target separate from `print` and `info` messages.
 - `stdout`: Writable stream which can be used for piping.
 - `stderr`: Writable stream which can be used for piping.
 - `level`: The current log level (eg. `info`).
-
-Any logged messages may be modified in the following ways:
-
-- ANSI escape sequences are stripped.
-- Workspace name prefixes may be added.
-- Blank lines may be removed.
-- Message may be omitted based on log level.
-
-No hard wrapping is ever added.
+- `isLevel(level)`: Returns true if the current log level is at least the given level.
+- `silly(message?)`: Print a dimmed log message to stderr. This is intended to be useful only to developers.
+- `verbose(message?)`: Print a dimmed log message to stderr. This is intended to help users do their own troubleshooting.
+- `info(message?)`: Print an uncolored log message to stdout. This is intended for informational details about the progress or results of a command.
+- `notice(message?)`: Print an uncolored log message to stderr. This is intended for messages that are important, but not necessarily problems.
+- `warn(message?)`: Print a yellow log message to stderr. This is intended for problems that are not immediate failures, but may indicate something unexpected or incorrect.
+- `error(message?)`: Print a red log message to stderr. This is intended for things that are definitely wrong, and are probably immediate failures.
+- `print(message?)`: Print an uncolored message to stdout, regardless of the current log level. This is intended for informational commands, where the command has no purpose but to print a message.
+- `printErr(message?)`: Print an uncolored message to stderr, regardless of the current log level. This is intended for informational commands, where the command has no purpose but to print a message, which may need to be piped to a target separate from `print` and `info` messages.
 
 ### Workspaces
 
