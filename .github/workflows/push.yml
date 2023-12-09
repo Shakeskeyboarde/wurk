@@ -10,6 +10,7 @@ concurrency:
 
 env:
   TERM: linux
+  FORCE_COLOR: 1
 
 jobs:
   build:
