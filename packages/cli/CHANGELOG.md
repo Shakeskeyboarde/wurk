@@ -1,3 +1,9 @@
+## 9.2.0 (2023-12-09)
+
+### Features
+
+- Improve/refactor logging. (f6df775)
+
 ## 9.1.4 (2023-12-08)
 
 ### Bug Fixes

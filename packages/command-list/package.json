@@ -1,7 +1,7 @@
 {
   "name": "@werk/command-list",
   "description": "List workspaces.",
-  "version": "1.3.11",
+  "version": "1.3.12",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/command-list/README.md",
@@ -35,7 +35,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@werk/cli": "^9.1.4"
+    "@werk/cli": "^9.2.0"
   },
   "devDependencies": {
     "@werk/command-build": "*",

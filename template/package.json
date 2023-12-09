@@ -22,11 +22,11 @@
     "werk-command"
   ],
   "dependencies": {
-    "@werk/cli": "^9.1.4"
+    "@werk/cli": "^9.2.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.4",
-    "@werk/command-build": "^3.0.5",
+    "@werk/command-build": "^3.0.6",
     "typescript": "^5.3.3"
   }
 }

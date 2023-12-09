@@ -1,3 +1,9 @@
+## 3.0.6 (2023-12-09)
+
+### Chores
+
+- Updates to support logging changes. (6c258e4)
+
 ## 3.0.5 (2023-12-08)
 
 ### Improvements
