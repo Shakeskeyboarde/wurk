@@ -10,6 +10,7 @@ import { createCommander } from './commander/commander.js';
 import { loadConfig } from './config.js';
 import { onError } from './error.js';
 import { type GlobalOptions, type SelectMatcher } from './options.js';
+import { Ansi } from './utils/ansi.js';
 import { Log, log, parseLogLevel } from './utils/log.js';
 
 process.on('uncaughtException', onError);
@@ -69,18 +70,21 @@ const mainAsync = async (args: string[]): Promise<void> => {
     .allowPartialCommand()
     .description(globalConfig.description)
     .addHelpText('after', 'To get help for a specific command, run `werk <command> --help`.')
+    // Workspace options.
     .option(
-      '-l, --loglevel <level>',
-      'Set the log level (silent, error, warn, notice, info, verbose, silly).',
-      parseLogLevel,
+      '-w, --workspace <patterns>',
+      'Select workspaces by name (glob, csv, repeatable).',
+      (value, previous: SelectMatcher[] = []) => {
+        const matchers = getMatchers(value, globalConfig.workspaceNames, (pattern) => {
+          throw new Error(`Workspace pattern "${pattern}" will never match.`);
+        });
+
+        return [...previous, ...matchers];
+      },
     )
-    .addOption(
-      commander
-        .createOption('--log-level <level>', 'Alias for --loglevel.')
-        .argParser(parseLogLevel)
-        .hideHelp()
-        .conflicts('loglevel'),
-    )
+    .option('--no-dependencies', 'Do not automatically include dependencies of selected workspaces.')
+    .option('--include-root-workspace', 'Include the root workspace in the selection.')
+    // Parallelization options.
     .option('-p, --parallel', 'Process workspaces in parallel.')
     .addOption(
       commander
@@ -98,23 +102,26 @@ const mainAsync = async (args: string[]): Promise<void> => {
         })
         .implies({ parallel: true }),
     )
+    // Logging options.
     .option(
-      '-w, --workspace <patterns>',
-      'Select workspaces by name (glob, csv, repeatable).',
-      (value, previous: SelectMatcher[] = []) => {
-        const matchers = getMatchers(value, globalConfig.workspaceNames, (pattern) => {
-          throw new Error(`Workspace pattern "${pattern}" will never match.`);
-        });
-
-        return [...previous, ...matchers];
-      },
+      '-l, --loglevel <level>',
+      'Set the log level (silent, error, warn, notice, info, verbose, silly).',
+      parseLogLevel,
     )
-    .option('--include-root-workspace', 'Include the root workspace in the selection.')
-    .option('--no-dependencies', 'Do not automatically include dependencies of selected workspaces.')
+    .addOption(
+      commander
+        .createOption('--log-level <level>', 'Alias for --loglevel.')
+        .argParser(parseLogLevel)
+        .hideHelp()
+        .conflicts('loglevel'),
+    )
     .option('--no-prefix', 'No output prefixes.')
+    .option('--clear', 'Clear the screen on startup.')
+    // Git options.
     .option('--git-from-revision <rev>', 'Set the revision used for detecting modifications.')
+    // Other options.
     .version(globalConfig.version, '-v, --version', 'Display the current version.')
-    .hook('preSubcommand', (_, subCommand) => {
+    .hook('preSubcommand', (command, subCommand) => {
       const running = process.env.WERK_RUNNING_COMMANDS?.split(/\s*,\s*/u) ?? [];
       const name = subCommand.name();
 
@@ -125,6 +132,10 @@ const mainAsync = async (args: string[]): Promise<void> => {
       }
 
       process.env.WERK_RUNNING_COMMANDS = [...running, name].join(',');
+
+      if (command.opts().clear && !running.length) {
+        process.stdout.write(Ansi.clear);
+      }
     });
 
   const plugins = await loadCommandPlugins(globalConfig, commander);

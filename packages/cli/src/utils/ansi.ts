@@ -1,35 +1,42 @@
+import tty from 'node:tty';
+
 import ansiRegex from 'ansi-regex';
 
 const ANSI_REGEXP = new RegExp(ansiRegex().source, 'gu');
+const isTTY = tty.isatty(1) && tty.isatty(2) && Boolean(process.env.TERM && process.env.TERM !== 'dumb');
+const isColorSupported = process.env.NO_COLOR ? false : process.env.FORCE_COLOR ? true : isTTY;
 
 export const Ansi = {
+  get clear(): string {
+    return isTTY ? '\u001B[3J\u001B[2J\u001B[H' : '';
+  },
   get reset(): string {
-    return process.env.NO_COLOR ? '' : '\u001B[0m';
+    return isColorSupported ? '\u001B[0m' : '';
   },
   get bold(): string {
-    return process.env.NO_COLOR ? '' : '\u001B[1m';
+    return isColorSupported ? '\u001B[1m' : '';
   },
   get dim(): string {
-    return process.env.NO_COLOR ? '' : '\u001B[2m';
+    return isColorSupported ? '\u001B[2m' : '';
   },
   color: {
     get red(): string {
-      return process.env.NO_COLOR ? '' : '\u001B[31;91m';
+      return isColorSupported ? '\u001B[31;91m' : '';
     },
     get green(): string {
-      return process.env.NO_COLOR ? '' : '\u001B[32;92m';
+      return isColorSupported ? '\u001B[32;92m' : '';
     },
     get yellow(): string {
-      return process.env.NO_COLOR ? '' : '\u001B[33;93m';
+      return isColorSupported ? '\u001B[33;93m' : '';
     },
     get blue(): string {
-      return process.env.NO_COLOR ? '' : '\u001B[34;94m';
+      return isColorSupported ? '\u001B[34;94m' : '';
     },
     get magenta(): string {
-      return process.env.NO_COLOR ? '' : '\u001B[35;95m';
+      return isColorSupported ? '\u001B[35;95m' : '';
     },
     get cyan(): string {
-      return process.env.NO_COLOR ? '' : '\u001B[36;96m';
+      return isColorSupported ? '\u001B[36;96m' : '';
     },
   },
   strip: (text: string): string => {

@@ -60,6 +60,7 @@
     "minimatch": "^9.0.3",
     "npm-run-path": "^5.1.0",
     "semver": "^7.5.4",
-    "shell-quote": "^1.8.1"
+    "shell-quote": "^1.8.1",
+    "supports-color": "^9.4.0"
   }
 }

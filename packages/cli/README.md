@@ -164,6 +164,8 @@ By default, workspaces are processed serially. This is generally the slowest opt
   - Log level can also be set using the `WERK_LOG_LEVEL` environment variable. This option takes precedence over the environment variable.
 - `--no-prefix`
   - Do not add prefixes to command output.
+- `--clear`
+  - Clear the screen on startup. This does the same thing as the linux `clear` command, but is more CI friendly. It does not error if it is not available or `TERM` is not set, and it respects TTY availability.
 
 ### Global Git Options
 
