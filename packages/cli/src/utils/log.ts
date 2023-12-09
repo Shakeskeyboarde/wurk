@@ -84,7 +84,7 @@ export class Log {
     this.prefixText = Ansi.strip(prefix);
     this.prefixColor = prefixColor;
     this.prefix = this.prefixText
-      ? `${Ansi.bold}${this.prefixColor ? Ansi.color[this.prefixColor] : ''}${this.prefixText}${Ansi.reset}: `
+      ? `${Ansi.bold}${this.prefixColor ? Ansi.color[this.prefixColor] : ''}${this.prefixText}:${Ansi.reset} `
       : '';
   }
 
