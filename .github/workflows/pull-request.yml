@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+env:
+  TERM: linux
+
 jobs:
   pull-request:
     runs-on: ubuntu-latest

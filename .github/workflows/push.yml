@@ -8,6 +8,9 @@ on:
 concurrency:
   group: ${{ github.workflow }}
 
+env:
+  TERM: linux
+
 jobs:
   build:
     runs-on: ubuntu-latest
