@@ -92,7 +92,7 @@ export const buildVite = async ({
       const outSubDir = lib?.isMultiTarget ? (lib.format === 'es' ? 'esm' : lib.format) : undefined;
 
       if (outSubDir) {
-        spawnLog = new Log({ ...log, prefix: `${log.prefix}(${outSubDir})` });
+        spawnLog = new Log({ ...log, prefixText: `${log.prefixText}(${outSubDir})` });
       }
 
       env = {

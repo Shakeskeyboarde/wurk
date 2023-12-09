@@ -2,7 +2,6 @@
 import assert from 'node:assert';
 
 import { createCommand, type PackageJson } from '@werk/cli';
-import chalk from 'chalk';
 import { diff, parse, type ReleaseType, SemVer } from 'semver';
 
 import { getAutoVersion } from './get-auto-version.js';
@@ -221,7 +220,8 @@ export default createCommand({
         .map(([name, { version }]) => `${name.replace(/^@.*\//u, '')}@${version}`)
         .join(', ');
 
-      log.notice(`version commit message: ${chalk.blue(releaseMessage)}`);
+      log.notice(`version commit message:`);
+      log.notice(`  ${releaseMessage}`, { color: 'blue' });
     }
   },
 });

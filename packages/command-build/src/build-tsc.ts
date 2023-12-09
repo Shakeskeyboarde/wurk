@@ -103,7 +103,7 @@ export const buildTsc = async ({
 
   const build = async (filename: string): Promise<boolean> => {
     const name = basename(filename).replace(/^tsconfig\.|\.json$/gu, '');
-    const subLog = new Log({ ...log, prefix: `${log.prefix}(${name})` });
+    const subLog = new Log({ ...log, prefixText: `${log.prefixText}(${name})` });
     const { noEmit, emitDeclarationOnly, outDir, isEsmConfig } = await readTsConfig(filename, workspace, spawn);
 
     if (!noEmit && !emitDeclarationOnly && isEsm != null && resolve(outDir, workspace.dir) !== '') {
