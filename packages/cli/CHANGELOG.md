@@ -1,3 +1,14 @@
+## 9.2.1 (2023-12-09)
+
+### Bug Fixes
+
+- Unused dependency. (39bd445)
+- Log prefix coloring should include the trailing colon. (891ce36)
+
+### Improvements
+
+- Add &#96;--clear&#96; option. (df5e0da)
+
 ## 9.2.0 (2023-12-09)
 
 ### Features
