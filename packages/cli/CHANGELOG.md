@@ -1,3 +1,9 @@
+## 9.2.2 (2023-12-12)
+
+### Improvements
+
+- Add &#96;--this-workspace&#96; option. (ab6b912)
+
 ## 9.2.1 (2023-12-09)
 
 ### Bug Fixes
