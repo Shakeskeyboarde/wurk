@@ -11,6 +11,7 @@ import { loadConfig } from './config.js';
 import { onError } from './error.js';
 import { type GlobalOptions, type SelectMatcher } from './options.js';
 import { Ansi } from './utils/ansi.js';
+import { getDirectoryPackageName } from './utils/get-directory-package-name.js';
 import { Log, log, parseLogLevel } from './utils/log.js';
 
 process.on('uncaughtException', onError);
@@ -32,6 +33,7 @@ const mainAsync = async (args: string[]): Promise<void> => {
   process.env.WERK_RECURSION_DEPTH = (recursionDepth + 1).toString(10);
 
   const globalConfig = await loadConfig();
+  const startDirectory = process.cwd();
 
   process.chdir(globalConfig.rawRootWorkspace.dir);
   process.chdir = () => {
@@ -82,6 +84,7 @@ const mainAsync = async (args: string[]): Promise<void> => {
         return [...previous, ...matchers];
       },
     )
+    .option('-t, --this-workspace', 'Select the workspace which contains the current working directory.')
     .option('--no-dependencies', 'Do not automatically include dependencies of selected workspaces.')
     .option('--include-root-workspace', 'Include the root workspace in the selection.')
     // Parallelization options.
@@ -139,8 +142,19 @@ const mainAsync = async (args: string[]): Promise<void> => {
     });
 
   const plugins = await loadCommandPlugins(globalConfig, commander);
-  const getGlobalOptions = (): GlobalOptions => {
+  const getGlobalOptions = async (): Promise<GlobalOptions> => {
     const opts = commanderConfigured.opts();
+    const thisWorkspaceName = opts.thisWorkspace ? await getDirectoryPackageName(startDirectory) : undefined;
+
+    if (
+      thisWorkspaceName &&
+      ![
+        ...globalConfig.workspaceNames,
+        ...(opts.includeRootWorkspace ? [globalConfig.rawRootWorkspace.name] : []),
+      ].includes(thisWorkspaceName)
+    ) {
+      throw new Error('The working directory is not part of a monorepo workspace.');
+    }
 
     Log.setLevel(opts.loglevel ?? opts.logLevel ?? 'info');
 
@@ -150,7 +164,12 @@ const mainAsync = async (args: string[]): Promise<void> => {
         prefix: opts.prefix,
       },
       select: {
-        workspace: opts.workspace ?? [],
+        workspace: [
+          ...(opts.workspace ?? []),
+          ...(thisWorkspaceName
+            ? [{ match: (name) => name === thisWorkspaceName, isSelected: true } satisfies SelectMatcher]
+            : []),
+        ],
         includeRootWorkspace: opts.includeRootWorkspace ?? false,
         dependencies: opts.dependencies,
       },
@@ -181,7 +200,7 @@ const mainAsync = async (args: string[]): Promise<void> => {
   plugins.forEach((plugin) => {
     commander.addCommand(
       plugin.commander.action(async () => {
-        const globalOpts = getGlobalOptions();
+        const globalOpts = await getGlobalOptions();
 
         await runCommandPlugin(globalConfig, globalOpts, plugin);
       }),

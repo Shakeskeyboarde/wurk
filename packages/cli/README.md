@@ -139,6 +139,8 @@ Options which reduce the number of workspaces that are processed.
 
 - `-w, --workspace <patterns>`
   - Select workspaces by name (glob, csv, repeatable).
+- `-t, --this-workspace`
+  - Select the workspace which contains the current working directory.
 - `--no-dependencies`
   - Do not automatically include dependencies of selected workspaces.
 - `--include-root-workspace`
