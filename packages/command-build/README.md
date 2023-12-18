@@ -60,37 +60,9 @@ If no configuration exists, a default configuration will be used. Under the defa
 
 When library mode is enabled, bundling is disabled (ie. "preserve modules"), _unless_ any package entry (`exports`, `module`, `main`, `bin`, or `types`) is named `bundle.*`. Disabling bundling means that one output file per-input file is generated, which is useful for tree-shaking.
 
-The following plugins are used in the default configuration, _if they are dev dependencies of the workspace._
+#### Automatic Plugin Support
 
-- `@vitejs/plugin-react`
-  - Version: ^4.0.4
-- `vite-plugin-bin`
-  - Version: ^1.0.1
-- `vite-plugin-checker`
-  - Version: >=0.6.2 <1
-- `vite-plugin-dts`
-  - Version: ^3.5.3
-- `vite-plugin-refresh`
-  - Version: ^1.0.3
-- `vite-plugin-svgr`
-  - Version: ^4.0.0
-- `vite-plugin-rewrite-all`
-  - Version: ^1.0.1
-- `vite-plugin-zip-pack`
-  - Version: ^1.0.6
-
-#### Plugin: Checker
-
-The checker plugin will enable Typescript and ESLint checking based on the workspace configuration.
-
-Typescript checking is enabled if Typescript is dev dependency of the root (or current) workspace, and there is Typescript configuration in the
-current workspace.
-
-ESlint checking is enabled if ESLint is a dev dependency of the root (or current) workspace, and the current workspace `package.json` has an `eslint` script. _ESLint checking as part of the build process is not recommended, because it should probably be considered testing._
-
-#### Plugin: Zip Pack
-
-The zip pack plugin will generate a zip file from either the `dist` or `lib` directory, depending on whether library mode is enabled. The zip file will be written to `out/dist.zip` or `out/lib.zip`.
+See the [@werk/vite-config](https://github.com/Shakeskeyboarde/werk/blob/main/packages/vite-config/README.md#optional-plugins) package for more information about what Vite plugins are used automatically.
 
 ### Mode: `tsc`
 
