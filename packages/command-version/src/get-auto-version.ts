@@ -24,7 +24,8 @@ export const getAutoVersion = async (
   const fromRevision = await workspace.getNpmHead();
 
   if (!fromRevision) {
-    log.debug('Unable to determine a "from" Git revision. Assuming initial release.');
+    log.debug('Unable to determine a "from" Git revision.');
+    log.info(`Using current version ${workspace.version} for initial release.`);
     return [workspace.version, []];
   }
 
