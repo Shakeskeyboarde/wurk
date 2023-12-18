@@ -3,8 +3,7 @@ import { dirname, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { findAsync, Log, type Spawn, type Workspace } from '@werk/cli';
-
-import { type ViteConfigOptions } from './vite-config.js';
+import { type WerkConfigOptions } from '@werk/vite-config';
 
 interface BuildConfig {
   readonly configFile: string;
@@ -100,11 +99,11 @@ export const buildVite = async ({
           outDir: outSubDir ? `lib/${outSubDir}` : 'lib',
           emptyOutDir: !watchArg && clean,
           lib: {
-            entry: inputs,
+            entries: inputs,
             format: lib.format,
             preserveModules: !isBundle,
           },
-        } as ViteConfigOptions),
+        } satisfies WerkConfigOptions),
       };
     } else {
       log.info(`Creating web application.`);

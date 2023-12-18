@@ -1,10 +1,7 @@
-import { getViteConfig, type ViteConfigOptions } from '@werk/command-build/vite-config';
-import { defineConfig, type UserConfig } from 'vite';
+import { defineWerkConfig, type WerkConfigOptions } from '@werk/vite-config';
 
-export default defineConfig(async (env): Promise<UserConfig> => {
-  const options: ViteConfigOptions | undefined = await Promise.resolve()
-    .then(async () => JSON.parse(process.env.VITE_WERK_OPTIONS!))
-    .catch(() => undefined);
+const options: WerkConfigOptions | undefined = await Promise.resolve(process.env.VITE_WERK_OPTIONS!)
+  .then(JSON.parse)
+  .catch(() => undefined);
 
-  return await getViteConfig(env, options);
-});
+export default defineWerkConfig(options);
