@@ -1,3 +1,14 @@
+## 3.3.13 (2023-12-18)
+
+### Bug Fixes
+
+- Consider an initial version to be "updated". (633dee1)
+
+### Improvements
+
+- Status success for initial version. (02bfdf1)
+- Log message for initial release auto version. (1bcc539)
+
 ## 3.3.12 (2023-12-09)
 
 ### Chores

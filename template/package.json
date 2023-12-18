@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.10.4",
-    "@werk/command-build": "^3.0.6",
+    "@werk/command-build": "^4.0.0",
     "typescript": "^5.3.3"
   }
 }

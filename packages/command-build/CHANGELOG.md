@@ -1,3 +1,13 @@
+# 4.0.0 (2023-12-18)
+
+### Breaking Changes
+
+- Use "@werk/vite-config" package. (dd1db00)
+
+### Chores
+
+- Update readmes about Vite plugins. (9b084ee)
+
 ## 3.0.6 (2023-12-09)
 
 ### Chores
