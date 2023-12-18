@@ -161,16 +161,22 @@ export default createCommand({
       log.info(`Updating changelog.`);
     }
 
+    if (!isPackageUpdated && !isChangeLogUpdated) {
+      if (releaseType === 'initial') {
+        workspace.setStatus('success', version);
+      } else {
+        workspace.setStatus('skipped');
+      }
+
+      return;
+    }
+
     /**
      * Skipped because the next thing is either returning due to no
      * changes, or scheduling a task which will change the status back
      * to pending when it starts.
      */
     workspace.setStatus('skipped');
-
-    if (!isPackageUpdated && !isChangeLogUpdated) {
-      return;
-    }
 
     workspaceChanges.set(workspace.name, async () => {
       workspace.setStatus('pending');
