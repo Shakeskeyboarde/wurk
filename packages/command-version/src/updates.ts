@@ -39,6 +39,10 @@ export const getUpdatePatches = (
       const prefix = depRange.match(/^([=^~]|>=?)?\d+(?:\.\d+(?:\.\d+(?:-[^\s|=<>^~]*)?)?)?$/u)?.[1] ?? '^';
       const newDepRange = `${prefix}${update.version}`;
 
+      if (newDepRange === depRange) {
+        continue;
+      }
+
       /*
        * The dependency update is too small to matter and the current
        * range already satisfies it.

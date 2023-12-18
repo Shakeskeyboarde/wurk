@@ -139,11 +139,14 @@ export default createCommand({
       changes = [...changes, { type: ChangeType.note, message: 'Updated local dependencies.' }];
     }
 
-    const releaseType = version ? diff(workspace.version, version) : null;
+    const releaseType = version ? diff(workspace.version, version) || 'initial' : null;
 
     if (releaseType) {
       addUpdate(workspace.name, version);
-      packagePatches.push({ version: version });
+
+      if (releaseType !== 'initial') {
+        packagePatches.push({ version: version });
+      }
     }
 
     // Add any additional changelog notes.
@@ -152,7 +155,7 @@ export default createCommand({
     }
 
     const isPackageUpdated = Boolean(packagePatches.length);
-    const isChangeLogUpdated = Boolean(releaseType && changelog && changes.length);
+    const isChangeLogUpdated = Boolean(releaseType && releaseType !== 'initial' && changelog && changes.length);
 
     if (isChangeLogUpdated) {
       log.info(`Updating changelog.`);
