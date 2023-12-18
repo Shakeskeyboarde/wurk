@@ -18,3 +18,4 @@ Start by reading about the [CLI](packages/cli/README.md), or learn how to build 
 - [@werk/command-depcheck](packages/command-depcheck/README.md): Check for unused production dependencies.
 - [@werk/command-version](packages/command-version/README.md): Update versions.
 - [@werk/command-publish](packages/command-publish/README.md): Publish packages.
+- [@werk/vite-config](packages/vite-config/README.md): Vite configuration used by the Werk build command.
