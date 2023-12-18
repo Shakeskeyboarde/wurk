@@ -1,6 +1,6 @@
 {
   "name": "@werk/vite-config",
-  "description": "Run Vitest.",
+  "description": "Vite configuration used by the Werk build command.",
   "version": "1.0.0",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
