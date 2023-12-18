@@ -10,6 +10,9 @@
     "url": "git+https://github.com/Shakeskeyboarde/werk.git",
     "directory": "packages/vite-config"
   },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json"
+  },
   "type": "module",
   "types": "./lib/index.d.ts",
   "exports": {
@@ -38,7 +41,6 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
-    "@werk/command-build": "*",
     "vite-plugin-bin": "^1.0.2",
     "vite-plugin-checker": "^0.6.2",
     "vite-plugin-dts": "^3.6.4",
