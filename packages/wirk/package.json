@@ -1,0 +1,44 @@
+{
+  "name": "wirk",
+  "description": "Open-minded build tooling, with opinionated plugins.",
+  "version": "0.0.1",
+  "author": "Chris Ackerman <chris@topher.land>",
+  "license": "ISC",
+  "homepage": "https://github.com/Shakeskeyboarde/werk/blob/main/packages/wirk/README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shakeskeyboarde/werk.git",
+    "directory": "packages/wirk"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && chmod +x lib/wirk.js"
+  },
+  "type": "module",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    "types": "./lib/index.d.ts",
+    "default": "./lib/index.js"
+  },
+  "bin": {
+    "wirk": "./lib/wirk.js",
+    "wi": "./lib/wirk.js"
+  },
+  "files": [
+    "CHANGELOG.md",
+    "lib/**"
+  ],
+  "keywords": [
+    "werk",
+    "werk-command",
+    "monorepo",
+    "workspaces",
+    "npm",
+    "cli",
+    "parser",
+    "args",
+    "argv"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
