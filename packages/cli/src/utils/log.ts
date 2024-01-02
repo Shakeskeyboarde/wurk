@@ -173,10 +173,8 @@ export class Log {
    * _This method is intended for internal use._
    *
    * All logged and streamed data is passed through this method.
-   *
-   * @protected
    */
-  readonly _print = (
+  protected readonly _print = (
     stream: Writable,
     level: LogLevel,
     value: unknown,
