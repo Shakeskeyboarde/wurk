@@ -44,11 +44,11 @@ export default createCommand({
 
     log.info('Testing with Vitest.');
 
+    let configFilename: string | undefined;
+
     if (await isVitestWorkspaceConfigFound(root.dir)) {
       log.warn('Preexisting workspaces config found. Filter options will not apply.');
     } else {
-      const tempDir = resolve(root.dir, 'node_modules', '.werk-command-vitest');
-      const filename = resolve(tempDir, 'vitest.workspace.json');
       const workspaceNames = await workspaces
         .filter(({ isSelected }) => isSelected)
         .mapAsync(({ dir }) => isVitestConfigFound(dir).then((isConfigured) => (isConfigured ? dir : undefined)))
@@ -56,16 +56,24 @@ export default createCommand({
 
       assert(workspaceNames.length, 'No configs found in any selected workspace.');
 
+      const tempDir = resolve(root.dir, 'node_modules', '.werk-command-vitest');
+
+      configFilename = resolve(tempDir, 'vitest.workspace.json');
+
       await mkdir(tempDir, { recursive: true });
-      await writeFile(filename, JSON.stringify(workspaceNames));
+      await writeFile(configFilename, JSON.stringify(workspaceNames));
     }
 
-    const result = await spawn('vitest', vitestArgs, {
-      input: 'inherit',
-      echo: 'inherit',
-      errorSetExitCode: true,
-      errorReturn: true,
-    });
+    const result = await spawn(
+      'vitest',
+      [...(configFilename ? [`--workspace=${configFilename}`] : []), ...vitestArgs],
+      {
+        input: 'inherit',
+        echo: 'inherit',
+        errorSetExitCode: true,
+        errorReturn: true,
+      },
+    );
 
     if (result.error instanceof Error && 'code' in result.error && result.error.code === 'ENOENT') {
       log.error('Vitest is not installed. Run `npm i -D vitest` to install it.');
