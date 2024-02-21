@@ -59,10 +59,12 @@ export const sync = ({ log, config, version, isPrivate, getDependencyLinks }: Wo
   pending.forEach((update) => update());
 
   // Increment the workspace version if workspace dependencies are being
-  // updated and the workspace version has not already been updated by a
-  // versioning strategy.
-  if (version && isOriginalVersion) {
-    config.at('version').set(semver.inc(version, semver.prerelease(version)?.length ? 'prerelease' : 'patch'));
+  // updated, the workspace version has not already been updated by a
+  // versioning strategy, and the workspace is not private.
+  if (version && isOriginalVersion && !isPrivate) {
+    config
+      .at('version')
+      .set(new semver.SemVer(version).inc(semver.prerelease(version)?.length ? 'prerelease' : 'patch').format());
   }
 
   return [{ type: ChangeType.note, message: 'update local dependency versions' }];

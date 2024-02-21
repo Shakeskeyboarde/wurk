@@ -116,43 +116,47 @@ export default createCommand('version', {
     // fails (eg. dirty Git working tree), dependent workspace writes should
     // be skipped so that they don't end up referencing non-existent versions.
     await workspaces.forEach(async (workspace) => {
-      const { status, version, config, git, pinFile } = workspace;
-
-      if (!config.isModified) {
-        log.debug('skipping update (no modifications)');
-        status.set('skipped', 'no modifications');
+      if (!workspace.config.isModified) {
+        workspace.log.debug('skipping update (no modifications)');
+        workspace.status.set('skipped', 'no modifications');
         return;
       }
 
-      if ((await git.getIsRepo()) && (await git.getIsDirty())) {
+      if ((await workspace.git.getIsRepo()) && (await workspace.git.getIsDirty())) {
         throw new Error('versioning requires a clean git repository');
       }
 
-      const newVersion = config.at('version').as('string');
+      const newVersion = workspace.config.at('version').as('string');
 
-      status.set('pending', version !== newVersion ? `${version} -> ${newVersion}` : 'no version change');
+      workspace.status.set(
+        'pending',
+        workspace.version !== newVersion ? `${workspace.version} -> ${newVersion}` : 'dependency updates',
+      );
 
       if (dryRun) {
-        pinFile('package.json');
-        pinFile('package-lock.json');
+        workspace.pinFile('package.json');
       }
 
       await writeConfig(workspace);
 
       if (changelog) {
         if (dryRun) {
-          pinFile('CHANGELOG.md');
+          workspace.pinFile('CHANGELOG.md');
         }
 
         await writeChangelog(workspace, changes.get(workspace));
       }
 
-      status.set('success');
+      workspace.status.set('success');
     });
 
     const updated = Array.from(workspaces).filter(({ config }) => config.isModified);
 
     if (updated.length) {
+      if (dryRun) {
+        workspaces.root.pinFile('package-lock.json');
+      }
+
       await workspaces.root.spawn('npm', ['update', ...updated.map(({ name }) => name)], {
         output: 'ignore',
       });
