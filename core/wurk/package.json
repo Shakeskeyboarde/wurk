@@ -1,0 +1,63 @@
+{
+  "name": "wurk",
+  "description": "Open-minded build tooling, with opinionated plugins.",
+  "version": "1.0.0",
+  "author": "Chris Ackerman <chris@topher.land>",
+  "license": "ISC",
+  "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/core/wurk/README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shakeskeyboarde/wurk.git",
+    "directory": "core/wurk"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && chmod +x lib/bin.js"
+  },
+  "type": "module",
+  "types": "./lib/index.d.ts",
+  "main": "./lib/index.js",
+  "exports": {
+    "types": "./lib/index.d.ts",
+    "default": "./lib/index.js"
+  },
+  "bin": {
+    "wurk": "./lib/bin.js"
+  },
+  "engines": {
+    "node": ">=18",
+    "npm": ">=9"
+  },
+  "engineStrict": true,
+  "files": [
+    "CHANGELOG.md",
+    "lib/**"
+  ],
+  "keywords": [
+    "monorepo",
+    "workspace",
+    "workspaces",
+    "command",
+    "commander",
+    "run",
+    "exec",
+    "script",
+    "version",
+    "publish",
+    "npm",
+    "git",
+    "task",
+    "ci",
+    "orchestrator"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@wurk/cli": "*",
+    "@wurk/import": "*",
+    "@wurk/json": "*",
+    "@wurk/log": "*",
+    "@wurk/spawn": "*",
+    "@wurk/workspace": "*"
+  }
+}

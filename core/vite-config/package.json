@@ -1,0 +1,53 @@
+{
+  "name": "@wurk/vite-config",
+  "description": "Vite configuration used by the Wurk build command.",
+  "version": "1.0.0",
+  "author": "Chris Ackerman <chris@topher.land>",
+  "license": "ISC",
+  "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/core/vite-config/README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shakeskeyboarde/wurk.git",
+    "directory": "core/vite-config"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "type": "module",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    "types": "./lib/index.d.ts",
+    "default": "./lib/index.js"
+  },
+  "files": [
+    "CHANGELOG.md",
+    "lib/**"
+  ],
+  "keywords": [
+    "wurk",
+    "wurk-command",
+    "monorepo",
+    "workspaces",
+    "npm",
+    "command",
+    "vite",
+    "config"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@wurk/import": "*",
+    "@wurk/json": "*"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.1.1",
+    "vite-plugin-bin": "^1.0.2",
+    "vite-plugin-checker": "^0.6.4",
+    "vite-plugin-dts": "^3.7.2",
+    "vite-plugin-refresh": "^1.0.3",
+    "vite-plugin-svgr": "^4.2.0",
+    "vite-plugin-zip-pack": "^1.2.1"
+  }
+}

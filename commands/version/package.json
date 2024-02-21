@@ -1,0 +1,45 @@
+{
+  "name": "@wurk/command-version",
+  "description": "Update versions.",
+  "version": "1.0.0",
+  "author": "Chris Ackerman <chris@topher.land>",
+  "license": "ISC",
+  "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/commands/version/README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shakeskeyboarde/wurk.git",
+    "directory": "commands/version"
+  },
+  "type": "module",
+  "types": "./lib/command.d.ts",
+  "exports": {
+    "types": "./lib/command.d.ts",
+    "default": "./lib/command.js"
+  },
+  "files": [
+    "CHANGELOG.md",
+    "lib/**"
+  ],
+  "keywords": [
+    "wurk",
+    "wurk-command",
+    "monorepo",
+    "workspaces",
+    "npm",
+    "command"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@types/semver": "^7.5.7",
+    "wurk": "*",
+    "semver": "^7.6.0"
+  },
+  "devDependencies": {
+    "@wurk/command-build": "*",
+    "vite": "^5.1.1",
+    "vite-plugin-checker": "^0.6.4",
+    "vite-plugin-dts": "^3.7.2"
+  }
+}

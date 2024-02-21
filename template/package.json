@@ -1,11 +1,11 @@
 {
   "private": true,
-  "name": "werk-command-template",
+  "name": "wurk-command-template",
   "description": "TODO: Update this description.",
   "version": "1.0.0",
   "license": "ISC",
   "scripts": {
-    "prepublishOnly": "werk build",
+    "prepublishOnly": "wurk build",
     "modernize": "npx npm-check-updates@latest -i --format group"
   },
   "type": "module",
@@ -19,14 +19,14 @@
     "lib/**"
   ],
   "keywords": [
-    "werk-command"
+    "wurk-command"
   ],
   "dependencies": {
-    "@werk/cli": "^9.2.3"
+    "wurk": "^1.0.0"
   },
   "devDependencies": {
-    "@types/node": "^20.10.5",
-    "@werk/command-build": "^4.0.0",
+    "@types/node": "^20.11.17",
+    "@wurk/command-build": "^1.0.0",
     "typescript": "^5.3.3"
   }
 }

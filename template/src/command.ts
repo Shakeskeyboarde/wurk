@@ -1,28 +1,13 @@
-import { createCommand } from '@werk/cli';
+import { createCommand } from 'wurk';
 
-export default createCommand({
-  config: (commander) => {
+export default createCommand('template', {
+  config: (cli) => {
     // TODO: Configure the command line interface.
-    return commander;
+    return cli;
   },
 
-  before: async (context) => {
-    // TODO: Perform pre-processing.
-    context;
-  },
-
-  each: async (context) => {
-    // TODO: Process each workspaces.
-    context;
-  },
-
-  after: async (context) => {
-    // TODO: Perform post-processing.
-    context;
-  },
-
-  cleanup: (context) => {
-    // TODO: Synchronously cleanup before exiting.
+  run: async (context) => {
+    // TODO: Implement the command.
     context;
   },
 });

@@ -1,0 +1,50 @@
+{
+  "name": "@wurk/command-build",
+  "description": "Build packages.",
+  "version": "1.0.0",
+  "author": "Chris Ackerman <chris@topher.land>",
+  "license": "ISC",
+  "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/commands/build/README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shakeskeyboarde/wurk.git",
+    "directory": "commands/build"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "type": "module",
+  "types": "./lib/command.d.ts",
+  "exports": {
+    "types": "./lib/command.d.ts",
+    "default": "./lib/command.js"
+  },
+  "files": [
+    "CHANGELOG.md",
+    "lib/**",
+    "config/**"
+  ],
+  "keywords": [
+    "wurk",
+    "wurk-command",
+    "monorepo",
+    "workspaces",
+    "npm",
+    "command",
+    "build",
+    "compile",
+    "bundle",
+    "vite",
+    "typescript",
+    "tsc",
+    "rollup"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "wurk": "*",
+    "@wurk/json": "*",
+    "@wurk/vite-config": "*"
+  }
+}

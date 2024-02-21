@@ -1,0 +1,52 @@
+{
+  "private": true,
+  "name": "@wurk/cli",
+  "description": "CLI argument parsing.",
+  "version": "1.0.0",
+  "author": "Chris Ackerman <chris@topher.land>",
+  "license": "ISC",
+  "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/core/cli/README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shakeskeyboarde/wurk.git",
+    "directory": "core/cli"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "check": "wurk -t build --no-clean && wurk -t vitest --no-build run"
+  },
+  "type": "module",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    "types": "./lib/index.d.ts",
+    "default": "./lib/index.js"
+  },
+  "files": [
+    "CHANGELOG.md",
+    "lib/**"
+  ],
+  "keywords": [
+    "wurk",
+    "cli",
+    "arg",
+    "args",
+    "argv",
+    "argument",
+    "arguments",
+    "option",
+    "options",
+    "parse",
+    "parser",
+    "parsing",
+    "command",
+    "commands",
+    "commander"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/shell-quote": "^1.7.5",
+    "shell-quote": "^1.8.1"
+  }
+}

@@ -1,19 +1,15 @@
-import { createCommand } from '@werk/cli';
+import { createCommand } from 'wurk';
 
-export default createCommand({
-  each: async ({ log, workspace, spawn }) => {
-    // Honor the Werk global options for selection.
-    if (!workspace.isSelected) return;
+export default createCommand('spawn-example', {
+  run: async ({ workspaces }) => {
+    await workspaces.forEach(async ({ log, name, dir, spawn }) => {
+      log.info(`git status for workspace "${name}"`);
 
-    log.info(`Git status for workspace "${workspace.name}".`);
+      const status = await spawn('git', ['status', '--porcelain', '--', dir]).stdoutText();
 
-    const status = await spawn('git', ['status', '--porcelain', '--', workspace.dir], {
-      echo: true,
-      capture: true,
-    }).getStdout('utf-8');
-
-    if (status.length !== 0) {
-      log.warn(`Workspace "${workspace.name}" has uncommitted changes!`);
-    }
+      if (status.length !== 0) {
+        log.warn(`workspace "${name}" has uncommitted changes`);
+      }
+    });
   },
 });

@@ -31,13 +31,11 @@ jobs:
       - name: Build
         run: |
           npm run build
-          npx @werk/cli publish --no-build --to-archive
+          npx wurk publish --no-build --to-archive
 
       - name: Test
         run: |
-          npm run lint
-          npx @werk/cli depcheck
-          npx @werk/cli vitest run --no-build
+          npx wurk test --no-build
 
       - name: Publish (Dry Run)
-        run: npx @werk/cli publish --from-archive --dry-run
+        run: npx wurk publish --from-archive --dry-run

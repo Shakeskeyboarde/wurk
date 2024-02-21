@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "name": "test-rollup",
+  "description": "Testing the build command rollup mode",
+  "type": "module",
+  "dependencies": {},
+  "devDependencies": {
+    "@wurk/command-build": "*"
+  }
+}

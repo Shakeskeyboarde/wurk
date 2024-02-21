@@ -1,0 +1,46 @@
+{
+  "name": "@wurk/command-list",
+  "description": "List workspaces.",
+  "version": "1.0.0",
+  "author": "Chris Ackerman <chris@topher.land>",
+  "license": "ISC",
+  "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/commands/list/README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shakeskeyboarde/wurk.git",
+    "directory": "commands/list"
+  },
+  "type": "module",
+  "types": "./lib/command.d.ts",
+  "exports": {
+    "types": "./lib/command.d.ts",
+    "default": "./lib/command.js"
+  },
+  "files": [
+    "CHANGELOG.md",
+    "lib/**"
+  ],
+  "keywords": [
+    "wurk",
+    "wurk-command",
+    "monorepo",
+    "workspaces",
+    "npm",
+    "command",
+    "list",
+    "json",
+    "filter"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "wurk": "*"
+  },
+  "devDependencies": {
+    "@wurk/command-build": "*",
+    "vite": "^5.1.1",
+    "vite-plugin-checker": "^0.6.4",
+    "vite-plugin-dts": "^3.7.2"
+  }
+}

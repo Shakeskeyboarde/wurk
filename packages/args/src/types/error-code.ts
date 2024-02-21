@@ -1,1 +1,0 @@
-export type ArgsErrorCode = 'ARGS_VALIDATION_ERROR' | 'ARGS_PARSE_ERROR' | 'ARGS_ACTION_ERROR';

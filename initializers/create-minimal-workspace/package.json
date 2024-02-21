@@ -1,0 +1,16 @@
+{
+  "name": "create-minimal-workspace",
+  "description": "Create the bare minimum monorepo workspace project.",
+  "version": "1.0.8",
+  "license": "ISC",
+  "type": "module",
+  "bin": "./lib/main.js",
+  "devDependencies": {
+    "@wurk/command-build": "*",
+    "vite": "^5.1.1",
+    "vite-plugin-bin": "^1.0.2"
+  },
+  "dependencies": {
+    "execa": "^8.0.1"
+  }
+}

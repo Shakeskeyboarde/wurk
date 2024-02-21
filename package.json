@@ -5,23 +5,29 @@
   "author": "Chris Ackerman <chris@topher.land>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Shakeskeyboarde/werk"
+    "url": "https://github.com/Shakeskeyboarde/wurk"
   },
   "type": "module",
   "scripts": {
     "lint": "eslint --max-warnings=0 .",
-    "build": "npm -ws --if-present run build && npm update --silent @werk/cli && werk --clear -p build",
-    "test": "npm run lint && npm run build && werk depcheck && werk vitest run --no-build",
-    "start": "npm run build && werk --clear",
+    "build-scripts": "npm -ws --if-present run build && npm update --silent --progress=false wurk",
+    "build": "npm run build-scripts && wurk --clear -p build",
+    "test": "npm run build && wurk test --no-build",
+    "start": "npm run build && wurk --clear",
     "clean": "npm start -- clean",
     "modernize": "npx npm-check-updates@latest -i --workspaces --root --format group"
   },
   "workspaces": [
-    "packages/cli",
-    "packages/vite-config",
-    "packages/command-build",
-    "packages/*",
-    "packages/test/*",
+    "core/cli",
+    "core/json",
+    "core/import",
+    "core/log",
+    "core/spawn",
+    "core/vite-config",
+    "core/workspace",
+    "core/wurk",
+    "commands/*",
+    "tests/*",
     "template"
   ],
   "engines": {
@@ -32,30 +38,25 @@
   },
   "engineStrict": true,
   "devDependencies": {
-    "@rollup/plugin-typescript": "^11.1.5",
-    "@types/eslint": "^8.56.0",
-    "@types/node": "^20.10.5",
-    "@vitest/coverage-v8": "^1.1.0",
-    "@werk/command-build": "*",
-    "@werk/command-clean": "*",
-    "@werk/command-depcheck": "*",
-    "@werk/command-exec": "*",
-    "@werk/command-list": "*",
-    "@werk/command-publish": "*",
-    "@werk/command-run": "*",
-    "@werk/command-version": "*",
-    "@werk/command-vitest": "*",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/eslint": "^8.56.2",
+    "@types/node": "^20.11.17",
+    "@vitest/coverage-v8": "^1.2.2",
+    "vite": "5.1.1",
+    "@wurk/command-build": "*",
+    "@wurk/command-clean": "*",
+    "@wurk/command-depcheck": "*",
+    "@wurk/command-exec": "*",
+    "@wurk/command-list": "*",
+    "@wurk/command-publish": "*",
+    "@wurk/command-run": "*",
+    "@wurk/command-test": "*",
+    "@wurk/command-version": "*",
     "eslint": "^8.56.0",
-    "eslint-config-rational": "^3.0.10",
-    "prettier": "^3.1.1",
-    "rollup": "^4.9.1",
+    "eslint-config-rational": "^3.0.11",
+    "prettier": "^3.2.5",
+    "rollup": "^4.10.0",
     "typescript": "^5.3.3",
-    "vitest": "^1.1.0"
-  },
-  "werk": {
-    "commands": {
-      "a": "typescript",
-      "b": "does-not-exist"
-    }
+    "vitest": "^1.2.2"
   }
 }

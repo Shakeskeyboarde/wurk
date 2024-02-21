@@ -1,0 +1,50 @@
+{
+  "name": "@wurk/command-publish",
+  "description": "Publish packages.",
+  "version": "1.0.0",
+  "author": "Chris Ackerman <chris@topher.land>",
+  "license": "ISC",
+  "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/commands/publish/README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shakeskeyboarde/wurk.git",
+    "directory": "commands/publish"
+  },
+  "type": "module",
+  "types": "./lib/command.d.ts",
+  "exports": {
+    "types": "./lib/command.d.ts",
+    "default": "./lib/command.js"
+  },
+  "files": [
+    "CHANGELOG.md",
+    "lib/**"
+  ],
+  "keywords": [
+    "wurk",
+    "wurk-command",
+    "monorepo",
+    "workspaces",
+    "npm",
+    "command",
+    "publish",
+    "deploy",
+    "release",
+    "registry"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/tar-stream": "^3.1.3",
+    "@wurk/command-build": "*",
+    "vite": "^5.1.1",
+    "vite-plugin-checker": "^0.6.4",
+    "vite-plugin-dts": "^3.7.2"
+  },
+  "dependencies": {
+    "wurk": "*",
+    "tar-stream": "^3.1.7",
+    "semver": "^7.6.0"
+  }
+}

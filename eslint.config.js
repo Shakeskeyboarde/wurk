@@ -4,7 +4,14 @@ export default rational({
   ignores: ['**/{.git,node_modules,out,lib,dist}'],
   override: [
     {
-      files: ['packages/vite-config/src/logger.ts', 'packages/vite-config/src/plugins/*'],
+      files: ['core/cli/src/**'],
+      rules: {
+        'import/group-exports': 'warn',
+        'import/exports-last': 'warn',
+      },
+    },
+    {
+      files: ['core/vite-config/src/logger.ts', 'core/vite-config/src/plugins/*'],
       rules: {
         'import/no-extraneous-dependencies': 'off',
         '@typescript-eslint/consistent-type-imports': 'off',

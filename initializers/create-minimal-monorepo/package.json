@@ -1,0 +1,21 @@
+{
+  "name": "create-minimal-monorepo",
+  "description": "Create the bare minimum monorepo project.",
+  "version": "1.0.0",
+  "license": "ISC",
+  "type": "module",
+  "bin": "./lib/main.js",
+  "devDependencies": {
+    "@wurk/command-build": "*",
+    "vite": "^5.1.1",
+    "vite-plugin-bin": "^1.0.2"
+  },
+  "dependencies": {
+    "@types/git-url-parse": "^9.0.3",
+    "@types/wrap-text": "^1.0.2",
+    "execa": "^8.0.1",
+    "git-url-parse": "^14.0.0",
+    "license": "^1.0.3",
+    "wrap-text": "^1.0.9"
+  }
+}
