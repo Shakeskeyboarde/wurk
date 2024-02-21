@@ -165,8 +165,10 @@ export default createCommand('version', {
         .map(({ name, version }) => `${name.replace(/^@[^/]*/u, '')}@${version}`)
         .join(', ');
 
-      log.notice(`version commit message:`);
-      log.notice(`  release: ${releaseMessage}`, { color: 'blue' });
+      if (releaseMessage) {
+        log.notice(`version commit message:`);
+        log.notice(`  release: ${releaseMessage}`, { color: 'blue' });
+      }
     }
   },
 });
