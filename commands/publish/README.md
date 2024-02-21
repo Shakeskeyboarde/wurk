@@ -71,7 +71,7 @@ Validation is always performed before publishing. This provides reasonable certa
 
 1. **Ensure the Git working tree is clean.**
 
-   - If there are uncommitted changes, then there may not be any permanent record of the published code. Publishing also makes temporary changes to `package.json` files, which need to be removed be resetting the uncommitted changes.
+   - If the working tree is dirty, then there may not be any permanent record of the published code. Publishing also makes temporary changes to `package.json` files, which need to be removed be resetting the working tree.
 
 2. **Ensure local dependencies are either successfully published, or were already published from up-to-date code.**
 

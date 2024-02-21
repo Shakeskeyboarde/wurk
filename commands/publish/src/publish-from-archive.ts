@@ -39,7 +39,7 @@ export const publishFromArchive = async ({ options, workspace }: PublishFromArch
     return;
   }
 
-  log.info(`publishing v${version} from archive to registry`);
+  log.info(`publishing version ${version} from archive to registry`);
 
   const tmpDir = resolve(dir, `.${randomUUID()}.tmp`);
   const tmpFilename = resolve(tmpDir, basename(filename));

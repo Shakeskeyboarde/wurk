@@ -41,26 +41,27 @@ export const publishFromFilesystem = async ({ options, workspace }: PublishFromF
     return;
   }
 
-  log.info(`publishing v${version} from filesystem to ${options.toArchive ? 'archive' : 'registry'}`);
+  log.info(`publishing version ${version} from filesystem to ${options.toArchive ? 'archive' : 'registry'}`);
 
   if (await git.getIsDirty()) {
-    log.warn(`skipping workspace with uncommitted changes`);
-    status.set('warning', 'skipped, dirty ');
+    log.warn(`skipping workspace with dirty working tree`);
+    status.set('warning', 'dirty working tree');
 
     return;
   }
 
   const prodDependencyLinks = await Promise.all(
-    getDependencyLinks()
-      .filter((link) => link.scope !== 'devDependencies')
-      .map(async (link) => {
-        const [isDirty, isModified] = await Promise.all([
-          link.dependency.git.getIsDirty(),
-          !published.has(link.dependency) && link.dependency.getIsModified(),
-        ]);
+    getDependencyLinks({
+      recursive: true,
+      filter: ({ scope }) => scope !== 'devDependencies',
+    }).map(async (link) => {
+      const [isDirty, isModified] = await Promise.all([
+        link.dependency.git.getIsDirty(),
+        !published.has(link.dependency) && link.dependency.getIsModified(),
+      ]);
 
-        return { ...link, isDirty, isModified };
-      }),
+      return { ...link, isDirty, isModified };
+    }),
   );
 
   const dirtyDependencies = prodDependencyLinks.filter((link) => link.isDirty).map((link) => link.dependency);
@@ -93,25 +94,14 @@ export const publishFromFilesystem = async ({ options, workspace }: PublishFromF
     return;
   }
 
-  const missingPackedEntrypoints = await getMissingPackFiles(workspace);
-
-  if (missingPackedEntrypoints.length) {
-    log.error(`unpublished entry points:`);
-    missingPackedEntrypoints.forEach(({ type, filename }) =>
-      log.error(`  - ${path.relative(dir, filename)} (${type})`),
-    );
-    status.set('failure', 'entry points');
-
-    return;
-  }
-
   if (await getIsChangeLogOutdated(workspace)) {
-    log.warn(`workspace has commits after changelog update (changelog may be outdated)`);
+    log.warn(`change log may be outdated`);
   }
 
   const packageJson = await fs.readJson('package.json');
+  console.log('packageJson', JSON.stringify(packageJson, null, 2));
 
-  // All changes are temporary and will be reverted after publishing.
+  // All package changes are temporary and will be reverted after publishing.
   pinFile('package.json');
 
   /*
@@ -167,6 +157,7 @@ export const publishFromFilesystem = async ({ options, workspace }: PublishFromF
    * intentionally in v7.
    */
   packageJson.at('gitHead').set(await git.getHead());
+  console.log('packageJson', JSON.stringify(packageJson, null, 2));
 
   await fs.writeJson('package.json', packageJson);
   await spawn(
@@ -181,7 +172,18 @@ export const publishFromFilesystem = async ({ options, workspace }: PublishFromF
   );
 
   published.add(workspace);
-  status.set('success', version);
+
+  const missingPackedEntrypoints = await getMissingPackFiles(workspace);
+
+  if (missingPackedEntrypoints.length) {
+    log.error(`unpublished entry points:`);
+    missingPackedEntrypoints.forEach(({ type, filename }) =>
+      log.error(`  - ${path.relative(dir, filename)} (${type})`),
+    );
+    status.set('warning', 'entry points');
+  } else {
+    status.set('success', version);
+  }
 };
 
 const getIsChangeLogOutdated = async (workspace: Workspace): Promise<boolean> => {
