@@ -102,7 +102,7 @@ const mainAsync = async (): Promise<void> => {
     .action(async ({ options, command }) => {
       const {
         clear = false,
-        expressions = new JsonAccessor(env.WURK_WORKSPACE_EXPRESSIONS)
+        expressions = JsonAccessor.parse(env.WURK_WORKSPACE_EXPRESSIONS)
           .as('array', [] as unknown[])
           .filter((value): value is string => typeof value === 'string'),
         includeRootWorkspace = env.WURK_INCLUDE_ROOT_WORKSPACE === 'true',
