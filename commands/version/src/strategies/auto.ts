@@ -4,7 +4,7 @@ import { type Workspace } from 'wurk';
 import { type Change, getChanges } from '../change.js';
 
 export const auto = async (workspace: Workspace): Promise<readonly Change[]> => {
-  const { log, npm, git, config, name, version } = workspace;
+  const { log, npm, git, config, version } = workspace;
 
   // Auto-versioning does not support workspaces without versions or with
   // prerelease versions.
@@ -16,7 +16,7 @@ export const auto = async (workspace: Workspace): Promise<readonly Change[]> => 
   const meta = await npm.getMetadata();
 
   if (!meta) {
-    log.info(`using existing version ${version} for initial release`);
+    log.info(`using existing version for initial release (${version})`);
     return [];
   }
 
@@ -33,7 +33,7 @@ export const auto = async (workspace: Workspace): Promise<readonly Change[]> => 
   const { isConventional, releaseType, changes } = await getChanges(workspace, meta.gitHead);
 
   if (!isConventional) {
-    log.warn(`workspace "${name}" has non-conventional commits`);
+    log.warn(`workspace has non-conventional commits`);
   }
 
   if (!releaseType) {
