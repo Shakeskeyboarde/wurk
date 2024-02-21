@@ -25,12 +25,12 @@ export class Fs {
     return await fs.promises.readFile(this.resolve(filename));
   }
 
-  async readText(filename: string, encoding: BufferEncoding = 'utf-16le'): Promise<string> {
+  async readText(filename: string, encoding?: BufferEncoding): Promise<string> {
     return await this.read(filename).then((buffer) => buffer.toString(encoding));
   }
 
   async readJson(filename: string): Promise<JsonAccessor> {
-    return await this.readText(filename).then((text) => JsonAccessor.parse(text));
+    return await this.readText(filename).then(JsonAccessor.parse);
   }
 
   async write(filename: string, data: Buffer): Promise<void> {
