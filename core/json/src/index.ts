@@ -166,27 +166,9 @@ export class JsonAccessor {
       const { accessor, key } = this.parent;
 
       if (typeof key === 'number') {
-        let parentValue: unknown[] | undefined;
-
-        if (Array.isArray(accessor.value)) {
-          parentValue = accessor.value;
-        } else {
-          accessor.set((parentValue = []));
-        }
-
-        parentValue.splice(key, 1, this.#value);
+        accessor.set(accessor.as('array', []).splice(key, 1, this.#value));
       } else {
-        let parentValue: Record<string, unknown> | undefined;
-
-        if (typeof accessor.value === 'object' || accessor.value == null || Array.isArray(accessor.value)) {
-          parentValue = accessor.value as Record<string, unknown>;
-        } else if (this.#value !== undefined) {
-          accessor.set((parentValue = {}));
-        }
-
-        if (parentValue) {
-          parentValue[key] = this.#value;
-        }
+        accessor.set(Object.assign(accessor.as('object', {}), { [key]: this.#value }));
       }
     }
   }
