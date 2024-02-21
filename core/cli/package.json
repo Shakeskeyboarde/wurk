@@ -1,5 +1,4 @@
 {
-  "private": true,
   "name": "@wurk/cli",
   "description": "CLI argument parsing.",
   "version": "1.0.0",
