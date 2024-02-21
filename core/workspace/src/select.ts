@@ -2,7 +2,7 @@ import { minimatch } from 'minimatch';
 
 import { type Workspace } from './workspace.js';
 
-interface SelectResult {
+export interface SelectResult {
   readonly isSelected: boolean;
   readonly includeDependencies?: boolean;
   readonly includeDependents?: boolean;

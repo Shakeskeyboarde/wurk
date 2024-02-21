@@ -6,7 +6,7 @@ import { importRelative, type ImportResult } from '@wurk/import';
 import { JsonAccessor } from '@wurk/json';
 import { glob, type Path } from 'glob';
 
-interface FsOptions {
+export interface FsOptions {
   readonly dir: string;
 }
 

@@ -10,11 +10,15 @@ import { DepthFirstIterable, iterateDepthFirst } from './iterate.js';
 import { Pin } from './pin.js';
 import { select, type SelectCondition } from './select.js';
 import { printStatus, StatusValue } from './status.js';
-import { Workspace, type WorkspaceLink } from './workspace.js';
+import { Workspace, type WorkspaceLink, type WorkspaceLinkOptions } from './workspace.js';
 
-type WorkspaceCallback = (workspace: Workspace, signal: AbortSignal, abort: (reason?: any) => void) => Promise<void>;
+export type WorkspaceCallback = (
+  workspace: Workspace,
+  signal: AbortSignal,
+  abort: (reason?: any) => void,
+) => Promise<void>;
 
-interface WorkspaceCollectionOptions {
+export interface WorkspaceCollectionOptions {
   readonly log?: Log;
   readonly root: JsonAccessor;
   readonly rootDir: string;
@@ -24,7 +28,7 @@ interface WorkspaceCollectionOptions {
   readonly npmHead?: string;
 }
 
-interface WorkspacePrintStatusOptions {
+export interface WorkspacePrintStatusOptions {
   readonly prefix?: string;
   readonly condition?: SelectCondition;
 }
@@ -233,11 +237,13 @@ export class WorkspaceCollection {
    * Get dependency links for a workspace. This includes links to workspaces
    * which are not selected.
    */
-  getDependencyLinks = (workspace: Workspace, options?: { recursive?: boolean }): readonly WorkspaceLink[] => {
+  getDependencyLinks = (workspace: Workspace, options?: WorkspaceLinkOptions): readonly WorkspaceLink[] => {
     let links = this.#dependencyLinks.get(workspace) ?? [];
 
     if (options?.recursive) {
-      links = Array.from(iterateDepthFirst(links, (current) => this.#dependencyLinks.get(current.dependency)));
+      links = Array.from(
+        iterateDepthFirst(links, (current) => this.#dependencyLinks.get(current.dependency), options?.filter),
+      );
     }
 
     return links;
@@ -247,11 +253,13 @@ export class WorkspaceCollection {
    * Get dependent links for a workspace. This includes links to workspaces
    * which are not selected.
    */
-  getDependentLinks = (workspace: Workspace, options?: { recursive?: boolean }): readonly WorkspaceLink[] => {
+  getDependentLinks = (workspace: Workspace, options?: WorkspaceLinkOptions): readonly WorkspaceLink[] => {
     let links = this.#dependentLinks.get(workspace) ?? [];
 
     if (options?.recursive) {
-      links = Array.from(iterateDepthFirst(links, (current) => this.#dependentLinks.get(current.dependent)));
+      links = Array.from(
+        iterateDepthFirst(links, (current) => this.#dependentLinks.get(current.dependent), options?.filter),
+      );
     }
 
     return links;

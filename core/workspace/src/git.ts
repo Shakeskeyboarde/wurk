@@ -3,12 +3,12 @@ import path from 'node:path';
 import { type Log, log as defaultLog } from '@wurk/log';
 import { type Spawn, spawn } from '@wurk/spawn';
 
-interface GitOptions {
+export interface GitOptions {
   readonly log?: Log;
   readonly dir: string;
 }
 
-interface GitLog {
+export interface GitLog {
   readonly hash: string;
   readonly author: string;
   readonly authorEmail: string;

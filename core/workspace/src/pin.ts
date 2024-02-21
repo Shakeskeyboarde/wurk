@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { type Log, log as defaultLog } from '@wurk/log';
 
-interface PinOptions {
+export interface PinOptions {
   readonly log?: Log;
   readonly dir: string;
 }

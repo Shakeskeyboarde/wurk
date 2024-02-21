@@ -2,14 +2,14 @@ import { type Log, log as defaultLog } from '@wurk/log';
 import { spawn } from '@wurk/spawn';
 import { rcompare } from 'semver';
 
-interface NpmOptions {
+export interface NpmOptions {
   readonly log?: Log;
   readonly name: string;
   readonly version?: string;
   readonly gitHead?: string;
 }
 
-interface NpmMetadata {
+export interface NpmMetadata {
   readonly version: string;
   readonly gitHead: string | null;
 }

@@ -10,15 +10,20 @@ import { Git } from './git.js';
 import { Npm } from './npm.js';
 import { Status } from './status.js';
 
-interface WorkspaceOptions {
+export interface WorkspaceOptions {
   readonly config: JsonAccessor;
   readonly dir: string;
   readonly relativeDir: string;
   readonly isRoot: boolean;
   readonly npmHead: string | undefined;
   readonly pinFile: (filename: string) => void;
-  readonly getDependencyLinks: (options?: { recursive?: boolean }) => readonly WorkspaceLink[];
-  readonly getDependentLinks: (options?: { recursive?: boolean }) => readonly WorkspaceLink[];
+  readonly getDependencyLinks: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
+  readonly getDependentLinks: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
+}
+
+export interface WorkspaceLinkOptions {
+  readonly recursive?: boolean;
+  readonly filter?: (link: WorkspaceLink) => boolean;
 }
 
 export interface WorkspaceEntrypoint {
@@ -102,7 +107,7 @@ export class Workspace {
    * True if this workspace is a dependency of any selected workspace.
    */
   get isDependencyOfSelected(): boolean {
-    return this.getDependentLinks().some((link) => link.dependent.isSelected);
+    return this.getDependentLinks({ recursive: true }).some((link) => link.dependent.isSelected);
   }
 
   /**
@@ -110,7 +115,7 @@ export class Workspace {
    * workspace.
    */
   get isDependentOfSelected(): boolean {
-    return this.getDependencyLinks().some((link) => link.dependency.isSelected);
+    return this.getDependencyLinks({ recursive: true }).some((link) => link.dependency.isSelected);
   }
 
   constructor(options: WorkspaceOptions) {
@@ -259,10 +264,10 @@ export class Workspace {
   /**
    * Get all immediate local dependency workspaces.
    */
-  readonly getDependencyLinks: (options?: { recursive?: boolean }) => readonly WorkspaceLink[];
+  readonly getDependencyLinks: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
 
   /**
    * Get all immediate local dependent workspaces.
    */
-  readonly getDependentLinks: (options?: { recursive?: boolean }) => readonly WorkspaceLink[];
+  readonly getDependentLinks: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
 }

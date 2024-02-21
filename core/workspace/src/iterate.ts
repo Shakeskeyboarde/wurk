@@ -1,6 +1,7 @@
 export const iterateDepthFirst = function* <T>(
   root: Iterable<T>,
   getRelated: (current: T) => Iterable<T> | undefined,
+  filter: (current: T) => boolean = () => true,
 ): Generator<T> {
   const marked = new Set<T>();
   const next = function* (values: Iterable<T> | undefined): Generator<T> {
@@ -8,6 +9,7 @@ export const iterateDepthFirst = function* <T>(
 
     for (const value of values) {
       if (marked.has(value)) continue;
+      if (!filter(value)) continue;
 
       // Mark before iterating over dependencies to prevent infinite
       // recursion in the case of a circular dependency.
