@@ -99,7 +99,6 @@ export const publishFromFilesystem = async ({ options, workspace }: PublishFromF
   }
 
   const packageJson = await fs.readJson('package.json');
-  console.log('packageJson', JSON.stringify(packageJson, null, 2));
 
   // All package changes are temporary and will be reverted after publishing.
   pinFile('package.json');
@@ -157,7 +156,6 @@ export const publishFromFilesystem = async ({ options, workspace }: PublishFromF
    * intentionally in v7.
    */
   packageJson.at('gitHead').set(await git.getHead());
-  console.log('packageJson', JSON.stringify(packageJson, null, 2));
 
   await fs.writeJson('package.json', packageJson);
   await spawn(
