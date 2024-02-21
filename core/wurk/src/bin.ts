@@ -7,6 +7,7 @@ import { JsonAccessor } from '@wurk/json';
 
 const findRoot = async (current = process.cwd()): Promise<string> => {
   return await readFile(resolve(current, 'package.json'), 'utf-8')
+    .catch(() => undefined)
     .then(JsonAccessor.parse)
     .then((config) => {
       if (config.at('workspaces').is('array')) return current;
@@ -22,7 +23,8 @@ await findRoot()
     assert(typeof main === 'function');
     return main;
   })
-  .catch(async () => {
+  .catch(async (error) => {
+    console.log(error);
     const { main } = await import('./main.js');
     console.warn('\u001B[2mUsing globally installed Wurk.\u001B[22m');
     return main;
