@@ -25,12 +25,12 @@ export class Fs {
     return await fs.promises.readFile(this.resolve(filename));
   }
 
-  async readJson(filename: string): Promise<JsonAccessor> {
-    return await this.read(filename).then((buffer) => JsonAccessor.parse(buffer.toString('utf8')));
-  }
-
   async readText(filename: string, encoding: BufferEncoding = 'utf-16le'): Promise<string> {
     return await this.read(filename).then((buffer) => buffer.toString(encoding));
+  }
+
+  async readJson(filename: string): Promise<JsonAccessor> {
+    return await this.readText(filename).then((text) => JsonAccessor.parse(text));
   }
 
   async write(filename: string, data: Buffer): Promise<void> {
@@ -41,12 +41,12 @@ export class Fs {
     await fs.promises.writeFile(abs, data);
   }
 
-  async writeJson(filename: string, data: unknown): Promise<void> {
-    await this.write(filename, Buffer.from(JSON.stringify(data, null, 2)));
+  async writeText(filename: string, data: string, encoding?: BufferEncoding): Promise<void> {
+    await this.write(filename, Buffer.from(data.endsWith('\n') ? data : data + '\n', encoding));
   }
 
-  async writeText(filename: string, data: string, encoding?: BufferEncoding): Promise<void> {
-    await this.write(filename, Buffer.from(data, encoding));
+  async writeJson(filename: string, data: unknown): Promise<void> {
+    await this.writeText(filename, JSON.stringify(data, null, 2));
   }
 
   async readdir(dir: string, options?: { withFileTypes?: false; recursive?: boolean }): Promise<string[]>;
