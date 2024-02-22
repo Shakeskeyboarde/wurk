@@ -7,7 +7,6 @@ import { Sema } from 'async-sema';
 
 import { AbortError } from './error.js';
 import { DepthFirstIterable, iterateDepthFirst } from './iterate.js';
-import { Pin } from './pin.js';
 import { select, type SelectCondition } from './select.js';
 import { printStatus, StatusValue } from './status.js';
 import { Workspace, type WorkspaceLink, type WorkspaceLinkOptions } from './workspace.js';
@@ -50,7 +49,6 @@ export class WorkspaceCollection {
   constructor(options: WorkspaceCollectionOptions) {
     this.#log = options.log ?? defaultLog;
 
-    const pin = new Pin({ log: options.log, dir: options.rootDir });
     const workspaces: Workspace[] = (this.#workspaces = []);
     const dependencyLinks = (this.#dependencyLinks = new Map<Workspace, WorkspaceLink[]>());
     const dependentLinks = (this.#dependentLinks = new Map<Workspace, WorkspaceLink[]>());
@@ -60,7 +58,6 @@ export class WorkspaceCollection {
       config: options.root,
       isRoot: true,
       npmHead: options.npmHead,
-      pinFile: pin.pinFile,
       getDependencyLinks: (linkOptions) => this.getDependencyLinks(root, linkOptions),
       getDependentLinks: (linkOptions) => this.getDependentLinks(root, linkOptions),
     });
@@ -76,7 +73,6 @@ export class WorkspaceCollection {
         config,
         isRoot: false,
         npmHead: options.npmHead,
-        pinFile: pin.pinFile,
         getDependencyLinks: (linkOptions) => this.getDependencyLinks(workspace, linkOptions),
         getDependentLinks: (linkOptions) => this.getDependentLinks(workspace, linkOptions),
       });

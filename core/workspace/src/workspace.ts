@@ -1,5 +1,3 @@
-import path from 'node:path';
-
 import { type JsonAccessor } from '@wurk/json';
 import { Log } from '@wurk/log';
 import { type Spawn, spawn } from '@wurk/spawn';
@@ -15,7 +13,6 @@ export interface WorkspaceOptions {
   readonly relativeDir: string;
   readonly isRoot: boolean;
   readonly npmHead: string | undefined;
-  readonly pinFile: (filename: string) => void;
   readonly getDependencyLinks: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
   readonly getDependentLinks: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
 }
@@ -135,7 +132,6 @@ export class Workspace {
     });
     this.fs = new Fs({ dir: this.dir });
     this.status = new Status(this.name);
-    this.pinFile = (filename) => options.pinFile(path.resolve(this.dir, filename));
     this.getDependencyLinks = options.getDependencyLinks;
     this.getDependentLinks = options.getDependentLinks;
   }
@@ -252,11 +248,6 @@ export class Workspace {
 
     return sparse.filter((value): value is WorkspaceEntrypoint => Boolean(value));
   };
-
-  /**
-   * Pin a file so that it can be restored later.
-   */
-  readonly pinFile: (filename: string) => void;
 
   /**
    * Get all immediate local dependency workspaces.
