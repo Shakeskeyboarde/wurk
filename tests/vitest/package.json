@@ -3,6 +3,7 @@
   "name": "test-test",
   "description": "Testing the test command",
   "version": "",
+  "scripts": {},
   "type": "module",
   "devDependencies": {
     "@wurk/command-build": "*",

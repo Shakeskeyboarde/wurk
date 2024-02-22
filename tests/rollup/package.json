@@ -3,6 +3,7 @@
   "name": "test-rollup",
   "description": "Testing the build command rollup mode",
   "version": "",
+  "scripts": {},
   "type": "module",
   "dependencies": {},
   "devDependencies": {

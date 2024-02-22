@@ -3,6 +3,7 @@
   "name": "test-vite-lib-bundle",
   "description": "Testing the build command vite library mode with bundling",
   "version": "",
+  "scripts": {},
   "type": "module",
   "types": "./lib/esm/bundle.d.ts",
   "exports": {

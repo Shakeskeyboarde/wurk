@@ -3,6 +3,7 @@
   "name": "test-vite-lib",
   "description": "Testing the build command vite library mode",
   "version": "",
+  "scripts": {},
   "type": "module",
   "types": "./lib/esm/index.d.ts",
   "exports": {

@@ -3,6 +3,7 @@
   "name": "test-vite-bin",
   "description": "Testing the build command vite library mode for bins.",
   "version": "",
+  "scripts": {},
   "type": "module",
   "types": "./lib/index.d.ts",
   "bin": {
