@@ -94,8 +94,8 @@ export const publishFromFilesystem = async ({ options, workspace }: PublishFromF
     return;
   }
 
-  if (await getIsChangeLogOutdated(workspace)) {
-    log.warn(`change log may be outdated`);
+  if (await getIsChangelogOutdated(workspace)) {
+    log.warn(`changelog may be outdated`);
   }
 
   const packageJson = await fs.readJson('package.json');
@@ -183,7 +183,7 @@ export const publishFromFilesystem = async ({ options, workspace }: PublishFromF
   }
 };
 
-const getIsChangeLogOutdated = async (workspace: Workspace): Promise<boolean> => {
+const getIsChangelogOutdated = async (workspace: Workspace): Promise<boolean> => {
   const { log, git, fs, name, spawn } = workspace;
   const [lastCommit, isRepo] = await Promise.all([git.getHead(), git.getIsRepo()]);
 
@@ -193,16 +193,16 @@ const getIsChangeLogOutdated = async (workspace: Workspace): Promise<boolean> =>
   if (isRepo && lastCommit == null) return true;
 
   // git diff-tree -1 -r --name-only --no-commit-id 19fb750136fadef9929ea9b54c0807c0d9b06216 -- CHANGELOG.md
-  const [isChangeLogPresent, isChangeLogUpToDate] = await Promise.all([
+  const [isChangelogPresent, isChangelogUpToDate] = await Promise.all([
     fs.exists('CHANGELOG.md'),
     spawn('git', ['diff-tree', '-1', '-r', '--name-only', '--no-commit-id', lastCommit, '--', 'CHANGELOG.md'])
       .stdoutText()
       .then(Boolean),
   ]);
 
-  log.debug(`workspace "${name}" isChangeLogUpToDate=${isChangeLogUpToDate}`);
+  log.debug(`workspace "${name}" isChangelogUpToDate=${isChangelogUpToDate}`);
 
-  return isChangeLogPresent && !isChangeLogUpToDate;
+  return isChangelogPresent && !isChangelogUpToDate;
 };
 
 const getMissingPackFiles = async (workspace: Workspace): Promise<WorkspaceEntrypoint[]> => {
