@@ -19,7 +19,7 @@ const published = new WeakSet<Workspace>();
 
 export const publishFromFilesystem = async ({ options, workspace }: PublishFromFilesystemContext): Promise<void> => {
   const { toArchive = false, tag, otp, removePackageFields = [], dryRun = false } = options;
-  const { status, log, git, npm, fs, version, dir, getDependencyLinks, pinFile, spawn } = workspace;
+  const { status, log, git, npm, fs, version, dir, getDependencyLinks, spawn } = workspace;
 
   status.set('pending');
 
@@ -100,14 +100,9 @@ export const publishFromFilesystem = async ({ options, workspace }: PublishFromF
 
   const packageJson = await fs.readJson('package.json');
 
-  // All package changes are temporary and will be reverted after publishing.
-  pinFile('package.json');
-
-  /*
-   * Temporarily update local production dependency versions to real versions.
-   * File (file:) and wildcard versions should not be published to the
-   * registry.
-   */
+  // Temporarily update local production dependency versions to real versions.
+  // File (file:) and wildcard versions should not be published to the
+  // registry.
   prodDependencyLinks.forEach((link) => {
     const { dependency, scope, id, versionRange } = link;
 
@@ -139,9 +134,7 @@ export const publishFromFilesystem = async ({ options, workspace }: PublishFromF
     packageJson.at(scope).at(id).set(spec);
   });
 
-  /**
-   * Temporarily remove fields from the package.json file.
-   */
+  // Temporarily remove fields from the package.json file.
   removePackageFields.forEach((field) => {
     field
       .split('.')
@@ -149,25 +142,31 @@ export const publishFromFilesystem = async ({ options, workspace }: PublishFromF
       .set(undefined);
   });
 
-  /*
-   * Temporarily set "gitHead" in the package.json file. NPM publish
-   * should do this automatically. But, it doesn't do it for packing.
-   * It's also not documented well even though it is definitely added
-   * intentionally in v7.
-   */
+  // Temporarily set "gitHead" in the package.json file. NPM publish should do
+  // this automatically. But, it doesn't do it for packing. It's also not
+  // documented well even though it is definitely added intentionally in v7.
   packageJson.at('gitHead').set(await git.getHead());
 
-  await fs.writeJson('package.json', packageJson);
-  await spawn(
-    'npm',
-    [
-      toArchive ? 'pack' : 'publish',
-      Boolean(tag) && `--tag=${tag}`,
-      Boolean(otp) && `--otp=${otp}`,
-      dryRun && '--dry-run',
-    ],
-    { output: 'echo' },
-  );
+  /**
+   * All package changes are temporary and will be reverted after publishing.
+   */
+  const savedPackageJson = await fs.readText('package.json');
+
+  try {
+    await fs.writeJson('package.json', packageJson);
+    await spawn(
+      'npm',
+      [
+        toArchive ? 'pack' : 'publish',
+        Boolean(tag) && `--tag=${tag}`,
+        Boolean(otp) && `--otp=${otp}`,
+        dryRun && '--dry-run',
+      ],
+      { output: 'echo' },
+    );
+  } finally {
+    await fs.writeText('package.json', savedPackageJson);
+  }
 
   published.add(workspace);
 

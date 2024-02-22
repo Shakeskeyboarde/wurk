@@ -40,6 +40,10 @@ export const publishFromArchive = async ({ options, workspace }: PublishFromArch
 
   log.info(`publishing version ${version} from archive to registry`);
 
+  /**
+   * This is a subdirectory of the workspace directory so that .npmrc files
+   * in parent directories are still in effect.
+   */
   const tmpDir = fs.resolve(`.${crypto.randomUUID()}.tmp`);
   const tmpFilename = fs.resolve(tmpDir, path.basename(filename));
 
