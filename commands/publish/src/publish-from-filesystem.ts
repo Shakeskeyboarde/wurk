@@ -15,7 +15,7 @@ interface PublishFromFilesystemContext {
   readonly workspace: Workspace;
 }
 
-const published = new Set<Workspace>();
+const published = new WeakSet<Workspace>();
 
 export const publishFromFilesystem = async ({ options, workspace }: PublishFromFilesystemContext): Promise<void> => {
   const { toArchive = false, tag, otp, removePackageFields = [], dryRun = false } = options;
@@ -56,7 +56,7 @@ export const publishFromFilesystem = async ({ options, workspace }: PublishFromF
       filter: ({ scope }) => scope !== 'devDependencies',
     }).map(async (link) => {
       const [isDirty, isModified] = await Promise.all([
-        link.dependency.git.getIsDirty(),
+        !published.has(link.dependency) && link.dependency.git.getIsDirty(),
         !published.has(link.dependency) && link.dependency.getIsModified(),
       ]);
 
@@ -69,7 +69,7 @@ export const publishFromFilesystem = async ({ options, workspace }: PublishFromF
   if (dirtyDependencies.length) {
     log.warn(`skipping workspace with dirty local dependencies:`);
     dirtyDependencies.forEach((dependency) => log.warn(`  - ${dependency.name}`));
-    status.set('warning', 'skipped, dirty dependencies');
+    status.set('warning', 'dirty dependencies');
 
     return;
   }
@@ -77,9 +77,9 @@ export const publishFromFilesystem = async ({ options, workspace }: PublishFromF
   const modifiedDependencies = prodDependencyLinks.filter((link) => link.isModified).map((link) => link.dependency);
 
   if (modifiedDependencies.length) {
-    log.warn(`skipping workspace with modified (and unpublished) local dependencies:`);
+    log.warn(`skipping workspace with modified local dependencies:`);
     modifiedDependencies.forEach((dependency) => log.warn(`  - ${dependency.name}`));
-    status.set('warning', 'skipped, modified dependencies');
+    status.set('warning', 'dirty working tree');
 
     return;
   }
@@ -213,8 +213,11 @@ const getMissingPackFiles = async (workspace: Workspace): Promise<WorkspaceEntry
     .at(0)
     .at('files')
     .as('array', [] as unknown[])
-    .filter((value): value is string => typeof value === 'string')
-    .map((value) => fs.resolve(value));
+    .filter(
+      (value): value is { path: string } =>
+        typeof value === 'object' && value != null && 'path' in value && typeof value.path === 'string',
+    )
+    .map((value) => fs.resolve(value.path));
   const missing = getEntrypoints().filter(
     ({ filename }) => !packFilenames.some((packFilename) => path.relative(packFilename, filename) === ''),
   );

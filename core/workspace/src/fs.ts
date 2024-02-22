@@ -1,6 +1,6 @@
-/* eslint-disable max-lines */
 import fs from 'node:fs';
 import path from 'node:path';
+import type stream from 'node:stream';
 
 import { importRelative, type ImportResult } from '@wurk/import';
 import { JsonAccessor } from '@wurk/json';
@@ -21,6 +21,10 @@ export class Fs {
     return path.resolve(this.dir, ...paths);
   }
 
+  relative(...paths: string[]): string {
+    return path.relative(this.dir, path.join(...paths));
+  }
+
   async read(filename: string): Promise<Buffer> {
     return await fs.promises.readFile(this.resolve(filename));
   }
@@ -33,12 +37,14 @@ export class Fs {
     return await this.readText(filename).then(JsonAccessor.parse);
   }
 
-  async write(filename: string, data: Buffer): Promise<void> {
-    const abs = this.resolve(filename);
-    const dir = path.dirname(abs);
+  async createReadStream(filename: string, options?: fs.promises.CreateReadStreamOptions): Promise<fs.ReadStream> {
+    const handle = await fs.promises.open(this.resolve(filename), 'r');
+    return handle.createReadStream(options);
+  }
 
-    await this.mkdir(dir);
-    await fs.promises.writeFile(abs, data);
+  async write(filename: string, data: Buffer | stream.Readable): Promise<void> {
+    await this.mkdir(path.dirname(filename));
+    await fs.promises.writeFile(this.resolve(filename), data);
   }
 
   async writeText(filename: string, data: string, encoding?: BufferEncoding): Promise<void> {
@@ -47,6 +53,26 @@ export class Fs {
 
   async writeJson(filename: string, data: unknown): Promise<void> {
     await this.writeText(filename, JSON.stringify(data, null, 2));
+  }
+
+  async createWriteStream(
+    filename: string,
+    options?: fs.promises.CreateWriteStreamOptions & { readonly truncate?: boolean },
+  ): Promise<fs.WriteStream> {
+    const handle = await fs.promises.open(this.resolve(filename), options?.truncate ? 'w' : 'wx');
+    return handle.createWriteStream(options);
+  }
+
+  async copyFile(source: string, destination: string): Promise<void> {
+    await this.mkdir(path.dirname(destination));
+    await fs.promises.copyFile(this.resolve(source), this.resolve(destination));
+  }
+
+  async rm(filename: string, options?: Pick<fs.RmOptions, 'recursive'>): Promise<void> {
+    await fs.promises.rm(this.resolve(filename), {
+      ...options,
+      force: true,
+    });
   }
 
   async readdir(dir: string, options?: { withFileTypes?: false; recursive?: boolean }): Promise<string[]>;

@@ -1,11 +1,9 @@
-import { randomUUID } from 'node:crypto';
-import { createReadStream, createWriteStream } from 'node:fs';
-import { copyFile, mkdir, rm, stat } from 'node:fs/promises';
-import { basename, resolve } from 'node:path';
-import { createGunzip } from 'node:zlib';
+import crypto from 'node:crypto';
+import path from 'node:path';
+import zlib from 'node:zlib';
 
 import { extract } from 'tar-stream';
-import { type Workspace } from 'wurk';
+import { type Fs, type Workspace } from 'wurk';
 
 interface PublishFromArchiveContext {
   readonly options: {
@@ -18,7 +16,7 @@ interface PublishFromArchiveContext {
 
 export const publishFromArchive = async ({ options, workspace }: PublishFromArchiveContext): Promise<void> => {
   const { tag, otp, dryRun = false } = options;
-  const { log, dir, name, version, status, spawn } = workspace;
+  const { log, name, version, status, fs, spawn } = workspace;
 
   status.set('pending');
 
@@ -28,8 +26,9 @@ export const publishFromArchive = async ({ options, workspace }: PublishFromArch
     return;
   }
 
-  const filename = resolve(dir, `${name.replace(/^@/u, '').replace(/\//gu, '-')}-${version}.tgz`);
-  const filenameExists = await stat(filename)
+  const filename = fs.resolve(`${name.replace(/^@/u, '').replace(/\//gu, '-')}-${version}.tgz`);
+  const filenameExists = await fs
+    .stat(filename)
     .then((stats) => stats.isFile())
     .catch(() => false);
 
@@ -41,13 +40,12 @@ export const publishFromArchive = async ({ options, workspace }: PublishFromArch
 
   log.info(`publishing version ${version} from archive to registry`);
 
-  const tmpDir = resolve(dir, `.${randomUUID()}.tmp`);
-  const tmpFilename = resolve(tmpDir, basename(filename));
+  const tmpDir = fs.resolve(`.${crypto.randomUUID()}.tmp`);
+  const tmpFilename = fs.resolve(tmpDir, path.basename(filename));
 
   try {
-    await mkdir(tmpDir, { recursive: true });
-    await copyFile(filename, tmpFilename);
-    await extractPackageJson(filename, tmpDir);
+    await fs.copyFile(filename, tmpFilename);
+    await extractPackageJson(fs, tmpFilename, tmpDir);
 
     await spawn(
       'npm',
@@ -55,31 +53,24 @@ export const publishFromArchive = async ({ options, workspace }: PublishFromArch
       { cwd: tmpDir, output: 'echo' },
     );
   } finally {
-    await rm(tmpDir, { recursive: true, force: true });
+    await fs.rm(tmpDir, { recursive: true });
   }
 
   status.set('success', version);
 };
 
-const extractPackageJson = async (tgz: string, tmpDir: string): Promise<void> => {
-  await new Promise<void>((resolve_, reject) => {
-    const extractor = extract()
-      .on('entry', (header, stream, next) => {
-        if (header.name !== 'package/package.json') {
-          stream.resume();
-          next();
-          return;
-        }
+const extractPackageJson = async (fs: Fs, tgz: string, tmpDir: string): Promise<void> => {
+  const readable = await fs.createReadStream(tgz);
+  const extractor = readable.pipe(zlib.createGunzip()).pipe(extract());
 
-        stream.pipe(createWriteStream(resolve(tmpDir, 'package.json')).on('error', reject)).on('finish', () => {
-          extractor.destroy();
-          resolve_();
-        });
-      })
-      .on('finish', () => {
-        reject(new Error('archive does not contain a package.json file'));
-      });
+  for await (const entry of extractor) {
+    if (entry.header.name === 'package/package.json') {
+      await fs.write(fs.resolve(tmpDir, 'package.json'), entry);
+      return;
+    }
 
-    createReadStream(tgz).pipe(createGunzip()).pipe(extractor);
-  });
+    entry.resume();
+  }
+
+  readable.close();
 };

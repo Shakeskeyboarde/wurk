@@ -1,6 +1,6 @@
-import { readFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import fs from 'node:fs';
+import path from 'node:path';
+import url from 'node:url';
 
 import { JsonAccessor } from '@wurk/json';
 
@@ -13,9 +13,9 @@ export type Config = {
 };
 
 export const getConfig = async (): Promise<Config> => {
-  const __dirname = dirname(fileURLToPath(import.meta.url));
+  const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
   const [config, npmRoot] = await Promise.all([
-    readFile(resolve(__dirname, '../package.json'), 'utf-8').then(JsonAccessor.parse),
+    fs.promises.readFile(path.resolve(__dirname, '../package.json'), 'utf-8').then(JsonAccessor.parse),
     getNpmRoot(),
   ]);
 

@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 import assert from 'node:assert';
-import { readFile } from 'node:fs/promises';
+import fs from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
 import { JsonAccessor } from '@wurk/json';
 
 const findRoot = async (current = process.cwd()): Promise<string> => {
-  return await readFile(resolve(current, 'package.json'), 'utf-8')
+  return await fs.promises
+    .readFile(resolve(current, 'package.json'), 'utf-8')
     .catch(() => undefined)
     .then(JsonAccessor.parse)
     .then((config) => {

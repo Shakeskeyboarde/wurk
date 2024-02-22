@@ -1,4 +1,3 @@
-import fs from 'node:fs';
 import path from 'node:path';
 
 import { type JsonAccessor } from '@wurk/json';
@@ -146,21 +145,19 @@ export class Workspace {
    * Git, _except_ for `node_modules` and dot-files (eg. `.gitignore`, `.vscode`, etc.).
    */
   readonly clean = async (): Promise<string[]> => {
-    const ignored = (await this.git.getIgnored())
+    const filenames = (await this.git.getIgnored())
       // Don't clean node_modules and dot-files.
       .filter((filename) => !/(?:^|[\\/])node_modules(?:[\\/]|$)/u.test(filename))
       .filter((filename) => !/(?:^|[\\/])\./u.test(filename));
 
-    const promises = ignored.map(async (filename) => {
-      const fullFilename = path.resolve(this.dir, filename);
-
-      this.log.debug(`removing ignored file "${fullFilename}"`);
-      await fs.promises.rm(fullFilename, { force: true, recursive: true });
+    const promises = filenames.map(async (filename) => {
+      this.log.debug(`removing ignored file "${filename}"`);
+      await this.fs.rm(filename, { recursive: true });
     });
 
     await Promise.all(promises);
 
-    return ignored;
+    return filenames;
   };
 
   readonly spawn: Spawn = (command, args, options) => {
@@ -212,7 +209,7 @@ export class Workspace {
     const entryPoints: WorkspaceEntrypoint[] = [];
     const addEntryPoints = (type: WorkspaceEntrypoint['type'], value: unknown): void => {
       if (typeof value === 'string') {
-        entryPoints.push({ type, filename: path.resolve(this.dir, value) });
+        entryPoints.push({ type, filename: this.fs.resolve(value) });
       } else if (Array.isArray(value)) {
         value.forEach((subValue) => addEntryPoints(type, subValue));
       } else if (typeof value === 'object' && value !== null) {
@@ -246,7 +243,7 @@ export class Workspace {
       values.map((value) =>
         value.filename.includes('*')
           ? undefined
-          : fs.promises
+          : this.fs
               .stat(value.filename)
               .then(() => undefined)
               .catch(() => value),

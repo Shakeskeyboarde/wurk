@@ -106,7 +106,7 @@ export class Git {
         const match = line.match(/^!! (.*)$/u);
         return match ? [match[1]!] : [];
       })
-      .map((file) => path.relative(this.#dir, path.resolve(gitRoot, file)));
+      .map((file) => path.resolve(gitRoot, file));
   };
 
   /**
