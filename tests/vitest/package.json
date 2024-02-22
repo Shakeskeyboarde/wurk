@@ -2,6 +2,7 @@
   "private": true,
   "name": "test-test",
   "description": "Testing the test command",
+  "version": "",
   "type": "module",
   "devDependencies": {
     "@wurk/command-build": "*",

@@ -21,7 +21,7 @@
     "default": "./lib/index.js"
   },
   "bin": {
-    "wurk": "./lib/bin.js"
+    "wurk": "lib/bin.js"
   },
   "engines": {
     "node": ">=18",

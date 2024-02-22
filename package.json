@@ -1,11 +1,12 @@
 {
   "private": true,
   "name": "root",
-  "license": "ISC",
   "author": "Chris Ackerman <chris@topher.land>",
+  "version": "",
+  "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Shakeskeyboarde/wurk"
+    "url": "git+https://github.com/Shakeskeyboarde/wurk.git"
   },
   "type": "module",
   "scripts": {

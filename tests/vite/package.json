@@ -2,6 +2,7 @@
   "private": true,
   "name": "test-vite",
   "description": "Testing the build command vite mode",
+  "version": "",
   "type": "module",
   "dependencies": {
     "@types/react": "^18.2.55",

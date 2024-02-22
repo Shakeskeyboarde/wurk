@@ -13,7 +13,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Shakeskeyboarde/wurk",
+    "url": "git+https://github.com/Shakeskeyboarde/wurk.git",
     "directory": "commands/depcheck"
   },
   "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/commands/depcheck/README.md",

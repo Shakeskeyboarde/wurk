@@ -2,6 +2,7 @@
   "private": true,
   "name": "test-vite-cjs",
   "description": "Testing the build command vite library mode with CJS",
+  "version": "",
   "type": "commonjs",
   "types": "./lib/index.d.ts",
   "main": "./lib/index.js",

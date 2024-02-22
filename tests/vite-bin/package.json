@@ -2,9 +2,12 @@
   "private": true,
   "name": "test-vite-bin",
   "description": "Testing the build command vite library mode for bins.",
+  "version": "",
   "type": "module",
   "types": "./lib/index.d.ts",
-  "bin": "./lib/index.js",
+  "bin": {
+    "test-vite-bin": "lib/index.js"
+  },
   "devDependencies": {
     "@wurk/command-build": "*",
     "vite": "^5.1.1",
