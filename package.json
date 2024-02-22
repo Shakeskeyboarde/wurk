@@ -21,6 +21,7 @@
   "workspaces": [
     "core/cli",
     "core/json",
+    "core/fs",
     "core/import",
     "core/log",
     "core/spawn",
