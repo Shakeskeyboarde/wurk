@@ -62,13 +62,12 @@ export default createCommand('version', {
       .option('--preid <id>', 'set the identifier for prerelease versions')
       .option('--changelog', 'add changelog entries (default for the "auto" strategy)')
       .option('--no-changelog', 'do not add changelog entries (default for non-"auto" strategies)')
-      .optionNegation('changelog', 'noChangelog')
-      .option('--dry-run', 'display proposed version changes without writing files');
+      .optionNegation('changelog', 'noChangelog');
   },
 
   run: async (context) => {
     const { log, workspaces, options, autoPrintStatus } = context;
-    const { strategy, preid, changelog = strategy === 'auto', dryRun = false } = options;
+    const { strategy, preid, changelog = strategy === 'auto' } = options;
 
     autoPrintStatus();
 
@@ -133,17 +132,9 @@ export default createCommand('version', {
         workspace.version !== newVersion ? `${workspace.version} -> ${newVersion}` : 'dependency updates',
       );
 
-      if (dryRun) {
-        workspace.pinFile('package.json');
-      }
-
       await writeConfig(workspace);
 
       if (changelog) {
-        if (dryRun) {
-          workspace.pinFile('CHANGELOG.md');
-        }
-
         await writeChangelog(workspace, changes.get(workspace));
       }
 
@@ -153,10 +144,6 @@ export default createCommand('version', {
     const updated = Array.from(workspaces).filter(({ config }) => config.isModified);
 
     if (updated.length) {
-      if (dryRun) {
-        workspaces.root.pinFile('package-lock.json');
-      }
-
       await workspaces.root.spawn('npm', ['update', ...updated.map(({ name }) => name)], {
         output: 'ignore',
       });
