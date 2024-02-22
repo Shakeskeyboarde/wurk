@@ -137,7 +137,7 @@ export const spawn = (cmd: string, sparseArgs: SpawnSparseArgs = [], options: Sp
           if (data.length) {
             log.print(
               Buffer.concat(data.map(({ chunk }) => chunk))
-                .toString('utf-8')
+                .toString('utf8')
                 .trim(),
               { to: 'stderr' },
             );
@@ -155,7 +155,7 @@ export const spawn = (cmd: string, sparseArgs: SpawnSparseArgs = [], options: Sp
             return Buffer.concat(data.filter(({ stream }) => stream === 'stdout').map(({ chunk }) => chunk));
           },
           get stdoutText() {
-            return result.stdout.toString('utf-8').trim();
+            return result.stdout.toString('utf8').trim();
           },
           get stdoutJson() {
             return JsonAccessor.parse(result.stdoutText);
@@ -164,7 +164,7 @@ export const spawn = (cmd: string, sparseArgs: SpawnSparseArgs = [], options: Sp
             return Buffer.concat(data.filter(({ stream }) => stream === 'stderr').map(({ chunk }) => chunk));
           },
           get stderrText() {
-            return result.stderr.toString('utf-8').trim();
+            return result.stderr.toString('utf8').trim();
           },
           get stderrJson() {
             return JsonAccessor.parse(result.stderrText);
@@ -173,7 +173,7 @@ export const spawn = (cmd: string, sparseArgs: SpawnSparseArgs = [], options: Sp
             return Buffer.concat(data.map(({ chunk }) => chunk));
           },
           get combinedText() {
-            return result.combined.toString('utf-8').trim();
+            return result.combined.toString('utf8').trim();
           },
           exitCode,
           signalCode,

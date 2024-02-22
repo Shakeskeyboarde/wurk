@@ -7,7 +7,7 @@ import { JsonAccessor } from '@wurk/json';
 
 const findRoot = async (current = process.cwd()): Promise<string> => {
   return await fs.promises
-    .readFile(resolve(current, 'package.json'), 'utf-8')
+    .readFile(resolve(current, 'package.json'), 'utf8')
     .catch(() => undefined)
     .then(JsonAccessor.parse)
     .then((config) => {

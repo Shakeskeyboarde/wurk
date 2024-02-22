@@ -15,7 +15,7 @@ export type Config = {
 export const getConfig = async (): Promise<Config> => {
   const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
   const [config, npmRoot] = await Promise.all([
-    fs.promises.readFile(path.resolve(__dirname, '../package.json'), 'utf-8').then(JsonAccessor.parse),
+    fs.promises.readFile(path.resolve(__dirname, '../package.json'), 'utf8').then(JsonAccessor.parse),
     getNpmRoot(),
   ]);
 

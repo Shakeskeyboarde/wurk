@@ -4,7 +4,7 @@ import { StringDecoder } from 'node:string_decoder';
 import { Ansi } from './ansi.js';
 
 export class LogStream extends Transform {
-  readonly #decoder = new StringDecoder('utf-8');
+  readonly #decoder = new StringDecoder('utf8');
 
   #buffer = '';
   #timeout?: NodeJS.Timeout;

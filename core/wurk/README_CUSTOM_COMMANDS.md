@@ -267,13 +267,13 @@ Get the process output as bytes, text, or decoded JSON.
 
 ```ts
 const stdoutBytes = await spawnPromise.getStdout();
-const stdoutText = await spawnPromise.getStdout('utf-8');
+const stdoutText = await spawnPromise.getStdout('utf8');
 const stderrBytes = await spawnPromise.getStderr();
-const stderrText = await spawnPromise.getStderr('utf-8');
+const stderrText = await spawnPromise.getStderr('utf8');
 
 // Both stdout and stderr as one combined value.
 const outputBytes = await spawnPromise.getOutput();
-const outputText = await spawnPromise.getOutput('utf-8');
+const outputText = await spawnPromise.getOutput('utf8');
 
 // JSON parsed stdout.
 const json = await spawnPromise.getJson();
@@ -314,9 +314,9 @@ The returned object is a promise. You can await it to get a synchronous result o
 const result = await spawnPromise;
 
 // Output buffers, not streams
-result.stdout.toString('utf-8').trim();
-result.stderr.toString('utf-8').trim();
-result.output.toString('utf-8').trim();
+result.stdout.toString('utf8').trim();
+result.stderr.toString('utf8').trim();
+result.output.toString('utf8').trim();
 
 // Get values, not promises.
 result.getJson().field;

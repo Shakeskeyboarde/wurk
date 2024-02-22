@@ -92,7 +92,7 @@ await Promise.all(Object.values(plugins));
 export const defineWurkConfig = async (options: WurkConfigOptions = {}): Promise<WurkUserConfig> => {
   const { outDir = 'dist', lib, disablePlugins = [] } = options;
   const dir = (await findWorkspaceDir()) ?? process.cwd();
-  const config = await fs.promises.readFile(resolve(dir, 'package.json'), 'utf-8').then(JsonAccessor.parse);
+  const config = await fs.promises.readFile(resolve(dir, 'package.json'), 'utf8').then(JsonAccessor.parse);
 
   const isPluginEnabled = (name: PluginName): boolean => {
     const isEnabled = !disablePlugins.includes(name) && config.at('devDependencies').at(name).is('string');

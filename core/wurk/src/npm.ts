@@ -15,7 +15,7 @@ const getNpmQuery = async (selector: string): Promise<NpmQueryResult[]> => {
   return await Promise.all(
     results.map(async (result): Promise<NpmQueryResult> => {
       const dir = result.at('realpath').as('string') ?? result.at('path').as('string')!;
-      const config = await fs.promises.readFile(path.join(dir, 'package.json'), 'utf-8').then(JsonAccessor.parse);
+      const config = await fs.promises.readFile(path.join(dir, 'package.json'), 'utf8').then(JsonAccessor.parse);
 
       return { dir, config };
     }) ?? [],
