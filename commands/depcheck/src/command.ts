@@ -1,9 +1,7 @@
-import path from 'node:path';
-
 import { createCommand } from 'wurk';
 
-import { DependencySet } from './dependency-set.js';
-import { getSourcesIterator } from './get-sources-iterator.js';
+import { Dependencies } from './dependencies.js';
+import { getSourcesGenerator } from './sources.js';
 
 export default createCommand('depcheck', {
   config: (cli) => {
@@ -12,29 +10,29 @@ export default createCommand('depcheck', {
 
   run: async ({ workspaces, options }) => {
     await workspaces.forEachSequential(async (workspace) => {
-      const { log, name, fs, git, spawn } = workspace;
+      const { log, name, fs, spawn } = workspace;
 
       log.prefix = '';
       log.debug(`checking workspace "${name}":`);
 
-      const ignored = await git.getIgnored();
-      const sourcesIterator = getSourcesIterator(fs);
-      const dependencies = new DependencySet(workspace);
+      const filenames = await getSourcesGenerator(workspace);
+      const dependencies = new Dependencies(workspace);
 
-      while (dependencies.size) {
-        const { value: filename } = await sourcesIterator.next();
+      for await (const filename of filenames) {
+        if (!dependencies.size) break;
 
-        if (filename == null) break;
-        if (ignored.some((ignore) => !path.relative(ignore, filename).startsWith('..'))) continue;
-
-        log.debug(`  - ${filename}`);
+        log.debug(`  - ${fs.relative(filename)}`);
 
         if (/\.(?:jsx|tsx)$/u.test(filename)) {
           await dependencies.removeUsed('react');
         }
 
         const content = await fs.readText(filename);
-        const matches = content.matchAll(
+
+        // File doesn't exist or is not accessible.
+        if (!content) continue;
+
+        const matches = content?.matchAll(
           /\b(?:require|import)\(\s*(['"`])((?:@[\w.-]+\/)?\w[\w.-]*)(?:\/[\w.-]+)?\1|(?:\bfrom|^import)\s+(['"`])((?:@[\w.-]+\/)?\w[\w.-]*)(?:\/[\w.-]+)?\3/gmu,
         );
 

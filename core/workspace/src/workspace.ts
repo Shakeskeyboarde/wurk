@@ -1,8 +1,9 @@
+import { Fs } from '@wurk/fs';
+import { importRelative, type ImportResult } from '@wurk/import';
 import { type JsonAccessor } from '@wurk/json';
 import { Log } from '@wurk/log';
 import { type Spawn, spawn } from '@wurk/spawn';
 
-import { Fs } from './fs.js';
 import { Git } from './git.js';
 import { Npm } from './npm.js';
 import { Status } from './status.js';
@@ -130,35 +131,21 @@ export class Workspace {
       version: this.version,
       gitHead: options.npmHead,
     });
-    this.fs = new Fs({ dir: this.dir });
+    this.fs = new Fs({ cwd: this.dir });
     this.status = new Status(this.name);
     this.getDependencyLinks = options.getDependencyLinks;
     this.getDependentLinks = options.getDependentLinks;
   }
 
   /**
-   * Remove files and directories from the workspace which are ignored by
-   * Git, _except_ for `node_modules` and dot-files (eg. `.gitignore`, `.vscode`, etc.).
+   * Get all immediate local dependency workspaces.
    */
-  readonly clean = async (): Promise<string[]> => {
-    const filenames = (await this.git.getIgnored())
-      // Don't clean node_modules and dot-files.
-      .filter((filename) => !/(?:^|[\\/])node_modules(?:[\\/]|$)/u.test(filename))
-      .filter((filename) => !/(?:^|[\\/])\./u.test(filename));
+  readonly getDependencyLinks: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
 
-    const promises = filenames.map(async (filename) => {
-      this.log.debug(`removing ignored file "${filename}"`);
-      await this.fs.rm(filename, { recursive: true });
-    });
-
-    await Promise.all(promises);
-
-    return filenames;
-  };
-
-  readonly spawn: Spawn = (command, args, options) => {
-    return spawn(command, args, { log: this.log, cwd: this.dir, ...options });
-  };
+  /**
+   * Get all immediate local dependent workspaces.
+   */
+  readonly getDependentLinks: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
 
   /**
    * Try to detect changes using git commits, and fall back to assuming
@@ -250,12 +237,46 @@ export class Workspace {
   };
 
   /**
-   * Get all immediate local dependency workspaces.
+   * Remove files and directories from the workspace which are ignored by
+   * Git, _except_ for `node_modules` and dot-files (eg. `.gitignore`, `.vscode`, etc.).
    */
-  readonly getDependencyLinks: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
+  readonly clean = async (): Promise<string[]> => {
+    const filenames = (await this.git.getIgnored())
+      // Don't clean node_modules and dot-files.
+      .filter((filename) => !/(?:^|[\\/])node_modules(?:[\\/]|$)/u.test(filename))
+      .filter((filename) => !/(?:^|[\\/])\./u.test(filename));
+
+    const promises = filenames.map(async (filename) => {
+      this.log.debug(`removing ignored file "${filename}"`);
+      await this.fs.delete(filename, { recursive: true });
+    });
+
+    await Promise.all(promises);
+
+    return filenames;
+  };
+
+  readonly spawn: Spawn = (command, args, options) => {
+    return spawn(command, args, { log: this.log, cwd: this.dir, ...options });
+  };
 
   /**
-   * Get all immediate local dependent workspaces.
+   * Import relative to the workspace directory, instead of relative to the
+   * current file. This method should be used to import optional command
+   * dependencies, because it allows per-workspace package installation.
+   *
+   * The `versionRange` option can be a semver range, just like a dependency
+   * in your `package.json` file.
+   *
+   * **Note:** There's no way to infer the type of the imported module.
+   * However, Typescript type imports are not emitted in compiled code,
+   * so you can safely import the module type, and then use this method
+   * to import the implementation.
    */
-  readonly getDependentLinks: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
+  async import<TExports extends Record<string, any> = Record<string, unknown>>(
+    name: string,
+    versionRange?: string,
+  ): Promise<ImportResult<TExports>> {
+    return await importRelative(name, { dir: this.dir, versionRange });
+  }
 }

@@ -20,11 +20,9 @@ export const buildTsc = async ({ workspace, root, start, isEsm, isCjs }: BuildTs
   status.set('pending', 'tsc');
   log.info(start ? `starting TypeScript compiler in watch mode` : `building with TypeScript compiler`);
 
-  const tsBuildConfigs = await fs.readdir('.', { withFileTypes: true }).then((files) => {
-    return files
-      .filter((file) => file.isFile() && /^tsconfig\..*build.*\.json$/u.test(file.name))
-      .map((file) => fs.resolve(file.name));
-  });
+  const tsBuildConfigs = await fs
+    .find('tsconfig.*build*.json')
+    .then((values) => values.map((value) => value.fullpath()));
 
   if (!tsBuildConfigs.length) {
     const tempSubDir = path.relative(root.dir, dir);
@@ -83,7 +81,7 @@ export const buildTsc = async ({ workspace, root, start, isEsm, isCjs }: BuildTs
     const { noEmit, emitDeclarationOnly, outDir, isEsmConfig } = await readTsConfig(filename, workspace);
 
     if (!noEmit && !emitDeclarationOnly && isEsm != null && fs.resolve(outDir, dir) !== '') {
-      await fs.mkdir(outDir);
+      await fs.writeDir(outDir);
 
       const type = isEsmConfig ? 'module' : 'commonjs';
 

@@ -1,6 +1,6 @@
 import { type Workspace } from 'wurk';
 
-export class DependencySet {
+export class Dependencies {
   readonly #workspace: Workspace;
   readonly #dependencies = new Set<string>();
 
@@ -32,7 +32,7 @@ export class DependencySet {
       names.map(async (name) => {
         if (!this.#dependencies.delete(name)) return;
 
-        const imported = await this.#workspace.fs.import(name).catch(() => undefined);
+        const imported = await this.#workspace.import(name).catch(() => undefined);
         const peers = imported?.moduleConfig.at('peerDependencies').keys('object') ?? [];
 
         await Promise.all(peers.map(this.removeUsed));

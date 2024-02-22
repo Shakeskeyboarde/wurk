@@ -6,7 +6,7 @@ import { type Log, log as defaultLog } from '@wurk/log';
 import { Sema } from 'async-sema';
 
 import { AbortError } from './error.js';
-import { DepthFirstIterable, iterateDepthFirst } from './iterate.js';
+import { GeneratorIterable, getDepthFirstGenerator } from './generator.js';
 import { select, type SelectCondition } from './select.js';
 import { printStatus, StatusValue } from './status.js';
 import { Workspace, type WorkspaceLink, type WorkspaceLinkOptions } from './workspace.js';
@@ -125,9 +125,11 @@ export class WorkspaceCollection {
 
     this.root = root;
     this.concurrency = getSafeConcurrency(options.concurrency);
-    this.all = new DepthFirstIterable(this.#workspaces, (current) => {
-      return this.#dependencyLinks.get(current)?.map((link) => link.dependency);
-    });
+    this.all = new GeneratorIterable(() =>
+      getDepthFirstGenerator(this.#workspaces, (current) => {
+        return this.#dependencyLinks.get(current)?.map((link) => link.dependency);
+      }),
+    );
   }
 
   *[Symbol.iterator](): Iterator<Workspace> {
@@ -238,7 +240,7 @@ export class WorkspaceCollection {
 
     if (options?.recursive) {
       links = Array.from(
-        iterateDepthFirst(links, (current) => this.#dependencyLinks.get(current.dependency), options?.filter),
+        getDepthFirstGenerator(links, (current) => this.#dependencyLinks.get(current.dependency), options?.filter),
       );
     }
 
@@ -254,7 +256,7 @@ export class WorkspaceCollection {
 
     if (options?.recursive) {
       links = Array.from(
-        iterateDepthFirst(links, (current) => this.#dependentLinks.get(current.dependent), options?.filter),
+        getDepthFirstGenerator(links, (current) => this.#dependentLinks.get(current.dependent), options?.filter),
       );
     }
 
