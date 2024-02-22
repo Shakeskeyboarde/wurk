@@ -16,6 +16,7 @@ export default createCommand('depcheck', {
 
       log.prefix = '';
       log.debug(`checking workspace "${name}":`);
+
       const ignored = await git.getIgnored();
       const sourcesIterator = getSourcesIterator(fs);
       const dependencies = new DependencySet(workspace);
@@ -28,6 +29,10 @@ export default createCommand('depcheck', {
 
         log.debug(`  - ${filename}`);
 
+        if (/\.(?:jsx|tsx)$/u.test(filename)) {
+          await dependencies.removeUsed('react');
+        }
+
         const content = await fs.readText(filename);
         const matches = content.matchAll(
           /\b(?:require|import)\(\s*(['"`])((?:@[\w.-]+\/)?\w[\w.-]*)(?:\/[\w.-]+)?\1|(?:\bfrom|^import)\s+(['"`])((?:@[\w.-]+\/)?\w[\w.-]*)(?:\/[\w.-]+)?\3/gmu,
@@ -37,7 +42,7 @@ export default createCommand('depcheck', {
           Array.from(matches)
             .map((match) => (match[2] || match[4])!)
             .map(async (dependency) => {
-              await dependencies.removedUsed(dependency);
+              await dependencies.removeUsed(dependency);
               log.debug(`    - ${dependency}`);
             }),
         );
@@ -48,14 +53,14 @@ export default createCommand('depcheck', {
         return;
       }
 
-      if (!options.fix) {
-        process.exitCode ||= 1;
-        log.print(`unused dependencies in "${name}":`);
-        Array.from(dependencies).forEach((dependency) => log.print(`  - ${dependency}`));
+      if (options.fix) {
+        await spawn('npm', ['remove', ...dependencies]);
         return;
       }
 
-      await spawn('npm', ['-w', name, 'remove', ...dependencies], { output: 'echo' });
+      process.exitCode ||= 1;
+      log.print(`unused dependencies in "${name}":`);
+      Array.from(dependencies).forEach((dependency) => log.print(`  - ${dependency}`));
     });
   },
 });

@@ -21,7 +21,7 @@ export class DependencySet {
     ]);
   }
 
-  readonly removedUsed = async (usedName: string): Promise<void> => {
+  readonly removeUsed = async (usedName: string): Promise<void> => {
     const names = usedName.startsWith('@types/')
       ? // The name is already a types package, so no other packages are used.
         [usedName]
@@ -35,7 +35,7 @@ export class DependencySet {
         const imported = await this.#workspace.fs.import(name).catch(() => undefined);
         const peers = imported?.moduleConfig.at('peerDependencies').keys('object') ?? [];
 
-        await Promise.all(peers.map(this.removedUsed));
+        await Promise.all(peers.map(this.removeUsed));
       }),
     );
   };
