@@ -1,7 +1,7 @@
 {
   "name": "@wurk/command-depcheck",
   "description": "Check for unused production dependencies.",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "license": "ISC",
   "author": "Chris Ackerman <chris@topher.land>",
   "keywords": [

@@ -1,7 +1,7 @@
 {
   "name": "@wurk/command-list",
   "description": "List workspaces.",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/commands/list/README.md",
