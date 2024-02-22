@@ -36,7 +36,7 @@ export default createCommand('run', {
 });
 
 const runWorkspaceScripts = async (workspace: Workspace, scripts: string[], args: readonly string[]): Promise<void> => {
-  const { log, isRoot, name, config, spawn } = workspace;
+  const { log, config, spawn } = workspace;
   const scriptsJson = config.at('scripts');
 
   for (const script of scripts) {
@@ -45,7 +45,7 @@ const runWorkspaceScripts = async (workspace: Workspace, scripts: string[], args
       continue;
     }
 
-    await spawn('npm', [!isRoot && ['-w', name], 'run', script, ...(args.length ? ['--', ...args] : [])], {
+    await spawn('npm', ['run', script, ...(args.length ? ['--', ...args] : [])], {
       output: 'echo',
     });
   }

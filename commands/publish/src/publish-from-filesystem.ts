@@ -206,8 +206,8 @@ const getIsChangeLogOutdated = async (workspace: Workspace): Promise<boolean> =>
 };
 
 const getMissingPackFiles = async (workspace: Workspace): Promise<WorkspaceEntrypoint[]> => {
-  const { name, fs, spawn, getEntrypoints } = workspace;
-  const packData = await spawn('npm', ['-w', name, 'pack', '--dry-run', '--json']).stdoutJson();
+  const { fs, spawn, getEntrypoints } = workspace;
+  const packData = await spawn('npm', ['pack', '--dry-run', '--json']).stdoutJson();
   const packFilenames = packData
     .at(0)
     .at('files')
