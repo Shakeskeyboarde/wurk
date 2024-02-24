@@ -2,7 +2,7 @@ import assert from 'node:assert';
 import path from 'node:path';
 
 import semver from 'semver';
-import { type Entrypoint, type Workspace } from 'wurk';
+import { type JsonAccessor, type Workspace } from 'wurk';
 
 interface PublishFromFilesystemContext {
   readonly options: {
@@ -22,8 +22,19 @@ export const publishFromFilesystem = async (
 ): Promise<void> => {
   const { options, workspace } = context;
 
-  const { status, log, git, npm, fs, version, dir, getDependencyLinks, spawn } =
-    workspace;
+  const {
+    status,
+    log,
+    git,
+    npm,
+    fs,
+    name,
+    version,
+    dir,
+    getDependencyLinks,
+    getEntrypoints,
+    spawn,
+  } = workspace;
 
   status.set('pending');
 
@@ -77,7 +88,7 @@ export const publishFromFilesystem = async (
   if (dirtyDependencies.length) {
     log.warn(`skipping workspace with dirty local dependencies:`);
     dirtyDependencies.forEach((dependency) => {
-      log.warn(`  - ${dependency.name}`);
+      log.warn(`- ${dependency.name}`);
     });
     status.set('warning', 'dirty dependencies');
 
@@ -91,7 +102,7 @@ export const publishFromFilesystem = async (
   if (modifiedDependencies.length) {
     log.warn(`skipping workspace with modified local dependencies:`);
     modifiedDependencies.forEach((dependency) => {
-      log.warn(`  - ${dependency.name}`);
+      log.warn(`- ${dependency.name}`);
     });
     status.set('warning', 'dirty working tree');
 
@@ -103,7 +114,7 @@ export const publishFromFilesystem = async (
   if (missingEntrypoints.length) {
     log.error(`missing entry points:`);
     missingEntrypoints.forEach(({ type, filename }) => {
-      log.error(`  - ${path.relative(dir, filename)} (${type})`);
+      log.error(`- ${path.relative(dir, filename)} (${type})`);
     });
     status.set('failure', 'entry points');
 
@@ -174,30 +185,52 @@ export const publishFromFilesystem = async (
 
   assert(savedPackageJson, 'failed to read package.json file');
 
+  let stdoutJson: JsonAccessor;
+  let stderrText: string;
+
   try {
     await fs.writeJson('package.json', packageJson);
-    await spawn(
-      'npm',
-      [
-        options.toArchive ? 'pack' : 'publish',
-        Boolean(options.tag) && `--tag=${options.tag}`,
-        Boolean(options.otp) && `--otp=${options.otp}`,
-        options.dryRun && '--dry-run',
-      ],
-      { output: 'echo' },
-    );
+    ({ stdoutJson, stderrText } = await spawn('npm', [
+      options.toArchive ? 'pack' : 'publish',
+      '--json',
+      Boolean(options.tag) && `--tag=${options.tag}`,
+      Boolean(options.otp) && `--otp=${options.otp}`,
+      options.dryRun && '--dry-run',
+    ]));
   } finally {
     await fs.writeText('package.json', savedPackageJson);
   }
 
+  if (stderrText) {
+    log.print(stderrText, { to: 'stderr' });
+  }
+
   published.add(workspace);
 
-  const missingPackedEntrypoints = await getMissingPackFiles(workspace);
+  // Publish and pack return different JSON structures. Publish returns an
+  // object with the package data under the workspace name. Pack returns an
+  // array with one package data object.
+  const packData = stdoutJson.at(stdoutJson.is('array') ? 0 : name).value as {
+    files: { path: string }[];
+  };
 
-  if (missingPackedEntrypoints.length) {
+  const missingPackEntrypoints = getEntrypoints().filter((entry) => {
+    // The entrypoint is missing if every pack filename mismatches the
+    // filename.
+    return packData.files.every((packEntry) => {
+      // True if the pack filename does not "match" the entry filename. The
+      // relative path starts with ".." if the pack filename is not equal to
+      // and not a subpath of the entry filename.
+      return path
+        .relative(entry.filename, fs.resolve(packEntry.path))
+        .startsWith('..');
+    });
+  });
+
+  if (missingPackEntrypoints.length) {
     log.error(`unpublished entry points:`);
-    missingPackedEntrypoints.forEach(({ type, filename }) =>
-      log.error(`  - ${path.relative(dir, filename)} (${type})`),
+    missingPackEntrypoints.forEach(({ type, filename }) =>
+      log.error(`- ${path.relative(dir, filename)} (${type})`),
     );
     status.set('warning', 'entry points');
   } else {
@@ -240,38 +273,4 @@ const getIsChangelogOutdated = async (
   log.debug(`workspace "${name}" isChangelogUpToDate=${isChangelogUpToDate}`);
 
   return isChangelogPresent && !isChangelogUpToDate;
-};
-
-const getMissingPackFiles = async (
-  workspace: Workspace,
-): Promise<Entrypoint[]> => {
-  const { fs, spawn, getEntrypoints } = workspace;
-
-  const packData = await spawn('npm', [
-    'pack',
-    '--dry-run',
-    '--json',
-  ]).stdoutJson();
-
-  const packFilenames = packData
-    .at(0)
-    .at('files')
-    .as('array', [] as unknown[])
-    .filter(
-      (value): value is { path: string } =>
-        typeof value === 'object' &&
-        value != null &&
-        'path' in value &&
-        typeof value.path === 'string',
-    )
-    .map((value) => fs.resolve(value.path));
-
-  const missing = getEntrypoints().filter(
-    ({ filename }) =>
-      !packFilenames.some(
-        (packFilename) => path.relative(packFilename, filename) === '',
-      ),
-  );
-
-  return missing;
 };

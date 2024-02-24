@@ -48,23 +48,30 @@ export const publishFromArchive = async (
   const tmpDir = fs.resolve(`.${crypto.randomUUID()}.tmp`);
   const tmpFilename = fs.resolve(tmpDir, path.basename(filename));
 
+  let stderrText: string;
+
   try {
     await fs.copyFile(filename, tmpFilename);
     await extractPackageJson(fs, tmpFilename, tmpDir);
 
-    await spawn(
+    ({ stderrText } = await spawn(
       'npm',
       [
         'publish',
+        '--json',
         Boolean(options.tag) && `--tag=${options.tag}`,
         Boolean(options.otp) && `--otp=${options.otp}`,
         options.dryRun && '--dry-run',
         tmpFilename,
       ],
-      { cwd: tmpDir, output: 'echo' },
-    );
+      { cwd: tmpDir },
+    ));
   } finally {
     await fs.delete(tmpDir, { recursive: true });
+  }
+
+  if (stderrText) {
+    log.print(stderrText, { to: 'stderr' });
   }
 
   status.set('success', version);
