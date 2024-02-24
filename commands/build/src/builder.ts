@@ -37,7 +37,7 @@ export class Builder<T = unknown> {
             status.set('warning', 'entry points');
             log.warn(`missing entry points:`);
             missing.forEach(({ type, filename }) => {
-              log.warn(`  - ${fs.relative(filename)} (${type})`);
+              log.warn(`- ${fs.relative(filename)} (${type})`);
             });
           } else {
             status.set('success');

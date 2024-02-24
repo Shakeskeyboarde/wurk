@@ -79,7 +79,7 @@ export default createCommand('depcheck', {
         // File doesn't exist or is not accessible.
         if (!content) return;
 
-        log.debug(`  - ${fs.relative(entry.fullpath)}`);
+        log.debug(`- ${fs.relative(entry.fullpath)}`);
 
         const moduleIds = new Set(
           Array.from(
@@ -93,7 +93,7 @@ export default createCommand('depcheck', {
         );
 
         for (const moduleId of moduleIds) {
-          log.debug(`    - ${moduleId}`);
+          log.debug(`- ${moduleId}`);
           await removeUsedDependency(moduleId);
         }
       });
@@ -111,7 +111,7 @@ export default createCommand('depcheck', {
       process.exitCode ||= 1;
       log.print(`unused dependencies in "${name}":`);
       Array.from(unusedDependencies).forEach((dependency) => {
-        log.print(`  - ${dependency}`);
+        log.print(`- ${dependency}`);
       });
     });
   },
