@@ -5,7 +5,7 @@ interface EslintContext {
   readonly options: { readonly fix?: boolean };
 }
 
-export const runEslint = async ({
+export const eslint = async ({
   workspaces,
   options,
 }: EslintContext): Promise<void> => {

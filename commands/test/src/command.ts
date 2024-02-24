@@ -1,8 +1,8 @@
 import { createCommand } from 'wurk';
 
-import { runDepcheck } from './depcheck.js';
-import { runEslint } from './eslint.js';
-import { runVitest } from './vitest.js';
+import { depcheck } from './testers/depcheck.js';
+import { eslint } from './testers/eslint.js';
+import { vitest } from './testers/vitest.js';
 
 export default createCommand('test', {
   config: (cli) => {
@@ -25,8 +25,8 @@ export default createCommand('test', {
       });
     }
 
-    await runDepcheck(context);
-    await runEslint(context);
-    await runVitest(context);
+    await depcheck(context);
+    await eslint(context);
+    await vitest(context);
   },
 });

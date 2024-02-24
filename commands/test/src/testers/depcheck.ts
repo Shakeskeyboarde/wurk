@@ -5,7 +5,7 @@ interface DepcheckContext {
   readonly options: { readonly fix?: boolean };
 }
 
-export const runDepcheck = async ({
+export const depcheck = async ({
   workspaces,
   options,
 }: DepcheckContext): Promise<void> => {
