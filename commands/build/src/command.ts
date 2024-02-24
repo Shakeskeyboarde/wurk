@@ -1,3 +1,5 @@
+import nodeFs from 'node:fs';
+
 import { createCommand, type Workspace } from 'wurk';
 
 import { type BuilderFactory } from './builder.js';
@@ -83,6 +85,23 @@ export default createCommand('build', {
 
     await workspaces.forEach(async (workspace) => {
       await builders.get(workspace)?.build?.();
+
+      const binFilenames = workspace
+        .getEntrypoints()
+        .filter((entry) => entry.type === 'bin')
+        .map((entry) => entry.filename);
+
+      for (const binFilename of binFilenames) {
+        const stats = await workspace.fs.stat(binFilename);
+
+        if (stats) {
+          await nodeFs.promises
+            .chmod(binFilename, stats.mode | 0o111)
+            .catch((error) => {
+              workspace.log.debug(error);
+            });
+        }
+      }
     });
 
     const updateNames = Array.from(builders.entries())
