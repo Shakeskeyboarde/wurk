@@ -96,16 +96,21 @@ const createMatchers = (
 const createExpressionMatcher = (
   expression: string,
 ): ((workspace: Workspace) => Required<SelectResult> | null) => {
-  const [, leadingEllipses, scope = '', pattern = '', trailingEllipses] =
-    expression.match(/^(\.{3})?(?:([^:]*):)?(.*?)(\.{3})?$/u)!;
-  const [, negated, scopeName = ''] = scope.match(/^(not)?(.*)$/u)!;
+  const [
+    ,
+    leadingEllipses,
+    negated,
+    scope = '',
+    pattern = '',
+    trailingEllipses,
+  ] = expression.match(/^(\.{3})?(not:?)?(?:([^:]+):)?(.*?)(\.{3})?$/u)!;
   const isSelected = !negated;
   const includeDependencies = Boolean(leadingEllipses);
   const includeDependents = Boolean(trailingEllipses);
 
   let match: (workspace: Workspace) => boolean;
 
-  switch (scopeName) {
+  switch (scope) {
     case '':
     case 'n':
     case 'name':
@@ -132,6 +137,7 @@ const createExpressionMatcher = (
     case 'd':
     case 'dir':
     case 'directory':
+    case 'path':
       match = ((
         predicate: (value: string) => boolean,
         workspace: Workspace,
