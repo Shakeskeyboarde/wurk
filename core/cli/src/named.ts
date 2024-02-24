@@ -34,13 +34,17 @@ interface NamedConfig<
     prev: TParsedValue | undefined,
     result: TResult,
     key: TKey,
-  ) => TKey extends string ? Exclude<TParsedValue, undefined | void> : TParsedValue;
+  ) => TKey extends string
+    ? Exclude<TParsedValue, undefined | void>
+    : TParsedValue;
 }
 
 type NamedUsageString = `-${string}`;
 
 type InferNamedKey<TUsage extends NamedUsageString> =
-  LastValue<Split<TUsage, ',' | '|'>> extends `-${infer TPrefix}${'' | `${'=' | ' '}${string}`}`
+  LastValue<
+    Split<TUsage, ',' | '|'>
+  > extends `-${infer TPrefix}${'' | `${'=' | ' '}${string}`}`
     ? CamelCase<Exclude<TPrefix, `${string}${' ' | '='}${string}`>>
     : never;
 
@@ -56,10 +60,23 @@ type InferNamedType<TUsage extends NamedUsageString> = TUsage extends any
       : boolean
   : never;
 
-type AnyNamedConfig = NamedConfig<string | null, any, any, boolean, boolean, UnknownResult>;
+type AnyNamedConfig = NamedConfig<
+  string | null,
+  any,
+  any,
+  boolean,
+  boolean,
+  UnknownResult
+>;
 
-const createNamed = (usage: string, configOrDescription: AnyNamedConfig | string = {}): Named => {
-  const config = typeof configOrDescription === 'string' ? { description: configOrDescription } : configOrDescription;
+const createNamed = (
+  usage: string,
+  configOrDescription: AnyNamedConfig | string = {},
+): Named => {
+  const config =
+    typeof configOrDescription === 'string'
+      ? { description: configOrDescription }
+      : configOrDescription;
   const parsedUsage = parseUsage(usage);
 
   return {
@@ -79,12 +96,16 @@ const createNamed = (usage: string, configOrDescription: AnyNamedConfig | string
           ? (
               value: Record<string, boolean | string[]>,
               prev: Record<string, (boolean | string)[]> | undefined,
-            ): Record<string, (boolean | string)[]> => ({
-              ...prev,
-              ...Object.fromEntries(
-                Object.entries(value).map(([k, v]) => [k, [...(prev?.[k] ?? []), ...(Array.isArray(v) ? v : [v])]]),
-              ),
-            })
+            ) =>
+              ({
+                ...prev,
+                ...Object.fromEntries(
+                  Object.entries(value).map(([k, v]) => [
+                    k,
+                    [...(prev?.[k] ?? []), ...(Array.isArray(v) ? v : [v])],
+                  ]),
+                ),
+              }) satisfies Record<string, (boolean | string)[]>
           : (
               value: Record<string, boolean | string>,
               prev: Record<string, boolean | string> | undefined,
@@ -93,10 +114,14 @@ const createNamed = (usage: string, configOrDescription: AnyNamedConfig | string
               ...value,
             })
         : parsedUsage.variadic
-          ? (value: boolean | string[], prev: (boolean | string)[] | undefined): (boolean | string)[] => [
-              ...(prev ?? []),
-              ...(Array.isArray(value) ? value : [value]),
-            ]
+          ? (
+              value: boolean | string[],
+              prev: (boolean | string)[] | undefined,
+            ) =>
+              [
+                ...(prev ?? []),
+                ...(Array.isArray(value) ? value : [value]),
+              ] satisfies (boolean | string)[]
           : (value: boolean | string): boolean | string => value),
   };
 };
@@ -116,7 +141,13 @@ const parseUsage = (usage: string): NamedUsage => {
   const required = Boolean(match[2]);
   const variadic = Boolean(match[3] || match[5]);
 
-  return { usage, key, variadic, names, value: value && (required ? 'required' : 'optional') };
+  return {
+    usage,
+    key,
+    variadic,
+    names,
+    value: value && (required ? 'required' : 'optional'),
+  };
 };
 
 export {

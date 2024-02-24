@@ -18,7 +18,10 @@ process.on('unhandledRejection', (error) => {
 let [dir = '.'] = process.argv.slice(2);
 
 dir = resolve(dir);
-assert(!existsSync(resolve(dir, 'package.json')), 'The target directory already has a package.json file');
+assert(
+  !existsSync(resolve(dir, 'package.json')),
+  'The target directory already has a package.json file',
+);
 
 await mkdir(dir, { recursive: true });
 
@@ -45,15 +48,15 @@ const rootDir = resolve(root.realpath || root.path);
 const repositoryDirectory = relative(rootDir, dir);
 const repository =
   typeof root.repository === 'object' && root.repository != null
-    ? {
-        ...root.repository,
-        directory: repositoryDirectory,
-      }
+    ? { ...root.repository, directory: repositoryDirectory }
     : undefined;
 const homepage = repository?.url?.startsWith('https://github.com')
-  ? repository.url.replace(/\.git|\/$/u, '') + posix.join('/blob/main', repositoryDirectory, 'README.md')
+  ? repository.url.replace(/\.git|\/$/u, '') +
+    posix.join('/blob/main', repositoryDirectory, 'README.md')
   : undefined;
-const isTypescript = Object.keys({ ...root.devDependencies }).includes('typescript');
+const isTypescript = Object.keys({ ...root.devDependencies }).includes(
+  'typescript',
+);
 const sourceDir = isTypescript ? 'lib' : 'src';
 const types = isTypescript ? './lib/index.d.ts' : undefined;
 const config = {
@@ -92,13 +95,23 @@ await mkdir(resolve(dir, 'src'), { recursive: true });
 
 process.chdir(dir);
 
-await writeFile('package.json', JSON.stringify(config, null, 2), { flag: 'wx' });
-await writeFile(`src/index.${isTypescript ? 'ts' : 'js'}`, 'export {};\n', { flag: 'wx' }).catch(() => undefined);
-await writeFile('README.md', `# ${config.name}\n${config.description ? `\n${config.description}\n` : ''}`, {
+await writeFile('package.json', JSON.stringify(config, null, 2), {
+  flag: 'wx',
+});
+await writeFile(`src/index.${isTypescript ? 'ts' : 'js'}`, 'export {};\n', {
   flag: 'wx',
 }).catch(() => undefined);
+await writeFile(
+  'README.md',
+  `# ${config.name}\n${config.description ? `\n${config.description}\n` : ''}`,
+  {
+    flag: 'wx',
+  },
+).catch(() => undefined);
 if (existsSync(resolve(rootDir, 'LICENSE'))) {
-  await cp(resolve(rootDir, 'LICENSE'), 'LICENSE', { errorOnExist: true }).catch(() => undefined);
+  await cp(resolve(rootDir, 'LICENSE'), 'LICENSE', {
+    errorOnExist: true,
+  }).catch(() => undefined);
 }
 
 if (isTypescript && existsSync(resolve(rootDir, 'tsconfig.json'))) {

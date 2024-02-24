@@ -9,7 +9,7 @@ import { promote } from './strategies/promote.js';
 import { sync } from './sync.js';
 import { writeChangelog, writeConfig } from './write.js';
 
-const STRATEGIES: Readonly<Record<semver.ReleaseType | 'auto' | 'promote' | 'sync', true>> = {
+const STRATEGIES = {
   major: true,
   minor: true,
   patch: true,
@@ -20,7 +20,10 @@ const STRATEGIES: Readonly<Record<semver.ReleaseType | 'auto' | 'promote' | 'syn
   auto: true,
   promote: true,
   sync: true,
-};
+} as const satisfies Record<
+  semver.ReleaseType | 'auto' | 'promote' | 'sync',
+  true
+>;
 
 export default createCommand('version', {
   config: (cli) => {
@@ -47,7 +50,9 @@ export default createCommand('version', {
       .option('<strategy>', {
         description:
           'major, minor, patch, premajor, preminor, prepatch, prerelease, auto, promote, or a version number',
-        parse: (value): semver.ReleaseType | 'auto' | 'promote' | 'sync' | SemVer => {
+        parse: (
+          value,
+        ): semver.ReleaseType | 'auto' | 'promote' | 'sync' | SemVer => {
           if (value in STRATEGIES) {
             return value as keyof typeof STRATEGIES;
           }
@@ -60,25 +65,36 @@ export default createCommand('version', {
         },
       })
       .option('--preid <id>', 'set the identifier for prerelease versions')
-      .option('--changelog', 'add changelog entries (default for the "auto" strategy)')
-      .option('--no-changelog', 'do not add changelog entries (default for non-"auto" strategies)')
+      .option(
+        '--changelog',
+        'add changelog entries (default for the "auto" strategy)',
+      )
+      .option(
+        '--no-changelog',
+        'do not add changelog entries (default for non-"auto" strategies)',
+      )
       .optionNegation('changelog', 'noChangelog');
   },
 
   run: async (context) => {
     const { log, workspaces, options, autoPrintStatus } = context;
-    const { strategy, preid, changelog = strategy === 'auto' } = options;
 
     autoPrintStatus();
 
-    if (preid && (typeof strategy !== 'string' || !strategy.startsWith('pre'))) {
+    const { strategy, preid, changelog = strategy === 'auto' } = options;
+    const isPreStrategy =
+      typeof strategy === 'string' && strategy.startsWith('pre');
+
+    if (preid && !isPreStrategy) {
       log.warn('option --preid only applies to "pre*" strategies');
     }
 
     const changes = new Map<Workspace, readonly Change[]>();
 
     if (strategy !== 'sync') {
-      let each: (workspace: Workspace) => Promise<readonly Change[] | undefined | null | void>;
+      let each: (
+        workspace: Workspace,
+      ) => Promise<readonly Change[] | undefined | null | void>;
 
       if (typeof strategy === 'string') {
         switch (strategy) {
@@ -89,7 +105,9 @@ export default createCommand('version', {
             each = promote;
             break;
           default:
-            each = (workspace) => bump(workspace, { releaseType: strategy, preid });
+            each = (workspace) => {
+              return bump(workspace, { releaseType: strategy, preid });
+            };
             break;
         }
       } else {
@@ -108,7 +126,10 @@ export default createCommand('version', {
     // their local dependency version ranges updates to match the new version.
     workspaces.includeDependents();
     workspaces.forEachSync((workspace) => {
-      changes.set(workspace, [...(changes.get(workspace) ?? []), ...sync(workspace)]);
+      changes.set(workspace, [
+        ...(changes.get(workspace) ?? []),
+        ...sync(workspace),
+      ]);
     });
 
     // Writing does not use `forEachIndependent` because if a workspace write
@@ -121,7 +142,10 @@ export default createCommand('version', {
         return;
       }
 
-      if ((await workspace.git.getIsRepo()) && (await workspace.git.getIsDirty())) {
+      if (
+        (await workspace.git.getIsRepo()) &&
+        (await workspace.git.getIsDirty())
+      ) {
         throw new Error('versioning requires a clean git repository');
       }
 
@@ -129,7 +153,9 @@ export default createCommand('version', {
 
       workspace.status.set(
         'pending',
-        workspace.version !== newVersion ? `${workspace.version} -> ${newVersion}` : 'dependency updates',
+        workspace.version !== newVersion
+          ? `${workspace.version} -> ${newVersion}`
+          : 'dependency updates',
       );
 
       await writeConfig(workspace);
@@ -141,19 +167,27 @@ export default createCommand('version', {
       workspace.status.set('success');
     });
 
-    const updated = Array.from(workspaces).filter(({ config }) => config.isModified);
+    const updated = Array.from(workspaces).filter(({ config }) => {
+      return config.isModified;
+    });
 
     if (updated.length) {
-      await workspaces.root.spawn('npm', ['update', ...updated.map(({ name }) => name)], {
-        output: 'ignore',
-      });
+      await workspaces.root.spawn(
+        'npm',
+        ['update', ...updated.map(({ name }) => name)],
+        { output: 'ignore' },
+      );
     }
 
-    const versioned = updated.filter(({ version, config }) => version !== config.at('version').as('string'));
+    const versioned = updated.filter(({ version, config }) => {
+      return version !== config.at('version').as('string');
+    });
 
     if (versioned) {
       const releaseMessage = versioned
-        .map(({ name, version }) => `${name.replace(/^@[^/]*/u, '')}@${version}`)
+        .map(({ name, version }) => {
+          return `${name.replace(/^@[^/]*/u, '')}@${version}`;
+        })
         .join(', ');
 
       if (releaseMessage) {

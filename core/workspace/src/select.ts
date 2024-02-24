@@ -8,11 +8,19 @@ export interface SelectResult {
   readonly includeDependents?: boolean;
 }
 
-export type SelectPredicate = (workspace: Workspace) => SelectResult | boolean | null;
+export type SelectPredicate = (
+  workspace: Workspace,
+) => SelectResult | boolean | null;
 
-export type SelectCondition = string | SelectPredicate | readonly (string | SelectPredicate)[];
+export type SelectCondition =
+  | string
+  | SelectPredicate
+  | readonly (string | SelectPredicate)[];
 
-export const select = (workspaces: Iterable<Workspace>, condition: SelectCondition): Map<Workspace, boolean> => {
+export const select = (
+  workspaces: Iterable<Workspace>,
+  condition: SelectCondition,
+): Map<Workspace, boolean> => {
   const matchers = createMatchers(condition);
   const selected = new Map<Workspace, boolean>();
 
@@ -41,9 +49,15 @@ export const select = (workspaces: Iterable<Workspace>, condition: SelectConditi
   return selected;
 };
 
-const createMatchers = (condition: SelectCondition): ((workspace: Workspace) => Required<SelectResult> | null)[] => {
-  const matchers: ((workspace: Workspace) => Required<SelectResult> | null)[] = [];
-  const conditions = (Array.isArray(condition) ? condition : [condition]) as (string | SelectPredicate)[];
+const createMatchers = (
+  condition: SelectCondition,
+): ((workspace: Workspace) => Required<SelectResult> | null)[] => {
+  const matchers: ((workspace: Workspace) => Required<SelectResult> | null)[] =
+    [];
+  const conditions = (Array.isArray(condition) ? condition : [condition]) as (
+    | string
+    | SelectPredicate
+  )[];
 
   conditions.forEach((value: string | SelectPredicate) => {
     if (typeof value === 'string') {
@@ -79,10 +93,11 @@ const createMatchers = (condition: SelectCondition): ((workspace: Workspace) => 
   return matchers;
 };
 
-const createExpressionMatcher = (expression: string): ((workspace: Workspace) => Required<SelectResult> | null) => {
-  const [, leadingEllipses, scope = '', pattern = '', trailingEllipses] = expression.match(
-    /^(\.{3})?(?:([^:]*):)?(.*?)(\.{3})?$/u,
-  )!;
+const createExpressionMatcher = (
+  expression: string,
+): ((workspace: Workspace) => Required<SelectResult> | null) => {
+  const [, leadingEllipses, scope = '', pattern = '', trailingEllipses] =
+    expression.match(/^(\.{3})?(?:([^:]*):)?(.*?)(\.{3})?$/u)!;
   const [, negated, scopeName = ''] = scope.match(/^(not)?(.*)$/u)!;
   const isSelected = !negated;
   const includeDependencies = Boolean(leadingEllipses);
@@ -94,13 +109,19 @@ const createExpressionMatcher = (expression: string): ((workspace: Workspace) =>
     case '':
     case 'n':
     case 'name':
-      match = ((predicate: (value: string) => boolean, workspace: Workspace) => {
+      match = ((
+        predicate: (value: string) => boolean,
+        workspace: Workspace,
+      ) => {
         return predicate(workspace.name);
       }).bind(null, minimatch.filter(pattern));
       break;
     case 'k':
     case 'keyword':
-      match = ((predicate: (value: string) => boolean, workspace: Workspace) => {
+      match = ((
+        predicate: (value: string) => boolean,
+        workspace: Workspace,
+      ) => {
         return workspace.config
           .at('keywords')
           .as('array', [] as unknown[])
@@ -111,17 +132,24 @@ const createExpressionMatcher = (expression: string): ((workspace: Workspace) =>
     case 'd':
     case 'dir':
     case 'directory':
-      match = ((predicate: (value: string) => boolean, workspace: Workspace) => {
+      match = ((
+        predicate: (value: string) => boolean,
+        workspace: Workspace,
+      ) => {
         return predicate(workspace.relativeDir);
       }).bind(null, minimatch.filter(pattern));
       break;
     case 'p':
     case 'private':
-      match = (workspace) => String(workspace.isPrivate) === pattern.toLocaleLowerCase();
+      match = (workspace) =>
+        String(workspace.isPrivate) === pattern.toLocaleLowerCase();
       break;
     default:
       throw new Error(`invalid expression scope "${scope}"`);
   }
 
-  return (workspace) => (match(workspace) ? { isSelected, includeDependencies, includeDependents } : null);
+  return (workspace) =>
+    match(workspace)
+      ? { isSelected, includeDependencies, includeDependents }
+      : null;
 };

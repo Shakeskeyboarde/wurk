@@ -1,14 +1,29 @@
 import { createCommand, type Workspace } from 'wurk';
 
-import { check } from './check.js';
-import { getBuilder } from './get-builder.js';
+import { type BuilderFactory } from './builder.js';
+import { getRollupBuilder } from './builders/rollup.js';
+import { getScriptBuilder } from './builders/script.js';
+import { getTscBuilder } from './builders/tsc.js';
+import { getViteBuilder } from './builders/vite.js';
 
-const command = createCommand('build', {
+const BUILDER_FACTORIES = [
+  getScriptBuilder,
+  getViteBuilder,
+  getRollupBuilder,
+  getTscBuilder,
+] as const satisfies readonly BuilderFactory[];
+
+export default createCommand('build', {
   config: (cli) => {
     return cli
       .alias('start')
-      .trailer('Auto detects and uses common tools and opinionated configurations for near-zero configuration.')
-      .option('--start', 'continuously build on source code changes and start development servers')
+      .trailer(
+        'Auto detects and uses common tools and opinionated configurations for near-zero configuration.',
+      )
+      .option(
+        '--start',
+        'continuously build on source code changes and start development servers',
+      )
       .option('--clean', { hidden: true })
       .option('--no-clean', 'do not clean the build directory before building')
       .optionNegation('clean', 'noClean')
@@ -21,48 +36,72 @@ const command = createCommand('build', {
 
   run: async (context) => {
     const { options, workspaces, autoPrintStatus } = context;
-    const { clean = true, start = false } = options;
 
     autoPrintStatus();
 
-    const builders = new Map<Workspace, (mode: 'build' | 'start') => Promise<void>>();
+    const builders = new Map<
+      Workspace,
+      {
+        build: (() => Promise<void>) | null;
+        start: (() => Promise<void>) | null;
+      }
+    >();
 
     await workspaces.forEach(async (workspace) => {
-      const builder = await getBuilder({ workspace, root: workspaces.root });
+      let build: (() => Promise<void>) | null = null;
+      let start: (() => Promise<void>) | null = null;
 
-      if (builder) {
-        builders.set(workspace, builder);
+      for (const factory of BUILDER_FACTORIES) {
+        const builder = await factory(workspace);
+
+        if (!builder) continue;
+
+        build = build ?? builder.build;
+        start = start ?? builder.start;
+
+        if (build && start) break;
+      }
+
+      if (build || start) {
+        builders.set(workspace, { build, start });
       } else {
         workspace.isSelected = false;
+      }
+
+      if (!build) {
+        workspace.status.set('skipped', 'no builder');
       }
     });
 
     if (builders.size === 0) return;
 
-    if (clean) {
+    if (options.clean) {
       await workspaces.forEachSequential(async (workspace) => {
         await workspace.clean();
       });
     }
 
     await workspaces.forEach(async (workspace) => {
-      await builders.get(workspace)!('build');
-      await check(workspace);
+      await builders.get(workspace)?.build?.();
     });
 
-    await workspaces.root.spawn('npm', ['update', ...Array.from(builders.keys()).map((ws) => ws.name)], {
-      output: 'ignore',
-    });
+    const updateNames = Array.from(builders.entries())
+      .filter(([, builder]) => builder.build)
+      .map(([ws]) => ws.name);
 
-    if (start) {
+    if (updateNames.length) {
+      await workspaces.root.spawn('npm', ['update', ...updateNames], {
+        output: 'ignore',
+      });
+    }
+
+    if (options.start) {
       // Don't show the status summary after starting.
       autoPrintStatus(false);
 
       await workspaces.forEachIndependent(async (workspace) => {
-        await builders.get(workspace)?.('start');
+        await builders.get(workspace)?.start?.();
       });
     }
   },
 });
-
-export default command;

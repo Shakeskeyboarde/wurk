@@ -11,6 +11,7 @@ type ParserCli = PartialCli<
   | 'options'
   | 'commands'
   | 'optionActions'
+  | 'optionDefaults'
   | 'isUnknownNamedOptionAllowed'
   | 'isShortOptionMergingAllowed'
   | 'isCommandOptional'
@@ -25,7 +26,8 @@ interface ParserParent {
   tryNamed(): Promise<boolean>;
 }
 
-interface ParserResult extends Pick<UnknownResult, 'name' | 'getHelpText' | 'printHelp'> {
+interface ParserResult
+  extends Pick<UnknownResult, 'name' | 'getHelpText' | 'printHelp'> {
   readonly options: Record<string, any>;
   readonly command: Record<string, ParserResult | undefined>;
   readonly parsed: Set<string>;
@@ -67,7 +69,9 @@ const parseMergedShortNamesArg = (arg: string): string[] | undefined => {
   const [, name, suffix = ''] = match as [string, string, string | undefined];
   const characters = name.split('');
 
-  return characters.map((character, i) => `-${character}${i === characters.length - 1 ? suffix : ''}`);
+  return characters.map((character, i) => {
+    return `-${character}${i === characters.length - 1 ? suffix : ''}`;
+  });
 };
 
 /**
@@ -83,6 +87,7 @@ const parseRecursive = async (
   const {
     options,
     optionActions,
+    optionDefaults,
     commands,
     isGreedy,
     isUnknownNamedOptionAllowed,
@@ -91,8 +96,14 @@ const parseRecursive = async (
     getHelpText,
     printHelp,
   } = cli;
-  const named = options.filter((option): option is Named => option.type === 'named');
-  const positional = options.filter((option): option is Positional => option.type === 'positional');
+  const named = options.filter((option): option is Named => {
+    return option.type === 'named';
+  });
+
+  const positional = options.filter(
+    (option): option is Positional => option.type === 'positional',
+  );
+
   const result: ParserResult = {
     options: Object.create(null),
     command: Object.create(null),
@@ -101,6 +112,7 @@ const parseRecursive = async (
     getHelpText: getHelpText.bind(cli),
     printHelp: printHelp.bind(cli),
   };
+
   const keylessValues = new Map<Named | Positional, any>();
 
   let isDoubleHyphenFound = false;
@@ -132,7 +144,9 @@ const parseRecursive = async (
    * argument which cannot be used as a value is encountered (eg. a named
    * option), or there are no more arguments.
    */
-  const getOptionValueArgs = async (option: Named | Positional): Promise<string[]> => {
+  const getOptionValueArgs = async (
+    option: Named | Positional,
+  ): Promise<string[]> => {
     if (option.type === 'named' && !option.value) return [];
 
     const valueArgs: string[] = [];
@@ -166,14 +180,22 @@ const parseRecursive = async (
     if (option.type === 'named') {
       if (option.mapped) {
         if (mappedKey == null) {
-          throw new CliParseError(`option "${option.usage}" does not support dot notation`, { cli: cli });
+          throw new CliParseError(
+            `option "${option.usage}" does not support dot notation`,
+            { cli: cli },
+          );
         }
       } else if (/* not mapped and */ mappedKey != null) {
-        throw new CliParseError(`option "${option.usage}" requires dot notation`, { cli: cli });
+        throw new CliParseError(
+          `option "${option.usage}" requires dot notation`,
+          { cli: cli },
+        );
       }
 
       if (option.value === 'required' && valueArgs.length === 0) {
-        throw new CliParseError(`option "${option.usage}" requires a value`, { cli: cli });
+        throw new CliParseError(`option "${option.usage}" requires a value`, {
+          cli: cli,
+        });
       }
     }
 
@@ -199,6 +221,16 @@ const parseRecursive = async (
     }
 
     return value;
+  };
+
+  const setOptionValue = async (key: string, value: any): Promise<void> => {
+    result.options[key] = value;
+
+    const actions = (key in optionActions && optionActions[key]) || [];
+
+    for (const action of actions) {
+      await action({ result, key: key, value });
+    }
   };
 
   /**
@@ -241,9 +273,14 @@ const parseRecursive = async (
     // Named option matched, consume the argument.
     args.shift();
 
-    const valueArgs = integralValue ? [integralValue] : await getOptionValueArgs(option);
+    const valueArgs = integralValue
+      ? [integralValue]
+      : await getOptionValueArgs(option);
     const valueRaw = getOptionValue(option, valueArgs, mappedKey);
-    const valuePrev = option.key ? result.options[option.key] : keylessValues.get(option);
+    const valuePrev =
+      option.key && option.key in result.options
+        ? result.options[option.key]
+        : keylessValues.get(option);
     const value = option.parse(valueRaw, valuePrev, result, option.key);
 
     keylessValues.set(option, value);
@@ -252,14 +289,8 @@ const parseRecursive = async (
     // and no per-option actions will be run.
     if (option.key == null) return true;
 
-    result.options[option.key] = value;
     result.parsed.add(option.key);
-
-    const actions = optionActions[option.key] ?? [];
-
-    for (const action of actions) {
-      await action({ result, key: option.key, value: valueRaw });
-    }
+    await setOptionValue(option.key, value);
 
     return true;
   };
@@ -286,13 +317,20 @@ const parseRecursive = async (
   const tryCommand = async (): Promise<boolean> => {
     if (isPositionalFound) return false;
 
-    const command = commands.find((value) => value.name === args[0] || value.aliases.includes(args[0]!));
+    const command = commands.find((value) => {
+      return value.name === args[0] || value.aliases.includes(args[0]!);
+    });
 
     if (!command) return false;
 
     const commandName = args.shift();
     isCommandFound = true;
-    result.command[command.name] = await parseRecursive(args, command, { isNamed, tryNamed }, commandName);
+    result.command[command.name] = await parseRecursive(
+      args,
+      command,
+      { isNamed, tryNamed },
+      commandName,
+    );
 
     return true;
   };
@@ -309,7 +347,10 @@ const parseRecursive = async (
     if (!command) return false;
 
     isCommandFound = true;
-    result.command[command.name] = await parseRecursive(args, command, { isNamed, tryNamed });
+    result.command[command.name] = await parseRecursive(args, command, {
+      isNamed,
+      tryNamed,
+    });
 
     return true;
   };
@@ -334,10 +375,11 @@ const parseRecursive = async (
     positional.shift();
     isPositionalFound = true;
 
-    const value = getOptionValue(option, valueArgs);
+    const valueRaw = getOptionValue(option, valueArgs);
+    const value = option.parse(valueRaw, result, option.key);
 
-    result.options[option.key] = option.parse(value, result, option.key);
     result.parsed.add(option.key);
+    await setOptionValue(option.key, value);
 
     return true;
   };
@@ -353,7 +395,11 @@ const parseRecursive = async (
     if (await tryCommand()) continue;
     if (await tryDefaultCommand()) continue;
 
-    if (args[0]!.startsWith('-') && !isUnknownNamedOptionAllowed && !isDoubleHyphenFound) {
+    if (
+      args[0]!.startsWith('-') &&
+      !isUnknownNamedOptionAllowed &&
+      !isDoubleHyphenFound
+    ) {
       throw new CliParseError(`unknown option "${args[0]}"`, { cli: cli });
     }
 
@@ -370,14 +416,39 @@ const parseRecursive = async (
     await tryDefaultCommand();
   }
 
-  named.forEach(({ key, usage, required }) => {
-    if (required && key != null && result.options[key] === undefined) {
-      throw new CliParseError(`missing required option "${usage}"`, { cli: cli });
+  for (const { key, usage, required } of named) {
+    if (
+      required &&
+      key != null &&
+      (!(key in result.options) || result.options[key] === undefined)
+    ) {
+      const getDefault = key in optionDefaults && optionDefaults[key];
+
+      if (getDefault) {
+        await setOptionValue(key, await getDefault());
+      } else {
+        throw new CliParseError(`missing required option "${usage}"`, {
+          cli: cli,
+        });
+      }
     }
-  });
+  }
 
   if (positional[0]?.required) {
-    throw new CliParseError(`missing required option "${positional[0].usage}"`, { cli: cli });
+    throw new CliParseError(
+      `missing required option "${positional[0].usage}"`,
+      { cli: cli },
+    );
+  }
+
+  for (const { key } of positional) {
+    if (!(key in result.options) || result.options[key] === undefined) {
+      const getDefault = key in optionDefaults && optionDefaults[key];
+
+      if (getDefault) {
+        await setOptionValue(key, await getDefault());
+      }
+    }
   }
 
   if (!isCommandFound && !isCommandOptional && commands.length) {
@@ -390,7 +461,10 @@ const parseRecursive = async (
 /**
  * Use the CLI to parse the arguments.
  */
-const parse = async (cli: ParserCli, args: readonly string[]): Promise<UnknownResult> => {
+const parse = async (
+  cli: ParserCli,
+  args: readonly string[],
+): Promise<UnknownResult> => {
   return await parseRecursive([...args], cli);
 };
 

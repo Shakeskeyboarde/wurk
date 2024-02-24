@@ -1,7 +1,7 @@
-import fs from 'node:fs';
 import path from 'node:path';
 
-import { JsonAccessor } from '@wurk/json';
+import { fs } from '@wurk/fs';
+import { type JsonAccessor } from '@wurk/json';
 import semver from 'semver';
 
 export interface ImportOptions {
@@ -22,7 +22,9 @@ export interface ImportResolved {
   readonly moduleEntry: string | null;
 }
 
-export interface ImportResult<TExports extends Record<string, any> = Record<string, unknown>> extends ImportResolved {
+export interface ImportResult<
+  TExports extends Record<string, any> = Record<string, unknown>,
+> extends ImportResolved {
   readonly moduleExports: TExports;
 }
 
@@ -34,23 +36,17 @@ export interface ImportResult<TExports extends Record<string, any> = Record<stri
  * The `versionRange` option can be a semver range, just like a dependency
  * in your `package.json` file.
  */
-export const importRelative = async <TExports extends Record<string, any> = Record<string, unknown>>(
+export const importRelative = async <
+  TExports extends Record<string, any> = Record<string, unknown>,
+>(
   spec: string,
-  { dir = process.cwd(), versionRange }: ImportOptions = {},
+  options: ImportOptions = {},
 ): Promise<ImportResult<TExports>> => {
-  const resolved = await resolveImport(spec, { dir });
-  const { moduleId, moduleConfig, moduleDir, moduleEntry } = resolved;
+  const resolved = await resolveImport(spec, options);
+  const { moduleId, moduleDir, moduleEntry } = resolved;
 
   if (moduleEntry == null) {
     throw new Error(`package "${moduleId}" has no acceptable entry points`);
-  }
-
-  if (versionRange) {
-    const version = moduleConfig.at('version').as('string');
-
-    if (!version || !semver.satisfies(version, versionRange)) {
-      throw new Error(`package "${moduleId}" does not satisfy "${versionRange}"`);
-    }
   }
 
   return {
@@ -66,12 +62,15 @@ export const importRelative = async <TExports extends Record<string, any> = Reco
  */
 export const resolveImport = async (
   spec: string,
-  { dir = process.cwd() }: Pick<ImportOptions, 'dir'> = {},
+  options: ImportOptions = {},
 ): Promise<ImportResolved> => {
+  const { dir = process.cwd(), versionRange } = options;
   const { moduleId, modulePath } = parseImport(spec);
 
   if (moduleId == null) {
-    throw new Error(`relative import only supports non-builtin bare specifiers`);
+    throw new Error(
+      `relative import only supports non-builtin bare specifiers`,
+    );
   }
 
   const configFilename = await findPackage(dir, moduleId);
@@ -80,7 +79,18 @@ export const resolveImport = async (
     throw new Error(`package "${moduleId}" not found`);
   }
 
-  const moduleConfig = await fs.promises.readFile(configFilename, 'utf8').then(JsonAccessor.parse);
+  const moduleConfig = await fs.readJson(configFilename);
+
+  if (versionRange) {
+    const version = moduleConfig.at('version').as('string');
+
+    if (!version || !semver.satisfies(version, versionRange)) {
+      throw new Error(
+        `package "${moduleId}" does not satisfy "${versionRange}"`,
+      );
+    }
+  }
+
   const entries = moduleConfig.compose((root) => {
     return {
       exports: root.at('exports').as(['string', 'object']),
@@ -92,23 +102,47 @@ export const resolveImport = async (
   const moduleDir = path.dirname(configFilename);
 
   if (entries.exports != null) {
-    for (const { entry: moduleEntry, conditions } of exportsIterator(entries.exports)) {
+    for (const exports of exportsIterator(entries.exports)) {
+      const { entry: moduleEntry, conditions } = exports;
+
       if (modulePath !== '.' && !conditions.includes(modulePath)) {
         continue;
       }
 
-      if (!conditions.every((condition) => ['node', 'import', 'default', modulePath].includes(condition))) {
+      const isConditionsMatch = conditions.every((condition) => {
+        return ['node', 'import', 'default', modulePath].includes(condition);
+      });
+
+      if (!isConditionsMatch) {
         continue;
       }
 
       return { moduleId, modulePath, moduleConfig, moduleDir, moduleEntry };
     }
   } else if (modulePath !== '.') {
-    return { moduleId, modulePath, moduleConfig, moduleDir, moduleEntry: modulePath };
+    return {
+      moduleId,
+      modulePath,
+      moduleConfig,
+      moduleDir,
+      moduleEntry: modulePath,
+    };
   } else if (entries.module != null) {
-    return { moduleId, modulePath, moduleConfig, moduleDir, moduleEntry: entries.module };
+    return {
+      moduleId,
+      modulePath,
+      moduleConfig,
+      moduleDir,
+      moduleEntry: entries.module,
+    };
   } else if (entries.main != null) {
-    return { moduleId, modulePath, moduleConfig, moduleDir, moduleEntry: entries.main };
+    return {
+      moduleId,
+      modulePath,
+      moduleConfig,
+      moduleDir,
+      moduleEntry: entries.main,
+    };
   }
 
   return { moduleId, modulePath, moduleConfig, moduleDir, moduleEntry: null };
@@ -119,7 +153,12 @@ export const resolveImport = async (
  * `null` if the specifier is not a [bare specifier](https://nodejs.org/api/esm.html#import-specifiers)
  */
 export const parseImport = (spec: string): ImportParsed => {
-  if (spec.startsWith('data:') || spec.startsWith('file:') || spec.startsWith('.') || spec.startsWith('/')) {
+  if (
+    spec.startsWith('data:') ||
+    spec.startsWith('file:') ||
+    spec.startsWith('.') ||
+    spec.startsWith('/')
+  ) {
     return { moduleId: null, modulePath: spec };
   }
 
@@ -133,14 +172,18 @@ export const parseImport = (spec: string): ImportParsed => {
   return { moduleId, modulePath };
 };
 
-const findPackage = async (dir: string, moduleId: string): Promise<string | undefined> => {
-  const filename = path.resolve(dir, 'node_modules', ...moduleId.split('/'), 'package.json');
-  const exists = await fs.promises
-    .stat(filename)
-    .then(() => true)
-    .catch(() => false);
+const findPackage = async (
+  dir: string,
+  moduleId: string,
+): Promise<string | undefined> => {
+  const filename = path.resolve(
+    dir,
+    'node_modules',
+    ...moduleId.split('/'),
+    'package.json',
+  );
 
-  if (exists) return filename;
+  if (await fs.exists(filename)) return filename;
 
   const parentDir = path.dirname(dir);
 

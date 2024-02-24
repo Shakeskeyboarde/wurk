@@ -28,7 +28,10 @@ export const writeConfig = async (workspace: Workspace): Promise<void> => {
   await fs.writeJson('package.json', config).catch((error) => log.error(error));
 };
 
-export const writeChangelog = async (workspace: Workspace, changes: readonly Change[] = []): Promise<void> => {
+export const writeChangelog = async (
+  workspace: Workspace,
+  changes: readonly Change[] = [],
+): Promise<void> => {
   const { log, name, version, config, fs } = workspace;
   const newVersion = config.at('version').as('string');
 
@@ -48,13 +51,22 @@ export const writeChangelog = async (workspace: Workspace, changes: readonly Cha
     return;
   }
 
-  const content = await fs.readText('CHANGELOG.md').catch(() => '');
+  const content = await fs.readText('CHANGELOG.md').then((text) => {
+    return text ?? '';
+  });
 
   /**
    * Change log entries sorted by version in descending order.
    */
-  const entries = [...content.matchAll(/^#+ (\d+\.\d+\.\d+(?:-[a-z\d.+-]*)?)(?:.(?!^#+ \d+\.\d+\.\d))*.?/gmsu)]
-    .map((entry) => ({ version: entry[1] as string, text: entry[0].trimEnd() + '\n' }))
+  const entries = [
+    ...content.matchAll(
+      /^#+ (\d+\.\d+\.\d+(?:-[a-z\d.+-]*)?)(?:.(?!^#+ \d+\.\d+\.\d))*.?/gmsu,
+    ),
+  ]
+    .map((entry) => ({
+      version: entry[1] as string,
+      text: entry[0].trimEnd() + '\n',
+    }))
     .sort((a, b) => semver.rcompare(a.version, b.version));
 
   /**
@@ -62,9 +74,14 @@ export const writeChangelog = async (workspace: Workspace, changes: readonly Cha
    * descending order (greatest first), so we want the first (highest) entry
    * that is less than or equal (`semver.lte`) to the new version.
    */
-  const previousVersionIndex = entries.findIndex((entry) => semver.lte(entry.version, newVersion));
+  const previousVersionIndex = entries.findIndex((entry) => {
+    return semver.lte(entry.version, newVersion);
+  });
 
-  if (previousVersionIndex >= 0 && newVersion === entries[previousVersionIndex]?.version) {
+  if (
+    previousVersionIndex >= 0 &&
+    newVersion === entries[previousVersionIndex]?.version
+  ) {
     log.warn(`skipping changelog write (version exists)`);
     return;
   }

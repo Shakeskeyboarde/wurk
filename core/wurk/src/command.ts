@@ -1,25 +1,39 @@
 import { Cli, type CliName, type EmptyResult } from '@wurk/cli';
 import { type ImportResult } from '@wurk/import';
 import { isLogLevel, LogLevel } from '@wurk/log';
-import { AbortError, StatusValue, type WorkspaceCollection } from '@wurk/workspace';
+import {
+  AbortError,
+  StatusValue,
+  type WorkspaceCollection,
+} from '@wurk/workspace';
 
 import { Context } from './context.js';
 
 interface CommandHooks<TResult extends EmptyResult, TName extends string> {
-  readonly config?: (cli: Cli<EmptyResult, TName>, commandPackage: ImportResult['moduleConfig']) => Cli<TResult, TName>;
+  readonly config?: (
+    cli: Cli<EmptyResult, TName>,
+    commandPackage: ImportResult['moduleConfig'],
+  ) => Cli<TResult, TName>;
   readonly run: (context: Context<TResult>) => Promise<void>;
 }
 
-export interface Command<TResult extends EmptyResult = EmptyResult, TName extends string = string> {
+export interface Command<
+  TResult extends EmptyResult = EmptyResult,
+  TName extends string = string,
+> {
   readonly cli: Cli<TResult, TName>;
   readonly init: (workspaces: WorkspaceCollection) => void;
 }
 
-export type CommandFactory<TResult extends EmptyResult = EmptyResult, TName extends string = string> = (
-  commandPackage: ImportResult['moduleConfig'],
-) => Command<TResult, TName>;
+export type CommandFactory<
+  TResult extends EmptyResult = EmptyResult,
+  TName extends string = string,
+> = (commandPackage: ImportResult['moduleConfig']) => Command<TResult, TName>;
 
-export const createCommand = <TName extends string, TResult extends EmptyResult>(
+export const createCommand = <
+  TName extends string,
+  TResult extends EmptyResult,
+>(
   name: CliName<TName>,
   hooks: CommandHooks<TResult, TName>,
 ): unknown => {
@@ -41,7 +55,9 @@ export const createCommand = <TName extends string, TResult extends EmptyResult>
       const context = new Context({
         result,
         workspaces,
-        autoPrintStatus: (enabled = true) => void (isAutoPrintStatusEnabled = enabled),
+        autoPrintStatus: (enabled = true) => {
+          isAutoPrintStatusEnabled = enabled;
+        },
       });
       const initialSelection = Array.from(workspaces);
 
@@ -59,7 +75,7 @@ export const createCommand = <TName extends string, TResult extends EmptyResult>
             workspace.status.set(StatusValue.failure);
           }
 
-          if (workspace.status.value >= StatusValue.warning) {
+          if (workspace.status.value >= StatusValue.failure) {
             process.exitCode ||= 1;
           }
         });
@@ -70,7 +86,10 @@ export const createCommand = <TName extends string, TResult extends EmptyResult>
             condition: isLogLevel(LogLevel.verbose)
               ? undefined
               : (workspace) => {
-                  return workspace.status.value !== StatusValue.skipped || initialSelection.includes(workspace);
+                  return (
+                    workspace.status.value !== StatusValue.skipped ||
+                    initialSelection.includes(workspace)
+                  );
                 },
           });
         }

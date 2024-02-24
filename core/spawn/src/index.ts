@@ -38,8 +38,16 @@ export class SpawnError extends Error {
   readonly exitCode: number;
   readonly signalCode: NodeJS.Signals | null;
 
-  constructor(cmd: string, exitCode: number, signalCode: NodeJS.Signals | null) {
-    super(exitCode !== 0 ? `process "${cmd}" exited with a non-zero status (${exitCode})` : `process "${cmd}" failed`);
+  constructor(
+    cmd: string,
+    exitCode: number,
+    signalCode: NodeJS.Signals | null,
+  ) {
+    super(
+      exitCode !== 0
+        ? `process "${cmd}" exited with a non-zero status (${exitCode})`
+        : `process "${cmd}" failed`,
+    );
 
     this.exitCode = exitCode;
     this.signalCode = signalCode;
@@ -74,23 +82,48 @@ export interface SpawnOptions {
   readonly allowNonZeroExitCode?: boolean;
 }
 
-export type SpawnSparseArgs = readonly (string | number | false | null | undefined | SpawnSparseArgs)[];
+export type SpawnSparseArgs = readonly (
+  | string
+  | number
+  | false
+  | null
+  | undefined
+  | SpawnSparseArgs
+)[];
 
 export type Spawn = typeof spawn;
 
-export const spawn = (cmd: string, sparseArgs: SpawnSparseArgs = [], options: SpawnOptions = {}): SpawnPromise => {
-  const { cwd, env, input, output = 'buffer', log = defaultLog, allowNonZeroExitCode = false } = options;
+export const spawn = (
+  cmd: string,
+  sparseArgs: SpawnSparseArgs = [],
+  options: SpawnOptions = {},
+): SpawnPromise => {
+  const {
+    cwd,
+    env,
+    input,
+    output = 'buffer',
+    log = defaultLog,
+    allowNonZeroExitCode = false,
+  } = options;
   const args = getArgs(sparseArgs);
 
   if (output === 'echo' || output === 'inherit') {
-    log.print(`> ${quote(cmd, ...args)}`, { to: 'stderr', prefix: output !== 'inherit' });
+    log.print(`> ${quote(cmd, ...args)}`, {
+      to: 'stderr',
+      prefix: output !== 'inherit',
+    });
   } else {
     log.debug(`> ${quote(cmd, ...args)}`);
   }
 
   const cp = crossSpawn(cmd, args, {
     cwd,
-    env: { ...process.env, ...env, PATH: npmRunPath({ cwd, path: env?.PATH ?? process.env.PATH }) },
+    env: {
+      ...process.env,
+      ...env,
+      PATH: npmRunPath({ cwd, path: env?.PATH ?? process.env.PATH }),
+    },
     stdio: [
       input != null ? 'pipe' : 'ignore',
       output === 'ignore' || output === 'inherit' ? output : 'pipe',
@@ -111,8 +144,12 @@ export const spawn = (cmd: string, sparseArgs: SpawnSparseArgs = [], options: Sp
   const data: { stream: 'stdout' | 'stderr'; chunk: Buffer }[] = [];
 
   if (output === 'buffer') {
-    cp.stdout?.on('data', (chunk: Buffer) => data.push({ stream: 'stdout', chunk }));
-    cp.stderr?.on('data', (chunk: Buffer) => data.push({ stream: 'stderr', chunk }));
+    cp.stdout?.on('data', (chunk: Buffer) =>
+      data.push({ stream: 'stdout', chunk }),
+    );
+    cp.stderr?.on('data', (chunk: Buffer) =>
+      data.push({ stream: 'stderr', chunk }),
+    );
   } else if (output === 'echo') {
     cp.stdout?.pipe(log.stdout);
     cp.stderr?.pipe(log.stderr);
@@ -152,7 +189,11 @@ export const spawn = (cmd: string, sparseArgs: SpawnSparseArgs = [], options: Sp
       try {
         const result: SpawnResult = {
           get stdout() {
-            return Buffer.concat(data.filter(({ stream }) => stream === 'stdout').map(({ chunk }) => chunk));
+            return Buffer.concat(
+              data
+                .filter(({ stream }) => stream === 'stdout')
+                .map(({ chunk }) => chunk),
+            );
           },
           get stdoutText() {
             return result.stdout.toString('utf8').trim();
@@ -161,7 +202,11 @@ export const spawn = (cmd: string, sparseArgs: SpawnSparseArgs = [], options: Sp
             return JsonAccessor.parse(result.stdoutText);
           },
           get stderr() {
-            return Buffer.concat(data.filter(({ stream }) => stream === 'stderr').map(({ chunk }) => chunk));
+            return Buffer.concat(
+              data
+                .filter(({ stream }) => stream === 'stderr')
+                .map(({ chunk }) => chunk),
+            );
           },
           get stderrText() {
             return result.stderr.toString('utf8').trim();
@@ -223,8 +268,13 @@ export const spawn = (cmd: string, sparseArgs: SpawnSparseArgs = [], options: Sp
 const quote = (...args: readonly string[]): string => {
   return args
     .map((arg) => {
-      if (/["`!#$^&*|?;<>(){}[\]\\]/u.test(arg)) return `'${arg.replaceAll(/(['\\])/gu, '\\$1')}'`;
-      if (/['\s]/u.test(arg)) return `"${arg}"`;
+      if (/["`!#$^&*|?;<>(){}[\]\\]/u.test(arg)) {
+        return `'${arg.replaceAll(/(['\\])/gu, '\\$1')}'`;
+      }
+
+      if (/['\s]/u.test(arg)) {
+        return `"${arg}"`;
+      }
 
       return arg;
     })

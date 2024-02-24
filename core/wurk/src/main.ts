@@ -6,7 +6,6 @@ import { JsonAccessor } from '@wurk/json';
 import { Ansi, ANSI_COLORS, log, setLogLevel } from '@wurk/log';
 import { WorkspaceCollection } from '@wurk/workspace';
 
-import { getConfig } from './config.js';
 import { env } from './env.js';
 import { getNpmWorkspaces } from './npm.js';
 import { loadCommandPlugins } from './plugin.js';
@@ -19,11 +18,13 @@ export const main = (): void => {
 };
 
 const mainAsync = async (): Promise<void> => {
-  const { version, description, npmRoot } = await getConfig();
+  const { version, description, npmRoot } = await import('./config.js');
 
   process.chdir(npmRoot.dir);
   process.chdir = () => {
-    throw new Error('command plugin tried to change the working directory (unsupported)');
+    throw new Error(
+      'command plugin tried to change the working directory (unsupported)',
+    );
   };
 
   const commandPlugins = await loadCommandPlugins(npmRoot.dir, npmRoot.config);
@@ -37,13 +38,14 @@ const mainAsync = async (): Promise<void> => {
 
     // Workspace Options:
     .option('-w, --workspace <expression>', {
-      description: 'select workspaces by name, keyword, directory, or private value',
+      description:
+        'select workspaces by name, keyword, directory, or private value',
       key: 'expressions',
       group: 'Workspace Options',
-      parse: (value, previous: [string, ...string[]] | undefined): [string, ...string[]] => [
-        ...(previous ?? []),
+      parse: (
         value,
-      ],
+        previous: [string, ...string[]] | undefined,
+      ): [string, ...string[]] => [...(previous ?? []), value],
     })
     .option('--include-root-workspace', {
       description: 'include the root workspace',
@@ -62,11 +64,15 @@ const mainAsync = async (): Promise<void> => {
     })
     .optionNegation('parallel', 'noParallel')
     .option('-c, --concurrency <count>', {
-      description: 'number of workspaces to process in parallel (<number>, "auto", "all")',
+      description:
+        'number of workspaces to process in parallel (<number>, "auto", "all")',
       group: 'Parallelization Options',
       parse: (value) => {
         const concurrency = getConcurrency(value);
-        assert(concurrency > 0, 'concurrency must be a non-zero positive number');
+        assert(
+          concurrency > 0,
+          'concurrency must be a non-zero positive number',
+        );
         return concurrency;
       },
     })
@@ -76,7 +82,8 @@ const mainAsync = async (): Promise<void> => {
 
     // Logging Options:
     .option('-l, --loglevel <level>', {
-      description: 'set the log level. (silent, error, warn, notice, info, verbose, silly)',
+      description:
+        'set the log level. (silent, error, warn, notice, info, verbose, silly)',
       group: 'Logging Options',
       key: null,
       parse: setLogLevel,
@@ -129,8 +136,12 @@ const mainAsync = async (): Promise<void> => {
       const workspaces = new WorkspaceCollection({
         root: npmRoot.config,
         rootDir: npmRoot.dir,
-        workspaces: npmWorkspaces.map((npmWorkspace) => [npmWorkspace.dir, npmWorkspace.config]),
-        includeRootWorkspace: includeRootWorkspace || npmWorkspaces.length === 0,
+        workspaces: npmWorkspaces.map((npmWorkspace) => [
+          npmWorkspace.dir,
+          npmWorkspace.config,
+        ]),
+        includeRootWorkspace:
+          includeRootWorkspace || npmWorkspaces.length === 0,
         concurrency: parallel ? concurrency : 1,
         npmHead,
       });

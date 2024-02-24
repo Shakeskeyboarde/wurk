@@ -7,9 +7,7 @@
   "type": "module",
   "bin": "./lib/main.js",
   "devDependencies": {
-    "@wurk/command-build": "*",
-    "vite": "^5.1.1",
-    "vite-plugin-bin": "^1.0.2"
+    "@wurk/command-build": "*"
   },
   "dependencies": {
     "@types/git-url-parse": "^9.0.3",

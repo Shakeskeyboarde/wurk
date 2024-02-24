@@ -14,7 +14,10 @@ export default defineConfig({
       all: true,
       reportsDirectory: './out/coverage',
       include: ['**/*.{ts,tsx}'],
-      exclude: ['**/{_*,.git*,.vscode,out,lib,dist,index*,example*,*.d.ts,types.ts}', '*.*'],
+      exclude: [
+        '**/{_*,.git*,.vscode,out,lib,dist,index*,example*,*.d.ts,types.ts}',
+        '*.*',
+      ],
       thresholds: {
         global: {
           branches: 0,

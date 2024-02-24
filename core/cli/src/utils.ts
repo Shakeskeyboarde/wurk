@@ -11,7 +11,11 @@ const resolve = <TSource, TValue, TDefault = undefined>(
   get: (source: TSource) => TValue | undefined | null,
   defaultValue?: TDefault,
 ): TValue | TDefault => {
-  for (let current: TSource | undefined | null = source; current; current = next(current)) {
+  for (
+    let current: TSource | undefined | null = source;
+    current;
+    current = next(current)
+  ) {
     const value = get(current);
 
     if (value != null) {
@@ -31,7 +35,9 @@ const resolve = <TSource, TValue, TDefault = undefined>(
  * collapsed to a single space character.
  */
 const wrap = (text: string, columns: number, newline = '\n'): string => {
-  const iterator = text.trim().matchAll(/(?<space>\s+)|(?<word>\S+?)(?=\s|(?<=[a-z]-)[a-z]|$)/guy);
+  const iterator = text
+    .trim()
+    .matchAll(/(?<space>\s+)|(?<word>\S+?)(?=\s|(?<=[a-z]-)[a-z]|$)/guy);
 
   let result = '';
   let lineLength = 0;

@@ -1,6 +1,9 @@
 import { type KeyOf } from './types.js';
 
-interface Result<TOptions extends Record<string, unknown>, TCommand extends Record<string, UnknownResult | undefined>> {
+interface Result<
+  TOptions extends Record<string, unknown>,
+  TCommand extends Record<string, UnknownResult | undefined>,
+> {
   /**
    * Options derived from argument parsing and actions.
    */
@@ -13,7 +16,9 @@ interface Result<TOptions extends Record<string, unknown>, TCommand extends Reco
    * defined, because only zero or one commands can be matched per parent
    * command.
    */
-  readonly command: { readonly [P in KeyOf<TCommand>]: TCommand[P] | undefined };
+  readonly command: {
+    readonly [P in KeyOf<TCommand>]: TCommand[P] | undefined;
+  };
 
   /**
    * Option keys which have been parsed from command line arguments.
@@ -46,19 +51,39 @@ interface PartialResult<
   TOptions extends Record<string, unknown>,
   TCommand extends Record<string, UnknownResult | undefined>,
   TKey extends KeyOf<TOptions> = never,
-> extends Pick<Result<TOptions, TCommand>, 'parsed' | 'getHelpText' | 'printHelp'> {
-  readonly options: { [P in KeyOf<TOptions>]: TOptions[P] | (P extends TKey ? never : undefined) };
+> extends Pick<
+    Result<TOptions, TCommand>,
+    'parsed' | 'getHelpText' | 'printHelp'
+  > {
+  readonly options: {
+    [P in KeyOf<TOptions>]: TOptions[P] | (P extends TKey ? never : undefined);
+  };
   readonly command: {
     readonly [P in keyof TCommand]:
-      | PartialResult<InferResultOptions<TCommand[P]>, InferResultCommand<TCommand[P]>>
+      | PartialResult<
+          InferResultOptions<TCommand[P]>,
+          InferResultCommand<TCommand[P]>
+        >
       | undefined;
   };
 }
 
-type InferResultOptions<T extends UnknownResult | undefined> = T extends Result<infer TOptions, any> ? TOptions : never;
-type InferResultCommand<T extends UnknownResult | undefined> = T extends Result<any, infer TCli> ? TCli : never;
+type InferResultOptions<T extends UnknownResult | undefined> =
+  T extends Result<infer TOptions, any> ? TOptions : never;
+type InferResultCommand<T extends UnknownResult | undefined> =
+  T extends Result<any, infer TCli> ? TCli : never;
 
-type UnknownResult = Result<Record<string, unknown>, Record<string, UnknownResult | undefined>>;
+type UnknownResult = Result<
+  Record<string, unknown>,
+  Record<string, UnknownResult | undefined>
+>;
 type EmptyResult = Result<{}, {}>;
 
-export type { EmptyResult, InferResultCommand, InferResultOptions, PartialResult, Result, UnknownResult };
+export type {
+  EmptyResult,
+  InferResultCommand,
+  InferResultOptions,
+  PartialResult,
+  Result,
+  UnknownResult,
+};

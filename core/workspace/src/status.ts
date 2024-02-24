@@ -26,7 +26,10 @@ export class Status {
     this.name = name;
   }
 
-  set(value: StatusValue | Extract<keyof typeof StatusValue, string>, detail?: string): this {
+  set(
+    value: StatusValue | Extract<keyof typeof StatusValue, string>,
+    detail?: string,
+  ): this {
     if (typeof value === 'string') {
       value = value in StatusValue ? StatusValue[value] : this.#value;
     }
@@ -47,7 +50,11 @@ export class Status {
   }
 }
 
-export const printStatus = (log: Log, entries: Iterable<{ name: string; status: Status }>, prefix = ''): void => {
+export const printStatus = (
+  log: Log,
+  entries: Iterable<{ name: string; status: Status }>,
+  prefix = '',
+): void => {
   let statusLogLevel: LogLevel = LogLevel.notice;
 
   const statusMessages = Array.from(entries)
@@ -85,12 +92,23 @@ export const printStatus = (log: Log, entries: Iterable<{ name: string; status: 
   }
 
   if (statusMessages) {
-    log.print(`${prefix}summary:${statusMessages}`, { prefix: false, to: 'stderr' });
+    log.print(`${prefix}summary:${statusMessages}`, {
+      prefix: false,
+      to: 'stderr',
+    });
   }
 
   if (process.exitCode) {
-    log.print(`${prefix}failure`, { prefix: false, to: 'stderr', color: 'red' });
+    log.print(`${prefix}failure`, {
+      prefix: false,
+      to: 'stderr',
+      color: 'red',
+    });
   } else {
-    log.print(`${prefix}success`, { prefix: false, to: 'stderr', color: 'green' });
+    log.print(`${prefix}success`, {
+      prefix: false,
+      to: 'stderr',
+      color: 'green',
+    });
   }
 };

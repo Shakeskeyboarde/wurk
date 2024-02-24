@@ -13,7 +13,12 @@ interface PositionalUsage {
   readonly required: boolean;
 }
 
-interface PositionalConfig<TKey extends string | null, TValue, TParsedValue, TResult extends UnknownResult> {
+interface PositionalConfig<
+  TKey extends string | null,
+  TValue,
+  TParsedValue,
+  TResult extends UnknownResult,
+> {
   readonly key?: TKey;
   readonly description?: string;
   readonly group?: string;
@@ -28,13 +33,17 @@ interface PositionalConfig<TKey extends string | null, TValue, TParsedValue, TRe
 
 type PositionalUsageString = `<${string}>` | `[${string}]`;
 
-type InferPositionalKey<TUsage extends PositionalUsageString> = TUsage extends `${
-  | `<${infer TLabel}${'' | '...'}>`
-  | `[${infer TLabel}${'' | '...'}]`}`
-  ? CamelCase<Exclude<TLabel, `${string}${'<' | '>' | '[' | ']' | '.'}${string}`>>
-  : never;
+type InferPositionalKey<TUsage extends PositionalUsageString> =
+  TUsage extends `${
+    | `<${infer TLabel}${'' | '...'}>`
+    | `[${infer TLabel}${'' | '...'}]`}`
+    ? CamelCase<
+        Exclude<TLabel, `${string}${'<' | '>' | '[' | ']' | '.'}${string}`>
+      >
+    : never;
 
-type InferPositionalRequired<TUsage extends PositionalUsageString> = TUsage extends `<${string}>` ? true : false;
+type InferPositionalRequired<TUsage extends PositionalUsageString> =
+  TUsage extends `<${string}>` ? true : false;
 
 type InferPositionalType<TUsage extends PositionalUsageString> = TUsage extends
   | `<${infer TLabel}>`
@@ -46,8 +55,14 @@ type InferPositionalType<TUsage extends PositionalUsageString> = TUsage extends
 
 type AnyPositionalConfig = PositionalConfig<string, any, any, UnknownResult>;
 
-const createPositional = (usage: string, configOrDescription: AnyPositionalConfig | string = {}): Positional => {
-  const config = typeof configOrDescription === 'string' ? { description: configOrDescription } : configOrDescription;
+const createPositional = (
+  usage: string,
+  configOrDescription: AnyPositionalConfig | string = {},
+): Positional => {
+  const config =
+    typeof configOrDescription === 'string'
+      ? { description: configOrDescription }
+      : configOrDescription;
   const parsedUsage = parseUsage(usage);
 
   return {
@@ -65,7 +80,9 @@ const createPositional = (usage: string, configOrDescription: AnyPositionalConfi
 };
 
 const parseUsage = (usage: string): PositionalUsage => {
-  const match = usage.match(/^(?:<([^\s=,|.<>[\]]+)(\.{3})?>|\[([^\s=,|.<>[\]]+)(\.{3})?\])$/u);
+  const match = usage.match(
+    /^(?:<([^\s=,|.<>[\]]+)(\.{3})?>|\[([^\s=,|.<>[\]]+)(\.{3})?\])$/u,
+  );
 
   if (!match) {
     throw new Error(`invalid positional "${usage}"`);

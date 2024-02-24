@@ -1,4 +1,9 @@
-import { type InferResultCommand, type InferResultOptions, type Result, type UnknownResult } from '@wurk/cli';
+import {
+  type InferResultCommand,
+  type InferResultOptions,
+  type Result,
+  type UnknownResult,
+} from '@wurk/cli';
 import { Log } from '@wurk/log';
 import { type WorkspaceCollection } from '@wurk/workspace';
 
@@ -46,7 +51,9 @@ export class Context<TResult extends UnknownResult>
     return this.#result.parsed;
   }
 
-  constructor({ result, workspaces, autoPrintStatus }: ContextOptions<TResult>) {
+  constructor(options: ContextOptions<TResult>) {
+    const { result, workspaces, autoPrintStatus } = options;
+
     this.#result = result;
     this.log = new Log();
     this.workspaces = workspaces;

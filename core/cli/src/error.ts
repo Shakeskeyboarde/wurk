@@ -14,36 +14,59 @@ class CliError extends Error implements CliErrorConfig {
 }
 
 class CliParseError extends CliError {
-  constructor(message: string | undefined, options: Omit<CliErrorConfig, 'code'>) {
+  constructor(
+    message: string | undefined,
+    options: Omit<CliErrorConfig, 'code'>,
+  ) {
     super(message, { ...options, code: 'CLI_PARSE_ERROR' });
   }
 
-  static from(cause: unknown, options: Omit<CliErrorConfig, 'code' | 'cause'>): CliError {
+  static from(
+    cause: unknown,
+    options: Omit<CliErrorConfig, 'code' | 'cause'>,
+  ): CliError {
     if (cause instanceof CliParseError) {
       return cause;
     }
 
-    return new CliParseError(cause instanceof Error ? cause.message : typeof cause === 'string' ? cause : undefined, {
-      ...options,
-      cause,
-    });
+    return new CliParseError(
+      cause instanceof Error
+        ? cause.message
+        : typeof cause === 'string'
+          ? cause
+          : undefined,
+      {
+        ...options,
+        cause,
+      },
+    );
   }
 }
 
 class CliActionError extends CliError {
-  constructor(message: string | undefined, options: Omit<CliErrorConfig, 'code'>) {
+  constructor(
+    message: string | undefined,
+    options: Omit<CliErrorConfig, 'code'>,
+  ) {
     super(message, { ...options, code: 'CLI_ACTION_ERROR' });
   }
 
-  static from(cause: unknown, options: Omit<CliErrorConfig, 'code' | 'cause'>): CliError {
+  static from(
+    cause: unknown,
+    options: Omit<CliErrorConfig, 'code' | 'cause'>,
+  ): CliError {
     if (cause instanceof CliActionError) {
       return cause;
     }
 
-    return new CliActionError(cause instanceof Error ? cause.message : typeof cause === 'string' ? cause : undefined, {
-      ...options,
-      cause,
-    });
+    const message =
+      cause instanceof Error
+        ? cause.message
+        : typeof cause === 'string'
+          ? cause
+          : undefined;
+
+    return new CliActionError(message, { ...options, cause });
   }
 }
 

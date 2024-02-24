@@ -11,8 +11,7 @@
     "directory": "core/cli"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "check": "wurk -t build --no-clean && wurk -t vitest --no-build run"
+    "build": "tsc -p src/tsconfig.json"
   },
   "type": "module",
   "types": "./lib/index.d.ts",
@@ -21,8 +20,8 @@
     "default": "./lib/index.js"
   },
   "files": [
-    "CHANGELOG.md",
-    "lib/**"
+    "lib",
+    "CHANGELOG.md"
   ],
   "keywords": [
     "wurk",

@@ -11,18 +11,17 @@
     "directory": "core/fs"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json"
+    "build": "tsc -p src/tsconfig.json"
   },
   "type": "module",
   "types": "./lib/index.d.ts",
-  "main": "./lib/index.js",
   "exports": {
     "types": "./lib/index.d.ts",
     "default": "./lib/index.js"
   },
   "files": [
-    "CHANGELOG.md",
-    "lib/**"
+    "lib",
+    "CHANGELOG.md"
   ],
   "publishConfig": {
     "access": "public"

@@ -35,9 +35,6 @@
     "wurk": "*"
   },
   "devDependencies": {
-    "@wurk/command-build": "*",
-    "vite": "^5.1.1",
-    "vite-plugin-checker": "^0.6.4",
-    "vite-plugin-dts": "^3.7.2"
+    "@wurk/command-build": "*"
   }
 }

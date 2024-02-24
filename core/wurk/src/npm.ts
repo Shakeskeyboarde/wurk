@@ -1,7 +1,7 @@
-import fs from 'node:fs';
 import path from 'node:path';
 
-import { JsonAccessor } from '@wurk/json';
+import { fs } from '@wurk/fs';
+import { type JsonAccessor } from '@wurk/json';
 import { spawn } from '@wurk/spawn';
 
 export interface NpmQueryResult {
@@ -10,12 +10,18 @@ export interface NpmQueryResult {
 }
 
 const getNpmQuery = async (selector: string): Promise<NpmQueryResult[]> => {
-  const results = await spawn('npm', ['query', selector, '--quiet', '--json']).stdoutJson();
+  const results = await spawn('npm', [
+    'query',
+    selector,
+    '--quiet',
+    '--json',
+  ]).stdoutJson();
 
   return await Promise.all(
     results.map(async (result): Promise<NpmQueryResult> => {
-      const dir = result.at('realpath').as('string') ?? result.at('path').as('string')!;
-      const config = await fs.promises.readFile(path.join(dir, 'package.json'), 'utf8').then(JsonAccessor.parse);
+      const dir =
+        result.at('realpath').as('string') ?? result.at('path').as('string')!;
+      const config = await fs.readJson(path.join(dir, 'package.json'));
 
       return { dir, config };
     }) ?? [],

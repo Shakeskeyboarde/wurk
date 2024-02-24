@@ -2,11 +2,15 @@ import { type PartialCli } from './cli.js';
 import { CliActionError } from './error.js';
 import { type UnknownResult } from './result.js';
 
-type RunCli = PartialCli<'name' | 'actions' | 'commands' | 'getHelpText' | 'printHelp'>;
+type RunCli = PartialCli<
+  'name' | 'actions' | 'commands' | 'getHelpText' | 'printHelp'
+>;
+
+type CleanupAction = (result: UnknownResult) => void | Promise<void>;
 
 const run = async (cli: RunCli, result: UnknownResult): Promise<void> => {
   try {
-    const cleanupActions: ((result: UnknownResult) => void | Promise<void>)[] = [];
+    const cleanupActions: CleanupAction[] = [];
 
     for (const action of cli.actions) {
       const cleanupAction = await action(result);

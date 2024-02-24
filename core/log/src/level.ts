@@ -13,7 +13,14 @@ export enum LogLevel {
 }
 
 export const setLogLevel = (
-  level: LogLevel | LogLevelString | 'trace' | 'debug' | (string & {}) | undefined | null,
+  level:
+    | LogLevel
+    | LogLevelString
+    | 'trace'
+    | 'debug'
+    | (string & {})
+    | undefined
+    | null,
 ): void => {
   if (typeof level === 'string') {
     switch (level) {
@@ -34,12 +41,16 @@ export const setLogLevel = (
   env.WURK_LOG_LEVEL = level ?? undefined;
 };
 
-export const getLogLevel = (): LogLevel | undefined => {
-  return isLogLevelString(env.WURK_LOG_LEVEL) ? LogLevel[env.WURK_LOG_LEVEL] : undefined;
+export const getLogLevel = (): LogLevel => {
+  return isLogLevelString(env.WURK_LOG_LEVEL)
+    ? LogLevel[env.WURK_LOG_LEVEL]
+    : process.env.DEBUG
+      ? LogLevel.silly
+      : LogLevel.info;
 };
 
 export const isLogLevel = (level: LogLevel): boolean => {
-  return level <= (getLogLevel() ?? LogLevel.info);
+  return level <= getLogLevel();
 };
 
 const isLogLevelString = (value: unknown): value is LogLevelString => {

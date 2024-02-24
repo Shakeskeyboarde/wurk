@@ -22,10 +22,21 @@ let [dir = '.'] = process.argv.slice(2);
 
 dir = resolve(dir);
 
-assert(!existsSync(resolve(dir, 'package.json')), 'target directory already has a package.json file');
+assert(
+  !existsSync(resolve(dir, 'package.json')),
+  'target directory already has a package.json file',
+);
 
 const ghUser = await execa('gh', ['api', 'user'])
-  .then((result): { login: string; html_url: string; name: string; email: string } => JSON.parse(result.stdout))
+  .then(
+    (result) =>
+      JSON.parse(result.stdout) as {
+        login: string;
+        html_url: string;
+        name: string;
+        email: string;
+      },
+  )
   .catch(() => undefined);
 const gitName =
   ghUser?.name ||
@@ -38,10 +49,7 @@ const gitEmail =
     .then((result) => result.stdout)
     .catch(() => undefined));
 
-const rl = createInterface({
-  input: process.stdin,
-  output: process.stderr,
-});
+const rl = createInterface({ input: process.stdin, output: process.stderr });
 
 const description = await rl.question('Description? ');
 const author = gitName || (await rl.question('Author Name? '));
@@ -74,10 +82,7 @@ const config = {
   author: author ? `${author}${email ? ` <${email}>` : ''}` : undefined,
   license: license || undefined,
   repository: gitRepoParsed
-    ? {
-        type: 'git',
-        url: gitRepoParsed.href,
-      }
+    ? { type: 'git', url: gitRepoParsed.href }
     : undefined,
   scripts: {},
   type: 'module',
@@ -96,7 +101,9 @@ await mkdir(resolve(dir, 'packages'), { recursive: true });
 
 process.chdir(dir);
 
-await writeFile('package.json', JSON.stringify(config, null, 2), { flag: 'wx' });
+await writeFile('package.json', JSON.stringify(config, null, 2), {
+  flag: 'wx',
+});
 await writeFile('packages/.gitkeep', '', { flag: 'wx' }).catch(() => undefined);
 await writeFile(
   '.gitignore',
@@ -125,7 +132,9 @@ await writeFile(
 ).catch(() => undefined);
 
 if (licenseText) {
-  await writeFile('LICENSE', wrapText(licenseText, 79), { flag: 'wx' }).catch(() => undefined);
+  await writeFile('LICENSE', wrapText(licenseText, 79), { flag: 'wx' }).catch(
+    () => undefined,
+  );
 }
 
 const isTypescript = await rl
@@ -138,7 +147,7 @@ if (isTypescript) {
     JSON.stringify(
       {
         compilerOptions: {
-          module: 'NodeNext',
+          module: 'Node16',
           target: 'ES2022',
           lib: ['ES2022'],
           types: [],
@@ -160,11 +169,17 @@ if (isTypescript) {
     { flag: 'wx' },
   ).catch(() => undefined);
 
-  await execa('npm', ['install', '--save-dev', 'typescript'], { stdio: 'ignore', reject: false });
+  await execa('npm', ['install', '--save-dev', 'typescript'], {
+    stdio: 'ignore',
+    reject: false,
+  });
 }
 
 await execa('git', ['init'], { stdio: 'ignore', reject: false });
 await execa('git', ['add', '.'], { stdio: 'ignore', reject: false });
-await execa('git', ['commit', '-m', 'Initial commit.'], { stdio: 'ignore', reject: false });
+await execa('git', ['commit', '-m', 'Initial commit.'], {
+  stdio: 'ignore',
+  reject: false,
+});
 
 rl.close();

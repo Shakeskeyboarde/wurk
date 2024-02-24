@@ -20,7 +20,9 @@ export class LogStream extends Transform {
     process.on('exit', this.#onExit);
   }
 
-  end(...args: [unknown?, (BufferEncoding | (() => void))?, (() => void)?]): this {
+  end(
+    ...args: [unknown?, (BufferEncoding | (() => void))?, (() => void)?]
+  ): this {
     if (args.length > 0) {
       this.write.call(this, ...(args as Parameters<this['write']>));
     }
@@ -38,7 +40,11 @@ export class LogStream extends Transform {
     return this;
   }
 
-  _transform(chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback): void {
+  _transform(
+    chunk: Buffer,
+    _encoding: BufferEncoding,
+    callback: TransformCallback,
+  ): void {
     if (chunk.length === 0) return;
 
     this.#buffer += Ansi.strip(this.#decoder.write(chunk));

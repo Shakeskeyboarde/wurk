@@ -99,7 +99,9 @@ export const getChanges = async (
   let isConventional = true;
   let changes: Change[] = logs
     .flatMap(({ hash, subject, body }): Change[] => {
-      const subjectMatch = subject.match(/^\s*([a-z][a-z- ]+(?<=[a-z]))\s*(?:\((.*?)\)\s*)?(?:!\s*)?:(.*)$/iu);
+      const subjectMatch = subject.match(
+        /^\s*([a-z][a-z- ]+(?<=[a-z]))\s*(?:\((.*?)\)\s*)?(?:!\s*)?:(.*)$/iu,
+      );
 
       if (!subjectMatch) {
         isConventional = false;
@@ -112,7 +114,9 @@ export const getChanges = async (
       scope = scope?.trim();
       summary = summary.trim();
 
-      const type = /none|internal|version(?:ed|ing)|releas(?:ed?|ing)/u.test(typeString)
+      const type = /none|internal|version(?:ed|ing)|releas(?:ed?|ing)/u.test(
+        typeString,
+      )
         ? ChangeType.none
         : CHANGE_TYPES[typeString] ?? ChangeType.fix;
       const message = `${summary} (${hash})`;
@@ -121,7 +125,9 @@ export const getChanges = async (
       return [
         { type, scope, message },
         ...bodyLines.flatMap((line) => {
-          const lineMatch = line.match(/^\s*break(?:s|ing(?:[ -]?changes?)?)?\s*(?:!\s*)?:(.*)$/imu);
+          const lineMatch = line.match(
+            /^\s*break(?:s|ing(?:[ -]?changes?)?)?\s*(?:!\s*)?:(.*)$/imu,
+          );
 
           if (!lineMatch) return [];
 
@@ -129,22 +135,34 @@ export const getChanges = async (
 
           breakingMessage = breakingMessage.trim();
 
-          return { type: ChangeType.breaking, message: `${breakingMessage} (${hash})` };
+          return {
+            type: ChangeType.breaking,
+            message: `${breakingMessage} (${hash})`,
+          };
         }),
       ];
     })
     .map(({ type, scope, message }) => {
       return {
         type,
-        scope: scope?.replace(MARKDOWN_ESCAPE, (char) => `&#${char.charCodeAt(0)};`),
-        message: message?.replace(MARKDOWN_ESCAPE, (char) => `&#${char.charCodeAt(0)};`),
+        scope: scope?.replace(MARKDOWN_ESCAPE, (char) => {
+          return `&#${char.charCodeAt(0)};`;
+        }),
+        message: message?.replace(MARKDOWN_ESCAPE, (char) => {
+          return `&#${char.charCodeAt(0)};`;
+        }),
       };
     });
 
   if (changes.length) {
     // Remove duplicate changelog entries.
-    const changeLogText = await fs.readText('CHANGELOG.md').catch(() => '');
-    changes = changes.filter((change) => !changeLogText.includes(` ${change.message}\n`));
+    const changeLogText = await fs
+      .readText('CHANGELOG.md')
+      .then((text) => text ?? '');
+
+    changes = changes.filter(
+      (change) => !changeLogText.includes(` ${change.message}\n`),
+    );
   }
 
   const releaseType = getReleaseType(changes);
@@ -152,8 +170,13 @@ export const getChanges = async (
   return { isConventional, releaseType, changes };
 };
 
-const getReleaseType = (changes: readonly Change[]): Exclude<ReleaseType, `pre${string}`> | null => {
-  const changeType = changes.reduce<ChangeType>((current, change) => Math.max(current, change.type), ChangeType.none);
+const getReleaseType = (
+  changes: readonly Change[],
+): Exclude<ReleaseType, `pre${string}`> | null => {
+  const changeType = changes.reduce<ChangeType>(
+    (current, change) => Math.max(current, change.type),
+    ChangeType.none,
+  );
 
   switch (changeType) {
     case ChangeType.none:

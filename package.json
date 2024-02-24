@@ -29,8 +29,7 @@
     "core/workspace",
     "core/wurk",
     "commands/*",
-    "tests/*",
-    "template"
+    "tests/*"
   ],
   "engines": {
     "node": ">=18",

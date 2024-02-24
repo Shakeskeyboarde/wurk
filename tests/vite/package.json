@@ -9,9 +9,7 @@
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "test-vite-lib": "*",
-    "test-vite-lib-bundle": "*"
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",

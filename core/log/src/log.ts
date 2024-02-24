@@ -70,7 +70,10 @@ export class Log {
    * Print a dimmed message to stderr.
    */
   readonly silly = (value?: unknown, options?: LogPrintOptions): void => {
-    this._print(options?.to ?? 'stderr', LogLevel.silly, value, { style: 'dim', ...options });
+    this._print(options?.to ?? 'stderr', LogLevel.silly, value, {
+      style: 'dim',
+      ...options,
+    });
   };
   /**
    * Alias for `silly`.
@@ -81,7 +84,10 @@ export class Log {
    * Print a dimmed message to stderr.
    */
   readonly verbose = (value?: unknown, options?: LogPrintOptions): void => {
-    this._print(options?.to ?? 'stderr', LogLevel.verbose, value, { style: 'dim', ...options });
+    this._print(options?.to ?? 'stderr', LogLevel.verbose, value, {
+      style: 'dim',
+      ...options,
+    });
   };
   /**
    * Alias for `verbose`.
@@ -106,14 +112,20 @@ export class Log {
    * Print a yellow message to stderr.
    */
   readonly warn = (value?: unknown, options?: LogPrintOptions): void => {
-    this._print(options?.to ?? 'stderr', LogLevel.warn, value, { color: 'yellow', ...options });
+    this._print(options?.to ?? 'stderr', LogLevel.warn, value, {
+      color: 'yellow',
+      ...options,
+    });
   };
 
   /**
    * Print a red message to stderr.
    */
   readonly error = (value?: unknown, options?: LogPrintOptions): void => {
-    this._print(options?.to ?? 'stderr', LogLevel.warn, value, { color: 'red', ...options });
+    this._print(options?.to ?? 'stderr', LogLevel.warn, value, {
+      color: 'red',
+      ...options,
+    });
   };
 
   /**
@@ -140,11 +152,17 @@ export class Log {
     to: 'stdout' | 'stderr',
     level: LogLevel,
     value: unknown,
-    { once = false, prefix = true, color, style }: Omit<LogPrintOptions, 'to'> = {},
+    options: Omit<LogPrintOptions, 'to'> = {},
   ): void => {
+    const { once = false, prefix = true, color, style } = options;
+
     if (isLogLevel(level)) {
       const message =
-        value == null ? '' : value instanceof Error && process.env.DEBUG ? value.stack ?? String(value) : String(value);
+        value == null
+          ? ''
+          : value instanceof Error && process.env.DEBUG
+            ? value.stack ?? String(value)
+            : String(value);
       const text = `${prefix ? this.#prefixFormatted : ''}${color ? Ansi.color[color] : ''}${style ? Ansi[style] : ''}${message}${
         Ansi.reset
       }\n`;

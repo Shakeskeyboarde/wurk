@@ -3,7 +3,9 @@ import { type Workspace } from 'wurk';
 
 import { type Change, getChanges } from '../change.js';
 
-export const auto = async (workspace: Workspace): Promise<readonly Change[]> => {
+export const auto = async (
+  workspace: Workspace,
+): Promise<readonly Change[]> => {
   const { log, npm, git, config, version } = workspace;
 
   // Auto-versioning does not support workspaces without versions or with
@@ -21,7 +23,9 @@ export const auto = async (workspace: Workspace): Promise<readonly Change[]> => 
   }
 
   if (!meta.gitHead) {
-    log.warn('auto versioning requires a "gitHead" published to the NPM registry');
+    log.warn(
+      'auto versioning requires a "gitHead" published to the NPM registry',
+    );
     return [];
   }
 
@@ -30,7 +34,10 @@ export const auto = async (workspace: Workspace): Promise<readonly Change[]> => 
     return [];
   }
 
-  const { isConventional, releaseType, changes } = await getChanges(workspace, meta.gitHead);
+  const { isConventional, releaseType, changes } = await getChanges(
+    workspace,
+    meta.gitHead,
+  );
 
   if (!isConventional) {
     log.warn(`workspace has non-conventional commits`);

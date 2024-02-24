@@ -20,22 +20,29 @@ export default createCommand('run', {
   },
 
   run: async ({ workspaces, options }) => {
-    const { scriptsCsv, args = [] } = options;
-    const scripts = scriptsCsv.split(/\s*,\s*/u).filter(Boolean);
+    const scripts = options.scriptsCsv.split(/\s*,\s*/u).filter(Boolean);
 
     if (scripts.length === 0) return;
 
     if (scripts[0] === 'start' && scripts.length === 1) {
       // If the start script is run by itself, it should generally be run
       // in all workspaces simultaneously.
-      await workspaces.forEachIndependent((workspace) => runWorkspaceScripts(workspace, scripts, args));
+      await workspaces.forEachIndependent((workspace) => {
+        return runWorkspaceScripts(workspace, scripts, options.args);
+      });
     } else {
-      await workspaces.forEach((workspace) => runWorkspaceScripts(workspace, scripts, args));
+      await workspaces.forEach((workspace) => {
+        return runWorkspaceScripts(workspace, scripts, options.args);
+      });
     }
   },
 });
 
-const runWorkspaceScripts = async (workspace: Workspace, scripts: string[], args: readonly string[]): Promise<void> => {
+const runWorkspaceScripts = async (
+  workspace: Workspace,
+  scripts: string[],
+  args: readonly string[] = [],
+): Promise<void> => {
   const { log, config, spawn } = workspace;
   const scriptsJson = config.at('scripts');
 
@@ -45,8 +52,10 @@ const runWorkspaceScripts = async (workspace: Workspace, scripts: string[], args
       continue;
     }
 
-    await spawn('npm', ['run', script, ...(args.length ? ['--', ...args] : [])], {
-      output: 'echo',
-    });
+    await spawn(
+      'npm',
+      ['run', script, ...(args.length ? ['--', ...args] : [])],
+      { output: 'echo' },
+    );
   }
 };

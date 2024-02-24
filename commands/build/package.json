@@ -11,7 +11,7 @@
     "directory": "commands/build"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json"
+    "build": "tsc -p src/tsconfig.json"
   },
   "type": "module",
   "types": "./lib/command.d.ts",
@@ -20,9 +20,8 @@
     "default": "./lib/command.js"
   },
   "files": [
-    "CHANGELOG.md",
-    "lib/**",
-    "config/**"
+    "lib",
+    "CHANGELOG.md"
   ],
   "keywords": [
     "wurk",
@@ -43,8 +42,6 @@
     "access": "public"
   },
   "dependencies": {
-    "wurk": "*",
-    "@wurk/json": "*",
-    "@wurk/vite-config": "*"
+    "wurk": "*"
   }
 }

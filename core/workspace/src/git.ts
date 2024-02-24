@@ -54,7 +54,10 @@ export class Git {
    * Return true if the workspace directory is only a shallow Git checkout.
    */
   readonly getIsShallow = async (): Promise<boolean> => {
-    return await this.#spawn('git', ['rev-parse', '--is-shallow-repository']).then(({ stdoutText }) => {
+    return await this.#spawn('git', [
+      'rev-parse',
+      '--is-shallow-repository',
+    ]).then(({ stdoutText }) => {
       return stdoutText !== 'false';
     });
   };
@@ -63,7 +66,10 @@ export class Git {
    * Return the root directory of the Git repository.
    */
   readonly getRoot = async (): Promise<string> => {
-    return await this.#spawn('git', ['rev-parse', '--show-toplevel']).stdoutText();
+    return await this.#spawn('git', [
+      'rev-parse',
+      '--show-toplevel',
+    ]).stdoutText();
   };
 
   /**
@@ -73,7 +79,13 @@ export class Git {
    */
   readonly getHead = async (): Promise<string | undefined> => {
     try {
-      let head = await this.#spawn('git', ['log', '-n', '1', '--pretty=format:%H', '.']).stdoutText();
+      let head = await this.#spawn('git', [
+        'log',
+        '-n',
+        '1',
+        '--pretty=format:%H',
+        '.',
+      ]).stdoutText();
 
       if (!head) {
         head = await this.#spawn('git', ['rev-parse', 'HEAD']).stdoutText();
@@ -97,7 +109,12 @@ export class Git {
 
     const [gitRoot, gitIgnoredText] = await Promise.all([
       await this.getRoot(),
-      await this.#spawn('git', ['status', '--ignored', '--porcelain', this.#dir]).stdoutText(),
+      await this.#spawn('git', [
+        'status',
+        '--ignored',
+        '--porcelain',
+        this.#dir,
+      ]).stdoutText(),
     ]);
 
     return gitIgnoredText
@@ -113,19 +130,26 @@ export class Git {
    * Return true if the Git working tree is dirty.
    */
   readonly getIsDirty = async (): Promise<boolean> => {
-    return await this.#spawn('git', ['status', '--porcelain', this.#dir]).stdoutText().then(Boolean);
+    return await this.#spawn('git', ['status', '--porcelain', this.#dir])
+      .stdoutText()
+      .then(Boolean);
   };
 
   /**
    * Get git log entries.
    */
-  readonly getLogs = async (start?: string | null, end?: string): Promise<GitLog[]> => {
+  readonly getLogs = async (
+    start?: string | null,
+    end?: string,
+  ): Promise<GitLog[]> => {
     start = start?.trim();
     end = end?.trim() || 'HEAD';
 
     const formatEntries = Object.entries(LOG_FORMAT);
     const formatNames = formatEntries.map(([name]) => name);
-    const formatPlaceholders = formatEntries.map(([, placeholder]) => placeholder);
+    const formatPlaceholders = formatEntries.map(
+      ([, placeholder]) => placeholder,
+    );
     const text = await this.#spawn('git', [
       'log',
       `--pretty=format:${LOG_CAP} ${formatPlaceholders.join(LOG_SEPARATOR)} ${LOG_CAP}`,
@@ -134,14 +158,25 @@ export class Git {
       this.#dir,
     ]).stdoutText();
 
-    return [...text.matchAll(/\0{3}(.*)\0{3}/gsu)].flatMap(([, content = '']) => {
-      const values = content.split(LOG_SEPARATOR).map((value) => value.trim());
-      const log = Object.fromEntries(formatNames.map((name, index) => [name, values[index]]));
-      return log as unknown as GitLog;
-    });
+    return [...text.matchAll(/\0{3}(.*)\0{3}/gsu)].flatMap(
+      ([, content = '']) => {
+        const values = content
+          .split(LOG_SEPARATOR)
+          .map((value) => value.trim());
+        const log = Object.fromEntries(
+          formatNames.map((name, index) => [name, values[index]]),
+        );
+
+        return log as unknown as GitLog;
+      },
+    );
   };
 
   readonly #spawn: Spawn = (cmd, sparseOrgs, spawnOptions) => {
-    return spawn(cmd, sparseOrgs, { log: this.#log, cwd: this.#dir, ...spawnOptions });
+    return spawn(cmd, sparseOrgs, {
+      log: this.#log,
+      cwd: this.#dir,
+      ...spawnOptions,
+    });
   };
 }

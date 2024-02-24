@@ -65,8 +65,6 @@ export default createCommand('my-command', {
 });
 ```
 
-You can also copy the [template](https://github.com/Shakeskeyboarde/wurk/blob/main/template) into your own repo to get started.
-
 The `config` callback must configure and return the command's command line interface. The `cli` parameter is an unconfigured `Cli` instance from the [@wurk/cli](https://www.npmjs.com/package/@wurk/cli) package.
 
 The `action` callback is called if the command name is matched. The `context` parameter is an object which provides access to the parsed command line results, workspaces, and helper methods.

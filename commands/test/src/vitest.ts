@@ -19,8 +19,14 @@ const CONFIG_FILENAMES = [
   'vitest.config.cjs',
 ];
 
-export const runVitest = async ({ workspaces }: VitestContext): Promise<void> => {
-  if (!workspaces.root.config.at('devDependencies').at('vitest').is('string')) return;
+export const runVitest = async (context: VitestContext): Promise<void> => {
+  const { workspaces } = context;
+  const isDependencyPresent = workspaces.root.config
+    .at('devDependencies')
+    .at('vitest')
+    .is('string');
+
+  if (!isDependencyPresent) return;
 
   const workspaceDirs: string[] = [];
 
@@ -32,12 +38,18 @@ export const runVitest = async ({ workspaces }: VitestContext): Promise<void> =>
 
   if (!workspaceDirs.length) return;
 
-  const configFilename = workspaces.root.fs.resolve('node_modules', '.wurk-command-test', 'vitest.workspace.json');
+  const configFilename = workspaces.root.fs.resolve(
+    'node_modules',
+    '.wurk-command-test',
+    'vitest.workspace.json',
+  );
 
   await workspaces.root.fs.writeJson(configFilename, workspaceDirs);
-  await workspaces.root.spawn('vitest', ['run', `--workspace=${configFilename}`], {
-    output: 'inherit',
-  });
+  await workspaces.root.spawn(
+    'vitest',
+    ['run', `--workspace=${configFilename}`],
+    { output: 'inherit' },
+  );
 };
 
 const isVitestConfigFound = async (workspace: Workspace): Promise<boolean> => {

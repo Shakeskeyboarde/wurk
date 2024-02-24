@@ -3,7 +3,8 @@ import { type Workspace } from 'wurk';
 
 import { type Change, ChangeType } from './change.js';
 
-export const sync = ({ log, config, version, isPrivate, getDependencyLinks }: Workspace): Change[] => {
+export const sync = (workspace: Workspace): Change[] => {
+  const { log, config, version, isPrivate, getDependencyLinks } = workspace;
   const pending: (() => void)[] = [];
   const isOriginalVersion = version === config.at('version').as('string');
 
@@ -11,7 +12,12 @@ export const sync = ({ log, config, version, isPrivate, getDependencyLinks }: Wo
 
   getDependencyLinks().forEach(({ scope, id, versionRange, dependency }) => {
     // The range is not updatable.
-    if (!semver.validRange(versionRange) || versionRange === '*' || versionRange === 'x') return;
+    if (
+      !semver.validRange(versionRange) ||
+      versionRange === '*' ||
+      versionRange === 'x'
+    )
+      return;
 
     const newVersion = dependency.config.at('version').as('string');
 
@@ -45,13 +51,17 @@ export const sync = ({ log, config, version, isPrivate, getDependencyLinks }: Wo
   }
 
   if (isOptional) {
-    log.debug('all local dependency version ranges are satisfied by current dependency versions');
+    log.debug(
+      'all local dependency version ranges are satisfied by current dependency versions',
+    );
 
     // Skip updates that aren't required in unselected public workspaces,
     // because it more closely matches the intent behind selecting workspaces,
     // and because it leads to less (unnecessary) publishing.
     if (!isPrivate && isOriginalVersion) {
-      log.debug('skipping optional local dependency updates (public and no version update)');
+      log.debug(
+        'skipping optional local dependency updates (public and no version update)',
+      );
       return [];
     }
   }
@@ -64,8 +74,14 @@ export const sync = ({ log, config, version, isPrivate, getDependencyLinks }: Wo
   if (version && isOriginalVersion && !isPrivate) {
     config
       .at('version')
-      .set(new semver.SemVer(version).inc(semver.prerelease(version)?.length ? 'prerelease' : 'patch').format());
+      .set(
+        new semver.SemVer(version)
+          .inc(semver.prerelease(version)?.length ? 'prerelease' : 'patch')
+          .format(),
+      );
   }
 
-  return [{ type: ChangeType.note, message: 'update local dependency versions' }];
+  return [
+    { type: ChangeType.note, message: 'update local dependency versions' },
+  ];
 };

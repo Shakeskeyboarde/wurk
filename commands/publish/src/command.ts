@@ -1,7 +1,7 @@
 import { createCommand } from 'wurk';
 
-import { publishFromArchive } from './publish-from-archive.js';
-import { publishFromFilesystem } from './publish-from-filesystem.js';
+import { publishFromArchive } from './archive.js';
+import { publishFromFilesystem } from './filesystem.js';
 
 export default createCommand('publish', {
   config: (cli) => {
@@ -11,8 +11,14 @@ export default createCommand('publish', {
       .option('--from-archive', 'publish pre-packed workspace archives')
       .optionConflict('toArchive', 'fromArchive')
       .option('--tag <tag>', 'publish with a dist-tag')
-      .option('--otp <password>', 'one-time password for two-factor authentication')
-      .option('--remove-package-fields <fields...>', 'remove fields from the package.json file')
+      .option(
+        '--otp <password>',
+        'one-time password for two-factor authentication',
+      )
+      .option(
+        '--remove-package-fields <fields...>',
+        'remove fields from the package.json file',
+      )
       .optionConflict('removePackageFields', 'fromArchive')
       .option('--build', { hidden: true })
       .option('--no-build', 'skip building workspaces')
@@ -21,14 +27,18 @@ export default createCommand('publish', {
   },
 
   run: async ({ log: rootLog, options, workspaces, autoPrintStatus }) => {
-    const { fromArchive = false, build = true } = options;
-
     autoPrintStatus();
 
-    if (!fromArchive && build && workspaces.root.config.at('scripts').at('build').is('string')) {
+    if (
+      !options.fromArchive &&
+      options.build &&
+      workspaces.root.config.at('scripts').at('build').is('string')
+    ) {
       rootLog.info(`running pre-publish build`);
 
-      await workspaces.root.spawn('npm', ['run', 'build'], { output: 'inherit' });
+      await workspaces.root.spawn('npm', ['run', 'build'], {
+        output: 'inherit',
+      });
     }
 
     await workspaces.forEach(async (workspace) => {
@@ -40,7 +50,7 @@ export default createCommand('publish', {
         return;
       }
 
-      return fromArchive
+      return options.fromArchive
         ? await publishFromArchive({ options, workspace })
         : await publishFromFilesystem({ options, workspace });
     });

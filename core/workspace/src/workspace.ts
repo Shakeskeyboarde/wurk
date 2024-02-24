@@ -1,9 +1,19 @@
 import { Fs } from '@wurk/fs';
-import { importRelative, type ImportResult } from '@wurk/import';
+import {
+  importRelative,
+  type ImportResolved,
+  type ImportResult,
+  resolveImport,
+} from '@wurk/import';
 import { type JsonAccessor } from '@wurk/json';
 import { Log } from '@wurk/log';
 import { type Spawn, spawn } from '@wurk/spawn';
 
+import {
+  type Entrypoint,
+  getEntrypoints,
+  getMissingEntrypoints,
+} from './entrypoint.js';
 import { Git } from './git.js';
 import { Npm } from './npm.js';
 import { Status } from './status.js';
@@ -14,18 +24,17 @@ export interface WorkspaceOptions {
   readonly relativeDir: string;
   readonly isRoot: boolean;
   readonly npmHead: string | undefined;
-  readonly getDependencyLinks: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
-  readonly getDependentLinks: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
+  readonly getDependencyLinks: (
+    options?: WorkspaceLinkOptions,
+  ) => readonly WorkspaceLink[];
+  readonly getDependentLinks: (
+    options?: WorkspaceLinkOptions,
+  ) => readonly WorkspaceLink[];
 }
 
 export interface WorkspaceLinkOptions {
   readonly recursive?: boolean;
   readonly filter?: (link: WorkspaceLink) => boolean;
-}
-
-export interface WorkspaceEntrypoint {
-  readonly type: (typeof WORKSPACE_ENTRYPOINT_TYPES)[number];
-  readonly filename: string;
 }
 
 export interface WorkspaceLink {
@@ -36,16 +45,11 @@ export interface WorkspaceLink {
   versionRange: string;
 }
 
-const WORKSPACE_LINK_SCOPES = ['devDependencies', 'peerDependencies', 'optionalDependencies', 'dependencies'] as const;
-const WORKSPACE_ENTRYPOINT_TYPES = [
-  'license',
-  'types',
-  'bin',
-  'main',
-  'module',
-  'exports',
-  'man',
-  'directories',
+const WORKSPACE_LINK_SCOPES = [
+  'devDependencies',
+  'peerDependencies',
+  'optionalDependencies',
+  'dependencies',
 ] as const;
 
 export class Workspace {
@@ -104,7 +108,9 @@ export class Workspace {
    * True if this workspace is a dependency of any selected workspace.
    */
   get isDependencyOfSelected(): boolean {
-    return this.getDependentLinks({ recursive: true }).some((link) => link.dependent.isSelected);
+    return this.getDependentLinks({ recursive: true }).some(
+      (link) => link.dependent.isSelected,
+    );
   }
 
   /**
@@ -112,7 +118,9 @@ export class Workspace {
    * workspace.
    */
   get isDependentOfSelected(): boolean {
-    return this.getDependencyLinks({ recursive: true }).some((link) => link.dependency.isSelected);
+    return this.getDependencyLinks({ recursive: true }).some(
+      (link) => link.dependency.isSelected,
+    );
   }
 
   constructor(options: WorkspaceOptions) {
@@ -140,12 +148,16 @@ export class Workspace {
   /**
    * Get all immediate local dependency workspaces.
    */
-  readonly getDependencyLinks: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
+  readonly getDependencyLinks: (
+    options?: WorkspaceLinkOptions,
+  ) => readonly WorkspaceLink[];
 
   /**
    * Get all immediate local dependent workspaces.
    */
-  readonly getDependentLinks: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
+  readonly getDependentLinks: (
+    options?: WorkspaceLinkOptions,
+  ) => readonly WorkspaceLink[];
 
   /**
    * Try to detect changes using git commits, and fall back to assuming
@@ -165,10 +177,15 @@ export class Workspace {
     }
 
     if (await this.git.getIsShallow()) {
-      throw new Error(`cannot detect modifications because the Git repository is shallow`);
+      throw new Error(
+        `cannot detect modifications because the Git repository is shallow`,
+      );
     }
 
-    const [fromMeta, to] = await Promise.all([this.npm.getMetadata(), this.git.getHead()]);
+    const [fromMeta, to] = await Promise.all([
+      this.npm.getMetadata(),
+      this.git.getHead(),
+    ]);
 
     if (fromMeta?.gitHead == null) {
       this.log.debug(`missing published Git head (assuming modified)`);
@@ -188,31 +205,8 @@ export class Workspace {
    * `package.json` file. These are the files that should be built and
    * published with the package.
    */
-  readonly getEntrypoints = (): readonly WorkspaceEntrypoint[] => {
-    const entryPoints: WorkspaceEntrypoint[] = [];
-    const addEntryPoints = (type: WorkspaceEntrypoint['type'], value: unknown): void => {
-      if (typeof value === 'string') {
-        entryPoints.push({ type, filename: this.fs.resolve(value) });
-      } else if (Array.isArray(value)) {
-        value.forEach((subValue) => addEntryPoints(type, subValue));
-      } else if (typeof value === 'object' && value !== null) {
-        Object.values(value).forEach((subValue) => addEntryPoints(type, subValue));
-      }
-    };
-
-    if (this.config.at('license').exists()) {
-      addEntryPoints('license', 'LICENSE');
-    }
-
-    addEntryPoints('types', this.config.at('types').value);
-    addEntryPoints('bin', this.config.at('bin').value);
-    addEntryPoints('main', this.config.at('main').value);
-    addEntryPoints('module', this.config.at('module').value);
-    addEntryPoints('exports', this.config.at('exports').value);
-    addEntryPoints('man', this.config.at('man').value);
-    addEntryPoints('directories', this.config.at('directories').value);
-
-    return entryPoints;
+  readonly getEntrypoints = (): readonly Entrypoint[] => {
+    return getEntrypoints(this);
   };
 
   /**
@@ -220,31 +214,24 @@ export class Workspace {
    *
    * **Note:** Entry points which include a wildcard are ignored.
    */
-  readonly getMissingEntrypoints = async (): Promise<WorkspaceEntrypoint[]> => {
-    const values = this.getEntrypoints();
-    const sparse = await Promise.all(
-      values.map((value) =>
-        value.filename.includes('*')
-          ? undefined
-          : this.fs
-              .stat(value.filename)
-              .then(() => undefined)
-              .catch(() => value),
-      ),
-    );
-
-    return sparse.filter((value): value is WorkspaceEntrypoint => Boolean(value));
+  readonly getMissingEntrypoints = async (): Promise<Entrypoint[]> => {
+    return await getMissingEntrypoints(this);
   };
 
   /**
    * Remove files and directories from the workspace which are ignored by
-   * Git, _except_ for `node_modules` and dot-files (eg. `.gitignore`, `.vscode`, etc.).
+   * Git, _except_ for `node_modules` and dot-files (eg. `.gitignore`,
+   * `.vscode`, etc.).
    */
   readonly clean = async (): Promise<string[]> => {
     const filenames = (await this.git.getIgnored())
       // Don't clean node_modules and dot-files.
-      .filter((filename) => !/(?:^|[\\/])node_modules(?:[\\/]|$)/u.test(filename))
-      .filter((filename) => !/(?:^|[\\/])\./u.test(filename));
+      .filter((filename) => {
+        return !/(?:^|[\\/])node_modules(?:[\\/]|$)/u.test(filename);
+      })
+      .filter((filename) => {
+        return !/(?:^|[\\/])\./u.test(filename);
+      });
 
     const promises = filenames.map(async (filename) => {
       this.log.debug(`removing ignored file "${filename}"`);
@@ -278,5 +265,12 @@ export class Workspace {
     versionRange?: string,
   ): Promise<ImportResult<TExports>> {
     return await importRelative(name, { dir: this.dir, versionRange });
+  }
+
+  async resolveImport(
+    name: string,
+    versionRange?: string,
+  ): Promise<ImportResolved> {
+    return await resolveImport(name, { dir: this.dir, versionRange });
   }
 }
