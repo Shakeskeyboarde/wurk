@@ -138,7 +138,7 @@ if (licenseText) {
 }
 
 const isTypescript = await rl
-  .question('Use Typescript? [Y/n] ')
+  .question('Use TypeScript? [Y/n] ')
   .then((answer) => !answer || /^y(?:es)?$/u.test(answer));
 
 if (isTypescript) {

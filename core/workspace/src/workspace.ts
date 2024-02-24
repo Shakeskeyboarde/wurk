@@ -264,7 +264,7 @@ export class Workspace {
    * in your `package.json` file.
    *
    * **Note:** There's no way to infer the type of the imported module.
-   * However, Typescript type imports are not emitted in compiled code,
+   * However, TypeScript type imports are not emitted in compiled code,
    * so you can safely import the module type, and then use this method
    * to import the implementation.
    */

@@ -22,7 +22,7 @@ A build mode will be selected automatically in the following order, based on the
 - `tsc`: Build using the TypeScript compiler.
   - All of the following are true:
     - An `exports`, `module`, `main`, `bin`, or `types` entry is present in the `package.json` file.
-    - Typescript is a dev dependency of the root or current workspace.
+    - TypeScript is a dev dependency of the root or current workspace.
 
 ### Mode: `script`
 
@@ -50,7 +50,7 @@ See the [@wurk/vite-config](https://github.com/Shakeskeyboarde/wurk/blob/main/co
 
 Builds once for every `tsconfig.*build*.json` file found in the workspace. If no matching build configuration files are present, then temporary configurations will be generated.
 
-This mode is the default even though it doesn't support bundling and is not particularly fast, because it is considered the "reference" option, and will handle all Typescript features.
+This mode is the default even though it doesn't support bundling and is not particularly fast, because it is considered the "reference" option, and will handle all TypeScript features.
 
 Generated configurations write output to the `lib` directory. CommonJS and/or ESModule output is determined automatically.
 
@@ -60,7 +60,7 @@ Generated configurations will extend a `tsconfig.json` file in the workspace or 
 
 ## Recommendations
 
-Build dependencies should be included in the `devDependencies` of each workspace, _even in a mono-repo._ Build dependency version mismatches in different workspaces usually won't cause problems, so this allows per-workspace build tool migration. It also makes it clear what tools are being used in the build. Typescript is the only exception to this rule, as it is used by the IDE as well as the build.
+Build dependencies should be included in the `devDependencies` of each workspace, _even in a mono-repo._ Build dependency version mismatches in different workspaces usually won't cause problems, so this allows per-workspace build tool migration. It also makes it clear what tools are being used in the build. TypeScript is the only exception to this rule, as it is used by the IDE as well as the build.
 
 ## Start (Watch)
 
