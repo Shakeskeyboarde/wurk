@@ -42,12 +42,6 @@ export const loadCommandPlugins = async (
   rootDir: string,
   rootPackage: ImportResult['moduleConfig'],
 ): Promise<Command[]> => {
-  const explicitPackageIds = rootPackage
-    .at('wurk')
-    .at('commands')
-    .as('array', [] as unknown[])
-    .filter((value): value is string => typeof value === 'string');
-
   const packageIds = Array.from(
     new Set([
       ...[
@@ -60,7 +54,6 @@ export const loadCommandPlugins = async (
           packageId,
         ),
       ),
-      ...explicitPackageIds,
     ]),
   ).sort();
 
