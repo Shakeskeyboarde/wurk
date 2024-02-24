@@ -418,18 +418,19 @@ const parseRecursive = async (
 
   for (const { key, usage, required } of named) {
     if (
-      required &&
       key != null &&
       (!(key in result.options) || result.options[key] === undefined)
     ) {
+      if (required) {
+        throw new CliParseError(`missing required option "${usage}"`, {
+          cli: cli,
+        });
+      }
+
       const getDefault = key in optionDefaults && optionDefaults[key];
 
       if (getDefault) {
         await setOptionValue(key, await getDefault());
-      } else {
-        throw new CliParseError(`missing required option "${usage}"`, {
-          cli: cli,
-        });
       }
     }
   }
