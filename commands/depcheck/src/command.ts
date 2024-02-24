@@ -18,7 +18,7 @@ export default createCommand('depcheck', {
     return cli.option('--fix', 'remove unused dependencies');
   },
 
-  run: async ({ workspaces, options }) => {
+  action: async ({ workspaces, options }) => {
     await workspaces.forEachSequential(async (workspace) => {
       const { log, name, config, git, fs, resolveImport, spawn } = workspace;
 

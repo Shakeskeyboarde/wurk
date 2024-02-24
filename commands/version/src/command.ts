@@ -76,7 +76,7 @@ export default createCommand('version', {
       .optionNegation('changelog', 'noChangelog');
   },
 
-  run: async (context) => {
+  action: async (context) => {
     const { log, workspaces, options, autoPrintStatus } = context;
 
     autoPrintStatus();

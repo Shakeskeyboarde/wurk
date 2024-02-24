@@ -19,7 +19,7 @@ export default createCommand('run', {
       .setUnknownNamedOptionAllowed();
   },
 
-  run: async ({ workspaces, options }) => {
+  action: async ({ workspaces, options }) => {
     const scripts = options.scriptsCsv.split(/\s*,\s*/u).filter(Boolean);
 
     if (scripts.length === 0) return;

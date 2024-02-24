@@ -26,7 +26,7 @@ export default createCommand('publish', {
       .option('--dry-run', 'perform a dry-run for validation');
   },
 
-  run: async ({ log: rootLog, options, workspaces, autoPrintStatus }) => {
+  action: async ({ log: rootLog, options, workspaces, autoPrintStatus }) => {
     autoPrintStatus();
 
     if (

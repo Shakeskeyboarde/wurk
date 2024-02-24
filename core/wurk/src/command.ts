@@ -9,12 +9,25 @@ import {
 
 import { Context } from './context.js';
 
-interface CommandHooks<TResult extends EmptyResult, TName extends string> {
+/**
+ * Action callback for a Wurk command plugin.
+ */
+export type CommandAction<TResult extends EmptyResult = EmptyResult> = (
+  context: Context<TResult>,
+) => Promise<void>;
+
+/**
+ * Configuration for a Wurk command plugin.
+ */
+export interface CommandHooks<
+  TResult extends EmptyResult,
+  TName extends string,
+> {
   readonly config?: (
     cli: Cli<EmptyResult, TName>,
     commandPackage: ImportResult['moduleConfig'],
   ) => Cli<TResult, TName>;
-  readonly run: (context: Context<TResult>) => Promise<void>;
+  readonly action: CommandAction<TResult>;
 }
 
 export interface Command<
@@ -30,17 +43,45 @@ export type CommandFactory<
   TName extends string = string,
 > = (commandPackage: ImportResult['moduleConfig']) => Command<TResult, TName>;
 
+/**
+ * Create a Wurk command plugin.
+ *
+ * @example
+ * ```ts
+ * export default createCommand('my-command', {
+ *   config: (cli) => {
+ *     // Configure command line options (optional).
+ *     return cli.option('-f, --foo <value>', 'Foo option');
+ *   },
+ *   action: async (context) => {
+ *     // Iterate over workspaces, spawn processes, modify files, etc.
+ *   },
+ * });
+ * ```
+ *
+ * @returns A Wurk command plugin. The type is `unknown` because its not
+ * intended for direct use, and exporting the type would complicate typescript
+ * type declaration output.
+ */
 export const createCommand = <
   TName extends string,
   TResult extends EmptyResult,
 >(
   name: CliName<TName>,
-  hooks: CommandHooks<TResult, TName>,
+  hooks: CommandHooks<TResult, TName> | CommandAction,
 ): unknown => {
   const factory: CommandFactory<TResult, TName> = (commandPackage) => {
     let workspaces: WorkspaceCollection | undefined;
 
-    const cli = (hooks.config ?? ((value) => value as Cli<TResult, TName>))(
+    const {
+      config: configHook = (value: unknown) => value as Cli<TResult, TName>,
+      action: actionHook,
+    } =
+      typeof hooks === 'function'
+        ? { action: hooks as CommandAction<TResult> }
+        : hooks;
+
+    const cli = configHook(
       Cli.create(name)
         .description(commandPackage.at('description').as('string'))
         .version(commandPackage.at('version').as('string'))
@@ -62,7 +103,7 @@ export const createCommand = <
       const initialSelection = Array.from(workspaces);
 
       try {
-        await hooks.run(context);
+        await actionHook(context);
       } catch (error) {
         process.exitCode ||= 1;
 

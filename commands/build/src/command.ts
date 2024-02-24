@@ -43,7 +43,7 @@ export default createCommand('build', {
       });
   },
 
-  run: async (context) => {
+  action: async (context) => {
     const { options, workspaces, autoPrintStatus } = context;
 
     autoPrintStatus();

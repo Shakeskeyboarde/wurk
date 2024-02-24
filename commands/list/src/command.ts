@@ -5,7 +5,7 @@ export default createCommand('list', {
     return cli.alias('ls');
   },
 
-  run: async ({ log, workspaces }) => {
+  action: async ({ log, workspaces }) => {
     const data = await Promise.all(
       Array.from(workspaces).map(async (workspace) => {
         const {

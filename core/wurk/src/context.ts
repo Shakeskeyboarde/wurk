@@ -13,6 +13,9 @@ export interface ContextOptions<TResult extends UnknownResult> {
   readonly autoPrintStatus: (enabled?: boolean) => void;
 }
 
+/**
+ * Context passed to Wurk command action hooks.
+ */
 export class Context<TResult extends UnknownResult>
   implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>>
 {

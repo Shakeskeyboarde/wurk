@@ -14,7 +14,7 @@ export default createCommand('test', {
       .optionNegation('build', 'noBuild');
   },
 
-  run: async (context) => {
+  action: async (context) => {
     if (context.workspaces.selectedSize === 0) return;
 
     const { options, workspaces } = context;

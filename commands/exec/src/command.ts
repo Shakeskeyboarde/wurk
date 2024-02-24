@@ -9,7 +9,7 @@ export default createCommand('exec', {
       .setUnknownNamedOptionAllowed();
   },
 
-  run: async ({ workspaces, options }) => {
+  action: async ({ workspaces, options }) => {
     await workspaces.forEach(async ({ spawn }) => {
       await spawn(options.executable, options.args, { output: 'echo' });
     });
