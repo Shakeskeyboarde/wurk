@@ -40,6 +40,14 @@ type PickOptional<TObject extends object> = {
       : never]?: TObject[P];
 };
 
+type PickRequired<TObject extends object> = {
+  [P in keyof TObject as {} extends Pick<TObject, P>
+    ? never
+    : undefined extends TObject[P]
+      ? never
+      : P]: TObject[P];
+};
+
 type UnionProps<T0 extends object, T1 extends object> = any extends any
   ? Simplify<{
       [P in keyof T0 | keyof T1]:
@@ -65,6 +73,7 @@ export type {
   LastValue,
   PickByType,
   PickOptional,
+  PickRequired,
   Split,
   UnionProps,
 };

@@ -96,13 +96,21 @@ export class Workspace {
   readonly isRoot: boolean = false;
 
   /**
-   * True if the workspace matches the
-   * [Wurk global selection options](https://github.com/Shakeskeyboarde/wurk/blob/main/core/wurk/README.md#global-selection-options).
+   * True if the workspace is explicitly included by command line options,
+   * false if it's explicitly _excluded_, and null if it is not explicitly
+   * included or excluded.
+   *
+   * Null values should generally be treated as "not selected". Some commands
+   * may choose to treat null as "selected-if-necessary". For example, the
+   * [build](https://npmjs.com/package/@wurk/build) command will build
+   * dependencies of selected (true) workspaces, as long as the dependency
+   * is not explicitly excluded (false).
+   *
    *
    * **Note:** This property is mutable so that command plugins can apply
    * their own selection logic.
    */
-  isSelected = false;
+  isSelected: boolean | null = null;
 
   /**
    * True if this workspace is a dependency of any selected workspace.

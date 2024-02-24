@@ -29,6 +29,13 @@ export default createCommand('build', {
       .option('--clean', { hidden: true })
       .option('--no-clean', 'do not clean the build directory before building')
       .optionNegation('clean', 'noClean')
+      .option('--include-dependencies', { hidden: true })
+      .option(
+        '--no-include-dependencies',
+        'do not automatically build the dependencies of selected workspaces',
+      )
+      .optionDefault('includeDependencies', true)
+      .optionNegation('includeDependencies', 'noIncludeDependencies')
       .action(async ({ name, options }) => {
         if (name === 'start') {
           options.start = true;
@@ -48,6 +55,10 @@ export default createCommand('build', {
         start: (() => Promise<void>) | null;
       }
     >();
+
+    if (options.includeDependencies) {
+      workspaces.includeDependencies();
+    }
 
     await workspaces.forEach(async (workspace) => {
       let build: (() => Promise<void>) | null = null;

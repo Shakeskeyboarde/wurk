@@ -52,6 +52,7 @@ import {
   type KeyOf,
   type PickByType,
   type PickOptional,
+  type PickRequired,
   type UnionProps,
 } from './types.js';
 import { resolve } from './utils.js';
@@ -530,8 +531,23 @@ class Cli<
     >[],
   >(
     ...keys: [key0: TKey0, key1: TKey1, ...keyN: UniqueArray<TKeyN>]
-  ): Cli<TResult, TName> {
-    return keys.reduce<Cli<TResult, TName>>((current, key) => {
+  ): Cli<
+    Result<
+      UnionProps<
+        Omit<InferResultOptions<TResult>, TKey0 | TKey1 | TKeyN[number]>,
+        Record<
+          TKey0 | TKey1 | TKeyN[number],
+          | boolean
+          | (keyof PickRequired<InferResultOptions<TResult>> extends never
+              ? undefined
+              : never)
+        >
+      >,
+      InferResultCommand<TResult>
+    >,
+    TName
+  > {
+    return keys.reduce<Cli<any, TName>>((current, key) => {
       return current.optionAction(key, ({ result }) => {
         keys.forEach((otherKey) => {
           if (otherKey !== key) {
@@ -609,9 +625,14 @@ class Cli<
    */
   optionDefault<TKey extends KeyOf<PickOptional<InferResultOptions<TResult>>>>(
     key: TKey,
-    factory: () =>
-      | Exclude<InferResultOptions<TResult>[TKey], undefined>
-      | Promise<Exclude<InferResultOptions<TResult>[TKey], undefined>>,
+    factory:
+      | Extract<
+          InferResultOptions<TResult>[TKey],
+          null | boolean | number | bigint | string
+        >
+      | (() =>
+          | Exclude<InferResultOptions<TResult>[TKey], undefined>
+          | Promise<Exclude<InferResultOptions<TResult>[TKey], undefined>>),
   ): Cli<
     Result<
       UnionProps<
@@ -626,7 +647,7 @@ class Cli<
       ...this.#internal,
       optionDefaults: {
         ...this.#internal.optionDefaults,
-        [key]: factory,
+        [key]: typeof factory === 'function' ? factory : () => factory,
       },
     });
   }

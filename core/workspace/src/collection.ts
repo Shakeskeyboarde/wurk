@@ -45,9 +45,8 @@ export class WorkspaceCollection {
   readonly #dependencyLinks: ReadonlyMap<Workspace, readonly WorkspaceLink[]>;
   readonly #dependentLinks: ReadonlyMap<Workspace, readonly WorkspaceLink[]>;
 
-  #includeUnselected = false;
-  #includeDependencies = false;
-  #includeDependents = false;
+  #includeDependencies: boolean = false;
+  #includeDependents: boolean = false;
 
   readonly root: Workspace;
   readonly concurrency: number;
@@ -187,10 +186,10 @@ export class WorkspaceCollection {
   *[Symbol.iterator](): Iterator<Workspace> {
     for (const workspace of this.all) {
       if (
-        this.#includeUnselected ||
-        workspace.isSelected ||
-        (this.#includeDependencies && workspace.isDependencyOfSelected) ||
-        (this.#includeDependents && workspace.isDependentOfSelected)
+        workspace.isSelected !== false &&
+        (workspace.isSelected ||
+          (this.#includeDependencies && workspace.isDependencyOfSelected) ||
+          (this.#includeDependents && workspace.isDependentOfSelected))
       ) {
         yield workspace;
       }
@@ -228,16 +227,8 @@ export class WorkspaceCollection {
   }
 
   /**
-   * Include workspaces in iteration that are not selected (ie.
-   * include all workspaces).
-   */
-  includeUnselected(enabled = true): void {
-    this.#includeUnselected = enabled;
-  }
-
-  /**
    * Include workspaces in iteration that are dependencies of selected
-   * workspaces, even if the dependency itself is not selected.
+   * workspaces, as long as the dependency is not _explicitly_ excluded.
    */
   includeDependencies(enabled = true): void {
     this.#includeDependencies = enabled;
@@ -245,7 +236,7 @@ export class WorkspaceCollection {
 
   /**
    * Include workspaces in iteration that are dependents of selected
-   * workspaces, even if the dependent itself is not selected.
+   * workspaces, as long as the dependency is not _explicitly_ excluded.
    */
   includeDependents(enabled = true): void {
     this.#includeDependents = enabled;
