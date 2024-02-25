@@ -63,7 +63,7 @@ wurk [global-options] <command> [command-options]
 Options which reduce the number of workspaces that are processed.
 
 - `-w, --workspace <query>`
-  - Select workspaces by name, private or public, keyword, and directory.
+  - Select workspaces by name, privacy, keyword, or directory.
   - Use `private:true` or `private:false` to select private or public workspaces.
   - Use `keyword:<pattern>` to select workspaces by keyword (glob supported).
   - Use `dir:<pattern>` to select workspaces by directory (glob supported).

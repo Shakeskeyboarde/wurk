@@ -15,30 +15,89 @@ import {
   type WorkspaceLinkOptions,
 } from './workspace.js';
 
-export type WorkspaceCallback = (
-  workspace: Workspace,
-  signal: AbortSignal,
-  abort: (reason?: any) => void,
-) => Promise<void>;
+/**
+ * Workspace collection `forEach*` asynchronous callback.
+ */
+export interface WorkspaceCallback {
+  (
+    workspace: Workspace,
+    signal: AbortSignal,
+    abort: (reason?: any) => void,
+  ): Promise<void>;
+}
 
+/**
+ * Workspace collection options.
+ */
 export interface WorkspaceCollectionOptions {
   readonly log?: Log;
+
+  /**
+   * The root workspace configuration (package.json).
+   */
   readonly root: JsonAccessor;
+
+  /**
+   * The directory of the root workspace.
+   */
   readonly rootDir: string;
+
+  /**
+   * Array of workspace directories and configurations (package.json files).
+   */
   readonly workspaces?: readonly (readonly [
     dir: string,
     config: JsonAccessor,
   ])[];
+
+  /**
+   * Whether or not to include the root workspace in iteration.
+   */
   readonly includeRootWorkspace?: boolean;
+
+  /**
+   * Maximum workspaces which may be processed in parallel using the
+   * asynchronous `forEach*` methods.
+   */
   readonly concurrency?: number;
-  readonly npmHead?: string;
+
+  readonly gitHead?: string;
 }
 
+/**
+ * Options for printing the status summary of the workspaces.
+ */
 export interface WorkspacePrintStatusOptions {
+  /**
+   * Prefix for status summary headers (eg. `${prefix} summary:`,
+   * `${prefix} success`).
+   */
   readonly prefix?: string;
+
+  /**
+   * Selection conditions for workspaces to include in the status summary.
+   * If omitted, all workspaces will be included. If provided, selected
+   * workspaces will be included, as well as any workspace with a non-skipped
+   * status.
+   */
   readonly condition?: SelectCondition;
 }
 
+/**
+ * An collection of workspaces with methods for selecting and iterating.
+ *
+ * the `forEach*` methods and collection iterator only iterate over selected
+ * workspaces by default. If the `includeDependencies` or `includeDependents`
+ * options are set, then iteration will include dependency/dependent workspaces
+ * that are not explicitly excluded.
+ *
+ * The root workspace may not be included in iteration if the
+ * `includeRootWorkspace` was not set when the collection was constructed. But,
+ * the root workspace can always be accessed via the `root` property.
+ *
+ * The `all` property is an iterable which includes all workspaces (may not
+ * included the root workspace), regardless of selection status.
+ */
 export class WorkspaceCollection {
   readonly #log: Log;
   readonly #workspaces: readonly Workspace[];
@@ -48,10 +107,25 @@ export class WorkspaceCollection {
   #includeDependencies: boolean = false;
   #includeDependents: boolean = false;
 
+  /**
+   * The root workspace.
+   */
   readonly root: Workspace;
+
+  /**
+   * Maximum workspaces which may be processed in parallel using the
+   * asynchronous `forEach*` methods.
+   */
   readonly concurrency: number;
+
+  /**
+   * All workspaces in the collection, regardless of selection status.
+   */
   readonly all: Iterable<Workspace>;
 
+  /**
+   * Create a new workspace collection.
+   */
   constructor(options: WorkspaceCollectionOptions) {
     this.#log = options.log ?? defaultLog;
 
@@ -66,10 +140,8 @@ export class WorkspaceCollection {
     >());
     const root: Workspace = new Workspace({
       dir: options.rootDir,
-      relativeDir: '',
       config: options.root,
-      isRoot: true,
-      npmHead: options.npmHead,
+      gitHead: options.gitHead,
       getDependencyLinks: (linkOptions) => {
         return this.getDependencyLinks(root, linkOptions);
       },
@@ -87,8 +159,7 @@ export class WorkspaceCollection {
         dir,
         relativeDir: path.relative(root.dir, dir),
         config,
-        isRoot: false,
-        npmHead: options.npmHead,
+        gitHead: options.gitHead,
         getDependencyLinks: (linkOptions) => {
           return this.getDependencyLinks(workspace, linkOptions);
         },
@@ -196,29 +267,37 @@ export class WorkspaceCollection {
     }
   }
 
+  /**
+   * Number of workspaces in the collection. This may not include the root
+   * workspace if the `includeRootWorkspace` option was not set. This is not
+   * affected by workspace selection.
+   */
   get size(): number {
     return this.#workspaces.length;
   }
 
-  get selectedSize(): number {
+  /**
+   * Number of workspaces which will be included in iteration. This respects
+   * workspace selection and the inclusion of dependencies and dependents.
+   */
+  get iterableSize(): number {
     return Array.from(this).length;
   }
 
   /**
-   * Select workspaces by name or predicate function.
+   * Select workspaces by name, privacy, keyword, directory, or predicate
+   * function.
+   *
+   * - Use `private:true` or `private:false` to select private or public workspaces.
+   * - Use `keyword:<pattern>` to select workspaces by keyword (glob supported).
+   * - Use `dir:<pattern>` to select workspaces by directory (glob supported).
+   * - Use `name:<pattern>` or just `<pattern>` to select workspaces by name (glob supported).
+   * - Prefix any query with `not:` to exclude instead of include.
+   * - Use a leading ellipsis to (eg. `...<query>`) to also match dependencies.
+   * - Use a trailing ellipsis to (eg. `<query>...`) to also match dependents.
    *
    * Glob patterns are supported via the
    * [minimatch](https://www.npmjs.com/package/minimatch) package.
-   *
-   * Negative patterns (prefixed with `!`) will exclude workspaces, and the
-   * order of positive and negative patterns is significant. For example,
-   * `**,!foo` will include all packages except `foo`. A double bang (`!!`)
-   * will _exclude_ all packages that _do not match_ the pattern. For example,
-   * `!!foo*` will _exclude_ all packages that _do not match_ `foo*`.
-   *
-   * Recursive patterns (suffixed or prefixed with `...`) will include
-   * dependencies (suffixed) and/or dependents (prefixed). For example `foo...`
-   * will include the `foo` package and all of its dependencies.
    */
   select(condition: SelectCondition): void {
     select(this.all, condition).forEach((isSelected, workspace) => {
@@ -287,12 +366,12 @@ export class WorkspaceCollection {
 
   /**
    * Get dependency links for a workspace. This includes links to workspaces
-   * which are not selected.
+   * which are not selected, even if they are explicitly excluded.
    */
-  getDependencyLinks = (
+  getDependencyLinks(
     workspace: Workspace,
     options?: WorkspaceLinkOptions,
-  ): readonly WorkspaceLink[] => {
+  ): readonly WorkspaceLink[] {
     let links = this.#dependencyLinks.get(workspace) ?? [];
 
     if (options?.recursive) {
@@ -306,16 +385,16 @@ export class WorkspaceCollection {
     }
 
     return links;
-  };
+  }
 
   /**
    * Get dependent links for a workspace. This includes links to workspaces
-   * which are not selected.
+   * which are not selected, even if they are explicitly excluded.
    */
-  getDependentLinks = (
+  getDependentLinks(
     workspace: Workspace,
     options?: WorkspaceLinkOptions,
-  ): readonly WorkspaceLink[] => {
+  ): readonly WorkspaceLink[] {
     let links = this.#dependentLinks.get(workspace) ?? [];
 
     if (options?.recursive) {
@@ -329,12 +408,12 @@ export class WorkspaceCollection {
     }
 
     return links;
-  };
+  }
 
   /**
-   * Print workspace statuses.
+   * Print a status summary for the workspaces.
    */
-  printStatus = (options?: WorkspacePrintStatusOptions): void => {
+  printStatus(options?: WorkspacePrintStatusOptions): void {
     let workspaces: Iterable<Workspace>;
 
     if (options?.condition) {
@@ -351,7 +430,7 @@ export class WorkspaceCollection {
     }
 
     printStatus(this.#log, workspaces, options?.prefix);
-  };
+  }
 
   protected async _forEachAsync(
     callback: WorkspaceCallback,

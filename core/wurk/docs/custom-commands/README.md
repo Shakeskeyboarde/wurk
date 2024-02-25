@@ -10,15 +10,20 @@ Wurk Custom Commands
 
 ### Classes
 
-- [Context](classes/Context.md)
+- [CommandContext](classes/CommandContext.md)
+- [Workspace](classes/Workspace.md)
+- [WorkspaceCollection](classes/WorkspaceCollection.md)
 
 ### Interfaces
 
+- [CommandAction](interfaces/CommandAction.md)
 - [CommandHooks](interfaces/CommandHooks.md)
-
-### Type Aliases
-
-- [CommandAction](README.md#commandaction)
+- [WorkspaceCallback](interfaces/WorkspaceCallback.md)
+- [WorkspaceCollectionOptions](interfaces/WorkspaceCollectionOptions.md)
+- [WorkspaceLink](interfaces/WorkspaceLink.md)
+- [WorkspaceLinkOptions](interfaces/WorkspaceLinkOptions.md)
+- [WorkspaceOptions](interfaces/WorkspaceOptions.md)
+- [WorkspacePrintStatusOptions](interfaces/WorkspacePrintStatusOptions.md)
 
 ## Functions
 
@@ -40,7 +45,7 @@ Create a Wurk command plugin.
 | Name | Type |
 | :------ | :------ |
 | `name` | `CliName`\<`TName`\> |
-| `hooks` | [`CommandHooks`](interfaces/CommandHooks.md)\<`TResult`, `TName`\> \| [`CommandAction`](README.md#commandaction)\<`EmptyResult`\> |
+| `hooks` | [`CommandHooks`](interfaces/CommandHooks.md)\<`TResult`, `TName`\> \| [`CommandAction`](interfaces/CommandAction.md)\<`EmptyResult`\> |
 
 #### Returns
 
@@ -66,31 +71,3 @@ export default createCommand('my-command', {
   },
 });
 ```
-
-## Type Aliases
-
-### CommandAction
-
-Ƭ **CommandAction**\<`TResult`\>: (`context`: [`Context`](classes/Context.md)\<`TResult`\>) => `Promise`\<`void`\>
-
-Action callback for a Wurk command plugin.
-
-#### Type parameters
-
-| Name | Type |
-| :------ | :------ |
-| `TResult` | extends `EmptyResult` = `EmptyResult` |
-
-#### Type declaration
-
-▸ (`context`): `Promise`\<`void`\>
-
-##### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `context` | [`Context`](classes/Context.md)\<`TResult`\> |
-
-##### Returns
-
-`Promise`\<`void`\>

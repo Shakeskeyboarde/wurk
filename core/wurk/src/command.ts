@@ -7,14 +7,14 @@ import {
   type WorkspaceCollection,
 } from '@wurk/workspace';
 
-import { Context } from './context.js';
+import { CommandContext } from './context.js';
 
 /**
  * Action callback for a Wurk command plugin.
  */
-export type CommandAction<TResult extends EmptyResult = EmptyResult> = (
-  context: Context<TResult>,
-) => Promise<void>;
+export interface CommandAction<TResult extends EmptyResult = EmptyResult> {
+  (context: CommandContext<TResult>): Promise<void>;
+}
 
 /**
  * Configuration for a Wurk command plugin.
@@ -23,10 +23,17 @@ export interface CommandHooks<
   TResult extends EmptyResult,
   TName extends string,
 > {
+  /**
+   * Configure command line options.
+   */
   readonly config?: (
     cli: Cli<EmptyResult, TName>,
     commandPackage: ImportResult['moduleConfig'],
   ) => Cli<TResult, TName>;
+
+  /**
+   * Command implementation.
+   */
   readonly action: CommandAction<TResult>;
 }
 
@@ -96,7 +103,7 @@ export const createCommand = <
 
       let isAutoPrintStatusEnabled = false;
 
-      const context = new Context({
+      const context = new CommandContext({
         result,
         workspaces,
         autoPrintStatus: (enabled = true) => {

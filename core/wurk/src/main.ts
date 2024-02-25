@@ -102,7 +102,7 @@ const mainAsync = async (): Promise<void> => {
     // Git Options:
     .option('--git-from-revision <rev>', {
       description: 'set the revision used for detecting modifications',
-      key: 'npmHead',
+      key: 'gitHead',
       group: 'Git Options',
     })
 
@@ -115,7 +115,7 @@ const mainAsync = async (): Promise<void> => {
         includeRootWorkspace = env.WURK_INCLUDE_ROOT_WORKSPACE === 'true',
         parallel = env.WURK_PARALLEL === 'true',
         concurrency = getConcurrency(env.WURK_CONCURRENCY),
-        npmHead = env.WURK_GIT_FROM_REVISION,
+        gitHead = env.WURK_GIT_FROM_REVISION,
       } = options;
       const running = env.WURK_RUNNING_COMMANDS?.split(/\s*,\s*/u) ?? [];
       const commandName = Object.keys(command).at(0)!;
@@ -143,7 +143,7 @@ const mainAsync = async (): Promise<void> => {
         includeRootWorkspace:
           includeRootWorkspace || npmWorkspaces.length === 0,
         concurrency: parallel ? concurrency : 1,
-        npmHead,
+        gitHead,
       });
 
       Array.from(workspaces.all).forEach((workspace, i) => {
@@ -158,7 +158,7 @@ const mainAsync = async (): Promise<void> => {
       env.WURK_INCLUDE_ROOT_WORKSPACE = String(includeRootWorkspace);
       env.WURK_PARALLEL = String(parallel);
       env.WURK_CONCURRENCY = String(concurrency);
-      env.WURK_GIT_FROM_REVISION = npmHead;
+      env.WURK_GIT_FROM_REVISION = gitHead;
     });
 
   for (const commandPlugin of commandPlugins) {

@@ -1,9 +1,9 @@
 import { Fs } from '@wurk/fs';
 import {
   importRelative,
+  importRelativeResolve,
   type ImportResolved,
   type ImportResult,
-  resolveImport,
 } from '@wurk/import';
 import { type JsonAccessor } from '@wurk/json';
 import { Log } from '@wurk/log';
@@ -18,31 +18,94 @@ import { Git } from './git.js';
 import { Npm } from './npm.js';
 import { Status } from './status.js';
 
+/**
+ * Workspace configuration.
+ */
 export interface WorkspaceOptions {
+  /**
+   * Workspace configuration (package.json).
+   */
   readonly config: JsonAccessor;
+
+  /**
+   * Absolute path of the workspace directory.
+   */
   readonly dir: string;
-  readonly relativeDir: string;
-  readonly isRoot: boolean;
-  readonly npmHead: string | undefined;
-  readonly getDependencyLinks: (
+
+  /**
+   * Path of the workspace directory relative to the root workspace. If this
+   * is omitted, blank, or `"."`, then the workspace is the root workspace.
+   */
+  readonly relativeDir?: string;
+
+  /**
+   * Override the Git head commit hash published to the NPM registry.
+   */
+  readonly gitHead?: string;
+
+  /**
+   * Resolve links to local dependency workspaces.
+   */
+  readonly getDependencyLinks?: (
     options?: WorkspaceLinkOptions,
   ) => readonly WorkspaceLink[];
-  readonly getDependentLinks: (
+
+  /**
+   * Resolve links to local dependent workspaces.
+   */
+  readonly getDependentLinks?: (
     options?: WorkspaceLinkOptions,
   ) => readonly WorkspaceLink[];
 }
 
+/**
+ * Options for filtering workspace links.
+ */
 export interface WorkspaceLinkOptions {
+  /**
+   * If true, include transitive links.
+   */
   readonly recursive?: boolean;
+
+  /**
+   * If provided, filter the links. If a link is filtered, it will also stop
+   * recursion from traversing the filtered link's transitive links.
+   */
   readonly filter?: (link: WorkspaceLink) => boolean;
 }
 
+/**
+ * Represents an edge in the workspace dependency graph.
+ */
 export interface WorkspaceLink {
-  dependent: Workspace;
-  dependency: Workspace;
-  scope: (typeof WORKSPACE_LINK_SCOPES)[number];
-  id: string;
-  versionRange: string;
+  /**
+   * The dependent workspace.
+   */
+  readonly dependent: Workspace;
+
+  /**
+   * The dependency workspace.
+   */
+  readonly dependency: Workspace;
+
+  /**
+   * The scope of the dependency in the dependent workspace's `package.json`
+   * file.
+   */
+  readonly scope: (typeof WORKSPACE_LINK_SCOPES)[number];
+
+  /**
+   * The key of the dependency in the dependent workspace's `package.json`
+   * file. This may not be the same as the dependency's package name if the
+   * entry is an alias.
+   */
+  readonly id: string;
+
+  /**
+   * Version range of the dependency in the dependent workspace's
+   * `package.json` file.
+   */
+  readonly versionRange: string;
 }
 
 const WORKSPACE_LINK_SCOPES = [
@@ -52,11 +115,34 @@ const WORKSPACE_LINK_SCOPES = [
   'dependencies',
 ] as const;
 
+/**
+ * Workspace information and utilities.
+ */
 export class Workspace {
+  /**
+   * Logger which should be used for messages related to the workspace.
+   */
   readonly log: Log;
+
+  /**
+   * Git utilities relative to this workspace's directory.
+   */
   readonly git: Git;
+
+  /**
+   * NPM utilities for this workspace's name.
+   */
   readonly npm: Npm;
+
+  /**
+   * File system utilities relative to this workspace's directory.
+   */
   readonly fs: Fs;
+
+  /**
+   * Workspace status tracking, used to (optionally) print a collective
+   * status message for multiple workspaces.
+   */
   readonly status: Status;
 
   /**
@@ -131,26 +217,30 @@ export class Workspace {
     );
   }
 
+  /**
+   * This is generally intended for internal use only. Use workspace
+   * collections instead, which create their own workspace instances.
+   */
   constructor(options: WorkspaceOptions) {
     this.dir = options.dir;
-    this.relativeDir = options.relativeDir;
+    this.relativeDir = options.relativeDir || '.';
     this.config = options.config.copy();
     this.name = this.config.at('name').as('string', '');
     this.version = this.config.at('version').as('string');
     this.isPrivate = this.config.at('private').as('boolean', false);
-    this.isRoot = options.isRoot;
+    this.isRoot = this.relativeDir === '.';
     this.log = new Log();
     this.git = new Git({ log: this.log, dir: this.dir });
     this.npm = new Npm({
       log: this.log,
       name: this.name,
       version: this.version,
-      gitHead: options.npmHead,
+      gitHead: options.gitHead,
     });
     this.fs = new Fs({ cwd: this.dir });
     this.status = new Status(this.name);
-    this.getDependencyLinks = options.getDependencyLinks;
-    this.getDependentLinks = options.getDependentLinks;
+    this.getDependencyLinks = options.getDependencyLinks ?? (() => []);
+    this.getDependentLinks = options.getDependentLinks ?? (() => []);
   }
 
   /**
@@ -268,17 +358,22 @@ export class Workspace {
    * so you can safely import the module type, and then use this method
    * to import the implementation.
    */
-  async import<TExports extends Record<string, any> = Record<string, unknown>>(
+  readonly importRelative = async <
+    TExports extends Record<string, any> = Record<string, unknown>,
+  >(
     name: string,
     versionRange?: string,
-  ): Promise<ImportResult<TExports>> {
+  ): Promise<ImportResult<TExports>> => {
     return await importRelative(name, { dir: this.dir, versionRange });
-  }
+  };
 
-  async resolveImport(
+  /**
+   *
+   */
+  readonly importRelativeResolve = async (
     name: string,
     versionRange?: string,
-  ): Promise<ImportResolved> {
-    return await resolveImport(name, { dir: this.dir, versionRange });
-  }
+  ): Promise<ImportResolved> => {
+    return await importRelativeResolve(name, { dir: this.dir, versionRange });
+  };
 }

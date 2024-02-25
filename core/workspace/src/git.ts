@@ -34,6 +34,9 @@ const LOG_FORMAT: Readonly<Record<keyof GitLog, string>> = {
   body: '%b',
 };
 
+/**
+ * Git repository informational utilities (readonly).
+ */
 export class Git {
   readonly #log: Log;
   readonly #dir: string;

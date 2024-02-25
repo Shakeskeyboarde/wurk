@@ -14,6 +14,9 @@ export interface NpmMetadata {
   readonly gitHead: string | null;
 }
 
+/**
+ * NPM registry informational utilities (readonly).
+ */
 export class Npm {
   readonly #log: Log;
   readonly #name: string;

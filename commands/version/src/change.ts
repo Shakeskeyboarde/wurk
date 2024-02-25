@@ -81,7 +81,7 @@ const MARKDOWN_ESCAPE = /[#`_*~[\]{}\\]/gu;
 
 export const getChanges = async (
   workspace: Workspace,
-  npmHead: string,
+  gitHead: string,
 ): Promise<{
   isConventional: boolean;
   releaseType: null | Exclude<ReleaseType, `pre${string}`>;
@@ -89,12 +89,12 @@ export const getChanges = async (
 }> => {
   const { log, git, fs } = workspace;
 
-  if (!npmHead) {
+  if (!gitHead) {
     log.debug('npm head commit not available');
     return { isConventional: true, releaseType: null, changes: [] };
   }
 
-  const logs = await git.getLogs(npmHead);
+  const logs = await git.getLogs(gitHead);
 
   let isConventional = true;
   let changes: Change[] = logs

@@ -1,8 +1,8 @@
-[Wurk Custom Commands](../README.md) / Context
+[Wurk Custom Commands](../README.md) / CommandContext
 
-# Class: Context\<TResult\>
+# Class: CommandContext\<TResult\>
 
-Context passed to Wurk command action hooks.
+Context passed to Wurk command action hook.
 
 ## Type parameters
 
@@ -18,9 +18,9 @@ Context passed to Wurk command action hooks.
 
 ### Properties
 
-- [autoPrintStatus](Context.md#autoprintstatus)
-- [log](Context.md#log)
-- [workspaces](Context.md#workspaces)
+- [autoPrintStatus](CommandContext.md#autoprintstatus)
+- [log](CommandContext.md#log)
+- [workspaces](CommandContext.md#workspaces)
 
 ## Properties
 
@@ -61,6 +61,6 @@ ___
 
 ### workspaces
 
-• `Readonly` **workspaces**: `WorkspaceCollection`
+• `Readonly` **workspaces**: [`WorkspaceCollection`](WorkspaceCollection.md)
 
 Collection of all workspaces in the project.

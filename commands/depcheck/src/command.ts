@@ -20,7 +20,8 @@ export default createCommand('depcheck', {
 
   action: async ({ workspaces, options }) => {
     await workspaces.forEachSequential(async (workspace) => {
-      const { log, name, config, git, fs, resolveImport, spawn } = workspace;
+      const { log, name, config, git, fs, importRelativeResolve, spawn } =
+        workspace;
 
       log.prefix = '';
       log.debug(`checking workspace "${name}":`);
@@ -46,7 +47,9 @@ export default createCommand('depcheck', {
         for (const id of ids) {
           if (!unusedDependencies.delete(id)) continue;
 
-          const imported = await resolveImport(id).catch(() => undefined);
+          const imported = await importRelativeResolve(id).catch(
+            () => undefined,
+          );
           const peerIds =
             imported?.moduleConfig.at('peerDependencies').keys('object') ?? [];
 

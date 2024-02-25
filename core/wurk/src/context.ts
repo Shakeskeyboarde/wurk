@@ -7,16 +7,16 @@ import {
 import { Log } from '@wurk/log';
 import { type WorkspaceCollection } from '@wurk/workspace';
 
-export interface ContextOptions<TResult extends UnknownResult> {
+interface ContextOptions<TResult extends UnknownResult> {
   readonly result: TResult;
   readonly workspaces: WorkspaceCollection;
   readonly autoPrintStatus: (enabled?: boolean) => void;
 }
 
 /**
- * Context passed to Wurk command action hooks.
+ * Context passed to Wurk command action hook.
  */
-export class Context<TResult extends UnknownResult>
+export class CommandContext<TResult extends UnknownResult>
   implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>>
 {
   readonly #result: TResult;

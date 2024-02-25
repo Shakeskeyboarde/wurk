@@ -9,13 +9,16 @@ export default createCommand('test', {
     return cli
       .option('--fix', 'fix any problems which are automatically fixable')
       .option('--build', { hidden: true })
-      .option('--no-build', 'skip building before testing')
+      .option(
+        '--no-build',
+        "skip running the root workspace's build script before testing",
+      )
       .optionDefault('build', () => true)
       .optionNegation('build', 'noBuild');
   },
 
   action: async (context) => {
-    if (context.workspaces.selectedSize === 0) return;
+    if (context.workspaces.iterableSize === 0) return;
 
     const { options, workspaces } = context;
 

@@ -22,7 +22,7 @@ export const getTypeDocBuilder: BuilderFactory = async (workspace) => {
   ): Promise<void> => {
     await spawn(
       'typedoc',
-      ['--options', filename, watch && ['--watch', '--preserveWatchOutput']],
+      [['--options', filename], watch && ['--watch', '--preserveWatchOutput']],
       { log, output: 'echo' },
     );
   };

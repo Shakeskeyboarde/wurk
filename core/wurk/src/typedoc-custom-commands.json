@@ -13,6 +13,7 @@
     "*"
   ],
   "excludeNotDocumented": true,
+  "excludeInternal": true,
   "disableSources": true,
   "disableGit": true,
   "plugin": ["typedoc-plugin-markdown"],

@@ -4,4 +4,4 @@ export * from './error.js';
 export type * from './git.js';
 export type * from './npm.js';
 export * from './status.js';
-export type * from './workspace.js';
+export * from './workspace.js';

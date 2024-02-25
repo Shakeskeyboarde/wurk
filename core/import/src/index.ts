@@ -42,7 +42,7 @@ export const importRelative = async <
   spec: string,
   options: ImportOptions = {},
 ): Promise<ImportResult<TExports>> => {
-  const resolved = await resolveImport(spec, options);
+  const resolved = await importRelativeResolve(spec, options);
   const { moduleId, moduleDir, moduleEntry } = resolved;
 
   if (moduleEntry == null) {
@@ -60,7 +60,7 @@ export const importRelative = async <
  * relative to an arbitrary directory, instead of to the file where import is
  * used.
  */
-export const resolveImport = async (
+export const importRelativeResolve = async (
   spec: string,
   options: ImportOptions = {},
 ): Promise<ImportResolved> => {
