@@ -10,11 +10,22 @@ import {
 import { CommandContext } from './context.js';
 
 /**
+ * Configuration callback for a Wurk command plugin.
+ */
+export type CommandConfigCallback<
+  TResult extends EmptyResult,
+  TName extends string,
+> = (
+  cli: Cli<EmptyResult, TName>,
+  commandPackage: ImportResult['moduleConfig'],
+) => Cli<TResult, TName>;
+
+/**
  * Action callback for a Wurk command plugin.
  */
-export interface CommandAction<TResult extends EmptyResult = EmptyResult> {
-  (context: CommandContext<TResult>): Promise<void>;
-}
+export type CommandActionCallback<TResult extends EmptyResult = EmptyResult> = (
+  context: CommandContext<TResult>,
+) => Promise<void>;
 
 /**
  * Configuration for a Wurk command plugin.
@@ -26,15 +37,12 @@ export interface CommandHooks<
   /**
    * Configure command line options.
    */
-  readonly config?: (
-    cli: Cli<EmptyResult, TName>,
-    commandPackage: ImportResult['moduleConfig'],
-  ) => Cli<TResult, TName>;
+  readonly config?: CommandConfigCallback<TResult, TName>;
 
   /**
    * Command implementation.
    */
-  readonly action: CommandAction<TResult>;
+  readonly action: CommandActionCallback<TResult>;
 }
 
 export interface Command<
@@ -78,7 +86,7 @@ export const createCommand = <
   TResult extends EmptyResult,
 >(
   name: CliName<TName>,
-  hooks: CommandHooks<TResult, TName> | CommandAction,
+  hooks: CommandHooks<TResult, TName> | CommandActionCallback,
 ): unknown => {
   const factory: CommandFactory<TResult, TName> = (commandPackage) => {
     let workspaces: WorkspaceCollection | undefined;
@@ -88,7 +96,7 @@ export const createCommand = <
       action: actionHook,
     } =
       typeof hooks === 'function'
-        ? { action: hooks as CommandAction<TResult> }
+        ? { action: hooks as CommandActionCallback<TResult> }
         : hooks;
 
     const cli = configHook(

@@ -1,4 +1,4 @@
-[Wurk Custom Commands](../README.md) / WorkspaceLinkOptions
+[Wurk API](../README.md) / WorkspaceLinkOptions
 
 # Interface: WorkspaceLinkOptions
 

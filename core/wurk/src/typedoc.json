@@ -1,6 +1,6 @@
 {
-  "name": "Wurk Custom Commands",
-  "entryPoints": ["typedoc-custom-commands.ts"],
+  "name": "Wurk API",
+  "entryPoints": ["typedoc.ts"],
   "tsconfig": "tsconfig.json",
   "readme": "none",
   "groupOrder": [
@@ -17,5 +17,5 @@
   "disableSources": true,
   "disableGit": true,
   "plugin": ["typedoc-plugin-markdown"],
-  "out": "../docs/custom-commands"
+  "out": "../docs/api"
 }

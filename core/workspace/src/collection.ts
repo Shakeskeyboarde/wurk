@@ -18,13 +18,11 @@ import {
 /**
  * Workspace collection `forEach*` asynchronous callback.
  */
-export interface WorkspaceCallback {
-  (
-    workspace: Workspace,
-    signal: AbortSignal,
-    abort: (reason?: any) => void,
-  ): Promise<void>;
-}
+export type WorkspaceCallback = (
+  workspace: Workspace,
+  signal: AbortSignal,
+  abort: (reason?: any) => void,
+) => Promise<void>;
 
 /**
  * Workspace collection options.

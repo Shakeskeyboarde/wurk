@@ -1,4 +1,4 @@
-[Wurk Custom Commands](../README.md) / Workspace
+[Wurk API](../README.md) / Workspace
 
 # Class: Workspace
 

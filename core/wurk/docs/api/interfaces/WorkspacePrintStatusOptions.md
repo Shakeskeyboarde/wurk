@@ -1,4 +1,4 @@
-[Wurk Custom Commands](../README.md) / WorkspacePrintStatusOptions
+[Wurk API](../README.md) / WorkspacePrintStatusOptions
 
 # Interface: WorkspacePrintStatusOptions
 

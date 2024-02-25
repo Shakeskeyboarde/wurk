@@ -1,4 +1,4 @@
-[Wurk Custom Commands](../README.md) / CommandContext
+[Wurk API](../README.md) / CommandContext
 
 # Class: CommandContext\<TResult\>
 

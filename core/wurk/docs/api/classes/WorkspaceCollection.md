@@ -1,4 +1,4 @@
-[Wurk Custom Commands](../README.md) / WorkspaceCollection
+[Wurk API](../README.md) / WorkspaceCollection
 
 # Class: WorkspaceCollection
 
@@ -105,7 +105,7 @@ workspace itself.
 
 | Name | Type |
 | :------ | :------ |
-| `callback` | [`WorkspaceCallback`](../interfaces/WorkspaceCallback.md) |
+| `callback` | [`WorkspaceCallback`](../README.md#workspacecallback) |
 | `signal?` | `AbortSignal` |
 
 #### Returns
@@ -125,7 +125,7 @@ interdependency.
 
 | Name | Type |
 | :------ | :------ |
-| `callback` | [`WorkspaceCallback`](../interfaces/WorkspaceCallback.md) |
+| `callback` | [`WorkspaceCallback`](../README.md#workspacecallback) |
 | `signal?` | `AbortSignal` |
 
 #### Returns
@@ -145,7 +145,7 @@ serially, non-parallel).
 
 | Name | Type |
 | :------ | :------ |
-| `callback` | [`WorkspaceCallback`](../interfaces/WorkspaceCallback.md) |
+| `callback` | [`WorkspaceCallback`](../README.md#workspacecallback) |
 | `signal?` | `AbortSignal` |
 
 #### Returns

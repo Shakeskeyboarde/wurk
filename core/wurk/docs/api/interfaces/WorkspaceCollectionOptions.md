@@ -1,4 +1,4 @@
-[Wurk Custom Commands](../README.md) / WorkspaceCollectionOptions
+[Wurk API](../README.md) / WorkspaceCollectionOptions
 
 # Interface: WorkspaceCollectionOptions
 

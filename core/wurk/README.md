@@ -46,7 +46,7 @@ The following "official" commands are available.
 
 Run `npm install --save-dev @wurk/command-<name>` in your project root to install any of these commands.
 
-See the [Custom Commands](./docs/custom-commands/README.md) documentation for information on creating your own commands.
+See the [API docs](./docs/custom-commands/README.md) for information on creating your own custom commands.
 
 ## Options
 
