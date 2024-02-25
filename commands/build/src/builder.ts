@@ -3,8 +3,8 @@ import { type Log, type Workspace } from 'wurk';
 export type BuilderFactory = (workspace: Workspace) => Promise<Builder | null>;
 
 export interface BuilderOptions<T> {
-  readonly build?: ((log: Log, value: T) => Promise<void>) | null;
-  readonly start?: ((log: Log, value: T) => Promise<void>) | null;
+  readonly build?: ((log: Log, value: T) => Promise<void>) | false;
+  readonly start?: ((log: Log, value: T) => Promise<void>) | false;
   readonly matrix?: readonly T[];
 }
 
@@ -15,12 +15,16 @@ export class Builder<T = unknown> {
 
   constructor(name: string, workspace: Workspace, options: BuilderOptions<T>) {
     const { log, status, fs, getMissingEntrypoints } = workspace;
+    const { build, start, matrix } = options;
 
-    this.#matrix = options.matrix?.length ? options.matrix : [undefined];
+    this.#matrix = matrix?.length ? matrix : [undefined];
 
-    this.build = options.build
+    this.build = build
       ? async () => {
-          status.set('pending', name);
+          status.set(
+            'pending',
+            status.detail ? `${status.detail}, ${name}` : name,
+          );
 
           for (const [index, value] of this.#matrix.entries()) {
             const taskLog =
@@ -28,7 +32,7 @@ export class Builder<T = unknown> {
                 ? log.clone({ prefix: `${log.prefix}[${index}]` })
                 : log;
 
-            await options.build!(taskLog, value);
+            await build(taskLog, value);
           }
 
           const missing = await getMissingEntrypoints();
@@ -45,13 +49,13 @@ export class Builder<T = unknown> {
         }
       : null;
 
-    this.start = options.start
+    this.start = start
       ? async () => {
           await Promise.all(
             this.#matrix.map(async (value, index) => {
               const taskLog = log.clone({ prefix: `${log.prefix}[${index}]` });
 
-              await options.start!(taskLog, value).catch((error) => {
+              await start(taskLog, value).catch((error) => {
                 process.exitCode ||= 1;
                 taskLog.error(error);
               });

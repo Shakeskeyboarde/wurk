@@ -1,10 +1,8 @@
-import { type Workspace } from 'wurk';
+import { type Log } from 'wurk';
 
-import { Builder } from '../builder.js';
+import { Builder, type BuilderFactory } from '../builder.js';
 
-export const getRollupBuilder = async (
-  workspace: Workspace,
-): Promise<Builder | null> => {
+export const getRollupBuilder: BuilderFactory = async (workspace) => {
   const { fs, spawn } = workspace;
 
   const filenames = await fs
@@ -17,30 +15,26 @@ export const getRollupBuilder = async (
 
   if (!filenames.length) return null;
 
+  const rollup = async (
+    watch: boolean,
+    log: Log,
+    filename: string,
+  ): Promise<void> => {
+    await spawn(
+      'rollup',
+      [
+        watch && '--watch',
+        '--config',
+        filename,
+        filename.endsWith('.ts') && ['--configPlugin', 'typescript'],
+      ],
+      { log, output: 'echo' },
+    );
+  };
+
   return new Builder('rollup', workspace, {
-    build: async (log, filename) => {
-      await spawn(
-        'rollup',
-        [
-          '--config',
-          filename,
-          filename.endsWith('.ts') && ['--configPlugin', 'typescript'],
-        ],
-        { log, output: 'echo' },
-      );
-    },
-    start: async (log, filename) => {
-      await spawn(
-        'rollup',
-        [
-          '--watch',
-          '--config',
-          filename,
-          filename.endsWith('.ts') && ['--configPlugin', 'typescript'],
-        ],
-        { log, output: 'echo' },
-      );
-    },
+    build: rollup.bind(null, false),
+    start: rollup.bind(null, true),
     matrix: filenames,
   });
 };

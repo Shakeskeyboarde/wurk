@@ -1,10 +1,8 @@
-import { JsonAccessor, type Workspace } from 'wurk';
+import { JsonAccessor, type Log } from 'wurk';
 
-import { Builder } from '../builder.js';
+import { Builder, type BuilderFactory } from '../builder.js';
 
-export const getTscBuilder = async (
-  workspace: Workspace,
-): Promise<Builder | null> => {
+export const getTscBuilder: BuilderFactory = async (workspace) => {
   const { fs, spawn } = workspace;
 
   const filenames = await fs
@@ -38,13 +36,17 @@ export const getTscBuilder = async (
 
   if (!matrix.length) return null;
 
+  const tsc = async (
+    watch: boolean,
+    log: Log,
+    args: string[],
+  ): Promise<void> => {
+    await spawn('tsc', [watch && '--watch', ...args], { log, output: 'echo' });
+  };
+
   return new Builder('tsc', workspace, {
-    build: async (log, args) => {
-      await spawn('tsc', args, { log, output: 'echo' });
-    },
-    start: async (log, args) => {
-      await spawn('tsc', [...args, '--watch'], { log, output: 'echo' });
-    },
+    build: tsc.bind(null, false),
+    start: tsc.bind(null, true),
     matrix,
   });
 };

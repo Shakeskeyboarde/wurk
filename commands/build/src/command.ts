@@ -2,14 +2,13 @@ import nodeFs from 'node:fs';
 
 import { createCommand, type Workspace } from 'wurk';
 
-import { type BuilderFactory } from './builder.js';
+import { type Builder, type BuilderFactory } from './builder.js';
 import { getRollupBuilder } from './builders/rollup.js';
 import { getScriptBuilder } from './builders/script.js';
 import { getTscBuilder } from './builders/tsc.js';
 import { getViteBuilder } from './builders/vite.js';
 
 const BUILDER_FACTORIES = [
-  getScriptBuilder,
   getViteBuilder,
   getRollupBuilder,
   getTscBuilder,
@@ -48,54 +47,69 @@ export default createCommand('build', {
 
     autoPrintStatus();
 
-    const builders = new Map<
-      Workspace,
-      {
-        build: (() => Promise<void>) | null;
-        start: (() => Promise<void>) | null;
-      }
-    >();
+    const workspaceBuildTasks = new Map<Workspace, (() => Promise<void>)[]>();
+    const workspaceStartTasks = new Map<Workspace, (() => Promise<void>)[]>();
 
     if (options.includeDependencies) {
       workspaces.includeDependencies();
     }
 
     await workspaces.forEach(async (workspace) => {
-      let build: (() => Promise<void>) | null = null;
-      let start: (() => Promise<void>) | null = null;
+      const builders: (Builder | null)[] = [];
+      const scriptBuilder = await getScriptBuilder(workspace);
 
-      for (const factory of BUILDER_FACTORIES) {
-        const builder = await factory(workspace);
-
-        if (!builder) continue;
-
-        build = build ?? builder.build;
-        start = start ?? builder.start;
-
-        if (build && start) break;
-      }
-
-      if (build || start) {
-        builders.set(workspace, { build, start });
+      if (scriptBuilder) {
+        // If the scripts builder is enabled, then it overrides all other
+        // builders. Script building is intended as a way to bypass the
+        // auto detection logic of this command.
+        builders.push(scriptBuilder);
       } else {
-        workspace.isSelected = false;
+        for (const factory of BUILDER_FACTORIES) {
+          builders.push(await factory(workspace));
+        }
       }
 
-      if (!build) {
-        workspace.status.set('skipped', 'no builder');
+      const buildTasks = builders
+        .map((builder) => builder?.build)
+        .filter((build): build is Exclude<typeof build, null | undefined> => {
+          return Boolean(build);
+        });
+
+      const startTasks = builders
+        .map((builder) => builder?.start)
+        .filter((start): start is Exclude<typeof start, null | undefined> => {
+          return Boolean(start);
+        });
+
+      if (!buildTasks.length) {
+        workspace.status.set('skipped', 'no build tasks');
+
+        if (!startTasks.length) {
+          workspace.isSelected = false;
+          return;
+        }
       }
+
+      workspaceBuildTasks.set(workspace, buildTasks);
+      workspaceStartTasks.set(workspace, startTasks);
     });
-
-    if (builders.size === 0) return;
 
     if (options.clean) {
       await workspaces.forEachSequential(async (workspace) => {
-        await workspace.clean();
+        if (workspaceBuildTasks.get(workspace)?.length) {
+          await workspace.clean();
+        }
       });
     }
 
     await workspaces.forEach(async (workspace) => {
-      await builders.get(workspace)?.build?.();
+      const tasks = workspaceBuildTasks.get(workspace);
+
+      if (!tasks?.length) return;
+
+      for (const task of tasks) {
+        await task();
+      }
 
       const binFilenames = workspace
         .getEntrypoints()
@@ -115,8 +129,8 @@ export default createCommand('build', {
       }
     });
 
-    const updateNames = Array.from(builders.entries())
-      .filter(([, builder]) => builder.build)
+    const updateNames = Array.from(workspaceBuildTasks.entries())
+      .filter(([, tasks]) => tasks.length)
       .map(([ws]) => ws.name);
 
     if (updateNames.length) {
@@ -130,7 +144,15 @@ export default createCommand('build', {
       autoPrintStatus(false);
 
       await workspaces.forEachIndependent(async (workspace) => {
-        await builders.get(workspace)?.start?.();
+        const tasks = workspaceStartTasks.get(workspace);
+
+        if (!tasks?.length) return;
+
+        await Promise.all(
+          tasks.map(async (task) => {
+            await task();
+          }),
+        );
       });
     }
   },
