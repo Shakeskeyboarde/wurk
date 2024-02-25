@@ -6,12 +6,14 @@ import { type Builder, type BuilderFactory } from './builder.js';
 import { getRollupBuilder } from './builders/rollup.js';
 import { getScriptBuilder } from './builders/script.js';
 import { getTscBuilder } from './builders/tsc.js';
+import { getTypeDocBuilder } from './builders/typedoc.js';
 import { getViteBuilder } from './builders/vite.js';
 
 const BUILDER_FACTORIES = [
   getViteBuilder,
   getRollupBuilder,
   getTscBuilder,
+  getTypeDocBuilder,
 ] as const satisfies readonly BuilderFactory[];
 
 export default createCommand('build', {

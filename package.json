@@ -43,7 +43,6 @@
     "@types/eslint": "^8.56.2",
     "@types/node": "^20.11.17",
     "@vitest/coverage-v8": "^1.2.2",
-    "vite": "5.1.1",
     "@wurk/command-build": "*",
     "@wurk/command-clean": "*",
     "@wurk/command-depcheck": "*",
@@ -57,7 +56,10 @@
     "eslint-config-rational": "^3.0.11",
     "prettier": "^3.2.5",
     "rollup": "^4.10.0",
+    "typedoc": "^0.25.8",
+    "typedoc-plugin-markdown": "^3.17.1",
     "typescript": "^5.3.3",
+    "vite": "5.1.1",
     "vitest": "^1.2.2"
   }
 }
