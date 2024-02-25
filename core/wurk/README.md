@@ -25,20 +25,26 @@ Run a Wurk command.
 npx wurk build
 ```
 
+(Optional) Install Wurk globally to avoid having to use `npx`. When `wurk` is executed, it delegates to the locally installed version, so `wurk` becomes equivalent to `npx wurk`.
+
+```sh
+npm install --global wurk
+```
+
 ## Commands
 
 The following "official" commands are available.
 
-- [build](https://www.npmjs.com/package/@wurk/command-build): Rollup, Vite, TypeScript, TypeDoc, and `build`/`start` package scripts
-- [test](https://www.npmjs.com/package/@wurk/command-test): ESLint and Vitest
-- [version](https://www.npmjs.com/package/@wurk/command-version): Update package versions (set, bump, auto, or promote)
-- [publish](https://www.npmjs.com/package/@wurk/command-publish): Publish/Pack packages
-- [run](https://www.npmjs.com/package/@wurk/command-run): Run package scripts
-- [exec](https://www.npmjs.com/package/@wurk/command-exec): Run executables
-- [clean](https://www.npmjs.com/package/@wurk/command-clean): Remove build output files (Git untracked, not node_modules, not dotfiles)
-- [list](https://www.npmjs.com/package/@wurk/command-list): List workspaces
+- [build](https://www.npmjs.com/package/@wurk/command-build): Run Rollup, Vite, TypeScript, and TypeDoc.
+- [test](https://www.npmjs.com/package/@wurk/command-test): Run ESLint and Vitest.
+- [version](https://www.npmjs.com/package/@wurk/command-version): Set, bump, promote, and semantically auto generate versions.
+- [publish](https://www.npmjs.com/package/@wurk/command-publish): Publish or pack packages.
+- [run](https://www.npmjs.com/package/@wurk/command-run): Run package scripts.
+- [exec](https://www.npmjs.com/package/@wurk/command-exec): Run executables.
+- [clean](https://www.npmjs.com/package/@wurk/command-clean): Remove Git untracked files, but not dependencies or dotfiles.
+- [list](https://www.npmjs.com/package/@wurk/command-list): List workspaces.
 
-Run `npm install --save-dev @wurk/command-<name>` in your workspaces root to install any of these commands.
+Run `npm install --save-dev @wurk/command-<name>` in your project root to install any of these commands.
 
 See the [Custom Commands](./docs/custom-commands/README.md) documentation for information on creating your own commands.
 

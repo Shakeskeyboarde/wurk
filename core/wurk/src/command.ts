@@ -55,6 +55,9 @@ export type CommandFactory<
  *   },
  *   action: async (context) => {
  *     // Iterate over workspaces, spawn processes, modify files, etc.
+ *     context.workspaces.forEach(async (workspace) => {
+ *       // Do something with each selected workspace.
+ *     });
  *   },
  * });
  * ```
