@@ -6,7 +6,7 @@ export const getTypeDocBuilder: BuilderFactory = async (workspace) => {
   const { fs, spawn } = workspace;
 
   const filenames = await fs
-    .find(['typedoc*.json', 'src/typedoc*.json'])
+    .find(['typedoc*.@(js|json)', 'src/typedoc*.@(js|json)'])
     .then((entries) => {
       return entries.map((entry) => {
         return fs.relative(entry.fullpath());
