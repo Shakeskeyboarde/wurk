@@ -25,7 +25,6 @@
     "core/import",
     "core/log",
     "core/spawn",
-    "core/vite-config",
     "core/workspace",
     "core/wurk",
     "commands/*",
