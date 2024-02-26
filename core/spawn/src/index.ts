@@ -20,6 +20,10 @@ interface SpawnResult {
   readonly ok: boolean;
 }
 
+interface LiteralArg {
+  readonly literal: string;
+}
+
 export type SpawnPromise = Promise<SpawnResult> & {
   stdout(): Promise<Buffer>;
   stdoutText(): Promise<string>;
@@ -77,6 +81,17 @@ export interface SpawnOptions {
    */
   readonly log?: Log;
   /**
+   * Print the command to the log before running it. Defaults to `true` if
+   * the `output` option is `echo` or `inherit`, otherwise `false`.
+   */
+  readonly logCommand?:
+    | boolean
+    | {
+        readonly mapArgs?: (
+          arg: string,
+        ) => boolean | string | LiteralArg | null | (string | LiteralArg)[];
+      };
+  /**
    * Do not throw an error if the child process exits with a non-zero status.
    */
   readonly allowNonZeroExitCode?: boolean;
@@ -104,12 +119,26 @@ export const spawn = (
     input,
     output = 'buffer',
     log = defaultLog,
+    logCommand = output === 'echo' || output === 'inherit',
     allowNonZeroExitCode = false,
   } = options;
   const args = getArgs(sparseArgs);
 
-  if (output === 'echo' || output === 'inherit') {
-    log.print(`> ${quote(cmd, ...args)}`, {
+  if (logCommand) {
+    const mapArgs =
+      (typeof logCommand === 'object' && logCommand.mapArgs) || ((arg) => arg);
+    const mappedArgs = args.flatMap((arg) => {
+      const mappedArg = mapArgs(arg);
+      return mappedArg == null
+        ? []
+        : typeof mappedArg === 'boolean'
+          ? mappedArg
+            ? arg
+            : []
+          : mappedArg;
+    });
+
+    log.print(`> ${quote(cmd, ...mappedArgs)}`, {
       to: 'stderr',
       prefix: output !== 'inherit',
     });
@@ -265,9 +294,13 @@ export const spawn = (
   });
 };
 
-const quote = (...args: readonly string[]): string => {
+const quote = (...args: readonly (string | LiteralArg)[]): string => {
   return args
     .map((arg) => {
+      if (isLiteralArg(arg)) {
+        return arg.literal;
+      }
+
       if (/["`!#$^&*|?;<>(){}[\]\\]/u.test(arg)) {
         return `'${arg.replaceAll(/(['\\])/gu, '\\$1')}'`;
       }
@@ -279,6 +312,10 @@ const quote = (...args: readonly string[]): string => {
       return arg;
     })
     .join(' ');
+};
+
+const isLiteralArg = (arg: unknown): arg is LiteralArg => {
+  return typeof arg === 'object' && arg !== null && 'literal' in arg;
 };
 
 const getArgs = (args: SpawnSparseArgs): string[] => {
