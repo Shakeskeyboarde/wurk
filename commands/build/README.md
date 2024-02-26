@@ -2,10 +2,10 @@
 
 Build workspaces using auto-detected tools.
 
-- Vite: `[src/]vite.config*.*`
-- Rollup: `[src/]rollup.config*.*`
-- TypeScript: `[src/]tsconfig*.json` (where noEmit != true)
-- TypeDoc: `[src/]typedoc*.*`
+- [Vite](https://npmjs.com/package/vite): `[src/]vite.config*.*`
+- [Rollup](https://npmjs.com/package/rollup): `[src/]rollup.config*.*`
+- [TypeScript](https://npmjs.com/package/typescript): `[src/]tsconfig*.json` (where noEmit != true)
+- [TypeDoc](https://npmjs.com/package/typedoc): `[src/]typedoc*.(js|json)`
 
 ## Getting Started
 
