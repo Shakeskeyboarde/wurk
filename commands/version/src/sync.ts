@@ -10,7 +10,7 @@ export const sync = (workspace: Workspace): Change[] => {
 
   let isOptional = true;
 
-  getDependencyLinks().forEach(({ scope, id, versionRange, dependency }) => {
+  getDependencyLinks().forEach(({ type, id, versionRange, dependency }) => {
     // The range is not updatable.
     if (
       !semver.validRange(versionRange) ||
@@ -40,8 +40,8 @@ export const sync = (workspace: Workspace): Change[] => {
     // Add the update to the pending list. It will only be applied if the
     // workspace is private, selected, or if some updates are required.
     pending.push(() => {
-      log.debug(`updating ${scope} "${id}" to "${spec}"`);
-      config.at(scope).at(id).set(spec);
+      log.debug(`updating ${type} "${id}" to "${spec}"`);
+      config.at(type).at(id).set(spec);
     });
   });
 

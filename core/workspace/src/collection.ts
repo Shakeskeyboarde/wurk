@@ -178,54 +178,54 @@ export class WorkspaceCollection {
           [dependent, 'optionalDependencies'],
         ] as const;
       })
-      .flatMap(([dependent, scope]) => {
+      .flatMap(([dependent, type]) => {
         return dependent.config
-          .at(scope)
+          .at(type)
           .entries('object')
-          .map(([id, spec]) => ({ dependent, scope, id, spec }))
+          .map(([id, spec]) => ({ dependent, type, id, spec }))
           .filter(
             (entry): entry is typeof entry & { spec: string } =>
               typeof entry.spec === 'string',
           );
       })
-      .map(({ dependent, scope, id, spec }) => {
+      .map(({ dependent, type, id, spec }) => {
         const match = spec.match(/^npm:((?:@[^@]+\/)?[^@]+)(?:@(.+))?/u);
 
         return match
           ? {
               dependent,
-              scope,
+              type,
               id,
               name: match[1]!,
               versionRange: match[2] ?? '*',
             }
           : {
               dependent,
-              scope,
+              type,
               id: id,
               name: id,
               versionRange: spec,
             };
       })
-      .flatMap(({ dependent, scope, id, name, versionRange }) => {
+      .flatMap(({ dependent, type, id, name, versionRange }) => {
         return workspaces
           .filter((workspace) => workspace.name === name)
           .map((dependency) => ({
             dependent,
             dependency,
-            scope,
+            type,
             id,
             versionRange,
           }));
       })
-      .forEach(({ dependent, dependency, scope, id, versionRange }) => {
+      .forEach(({ dependent, dependency, type, id, versionRange }) => {
         dependencyLinks.set(dependent, [
           ...(dependencyLinks.get(dependent) ?? []),
-          { dependent, dependency, scope, id, versionRange },
+          { dependent, dependency, type, id, versionRange },
         ]);
         dependentLinks.set(dependency, [
           ...(dependentLinks.get(dependency) ?? []),
-          { dependent, dependency, scope, id, versionRange },
+          { dependent, dependency, type, id, versionRange },
         ]);
       });
 

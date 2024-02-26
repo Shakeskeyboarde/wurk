@@ -89,10 +89,10 @@ export interface WorkspaceLink {
   readonly dependency: Workspace;
 
   /**
-   * The scope of the dependency in the dependent workspace's `package.json`
-   * file.
+   * The type of the dependency in the dependent workspace's `package.json`
+   * file (eg. `devDependencies`).
    */
-  readonly scope: (typeof WORKSPACE_LINK_SCOPES)[number];
+  readonly type: (typeof WORKSPACE_LINK_SCOPES)[number];
 
   /**
    * The key of the dependency in the dependent workspace's `package.json`

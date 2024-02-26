@@ -70,7 +70,7 @@ export const publishFromFilesystem = async (
   const prodDependencyLinks = await Promise.all(
     getDependencyLinks({
       recursive: true,
-      filter: ({ scope }) => scope !== 'devDependencies',
+      filter: ({ type }) => type !== 'devDependencies',
     }).map(async (link) => {
       const [isDirty, isModified] = await Promise.all([
         !published.has(link.dependency) && link.dependency.git.getIsDirty(),
@@ -131,7 +131,7 @@ export const publishFromFilesystem = async (
   // File (file:) and wildcard versions should not be published to the
   // registry.
   prodDependencyLinks.forEach((link) => {
-    const { dependency, scope, id, versionRange } = link;
+    const { dependency, type, id, versionRange } = link;
 
     if (
       !dependency.version ||
@@ -162,7 +162,7 @@ export const publishFromFilesystem = async (
         ? `${rangePrefix}${dependency.version}`
         : `npm:${dependency.name}@${rangePrefix}${dependency.version}`;
 
-    packageJson.at(scope).at(id).set(spec);
+    packageJson.at(type).at(id).set(spec);
   });
 
   // Temporarily remove fields from the package.json file.

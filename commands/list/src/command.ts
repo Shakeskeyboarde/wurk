@@ -35,14 +35,14 @@ export default createCommand('list', {
           dependencyLinks: getDependencyLinks().map((link) => ({
             name: link.dependency.name,
             dir: link.dependency.dir,
-            scope: link.scope,
+            type: link.type,
             id: link.id,
             versionRange: link.versionRange,
           })),
           dependentLinks: getDependentLinks().map((link) => ({
             name: link.dependent.name,
             dir: link.dependent.dir,
-            scope: link.scope,
+            type: link.type,
             id: link.id,
             versionRange: link.versionRange,
           })),
