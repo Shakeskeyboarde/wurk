@@ -3,7 +3,7 @@ import { type Workspace } from 'wurk';
 
 export interface Change {
   readonly type: ChangeType;
-  readonly scope?: string;
+  readonly project?: string;
   readonly message: string;
 }
 
@@ -108,10 +108,10 @@ export const getChanges = async (
         return [];
       }
 
-      let [, typeString = '', scope, summary = ''] = subjectMatch;
+      let [, typeString = '', project, summary = ''] = subjectMatch;
 
       typeString = typeString.trim().toLowerCase();
-      scope = scope?.trim();
+      project = project?.trim();
       summary = summary.trim();
 
       const type = /none|internal|version(?:ed|ing)|releas(?:ed?|ing)/u.test(
@@ -123,7 +123,7 @@ export const getChanges = async (
       const bodyLines = body.split(/\r?\n/u);
 
       return [
-        { type, scope, message },
+        { type, project, message },
         ...bodyLines.flatMap((line) => {
           const lineMatch = line.match(
             /^\s*break(?:s|ing(?:[ -]?changes?)?)?\s*(?:!\s*)?:(.*)$/imu,
@@ -142,10 +142,10 @@ export const getChanges = async (
         }),
       ];
     })
-    .map(({ type, scope, message }) => {
+    .map(({ type, project, message }) => {
       return {
         type,
-        scope: scope?.replace(MARKDOWN_ESCAPE, (char) => {
+        project: project?.replace(MARKDOWN_ESCAPE, (char) => {
           return `&#${char.charCodeAt(0)};`;
         }),
         message: message?.replace(MARKDOWN_ESCAPE, (char) => {

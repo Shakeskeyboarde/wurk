@@ -97,9 +97,9 @@ export const writeChangelog = async (
   let section: ChangelogSection | undefined;
 
   sortedChanges.forEach((change) => {
-    // Omit parts of the scope that match all or part of the workspace name.
+    // Omit parts of the project that match all or part of the workspace name.
     const nameParts = name.split('/');
-    const scope = change.scope
+    const project = change.project
       ?.split('/')
       .filter(
         (part) =>
@@ -113,7 +113,7 @@ export const writeChangelog = async (
       text += `\n#### ${getChangelogHeading(change.section)}\n\n`;
     }
 
-    text += `- ${scope ? `**${scope}:** ` : ''}${change.message}\n`;
+    text += `- ${project ? `**${project}:** ` : ''}${change.message}\n`;
   });
 
   const newEntry = { version: newVersion, text };
