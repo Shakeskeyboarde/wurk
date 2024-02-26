@@ -41,7 +41,7 @@ The following "official" commands are available.
 - [publish](https://www.npmjs.com/package/@wurk/command-publish): Publish or pack packages.
 - [run](https://www.npmjs.com/package/@wurk/command-run): Run package scripts.
 - [exec](https://www.npmjs.com/package/@wurk/command-exec): Run executables.
-- [clean](https://www.npmjs.com/package/@wurk/command-clean): Remove Git untracked files, but not dependencies or dotfiles.
+- [clean](https://www.npmjs.com/package/@wurk/command-clean): Remove Git ignored files, but leave dependencies and dotfiles alone.
 - [list](https://www.npmjs.com/package/@wurk/command-list): List workspaces.
 
 Run `npm install --save-dev @wurk/command-<name>` in your project root to install any of these commands.
