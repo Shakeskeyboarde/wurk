@@ -81,7 +81,7 @@ const mainAsync = async (): Promise<void> => {
     })
 
     // Logging Options:
-    .option('-l, --loglevel <level>', {
+    .option('--loglevel <level>', {
       description:
         'set the log level. (silent, error, warn, notice, info, verbose, silly)',
       group: 'Logging Options',
