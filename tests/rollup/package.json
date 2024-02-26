@@ -8,7 +8,6 @@
   "main": "lib/index.js",
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.6",
-    "@wurk/command-build": "*",
     "rollup": "^4.12.0"
   }
 }

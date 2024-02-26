@@ -37,8 +37,5 @@
   },
   "dependencies": {
     "wurk": "*"
-  },
-  "devDependencies": {
-    "@wurk/command-build": "*"
   }
 }

@@ -6,9 +6,6 @@
   "scripts": {},
   "type": "module",
   "bin": "./lib/main.js",
-  "devDependencies": {
-    "@wurk/command-build": "*"
-  },
   "dependencies": {
     "execa": "^8.0.1"
   }

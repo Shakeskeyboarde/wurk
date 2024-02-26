@@ -6,8 +6,6 @@
   "scripts": {},
   "type": "module",
   "devDependencies": {
-    "@wurk/command-build": "*",
-    "@wurk/command-test": "*",
     "vitest": "^1.2.2"
   },
   "dependencies": {}
