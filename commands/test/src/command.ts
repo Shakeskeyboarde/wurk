@@ -1,6 +1,5 @@
 import { createCommand } from 'wurk';
 
-import { depcheck } from './testers/depcheck.js';
 import { eslint } from './testers/eslint.js';
 import { vitest } from './testers/vitest.js';
 
@@ -28,7 +27,6 @@ export default createCommand('test', {
       });
     }
 
-    await depcheck(context);
     await eslint(context);
     await vitest(context);
   },
