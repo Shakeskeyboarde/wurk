@@ -35,7 +35,7 @@ wurk build
 The following "official" commands are available.
 
 - [build](https://www.npmjs.com/package/@wurk/command-build): Run Rollup, Vite, TypeScript, and TypeDoc.
-- [test](https://www.npmjs.com/package/@wurk/command-test): Run ESLint and Vitest.
+- [test](https://www.npmjs.com/package/@wurk/command-test): Run Depcheck, ESLint, and Vitest.
 - [version](https://www.npmjs.com/package/@wurk/command-version): Set, bump, promote, and semantically auto generate versions.
 - [publish](https://www.npmjs.com/package/@wurk/command-publish): Publish or pack packages.
 - [run](https://www.npmjs.com/package/@wurk/command-run): Run package scripts.
