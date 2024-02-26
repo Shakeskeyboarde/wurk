@@ -1,4 +1,5 @@
 import nodeFs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import type stream from 'node:stream';
 
@@ -321,7 +322,10 @@ export class Fs {
    * process exists.
    */
   async temp(prefix = 'wurk'): Promise<string> {
-    const dir = await nodeFs.promises.mkdtemp(prefix, { encoding: 'utf8' });
+    const dir = await nodeFs.promises.mkdtemp(
+      path.join(os.tmpdir(), `${prefix}-`),
+      { encoding: 'utf8' },
+    );
 
     process.on('exit', () => {
       try {
