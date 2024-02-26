@@ -2,13 +2,9 @@ import { type WorkspaceCollection } from 'wurk';
 
 interface EslintContext {
   readonly workspaces: WorkspaceCollection;
-  readonly options: { readonly fix?: boolean };
 }
 
-export const eslint = async ({
-  workspaces,
-  options,
-}: EslintContext): Promise<void> => {
+export const eslint = async ({ workspaces }: EslintContext): Promise<void> => {
   const isDependencyPresent = workspaces.root.config
     .at('devDependencies')
     .at('eslint')
@@ -16,13 +12,15 @@ export const eslint = async ({
 
   if (!isDependencyPresent) return;
 
-  const workspaceDirs = Array.from(workspaces).map(({ dir }) => dir);
+  const workspaceDirs = Array.from(workspaces).map(({ dir }) =>
+    workspaces.root.fs.relative(dir),
+  );
 
   if (!workspaceDirs.length) return;
 
   await workspaces.root.spawn(
     'eslint',
-    ['--max-warnings=0', ...(options.fix ? ['--fix'] : []), ...workspaceDirs],
+    ['--max-warnings=0', ...workspaceDirs],
     { output: 'inherit' },
   );
 };

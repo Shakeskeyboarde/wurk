@@ -35,5 +35,11 @@ export const vitest = async (context: VitestContext): Promise<void> => {
   await workspaces.root.fs.writeJson(tmpConfig, workspaceDirs);
   await workspaces.root.spawn('vitest', ['run', `--workspace=${tmpConfig}`], {
     output: 'inherit',
+    logCommand: {
+      mapArgs: (arg) =>
+        arg.startsWith('--workspace=')
+          ? { literal: '--workspace=<temp-config>' }
+          : arg,
+    },
   });
 };
