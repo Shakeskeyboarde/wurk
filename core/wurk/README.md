@@ -2,8 +2,6 @@
 
 Wurk is declarative build and project tooling for monorepos or single packages, designed to make project setup and onboarding easier, without sacrificing flexibility.
 
-[![npm](https://img.shields.io/npm/v/wurk?label=NPM)](https://www.npmjs.com/package/wurk)
-
 ## Prerequisites
 
 - [Node.js®](https://nodejs.org/) is required.
@@ -29,6 +27,7 @@ npx wurk build
 
 ```sh
 npm install --global wurk
+wurk build
 ```
 
 ## Commands
@@ -83,11 +82,11 @@ Options which reduce the number of workspaces that are processed.
   - Set the number workspaces to process in parallel. The count can be a number, "auto", or "all". The default is is "auto", which is equivalent to one greater than the number of CPU cores (cores + 1).
   - This option implies the `--parallel` option.
 
-> By default, workspaces are processed serially. This is generally the slowest option, but also the safest.
+> By default, workspaces are processed serially (one at a time). This is generally the slowest option, but also the safest.
 
 ### Logging Options
 
-- `-l, --loglevel <level>`
+- `--loglevel <level>`
   - Set the log level (`silent`, `error`, `warn`, `info`, `notice`, `verbose`, or `silly`). The default is `info`.
   - Log level can also be set using the `WURK_LOG_LEVEL` environment variable. The command line option takes precedence over the environment variable.
 - `--clear`

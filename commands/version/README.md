@@ -2,9 +2,6 @@
 
 Update versions.
 
-[![npm](https://img.shields.io/npm/v/@wurk/command-version?label=NPM)](https://www.npmjs.com/package/@wurk/command-version)
-[![wurk](https://img.shields.io/npm/v/wurk?label=Wurk&color=purple)](https://www.npmjs.com/package/wurk)
-
 ## Set Versions
 
 ```sh

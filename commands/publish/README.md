@@ -4,9 +4,6 @@ Publish workspaces.
 
 **Note:** Only unpublished versions of public workspaces are published!
 
-[![npm](https://img.shields.io/npm/v/@wurk/command-publish?label=NPM)](https://www.npmjs.com/package/@wurk/command-publish)
-[![wurk](https://img.shields.io/npm/v/wurk?label=Wurk&color=purple)](https://www.npmjs.com/package/wurk)
-
 ## Install
 
 ```sh

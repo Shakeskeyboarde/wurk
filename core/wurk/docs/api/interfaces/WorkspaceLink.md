@@ -11,7 +11,7 @@ Represents an edge in the workspace dependency graph.
 - [dependency](WorkspaceLink.md#dependency)
 - [dependent](WorkspaceLink.md#dependent)
 - [id](WorkspaceLink.md#id)
-- [scope](WorkspaceLink.md#scope)
+- [type](WorkspaceLink.md#type)
 - [versionRange](WorkspaceLink.md#versionrange)
 
 ## Properties
@@ -42,12 +42,12 @@ entry is an alias.
 
 ___
 
-### scope
+### type
 
-• `Readonly` **scope**: ``"dependencies"`` \| ``"devDependencies"`` \| ``"peerDependencies"`` \| ``"optionalDependencies"``
+• `Readonly` **type**: ``"dependencies"`` \| ``"devDependencies"`` \| ``"peerDependencies"`` \| ``"optionalDependencies"``
 
-The scope of the dependency in the dependent workspace's `package.json`
-file.
+The type of the dependency in the dependent workspace's `package.json`
+file (eg. `devDependencies`).
 
 ___
 

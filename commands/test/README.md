@@ -1,32 +1,35 @@
 # Wurk Test Command
 
-Run tests using the following tools.
+Test workspaces using auto-detected tools.
 
-- [eslint](https://npmjs.com/package/eslint)
-- [vitest](https://npmjs.com/package/vitest)
-- [@wurk/command-depcheck](https://npmjs.com/package/@wurk/command-depcheck)
+- [Depcheck](https://npmjs.com/package/depcheck)
+- [ESLint](https://npmjs.com/package/eslint)
+- [Vitest](https://npmjs.com/package/vitest)
 
-[![npm](https://img.shields.io/npm/v/@wurk/command-test?label=NPM)](https://www.npmjs.com/package/@wurk/command-test)
-[![wurk](https://img.shields.io/npm/v/wurk?label=Wurk&color=purple)](https://www.npmjs.com/package/wurk)
+## Getting Started
 
-## Vitest
+Install the command in your root workspace.
 
-Run Vitest in each selected workspaces using its built-in [workspaces support](https://vitest.dev/guide/workspace.html).
+```sh
+npm install --save-dev @wurk/command-test
+```
 
-If Vitest is not installed at the root, Vitest will be skipped. Workspaces which do not contain a Vitest configuration file will be skipped. Vitest can be explicitly skipped by using the `--no-vitest` option.
+Run the command.
 
-NOTE: Any static workspaces configuration file (eg. `vitest.workspace.ts`) is ignored. A temporary workspaces configuration is always generated from selected workspaces.
+```sh
+wurk test
+```
 
-## ESLint
+Test tools are only invoked if they are present in the root workspace `package.json` file `devDependencies` map.
 
-Run ESLint in each selected workspace. If available, the ESLint configuration
-in the workspace is used. Otherwise, the configuration in the root workspace
-is used.
+## Options
 
-If ESLint is not installed at the root or no configuration is found, ESLint will be skipped. ESLint can be skipped by using the `--no-eslint` option.
-
-## Depcheck
-
-Run the Wurk `depcheck` command (ie. [@wurk/command-depcheck](https://npmjs.com/package/@wurk/command-depcheck)) to check for unused dependencies in each selected workspace.
-
-If the `depcheck` command is not installed, depcheck will be skipped. Depcheck can be skipped by using the `--no-depcheck` option.
+- `--no-build`
+  - Do not run the root workspace `build` script before testing.
+  - In a monorepo it is usually required to build before testing so that dependencies can successfully be imported.
+- `--depcheck-dev`
+  - Show Depcheck unused devDependencies.
+  - Development dependencies are both more difficult to check reliably, and less important to remove.
+- `--depcheck-missing`
+  - Show Depcheck missing dependencies.
+  - Missing dependencies are better checked by ESLint, and dev dependencies are commonly maintained at the root workspace level which causes Depcheck to report false positives.
