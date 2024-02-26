@@ -17,17 +17,30 @@ Install Wurk and any [commands](#commands) you want as a dev dependencies of you
 npm install --save-dev wurk @wurk/command-build
 ```
 
-Run a Wurk command.
+Run a Wurk command. For example the [build](https://npmjs.com/package/@wurk/command-build) command (installed above) will automatically invoke Rollup, Vite, TypeScript, and/or TypeDoc, based on the presence of configuration files for each of these tools.
 
 ```sh
 npx wurk build
 ```
 
-(Optional) Install Wurk globally to avoid having to use `npx`. When `wurk` is executed, it delegates to the locally installed version, so `wurk` becomes equivalent to `npx wurk`.
+(Optional) Install Wurk globally to avoid having to use `npx`. When `wurk` is executed, it delegates to the locally installed version, so `wurk build` becomes equivalent to `npx wurk build`.
 
 ```sh
 npm install --global wurk
-wurk build
+```
+
+(Optional) Delegate root workspace NPM scripts to Wurk. This keeps your package scripts clean and allows developers to use NPM commands instead of invoking Wurk directly.
+
+```json
+{
+  "scripts": {
+    "build": "wurk build",
+    "test": "wurk test",
+    "create-release": "wurk version auto",
+    "release": "wurk publish",
+    "clean": "wurk clean"
+  }
+}
 ```
 
 ## Commands
