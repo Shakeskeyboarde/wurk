@@ -1,13 +1,18 @@
 # Wurk
 
-Wurk is declarative build and project tooling for monorepos or single packages, designed to make project setup and onboarding easier, without sacrificing flexibility.
+Wurk is a declarative, extensible build system for monorepos or single packages.
+
+- Run one command per logical task.
+- Leverage the power of community with custom commands.
+- Orchestrate tasks across multiple interrelated workspaces.
+- Stay flexible and transparent without adding complexity.
 
 ## Prerequisites
 
 - [Node.js®](https://nodejs.org/) is required.
 - [NPM](https://www.npmjs.com/) is required.
-- [Git](https://git-scm.com/) is optional, but strongly recommended.
-- [TypeScript](https://www.typescriptlang.org/) is optional, but strongly recommended.
+- [Git](https://git-scm.com/) is recommended but optional
+- [TypeScript](https://www.typescriptlang.org/) is recommended but optional.
 
 ## Getting Started
 
