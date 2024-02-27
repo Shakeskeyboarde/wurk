@@ -18,19 +18,18 @@ export const depcheck = async ({
     .is('string');
 
   if (!isDependencyPresent) return;
+  if (!workspaces.iterableSize) return;
 
-  const workspaceDirs = Array.from(workspaces).map(({ dir }) => dir);
+  const workspaceDirs = Array.from(workspaces)
+    .filter(({ isSelected }) => isSelected)
+    .map(({ dir }) => workspaces.root.fs.relative(dir));
 
   if (!workspaceDirs.length) return;
 
   for (const dir of workspaceDirs) {
     const { exitCode, stdoutJson } = await workspaces.root.spawn(
       'depcheck',
-      [
-        workspaces.root.fs.relative(dir),
-        !options.depcheckMissing && '--skip-missing',
-        '--json',
-      ],
+      [dir, !options.depcheckMissing && '--skip-missing', '--json'],
       {
         logCommand: { mapArgs: (arg) => arg !== '--json' },
         allowNonZeroExitCode: true,

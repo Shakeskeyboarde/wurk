@@ -11,12 +11,11 @@ export const eslint = async ({ workspaces }: EslintContext): Promise<void> => {
     .is('string');
 
   if (!isDependencyPresent) return;
+  if (!workspaces.iterableSize) return;
 
-  const workspaceDirs = Array.from(workspaces).map(({ dir }) =>
-    workspaces.root.fs.relative(dir),
-  );
-
-  if (!workspaceDirs.length) return;
+  const workspaceDirs = Array.from(workspaces)
+    .filter(({ isSelected }) => isSelected)
+    .map(({ dir }) => workspaces.root.fs.relative(dir));
 
   await workspaces.root.spawn(
     'eslint',

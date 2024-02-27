@@ -1,19 +1,21 @@
 import path from 'node:path';
 
-import { type WorkspaceCollection } from 'wurk';
+import { type Log, type WorkspaceCollection } from 'wurk';
 
 interface VitestContext {
+  readonly log: Log;
   readonly workspaces: WorkspaceCollection;
 }
 
 export const vitest = async (context: VitestContext): Promise<void> => {
-  const { workspaces } = context;
+  const { log, workspaces } = context;
   const isDependencyPresent = workspaces.root.config
     .at('devDependencies')
     .at('vitest')
     .is('string');
 
   if (!isDependencyPresent) return;
+  if (!workspaces.iterableSize) return;
 
   const workspaceDirs: string[] = [];
 
@@ -27,7 +29,10 @@ export const vitest = async (context: VitestContext): Promise<void> => {
     }
   }
 
-  if (!workspaceDirs.length) return;
+  if (!workspaceDirs.length) {
+    log.info('no vitest configurations found');
+    return;
+  }
 
   const tmpDir = await workspaces.root.fs.temp('vitest');
   const tmpConfig = path.join(tmpDir, 'vitest.workspace.json');
