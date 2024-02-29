@@ -1,9 +1,8 @@
+import { type Fs } from '@wurk/fs';
+
 import { type Workspace } from './workspace.js';
 
-export interface Entrypoint {
-  readonly type: (typeof WORKSPACE_ENTRYPOINT_TYPES)[number];
-  readonly filename: string;
-}
+export type EntrypointType = (typeof WORKSPACE_ENTRYPOINT_TYPES)[number];
 
 const WORKSPACE_ENTRYPOINT_TYPES = [
   'license',
@@ -22,7 +21,7 @@ export const getEntrypoints = (workspace: Workspace): readonly Entrypoint[] => {
   const entryPoints: Entrypoint[] = [];
   const addEntryPoints = (type: Entrypoint['type'], value: unknown): void => {
     if (typeof value === 'string') {
-      entryPoints.push({ type, filename: fs.resolve(value) });
+      entryPoints.push(new Entrypoint(fs, type, fs.resolve(value)));
     } else if (Array.isArray(value)) {
       value.forEach((subValue) => addEntryPoints(type, subValue));
     } else if (typeof value === 'object' && value !== null) {
@@ -48,62 +47,50 @@ export const getEntrypoints = (workspace: Workspace): readonly Entrypoint[] => {
   return entryPoints;
 };
 
-export const getMissingEntrypoints = async (
-  workspace: Workspace,
-): Promise<Entrypoint[]> => {
-  const { fs } = workspace;
-  const entrypoints = getEntrypoints(workspace);
-  const missing: Entrypoint[] = [];
+export class Entrypoint {
+  readonly #fs: Fs;
+  readonly type: EntrypointType;
+  readonly filename: string;
 
-  for (const entrypoint of entrypoints) {
-    if (entrypoint.type === 'files') {
-      const entries = await fs.find({
-        patterns: entrypoint.filename,
+  constructor(fs: Fs, type: EntrypointType, filename: string) {
+    this.#fs = fs;
+    this.type = type;
+    this.filename = filename;
+  }
+
+  async exists(): Promise<boolean> {
+    if (this.type === 'files') {
+      const entries = await this.#fs.find({
+        patterns: this.filename,
         includeDirs: true,
       });
 
-      let found = false;
-
-      for (const entry of entries) {
-        if (entry.isFile()) {
-          found = true;
-          break;
-        }
+      if (entries.some((entry) => entry.isFile())) {
+        return true;
       }
 
       /**
        * If the pattern didn't match any files, then check to see if any
        * matched directories contain any files.
        */
-      if (!found && !entrypoint.filename.includes('**')) {
-        found = await fs
-          .find(`${entrypoint.filename}/**`)
+      if (!this.filename.endsWith('/**')) {
+        const isNotEmpty = await this.#fs
+          .find(`${this.filename}/**`)
           .then((files) => Boolean(files.length));
-      }
 
-      if (!found) {
-        missing.push(entrypoint);
+        return isNotEmpty;
       }
     } else {
       const filenames =
-        entrypoint.filename === 'LICENSE'
-          ? ['LICENSE', 'LICENCE']
-          : [entrypoint.filename];
-
-      let found = false;
+        this.filename === 'LICENSE' ? ['LICENSE', 'LICENCE'] : [this.filename];
 
       for (const filename of filenames) {
-        if (await fs.exists(filename)) {
-          found = true;
-          break;
+        if (await this.#fs.exists(filename)) {
+          return true;
         }
       }
-
-      if (!found) {
-        missing.push(entrypoint);
-      }
     }
-  }
 
-  return missing;
-};
+    return false;
+  }
+}

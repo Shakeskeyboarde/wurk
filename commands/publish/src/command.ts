@@ -1,7 +1,7 @@
-import { createCommand } from 'wurk';
+import { createCommand, type Workspace } from 'wurk';
 
-import { publishFromArchive } from './archive.js';
-import { publishFromFilesystem } from './filesystem.js';
+import { publishFromArchive } from './publishers/archive.js';
+import { publishFromFilesystem } from './publishers/filesystem.js';
 
 export default createCommand('publish', {
   config: (cli) => {
@@ -26,33 +26,42 @@ export default createCommand('publish', {
       .option('--dry-run', 'perform a dry-run for validation');
   },
 
-  action: async ({ log: rootLog, options, workspaces, autoPrintStatus }) => {
+  action: async ({ log, options, workspaces, autoPrintStatus }) => {
     autoPrintStatus();
 
-    if (
-      !options.fromArchive &&
-      options.build &&
-      workspaces.root.config.at('scripts').at('build').is('string')
-    ) {
-      rootLog.info(`running pre-publish build`);
-
-      await workspaces.root.spawn('npm', ['run', 'build'], {
-        output: 'inherit',
-      });
-    }
-
-    await workspaces.forEach(async (workspace) => {
-      const { log, config, status } = workspace;
-
-      if (config.at('private').as('boolean', false)) {
-        log.verbose(`skipping private workspace`);
-        status.set('skipped', 'private');
-        return;
+    if (options.fromArchive) {
+      if (options.otp != null) {
+        log.warn(`option --otp is ignored when --from-archive is set`);
       }
 
-      return options.fromArchive
-        ? await publishFromArchive({ options, workspace })
-        : await publishFromFilesystem({ options, workspace });
-    });
+      if (options.removePackageFields != null) {
+        log.warn(
+          `option --remove-package-fields is ignored when --from-archive is set`,
+        );
+      }
+
+      if (options.build) {
+        log.warn(`option --build is ignored when --from-archive is set`);
+      }
+
+      await workspaces.forEach(async (workspace) => {
+        await publishFromArchive({ options, workspace });
+      });
+    } else {
+      if (
+        options.build &&
+        workspaces.root.config.at('scripts').at('build').is('string')
+      ) {
+        await workspaces.root.spawn('npm', ['run', 'build'], {
+          output: 'inherit',
+        });
+      }
+
+      const published = new Set<Workspace>();
+
+      await workspaces.forEach(async (workspace) => {
+        await publishFromFilesystem({ options, workspace, published });
+      });
+    }
   },
 });

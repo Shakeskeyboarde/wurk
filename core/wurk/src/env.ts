@@ -4,7 +4,6 @@ interface Env {
   WURK_INCLUDE_ROOT_WORKSPACE?: string;
   WURK_PARALLEL?: string;
   WURK_CONCURRENCY?: string;
-  WURK_GIT_FROM_REVISION?: string;
 }
 
 export const env = process.env as Env;

@@ -24,9 +24,8 @@ Workspace information and utilities.
 - [getDependencyLinks](Workspace.md#getdependencylinks)
 - [getDependentLinks](Workspace.md#getdependentlinks)
 - [getEntrypoints](Workspace.md#getentrypoints)
-- [getIsModified](Workspace.md#getismodified)
-- [getMissingEntrypoints](Workspace.md#getmissingentrypoints)
-- [git](Workspace.md#git)
+- [getGit](Workspace.md#getgit)
+- [getNpm](Workspace.md#getnpm)
 - [importRelative](Workspace.md#importrelative)
 - [importRelativeResolve](Workspace.md#importrelativeresolve)
 - [isPrivate](Workspace.md#isprivate)
@@ -34,8 +33,8 @@ Workspace information and utilities.
 - [isSelected](Workspace.md#isselected)
 - [log](Workspace.md#log)
 - [name](Workspace.md#name)
-- [npm](Workspace.md#npm)
 - [relativeDir](Workspace.md#relativedir)
+- [spawn](Workspace.md#spawn)
 - [status](Workspace.md#status)
 - [version](Workspace.md#version)
 
@@ -87,7 +86,7 @@ collections instead, which create their own workspace instances.
 
 ### clean
 
-• `Readonly` **clean**: () => `Promise`\<`string`[]\>
+• `Readonly` **clean**: () => `Promise`\<`void`\>
 
 Remove files and directories from the workspace which are ignored by
 Git, _except_ for `node_modules` and dot-files (eg. `.gitignore`,
@@ -95,7 +94,7 @@ Git, _except_ for `node_modules` and dot-files (eg. `.gitignore`,
 
 #### Type declaration
 
-▸ (): `Promise`\<`string`[]\>
+▸ (): `Promise`\<`void`\>
 
 Remove files and directories from the workspace which are ignored by
 Git, _except_ for `node_modules` and dot-files (eg. `.gitignore`,
@@ -103,7 +102,7 @@ Git, _except_ for `node_modules` and dot-files (eg. `.gitignore`,
 
 ##### Returns
 
-`Promise`\<`string`[]\>
+`Promise`\<`void`\>
 
 ___
 
@@ -201,67 +200,53 @@ readonly `Entrypoint`[]
 
 ___
 
-### getIsModified
+### getGit
 
-• `Readonly` **getIsModified**: () => `Promise`\<`boolean`\>
+• `Readonly` **getGit**: () => `Promise`\<`Git`\>
 
-Try to detect changes using git commits, and fall back to assuming
-modifications if that doesn't work.
+Get a Git API instance for the workspace directory.
 
-Return true if the NPM published head commit and the current Git
-head commit do not match, or if the directory is not part of a Git
-working tree, or if no published head commit is available.
-
-**Note:** This method will throw an error if the Git repository is
-a shallow clone!
+Throws:
+- If Git is not installed (ENOENT)
+- If the directory is not a repo (ENOGITREPO)
 
 #### Type declaration
 
-▸ (): `Promise`\<`boolean`\>
+▸ (): `Promise`\<`Git`\>
 
-Try to detect changes using git commits, and fall back to assuming
-modifications if that doesn't work.
+Get a Git API instance for the workspace directory.
 
-Return true if the NPM published head commit and the current Git
-head commit do not match, or if the directory is not part of a Git
-working tree, or if no published head commit is available.
-
-**Note:** This method will throw an error if the Git repository is
-a shallow clone!
+Throws:
+- If Git is not installed (ENOENT)
+- If the directory is not a repo (ENOGITREPO)
 
 ##### Returns
 
-`Promise`\<`boolean`\>
+`Promise`\<`Git`\>
 
 ___
 
-### getMissingEntrypoints
+### getNpm
 
-• `Readonly` **getMissingEntrypoints**: () => `Promise`\<`Entrypoint`[]\>
+• `Readonly` **getNpm**: () => `Promise`\<`Npm`\>
 
-Return a list of all the workspace entry points that are missing.
+Get an NPM API instance for the workspace directory.
 
-**Note:** Entry points which include a wildcard are ignored.
+Throws:
+- If NPM is not installed (ENOENT)
 
 #### Type declaration
 
-▸ (): `Promise`\<`Entrypoint`[]\>
+▸ (): `Promise`\<`Npm`\>
 
-Return a list of all the workspace entry points that are missing.
+Get an NPM API instance for the workspace directory.
 
-**Note:** Entry points which include a wildcard are ignored.
+Throws:
+- If NPM is not installed (ENOENT)
 
 ##### Returns
 
-`Promise`\<`Entrypoint`[]\>
-
-___
-
-### git
-
-• `Readonly` **git**: `Git`
-
-Git utilities relative to this workspace's directory.
+`Promise`\<`Npm`\>
 
 ___
 
@@ -320,9 +305,21 @@ ___
 
 • `Readonly` **importRelativeResolve**: (`name`: `string`, `versionRange?`: `string`) => `Promise`\<`ImportResolved`\>
 
+Find a package relative to the workspace directory, and return all of
+the package info except its exports.
+
+The `versionRange` option can be a semver range, just like a dependency
+in your `package.json` file.
+
 #### Type declaration
 
 ▸ (`name`, `versionRange?`): `Promise`\<`ImportResolved`\>
+
+Find a package relative to the workspace directory, and return all of
+the package info except its exports.
+
+The `versionRange` option can be a semver range, just like a dependency
+in your `package.json` file.
 
 ##### Parameters
 
@@ -389,19 +386,37 @@ Workspace package name.
 
 ___
 
-### npm
-
-• `Readonly` **npm**: `Npm`
-
-NPM utilities for this workspace's name.
-
-___
-
 ### relativeDir
 
 • `Readonly` **relativeDir**: `string`
 
 Workspace directory relative to the root workspace.
+
+___
+
+### spawn
+
+• `Readonly` **spawn**: (`cmd`: `string`, `sparseArgs?`: `SpawnSparseArgs`, `options?`: `SpawnOptions`) => `SpawnPromise`
+
+Spawn a child process.
+
+#### Type declaration
+
+▸ (`cmd`, `sparseArgs?`, `options?`): `SpawnPromise`
+
+Spawn a child process.
+
+##### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `cmd` | `string` |
+| `sparseArgs?` | `SpawnSparseArgs` |
+| `options?` | `SpawnOptions` |
+
+##### Returns
+
+`SpawnPromise`
 
 ___
 

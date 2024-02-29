@@ -1,4 +1,4 @@
-import { type Log, type Workspace } from 'wurk';
+import { type Entrypoint, type Log, type Workspace } from 'wurk';
 
 export type BuilderFactory = (workspace: Workspace) => Promise<Builder | null>;
 
@@ -14,7 +14,7 @@ export class Builder<T = unknown> {
   readonly start: (() => Promise<void>) | null;
 
   constructor(name: string, workspace: Workspace, options: BuilderOptions<T>) {
-    const { log, status, fs, getMissingEntrypoints } = workspace;
+    const { log, status, fs, getEntrypoints } = workspace;
     const { build, start, matrix } = options;
 
     this.#matrix = matrix?.length ? matrix : [undefined];
@@ -35,12 +35,19 @@ export class Builder<T = unknown> {
             await build(taskLog, value);
           }
 
-          const missing = await getMissingEntrypoints();
+          const entrypoints = getEntrypoints();
+          const missingEntrypoints: Entrypoint[] = [];
 
-          if (missing.length) {
+          for (const entrypoint of entrypoints) {
+            if (!(await entrypoint.exists())) {
+              missingEntrypoints.push(entrypoint);
+            }
+          }
+
+          if (missingEntrypoints.length) {
             status.set('warning', 'entry points');
             log.warn(`missing entry points:`);
-            missing.forEach(({ type, filename }) => {
+            missingEntrypoints.forEach(({ type, filename }) => {
               log.warn(`- ${fs.relative(filename)} (${type})`);
             });
           } else {

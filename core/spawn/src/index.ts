@@ -6,7 +6,11 @@ import { npmRunPath } from 'npm-run-path';
 type SpawnInput = WithImplicitCoercion<Uint8Array | readonly number[] | string>;
 type SpawnOutput = 'ignore' | 'inherit' | 'echo' | 'buffer';
 
-interface SpawnResult {
+interface LiteralArg {
+  readonly literal: string;
+}
+
+export interface SpawnResult {
   readonly stdout: Buffer;
   readonly stdoutText: string;
   readonly stdoutJson: JsonAccessor;
@@ -18,44 +22,6 @@ interface SpawnResult {
   readonly exitCode: number;
   readonly signalCode: NodeJS.Signals | null;
   readonly ok: boolean;
-}
-
-interface LiteralArg {
-  readonly literal: string;
-}
-
-export type SpawnPromise = Promise<SpawnResult> & {
-  stdout(): Promise<Buffer>;
-  stdoutText(): Promise<string>;
-  stdoutJson(): Promise<JsonAccessor>;
-  stderr(): Promise<Buffer>;
-  stderrText(): Promise<string>;
-  stderrJson(): Promise<JsonAccessor>;
-  combined(): Promise<Buffer>;
-  combinedText(): Promise<string>;
-  exitCode(): Promise<number>;
-  signalCode(): Promise<NodeJS.Signals | null>;
-  ok(): Promise<boolean>;
-};
-
-export class SpawnError extends Error {
-  readonly exitCode: number;
-  readonly signalCode: NodeJS.Signals | null;
-
-  constructor(
-    cmd: string,
-    exitCode: number,
-    signalCode: NodeJS.Signals | null,
-  ) {
-    super(
-      exitCode !== 0
-        ? `process "${cmd}" exited with a non-zero status (${exitCode})`
-        : `process "${cmd}" failed`,
-    );
-
-    this.exitCode = exitCode;
-    this.signalCode = signalCode;
-  }
 }
 
 export interface SpawnOptions {
@@ -189,7 +155,15 @@ export const spawn = (
   }
 
   const promise = new Promise<SpawnResult>((resolve, reject) => {
-    cp.on('error', reject);
+    cp.on('error', (error: Error & { code?: unknown }) => {
+      reject(
+        error?.code === 'ENOENT'
+          ? Object.assign(new Error(`${cmd} is required`, { cause: error }), {
+              code: error.code,
+            })
+          : error,
+      );
+    });
 
     cp.on('close', (exitCode, signalCode) => {
       log.flush();
@@ -210,7 +184,7 @@ export const spawn = (
           }
         }
 
-        reject(new SpawnError(cmd, exitCode, signalCode));
+        reject(new SpawnExitCodeError(cmd, exitCode, signalCode));
 
         return;
       }
@@ -261,38 +235,96 @@ export const spawn = (
     });
   });
 
-  return Object.assign(promise, {
-    stdout: () => promise.then((result) => result.stdout),
-    stdoutText: () => promise.then((result) => result.stdoutText),
-    stdoutJson: () => promise.then((result) => result.stdoutJson),
-    stderr: () => promise.then((result) => result.stderr),
-    stderrText: () => promise.then((result) => result.stderrText),
-    stderrJson: () => promise.then((result) => result.stderrJson),
-    combined: () => promise.then((result) => result.combined),
-    combinedText: () => promise.then((result) => result.combinedText),
-    exitCode: () =>
-      promise
-        .then((result) => result.exitCode)
-        .catch((error) => {
-          if (!(error instanceof SpawnError)) throw error;
-          return error.exitCode;
-        }),
-    signalCode: () =>
-      promise
-        .then((result) => result.signalCode)
-        .catch((error) => {
-          if (!(error instanceof SpawnError)) throw error;
-          return error.signalCode;
-        }),
-    ok: () =>
-      promise
-        .then((result) => result.ok)
-        .catch((error) => {
-          if (!(error instanceof SpawnError)) throw error;
-          return false;
-        }),
-  });
+  return new SpawnPromise(promise);
 };
+
+export class SpawnPromise extends Promise<SpawnResult> {
+  constructor(promise: Promise<SpawnResult>) {
+    super((resolve, reject) => {
+      promise.then(resolve, reject);
+    });
+  }
+
+  /**
+   * Do this or the above promise constructor will be invoked for then/catch
+   * chaining and it will break because the constructor does not match the
+   * base Promise constructor.
+   */
+  static [Symbol.species] = Promise;
+
+  async stdout(): Promise<Buffer> {
+    return await this.then((result) => result.stdout);
+  }
+
+  async stdoutText(): Promise<string> {
+    return await this.then((result) => result.stdoutText);
+  }
+
+  async stdoutJson(): Promise<JsonAccessor> {
+    return await this.then((result) => result.stdoutJson);
+  }
+
+  async stderr(): Promise<Buffer> {
+    return await this.then((result) => result.stderr);
+  }
+
+  async stderrText(): Promise<string> {
+    return await this.then((result) => result.stderrText);
+  }
+
+  async stderrJson(): Promise<JsonAccessor> {
+    return await this.then((result) => result.stderrJson);
+  }
+
+  async combined(): Promise<Buffer> {
+    return await this.then((result) => result.combined);
+  }
+
+  async combinedText(): Promise<string> {
+    return await this.then((result) => result.combinedText);
+  }
+
+  async exitCode(): Promise<number> {
+    return await this.then((result) => result.exitCode).catch((error) => {
+      if (!(error instanceof SpawnExitCodeError)) throw error;
+      return error.exitCode;
+    });
+  }
+
+  async signalCode(): Promise<NodeJS.Signals | null> {
+    return await this.then((result) => result.signalCode).catch((error) => {
+      if (!(error instanceof SpawnExitCodeError)) throw error;
+      return error.signalCode;
+    });
+  }
+
+  async ok(): Promise<boolean> {
+    return await this.then((result) => result.ok).catch((error) => {
+      if (!(error instanceof SpawnExitCodeError)) throw error;
+      return false;
+    });
+  }
+}
+
+export class SpawnExitCodeError extends Error {
+  readonly exitCode: number;
+  readonly signalCode: NodeJS.Signals | null;
+
+  constructor(
+    cmd: string,
+    exitCode: number,
+    signalCode: NodeJS.Signals | null,
+  ) {
+    super(
+      exitCode !== 0
+        ? `process "${cmd}" exited with a non-zero status (${exitCode})`
+        : `process "${cmd}" failed`,
+    );
+
+    this.exitCode = exitCode;
+    this.signalCode = signalCode;
+  }
+}
 
 const quote = (...args: readonly (string | LiteralArg)[]): string => {
   return args

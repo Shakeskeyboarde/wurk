@@ -9,54 +9,36 @@ export default createCommand('list', {
     const data = await Promise.all(
       Array.from(workspaces).map(async (workspace) => {
         const {
+          dir,
+          relativeDir,
+          name,
           version,
           config,
-          dir,
-          git,
-          npm,
+          isPrivate,
           isRoot,
-          getIsModified,
           getDependencyLinks,
           getDependentLinks,
         } = workspace;
 
-        const isRepo = await git.getIsRepo();
-
-        const [meta, isDirty, gitHead, isModified] = await Promise.all([
-          npm.getMetadata(),
-          isRepo ? git.getIsDirty() : undefined,
-          isRepo ? git.getHead() : undefined,
-          isRepo ? getIsModified() : undefined,
-        ]);
-
         return {
           dir,
+          relativeDir,
+          name,
+          version,
           config,
           dependencyLinks: getDependencyLinks().map((link) => ({
             name: link.dependency.name,
-            dir: link.dependency.dir,
             type: link.type,
             id: link.id,
-            versionRange: link.versionRange,
+            spec: link.spec,
           })),
           dependentLinks: getDependentLinks().map((link) => ({
             name: link.dependent.name,
-            dir: link.dependent.dir,
             type: link.type,
             id: link.id,
-            versionRange: link.versionRange,
+            spec: link.spec,
           })),
-          npm: {
-            version: meta ? meta.version : null,
-            gitHead: meta?.gitHead ?? null,
-            isPublished: Boolean(meta && meta.version === version),
-          },
-          git: {
-            head: gitHead ?? null,
-            isRepo,
-            isDirty: isDirty ?? null,
-          },
-          isModified,
+          isPrivate,
           isRoot,
         };
       }),

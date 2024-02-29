@@ -12,7 +12,6 @@ Workspace configuration.
 - [dir](WorkspaceOptions.md#dir)
 - [getDependencyLinks](WorkspaceOptions.md#getdependencylinks)
 - [getDependentLinks](WorkspaceOptions.md#getdependentlinks)
-- [gitHead](WorkspaceOptions.md#githead)
 - [relativeDir](WorkspaceOptions.md#relativedir)
 
 ## Properties
@@ -78,14 +77,6 @@ Resolve links to local dependent workspaces.
 ##### Returns
 
 readonly [`WorkspaceLink`](WorkspaceLink.md)[]
-
-___
-
-### gitHead
-
-• `Optional` `Readonly` **gitHead**: `string`
-
-Override the Git head commit hash published to the NPM registry.
 
 ___
 

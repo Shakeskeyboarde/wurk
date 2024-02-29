@@ -9,13 +9,11 @@ import { type JsonAccessor } from '@wurk/json';
 import { Log } from '@wurk/log';
 import { type Spawn, spawn } from '@wurk/spawn';
 
-import {
-  type Entrypoint,
-  getEntrypoints,
-  getMissingEntrypoints,
-} from './entrypoint.js';
+import { clean } from './clean.js';
+import { type Entrypoint, getEntrypoints } from './entrypoint.js';
 import { Git } from './git.js';
 import { Npm } from './npm.js';
+import { type DependencySpec } from './spec.js';
 import { Status } from './status.js';
 
 /**
@@ -37,11 +35,6 @@ export interface WorkspaceOptions {
    * is omitted, blank, or `"."`, then the workspace is the root workspace.
    */
   readonly relativeDir?: string;
-
-  /**
-   * Override the Git head commit hash published to the NPM registry.
-   */
-  readonly gitHead?: string;
 
   /**
    * Resolve links to local dependency workspaces.
@@ -102,10 +95,9 @@ export interface WorkspaceLink {
   readonly id: string;
 
   /**
-   * Version range of the dependency in the dependent workspace's
-   * `package.json` file.
+   * The dependency spec.
    */
-  readonly versionRange: string;
+  readonly spec: DependencySpec;
 }
 
 const WORKSPACE_LINK_SCOPES = [
@@ -123,16 +115,6 @@ export class Workspace {
    * Logger which should be used for messages related to the workspace.
    */
   readonly log: Log;
-
-  /**
-   * Git utilities relative to this workspace's directory.
-   */
-  readonly git: Git;
-
-  /**
-   * NPM utilities for this workspace's name.
-   */
-  readonly npm: Npm;
 
   /**
    * File system utilities relative to this workspace's directory.
@@ -230,13 +212,6 @@ export class Workspace {
     this.isPrivate = this.config.at('private').as('boolean', false);
     this.isRoot = this.relativeDir === '.';
     this.log = new Log();
-    this.git = new Git({ log: this.log, dir: this.dir });
-    this.npm = new Npm({
-      log: this.log,
-      name: this.name,
-      version: this.version,
-      gitHead: options.gitHead,
-    });
     this.fs = new Fs({ cwd: this.dir });
     this.status = new Status(this.name);
     this.getDependencyLinks = options.getDependencyLinks ?? (() => []);
@@ -258,47 +233,6 @@ export class Workspace {
   ) => readonly WorkspaceLink[];
 
   /**
-   * Try to detect changes using git commits, and fall back to assuming
-   * modifications if that doesn't work.
-   *
-   * Return true if the NPM published head commit and the current Git
-   * head commit do not match, or if the directory is not part of a Git
-   * working tree, or if no published head commit is available.
-   *
-   * **Note:** This method will throw an error if the Git repository is
-   * a shallow clone!
-   */
-  readonly getIsModified = async (): Promise<boolean> => {
-    if (!(await this.git.getIsRepo())) {
-      this.log.debug(`missing Git repository (assuming modified)`);
-      return true;
-    }
-
-    if (await this.git.getIsShallow()) {
-      throw new Error(
-        `cannot detect modifications because the Git repository is shallow`,
-      );
-    }
-
-    const [fromMeta, to] = await Promise.all([
-      this.npm.getMetadata(),
-      this.git.getHead(),
-    ]);
-
-    if (fromMeta?.gitHead == null) {
-      this.log.debug(`missing published Git head (assuming modified)`);
-      return true;
-    }
-
-    if (to == null) {
-      this.log.debug(`missing current Git head (assuming modified)`);
-      return true;
-    }
-
-    return fromMeta?.gitHead !== to;
-  };
-
-  /**
    * Return a list of all of the entry points in the workspace
    * `package.json` file. These are the files that should be built and
    * published with the package.
@@ -308,12 +242,28 @@ export class Workspace {
   };
 
   /**
-   * Return a list of all the workspace entry points that are missing.
+   * Get an NPM API instance for the workspace directory.
    *
-   * **Note:** Entry points which include a wildcard are ignored.
+   * Throws:
+   * - If NPM is not installed (ENOENT)
    */
-  readonly getMissingEntrypoints = async (): Promise<Entrypoint[]> => {
-    return await getMissingEntrypoints(this);
+  readonly getNpm = async (): Promise<Npm> => {
+    return await Npm.create({
+      name: this.name,
+      version: this.version,
+      log: this.log,
+    });
+  };
+
+  /**
+   * Get a Git API instance for the workspace directory.
+   *
+   * Throws:
+   * - If Git is not installed (ENOENT)
+   * - If the directory is not a repo (ENOGITREPO)
+   */
+  readonly getGit = async (): Promise<Git> => {
+    return await Git.create({ dir: this.dir, log: this.log });
   };
 
   /**
@@ -321,26 +271,13 @@ export class Workspace {
    * Git, _except_ for `node_modules` and dot-files (eg. `.gitignore`,
    * `.vscode`, etc.).
    */
-  readonly clean = async (): Promise<string[]> => {
-    const filenames = (await this.git.getIgnored())
-      // Don't clean node_modules and dot-files.
-      .filter((filename) => {
-        return !/(?:^|[\\/])node_modules(?:[\\/]|$)/u.test(filename);
-      })
-      .filter((filename) => {
-        return !/(?:^|[\\/])\./u.test(filename);
-      });
-
-    const promises = filenames.map(async (filename) => {
-      this.log.debug(`removing ignored file "${filename}"`);
-      await this.fs.delete(filename, { recursive: true });
-    });
-
-    await Promise.all(promises);
-
-    return filenames;
+  readonly clean = async (): Promise<void> => {
+    await clean(this);
   };
 
+  /**
+   * Spawn a child process.
+   */
   readonly spawn: Spawn = (command, args, options) => {
     return spawn(command, args, { log: this.log, cwd: this.dir, ...options });
   };
@@ -368,7 +305,11 @@ export class Workspace {
   };
 
   /**
+   * Find a package relative to the workspace directory, and return all of
+   * the package info except its exports.
    *
+   * The `versionRange` option can be a semver range, just like a dependency
+   * in your `package.json` file.
    */
   readonly importRelativeResolve = async (
     name: string,

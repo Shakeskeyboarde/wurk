@@ -118,6 +118,7 @@ export default createCommand('version', {
         if (workspace.isPrivate) {
           workspace.log.debug('skipping workspace (private)');
         }
+
         changes.set(workspace, (await each(workspace)) ?? []);
       });
     }
@@ -137,26 +138,26 @@ export default createCommand('version', {
     // be skipped so that they don't end up referencing non-existent versions.
     await workspaces.forEach(async (workspace) => {
       if (!workspace.config.isModified) {
-        workspace.log.debug('skipping update (no modifications)');
+        workspace.log.debug('skipping workspace update (no modifications)');
         workspace.status.set('skipped', 'no modifications');
         return;
       }
 
-      if (
-        (await workspace.git.getIsRepo()) &&
-        (await workspace.git.getIsDirty())
-      ) {
+      workspace.status.set('pending');
+
+      const git = await workspace.getGit().catch(() => null);
+
+      if (await git?.getIsDirty()) {
         throw new Error('versioning requires a clean git repository');
       }
 
       const newVersion = workspace.config.at('version').as('string');
 
-      workspace.status.set(
-        'pending',
-        workspace.version !== newVersion
-          ? `${workspace.version} -> ${newVersion}`
-          : 'dependency updates',
-      );
+      if (workspace.version === newVersion) {
+        workspace.status.setDetail('dependency updates');
+      } else {
+        workspace.status.setDetail(`${workspace.version} -> ${newVersion}`);
+      }
 
       await writeConfig(workspace);
 

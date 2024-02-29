@@ -8,6 +8,7 @@ import { Sema } from 'async-sema';
 import { AbortError } from './error.js';
 import { GeneratorIterable, getDepthFirstGenerator } from './generator.js';
 import { select, type SelectCondition } from './select.js';
+import { getSpec } from './spec.js';
 import { printStatus, StatusValue } from './status.js';
 import {
   Workspace,
@@ -58,8 +59,6 @@ export interface WorkspaceCollectionOptions {
    * asynchronous `forEach*` methods.
    */
   readonly concurrency?: number;
-
-  readonly gitHead?: string;
 }
 
 /**
@@ -139,7 +138,6 @@ export class WorkspaceCollection {
     const root: Workspace = new Workspace({
       dir: options.rootDir,
       config: options.root,
-      gitHead: options.gitHead,
       getDependencyLinks: (linkOptions) => {
         return this.getDependencyLinks(root, linkOptions);
       },
@@ -157,7 +155,6 @@ export class WorkspaceCollection {
         dir,
         relativeDir: path.relative(root.dir, dir),
         config,
-        gitHead: options.gitHead,
         getDependencyLinks: (linkOptions) => {
           return this.getDependencyLinks(workspace, linkOptions);
         },
@@ -182,32 +179,15 @@ export class WorkspaceCollection {
         return dependent.config
           .at(type)
           .entries('object')
-          .map(([id, spec]) => ({ dependent, type, id, spec }))
-          .filter(
-            (entry): entry is typeof entry & { spec: string } =>
-              typeof entry.spec === 'string',
-          );
+          .map(([id, specString]) => ({ dependent, type, id, specString }))
+          .filter((entry): entry is typeof entry & { specString: string } => {
+            return typeof entry.specString === 'string';
+          });
       })
-      .map(({ dependent, type, id, spec }) => {
-        const match = spec.match(/^npm:((?:@[^@]+\/)?[^@]+)(?:@(.+))?/u);
+      .flatMap(({ dependent, type, id, specString }) => {
+        const spec = getSpec(id, specString);
+        const name = spec.type === 'npm' ? spec.name : id;
 
-        return match
-          ? {
-              dependent,
-              type,
-              id,
-              name: match[1]!,
-              versionRange: match[2] ?? '*',
-            }
-          : {
-              dependent,
-              type,
-              id: id,
-              name: id,
-              versionRange: spec,
-            };
-      })
-      .flatMap(({ dependent, type, id, name, versionRange }) => {
         return workspaces
           .filter((workspace) => workspace.name === name)
           .map((dependency) => ({
@@ -215,17 +195,17 @@ export class WorkspaceCollection {
             dependency,
             type,
             id,
-            versionRange,
+            spec: { ...spec },
           }));
       })
-      .forEach(({ dependent, dependency, type, id, versionRange }) => {
+      .forEach(({ dependent, dependency, type, id, spec }) => {
         dependencyLinks.set(dependent, [
           ...(dependencyLinks.get(dependent) ?? []),
-          { dependent, dependency, type, id, versionRange },
+          { dependent, dependency, type, id, spec },
         ]);
         dependentLinks.set(dependency, [
           ...(dependentLinks.get(dependency) ?? []),
-          { dependent, dependency, type, id, versionRange },
+          { dependent, dependency, type, id, spec },
         ]);
       });
 
@@ -464,18 +444,22 @@ export class WorkspaceCollection {
       };
 
       const promise = (async () => {
-        if (!independent) {
-          await Promise.all(
-            this.getDependencyLinks(workspace).map((link) => {
-              return promises.get(link.dependency);
-            }),
-          );
-        }
-
         await semaphore.acquire();
 
         try {
+          if (!independent) {
+            const links = this.getDependencyLinks(workspace, {
+              recursive: true,
+            });
+            const linkPromises = links.map((link) => {
+              return promises.get(link.dependency);
+            });
+
+            await Promise.all(linkPromises);
+          }
+
           if (signal.aborted) return;
+
           await callback(workspace, signal, abort);
         } catch (error) {
           status.set(StatusValue.failure);

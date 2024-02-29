@@ -24,8 +24,8 @@ export const publishFromArchive = async (
   status.set('pending');
 
   if (!version) {
-    log.verbose(`skipping workspace without a version`);
-    status.set('skipped', 'no version');
+    log.verbose(`workspace is unversioned`);
+    status.set('skipped', 'unversioned');
     return;
   }
 
@@ -34,12 +34,10 @@ export const publishFromArchive = async (
   );
 
   if (!(await fs.exists(filename))) {
-    log.verbose(`no workspace archive found`);
+    log.verbose(`workspace has no archive`);
     status.set('skipped', 'no archive');
     return;
   }
-
-  log.info(`publishing version ${version} from archive to registry`);
 
   /**
    * This is a subdirectory of the workspace directory so that .npmrc files
@@ -48,13 +46,11 @@ export const publishFromArchive = async (
   const tmpDir = fs.resolve(`.${crypto.randomUUID()}.tmp`);
   const tmpFilename = fs.resolve(tmpDir, path.basename(filename));
 
-  let stderrText: string;
-
   try {
+    log.info(`publishing version ${version} from archive to registry`);
     await fs.copyFile(filename, tmpFilename);
     await extractPackageJson(fs, tmpFilename, tmpDir);
-
-    ({ stderrText } = await spawn(
+    await spawn(
       'npm',
       [
         'publish',
@@ -64,14 +60,10 @@ export const publishFromArchive = async (
         options.dryRun && '--dry-run',
         tmpFilename,
       ],
-      { cwd: tmpDir },
-    ));
+      { cwd: tmpDir, output: 'echo' },
+    );
   } finally {
     await fs.delete(tmpDir, { recursive: true });
-  }
-
-  if (stderrText) {
-    log.print(stderrText, { to: 'stderr' });
   }
 
   status.set('success', version);
@@ -84,7 +76,7 @@ const extractPackageJson = async (
 ): Promise<void> => {
   const readable = await fs.readStream(tgz);
 
-  assert(readable, 'failed to open archive');
+  assert(readable, 'failed to read workspace archive');
 
   try {
     const extractor = readable.pipe(zlib.createGunzip()).pipe(extract());

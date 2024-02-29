@@ -1,4 +1,4 @@
-import { SpawnError, type WorkspaceCollection } from 'wurk';
+import { SpawnExitCodeError, type WorkspaceCollection } from 'wurk';
 
 interface DepcheckContext {
   readonly workspaces: WorkspaceCollection;
@@ -38,7 +38,7 @@ export const depcheck = async ({
 
     if (!stdoutJson.exists()) {
       if (exitCode) {
-        throw new SpawnError('depcheck', exitCode, null);
+        throw new SpawnExitCodeError('depcheck', exitCode, null);
       } else {
         throw new Error('depcheck did not produce json output');
       }
@@ -78,7 +78,7 @@ export const depcheck = async ({
     }
 
     if (!isSuccess) {
-      throw new SpawnError('depcheck', exitCode || 1, null);
+      throw new SpawnExitCodeError('depcheck', exitCode || 1, null);
     }
   }
 };

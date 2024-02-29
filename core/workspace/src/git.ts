@@ -1,11 +1,26 @@
+import assert from 'node:assert';
 import path from 'node:path';
 
 import { type Log, log as defaultLog } from '@wurk/log';
-import { type Spawn, spawn } from '@wurk/spawn';
+import {
+  spawn,
+  type SpawnOptions,
+  type SpawnPromise,
+  type SpawnSparseArgs,
+} from '@wurk/spawn';
 
 export interface GitOptions {
-  readonly log?: Log;
   readonly dir: string;
+  readonly log?: Log;
+}
+
+export interface GitHeadOptions {
+  readonly allowShallow?: boolean;
+}
+
+export interface GitLogOptions extends GitHeadOptions {
+  readonly start?: string | null;
+  readonly end?: string;
 }
 
 export interface GitLog {
@@ -41,78 +56,50 @@ export class Git {
   readonly #log: Log;
   readonly #dir: string;
 
-  constructor(options: GitOptions) {
+  protected constructor(options: Pick<GitOptions, 'dir' | 'log'>) {
     this.#log = options.log ?? defaultLog;
     this.#dir = options.dir;
   }
 
   /**
-   * Return true if the workspace directory is part of a Git repository.
-   */
-  readonly getIsRepo = async (): Promise<boolean> => {
-    return await this.#spawn('git', ['status']).ok();
-  };
-
-  /**
-   * Return true if the workspace directory is only a shallow Git checkout.
+   * Return true if the instance directory is a shallow Git clone.
    */
   readonly getIsShallow = async (): Promise<boolean> => {
-    return await this.#spawn('git', [
-      'rev-parse',
-      '--is-shallow-repository',
-    ]).then(({ stdoutText }) => {
-      return stdoutText !== 'false';
-    });
+    return await this._exec(['rev-parse', '--is-shallow-repository']).then(
+      ({ stdoutText }) => stdoutText !== 'false',
+    );
   };
 
   /**
    * Return the root directory of the Git repository.
    */
   readonly getRoot = async (): Promise<string> => {
-    return await this.#spawn('git', [
-      'rev-parse',
-      '--show-toplevel',
-    ]).stdoutText();
+    return await this._exec(['rev-parse', '--show-toplevel']).stdoutText();
   };
 
   /**
-   * Get the hash of the most recent commit which modified the workspace
-   * directory. This may not actually be HEAD if the workspace directory
+   * Get the hash of the most recent commit which modified the instance
+   * directory. This may not actually be HEAD if the instance directory
    * was not modified in the current HEAD commit.
    */
-  readonly getHead = async (): Promise<string | undefined> => {
-    try {
-      let head = await this.#spawn('git', [
-        'log',
-        '-n',
-        '1',
-        '--pretty=format:%H',
-        '.',
-      ]).stdoutText();
-
-      if (!head) {
-        head = await this.#spawn('git', ['rev-parse', 'HEAD']).stdoutText();
-      }
-
-      return head || undefined;
-    } catch (_error) {
-      return undefined;
+  readonly getHead = async (
+    options?: GitHeadOptions,
+  ): Promise<string | null> => {
+    if (!options?.allowShallow) {
+      assert(!(await this.getIsShallow()), `non-shallow git clone required`);
     }
+
+    return (await this._exec(['rev-parse', 'HEAD']).stdoutText()) || null;
   };
 
   /**
-   * Get a list of all the files in the workspace directory which are
-   * ignored by Git (`.gitignore`). This method will return an empty
-   * array if the workspace directory is not part of a Git repository.
+   * Get a list of all the files in the instance directory which are
+   * ignored by Git (`.gitignore`).
    */
   readonly getIgnored = async (): Promise<string[]> => {
-    if (!(await this.getIsRepo())) return [];
-
-    this.#log.debug(`Git ignored files:`);
-
     const [gitRoot, gitIgnoredText] = await Promise.all([
       await this.getRoot(),
-      await this.#spawn('git', [
+      await this._exec([
         'status',
         '--ignored',
         '--porcelain',
@@ -133,27 +120,32 @@ export class Git {
    * Return true if the Git working tree is dirty.
    */
   readonly getIsDirty = async (): Promise<boolean> => {
-    return await this.#spawn('git', ['status', '--porcelain', this.#dir])
+    return await this._exec(['status', '--porcelain', this.#dir])
       .stdoutText()
       .then(Boolean);
   };
 
   /**
-   * Get git log entries.
+   * Get Git log entries.
+   *
+   * **Note:** This method will throw an error if the directory is part of a
+   * shallow Git clone.
    */
-  readonly getLogs = async (
-    start?: string | null,
-    end?: string,
-  ): Promise<GitLog[]> => {
-    start = start?.trim();
-    end = end?.trim() || 'HEAD';
+  readonly getLogs = async (options?: GitLogOptions): Promise<GitLog[]> => {
+    if (!options?.allowShallow) {
+      assert(!(await this.getIsShallow()), `non-shallow git clone required`);
+    }
 
+    const start = options?.start?.trim();
+    const end = options?.end?.trim() || 'HEAD';
     const formatEntries = Object.entries(LOG_FORMAT);
     const formatNames = formatEntries.map(([name]) => name);
+
     const formatPlaceholders = formatEntries.map(
       ([, placeholder]) => placeholder,
     );
-    const text = await this.#spawn('git', [
+
+    const text = await this._exec([
       'log',
       `--pretty=format:${LOG_CAP} ${formatPlaceholders.join(LOG_SEPARATOR)} ${LOG_CAP}`,
       start ? `${start}..${end}` : end,
@@ -175,11 +167,38 @@ export class Git {
     );
   };
 
-  readonly #spawn: Spawn = (cmd, sparseOrgs, spawnOptions) => {
-    return spawn(cmd, sparseOrgs, {
+  protected readonly _exec = (
+    args: SpawnSparseArgs,
+    options?: Omit<SpawnOptions, 'cwd' | 'log' | 'output'>,
+  ): SpawnPromise => {
+    return spawn('git', args, {
+      ...options,
       log: this.#log,
       cwd: this.#dir,
-      ...spawnOptions,
+      output: 'buffer',
     });
   };
+
+  /**
+   * Get a Git API instance.
+   *
+   * Throws:
+   * - If Git is not installed (ENOENT)
+   * - If the directory is not a repo (ENOGITREPO)
+   */
+  static async create(options: GitOptions): Promise<Git> {
+    const git = new Git({ dir: options.dir, log: options.log });
+
+    const { exitCode } = await git._exec(['status'], {
+      allowNonZeroExitCode: true,
+    });
+
+    if (exitCode) {
+      throw Object.assign(new Error('git repo is required'), {
+        code: 'ENOGITREPO',
+      });
+    }
+
+    return git;
+  }
 }

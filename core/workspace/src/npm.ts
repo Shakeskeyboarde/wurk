@@ -1,12 +1,16 @@
 import { type Log, log as defaultLog } from '@wurk/log';
-import { spawn } from '@wurk/spawn';
+import {
+  spawn,
+  type SpawnOptions,
+  type SpawnPromise,
+  type SpawnSparseArgs,
+} from '@wurk/spawn';
 import { rcompare } from 'semver';
 
 export interface NpmOptions {
-  readonly log?: Log;
   readonly name: string;
   readonly version?: string;
-  readonly gitHead?: string;
+  readonly log?: Log;
 }
 
 export interface NpmMetadata {
@@ -15,19 +19,17 @@ export interface NpmMetadata {
 }
 
 /**
- * NPM registry informational utilities (readonly).
+ * Readonly informational NPM API for a single package.
  */
 export class Npm {
   readonly #log: Log;
   readonly #name: string;
   readonly #version: string | undefined;
-  readonly #gitHead: string | undefined;
 
-  constructor(options: NpmOptions) {
-    this.#log = options.log ?? defaultLog;
+  protected constructor(options: NpmOptions) {
     this.#name = options.name;
     this.#version = options.version;
-    this.#gitHead = options.gitHead;
+    this.#log = options.log ?? defaultLog;
   }
 
   /**
@@ -42,13 +44,9 @@ export class Npm {
   }) => {
     cache.value = Promise.resolve().then(async () => {
       const packageSpec = `${this.#name}${this.#version ? `@<=${this.#version}` : ''}`;
-      const { stdoutJson, ok } = await spawn(
-        'npm',
+      const { stdoutJson, ok } = await this._exec(
         ['show', '--silent', '--json', packageSpec, 'version', 'gitHead'],
-        {
-          log: this.#log,
-          allowNonZeroExitCode: true,
-        },
+        { allowNonZeroExitCode: true },
       );
 
       if (!ok) return null;
@@ -64,22 +62,40 @@ export class Npm {
           );
         })
         .sort((a, b) => rcompare(a.version, b.version));
-      const version = metaArray?.at(0)?.version;
+      const meta = metaArray?.at(0);
 
-      if (!version) return null;
+      if (!meta) return null;
 
-      const gitHead =
-        this.#gitHead ??
-        metaArray.find(
-          (entry): entry is { version: string; gitHead: string } => {
-            return typeof entry.gitHead === 'string';
-          },
-        )?.gitHead ??
-        null;
-
-      return { version, gitHead };
+      return {
+        version: meta.version,
+        gitHead: typeof meta.gitHead === 'string' ? meta.gitHead : null,
+      };
     });
 
     return cache.value;
   }).bind(null, {});
+
+  protected readonly _exec = (
+    args: SpawnSparseArgs,
+    options?: Pick<SpawnOptions, 'allowNonZeroExitCode'>,
+  ): SpawnPromise => {
+    return spawn('npm', args, { ...options, log: this.#log, output: 'buffer' });
+  };
+
+  /**
+   * Create a new NPM API instance.
+   *
+   * Throws:
+   * - If NPM is not installed (ENOENT)
+   * - If the name option does not match the package name (EPKGNAME)
+   * - If the version option does not match the package version (EPKGVER)
+   */
+  static async create(options: NpmOptions): Promise<Npm> {
+    const npm = new Npm(options);
+
+    // Ensure NPM is installed
+    await npm._exec(['--version']);
+
+    return npm;
+  }
 }

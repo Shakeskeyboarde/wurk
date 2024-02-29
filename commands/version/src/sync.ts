@@ -10,14 +10,9 @@ export const sync = (workspace: Workspace): Change[] => {
 
   let isOptional = true;
 
-  getDependencyLinks().forEach(({ type, id, versionRange, dependency }) => {
+  getDependencyLinks().forEach(({ type, id, spec, dependency }) => {
     // The range is not updatable.
-    if (
-      !semver.validRange(versionRange) ||
-      versionRange === '*' ||
-      versionRange === 'x'
-    )
-      return;
+    if (spec.type !== 'npm') return;
 
     const newVersion = dependency.config.at('version').as('string');
 
@@ -26,22 +21,24 @@ export const sync = (workspace: Workspace): Change[] => {
     if (!newVersion) return;
 
     // The version range minimum is already equal to the new version.
-    if (semver.minVersion(versionRange)?.format() === newVersion) return;
+    if (semver.minVersion(spec.range)?.format() === newVersion) return;
 
-    if (!semver.satisfies(newVersion, versionRange)) {
+    if (!semver.satisfies(newVersion, spec.range)) {
       // The new version is not compatible with the range, so the range must
       // be updated.
       isOptional = false;
     }
 
-    const prefix = versionRange.match(/^(>=|\^|~)\d\S*$/u)?.[1] ?? '^';
-    const spec = `${id !== dependency.name ? `npm:${dependency.name}@` : ''}${prefix}${newVersion}`;
+    const prefix = spec.range.match(/^(>=|\^|~)\d\S*$/u)?.[1] ?? '^';
+    const newRange = `${prefix}${newVersion}`;
+    const newSpec =
+      spec.name === id ? `npm:${dependency.name}@${newRange}` : newRange;
 
     // Add the update to the pending list. It will only be applied if the
     // workspace is private, selected, or if some updates are required.
     pending.push(() => {
-      log.debug(`updating ${type} "${id}" to "${spec}"`);
-      config.at(type).at(id).set(spec);
+      log.debug(`updating ${type} "${id}" to "${newSpec}"`);
+      config.at(type).at(id).set(newSpec);
     });
   });
 
