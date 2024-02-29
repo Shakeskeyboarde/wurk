@@ -157,12 +157,7 @@ export class Log {
     const { once = false, prefix = true, color, style } = options;
 
     if (isLogLevel(level)) {
-      const message =
-        value == null
-          ? ''
-          : value instanceof Error && process.env.DEBUG
-            ? value.stack ?? String(value)
-            : String(value);
+      const message = getMessageString(value);
       const text = `${prefix ? this.#prefixFormatted : ''}${color ? Ansi.color[color] : ''}${style ? Ansi[style] : ''}${message}${
         Ansi.reset
       }\n`;
@@ -183,5 +178,19 @@ export class Log {
     if (line) this._print(to, LogLevel.silent, line);
   };
 }
+
+const getMessageString = (value: unknown): string => {
+  if (value instanceof Error) {
+    if (process.env.DEBUG) {
+      return value.stack ?? String(value);
+    }
+
+    if (value.name === 'Error' || value.name === 'AssertionError') {
+      return value.message;
+    }
+  }
+
+  return String(value);
+};
 
 export const log = new Log();
