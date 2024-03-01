@@ -90,13 +90,32 @@ export class Log {
   }
 
   /**
-   * Create a new instance of `Log` which inherits options from the current
+   * Create a new log instance which inherits options from the current
    * instance.
    */
   readonly clone = (overrides: LogOptions = {}): Log => {
     const { prefix = this.prefix, prefixColor = this.prefixColor } = overrides;
 
     return new Log({ prefix, prefixColor });
+  };
+
+  /**
+   * Create a new log instance with a suffix appended to the prefix. If there
+   * is no prefix, then the suffix becomes the entire prefix. If there is
+   * already a prefix, then the suffix is appended as a subscript
+   * (ie. `prefix[suffix]`). Blank, boolean, or nullish suffixes are ignored.
+   */
+  readonly sub = (
+    suffix: number | string | boolean | null | undefined,
+  ): Log => {
+    return this.clone({
+      prefix:
+        suffix === '' || typeof suffix === 'boolean' || suffix == null
+          ? undefined
+          : this.prefix
+            ? `${this.prefix}[${suffix}]`
+            : String(suffix),
+    });
   };
 
   /**

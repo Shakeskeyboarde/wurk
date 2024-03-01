@@ -49,8 +49,8 @@ export default createCommand('build', {
 
     autoPrintStatus();
 
-    const workspaceBuilds = new Map<Workspace, Builder[]>();
-    const workspaceStarts = new Map<Workspace, Builder[]>();
+    const workspaceBuildTasks = new Map<Workspace, (() => Promise<void>)[]>();
+    const workspaceStartTasks = new Map<Workspace, (() => Promise<void>)[]>();
 
     if (options.includeDependencies) {
       workspaces.includeDependencies();
@@ -71,13 +71,17 @@ export default createCommand('build', {
         }
       }
 
-      const buildTasks = builders.filter((builder): builder is Builder => {
-        return Boolean(builder?.build);
-      });
+      const buildTasks = builders
+        .map((builder) => builder?.build)
+        .filter((build): build is Exclude<typeof build, null | undefined> => {
+          return Boolean(build);
+        });
 
-      const startTasks = builders.filter((builder): builder is Builder => {
-        return Boolean(builder?.start);
-      });
+      const startTasks = builders
+        .map((builder) => builder?.start)
+        .filter((start): start is Exclude<typeof start, null | undefined> => {
+          return Boolean(start);
+        });
 
       if (!buildTasks.length) {
         workspace.status.set('skipped', 'no build tasks');
@@ -88,13 +92,13 @@ export default createCommand('build', {
         }
       }
 
-      workspaceBuilds.set(workspace, buildTasks);
-      workspaceStarts.set(workspace, startTasks);
+      workspaceBuildTasks.set(workspace, buildTasks);
+      workspaceStartTasks.set(workspace, startTasks);
     });
 
     if (options.clean) {
       await workspaces.forEachSequential(async (workspace) => {
-        if (workspaceBuilds.get(workspace)?.length) {
+        if (workspaceBuildTasks.get(workspace)?.length) {
           await workspace.clean();
         }
       });
@@ -105,18 +109,12 @@ export default createCommand('build', {
     }
 
     await workspaces.forEach(async (workspace) => {
-      const builders = workspaceBuilds.get(workspace);
+      const tasks = workspaceBuildTasks.get(workspace);
 
-      if (!builders?.length) return;
+      if (!tasks?.length) return;
 
-      for (const builder of builders) {
-        await builder.build!(
-          builders.length > 1
-            ? workspace.log.clone({
-                prefix: `${workspace.log.prefix}[${builder.name}]`,
-              })
-            : workspace.log,
-        );
+      for (const task of tasks) {
+        await task();
       }
 
       const binFilenames = workspace
@@ -137,7 +135,7 @@ export default createCommand('build', {
       }
     });
 
-    const updateNames = Array.from(workspaceBuilds.entries())
+    const updateNames = Array.from(workspaceBuildTasks.entries())
       .filter(([, tasks]) => tasks.length)
       .map(([ws]) => ws.name);
 
@@ -155,19 +153,13 @@ export default createCommand('build', {
 
       await Promise.all(
         Array.from(workspaces).map(async (workspace) => {
-          const builders = workspaceStarts.get(workspace);
+          const tasks = workspaceStartTasks.get(workspace);
 
-          if (!builders?.length) return;
+          if (!tasks?.length) return;
 
           await Promise.all(
-            builders.map(async (builder) => {
-              await builder.start!(
-                builders.length > 1
-                  ? workspace.log.clone({
-                      prefix: `${workspace.log.prefix}[${builder.name}]`,
-                    })
-                  : workspace.log,
-              );
+            tasks.map(async (task) => {
+              await task();
             }),
           );
         }),

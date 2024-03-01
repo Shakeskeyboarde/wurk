@@ -10,28 +10,24 @@ export interface BuilderOptions<T> {
 
 export class Builder<T = unknown> {
   readonly #matrix: readonly any[];
-  readonly name: string;
-  readonly build: ((log: Log) => Promise<void>) | null;
-  readonly start: ((log: Log) => Promise<void>) | null;
+  readonly build: (() => Promise<void>) | null;
+  readonly start: (() => Promise<void>) | null;
 
   constructor(name: string, workspace: Workspace, options: BuilderOptions<T>) {
-    const { status, fs, getEntrypoints } = workspace;
+    const { log, status, fs, getEntrypoints } = workspace;
     const { build, start, matrix } = options;
 
     this.#matrix = matrix?.length ? matrix : [undefined];
-    this.name = name;
 
     this.build = build
-      ? async (log) => {
+      ? async () => {
           status.set(
             'pending',
             status.detail ? `${status.detail}, ${name}` : name,
           );
 
           for (const [index, value] of this.#matrix.entries()) {
-            const taskLog = log.clone({
-              prefix: `${log.prefix}${this.#matrix.length > 1 ? `[${index}]` : ''}`,
-            });
+            const taskLog = log.sub(name).sub(this.#matrix.length > 1 && index);
 
             await build(taskLog, value);
           }
@@ -58,12 +54,12 @@ export class Builder<T = unknown> {
       : null;
 
     this.start = start
-      ? async (log) => {
+      ? async () => {
           await Promise.all(
             this.#matrix.map(async (value, index) => {
-              const taskLog = log.clone({
-                prefix: `${log.prefix}${this.#matrix.length > 1 ? `[${index}]` : ''}`,
-              });
+              const taskLog = log
+                .sub(name)
+                .sub(this.#matrix.length > 1 && index);
 
               await start(taskLog, value).catch((error: unknown) => {
                 process.exitCode ||= 1;
