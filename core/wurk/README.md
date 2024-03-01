@@ -109,8 +109,3 @@ Options which reduce the number of workspaces that are processed.
   - Log level can also be set using the `WURK_LOG_LEVEL` environment variable. The command line option takes precedence over the environment variable.
 - `--clear`
   - Clear the screen on startup. This does the same thing as the linux `clear` command, but is more CI friendly. It does not error if it is not available or `TERM` is not set, and it respects TTY availability.
-
-### Git Options
-
-- `--git-from-revision <rev>`
-  - Use a specific Git revision when detecting modifications. If not specified, it will be detected from the NPM registry metadata based on each workspace's current version.
