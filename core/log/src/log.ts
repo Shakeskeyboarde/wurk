@@ -198,20 +198,6 @@ export class Log {
   };
 }
 
-const getMessageString = (value: unknown): string => {
-  if (value instanceof Error) {
-    if (process.env.DEBUG) {
-      return value.stack ?? String(value);
-    }
-
-    if (value.name === 'Error' || value.name === 'AssertionError') {
-      return value.message;
-    }
-  }
-
-  return String(value);
-};
-
 const createLogFunction = (
   print: (message: unknown, options?: LogPrintOptions) => void,
   defaultOptions?: Omit<LogPrintOptions, 'to'>,
@@ -227,7 +213,7 @@ const createLogFunction = (
     | void => {
     if (args[0] instanceof Array) {
       const [template, ...values] = args;
-      print(String.raw(template, ...values), defaultOptions);
+      print(getTemplateString(template, values), defaultOptions);
     } else if (typeof args[0] === 'string' || args[0] instanceof Error) {
       const [message] = args;
       print(message, defaultOptions);
@@ -239,7 +225,7 @@ const createLogFunction = (
         print(message, { ...defaultOptions, ...rest });
       } else {
         return (template: TemplateStringsArray, ...values: unknown[]): void => {
-          print(String.raw(template, ...values), {
+          print(getTemplateString(template, values), {
             ...defaultOptions,
             ...options,
           });
@@ -247,6 +233,29 @@ const createLogFunction = (
       }
     }
   }) as LogFunction;
+};
+
+const getTemplateString = (
+  template: TemplateStringsArray,
+  values: unknown[],
+): string => {
+  return template.slice(1).reduce((acc, part, i) => {
+    return acc + String(values[i]) + part;
+  }, template[0]!);
+};
+
+const getMessageString = (value: unknown): string => {
+  if (value instanceof Error) {
+    if (process.env.DEBUG) {
+      return value.stack ?? String(value);
+    }
+
+    if (value.name === 'Error' || value.name === 'AssertionError') {
+      return value.message;
+    }
+  }
+
+  return String(value);
 };
 
 const isFirstOccurrence = (message: string): boolean => {
