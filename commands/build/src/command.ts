@@ -45,7 +45,7 @@ export default createCommand('build', {
   },
 
   action: async (context) => {
-    const { options, workspaces, autoPrintStatus } = context;
+    const { log, options, workspaces, autoPrintStatus } = context;
 
     autoPrintStatus();
 
@@ -104,6 +104,10 @@ export default createCommand('build', {
       });
     }
 
+    if (options.start) {
+      log.info`building...`;
+    }
+
     await workspaces.forEach(async (workspace) => {
       const tasks = workspaceBuildTasks.get(workspace);
 
@@ -145,17 +149,21 @@ export default createCommand('build', {
       // Don't show the status summary after starting.
       autoPrintStatus(false);
 
-      await workspaces.forEachIndependent(async (workspace) => {
-        const tasks = workspaceStartTasks.get(workspace);
+      log.info`starting...`;
 
-        if (!tasks?.length) return;
+      await Promise.all(
+        Array.from(workspaces).map(async (workspace) => {
+          const tasks = workspaceStartTasks.get(workspace);
 
-        await Promise.all(
-          tasks.map(async (task) => {
-            await task();
-          }),
-        );
-      });
+          if (!tasks?.length) return;
+
+          await Promise.all(
+            tasks.map(async (task) => {
+              await task();
+            }),
+          );
+        }),
+      );
     }
   },
 });
