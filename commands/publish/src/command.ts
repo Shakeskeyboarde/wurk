@@ -31,17 +31,15 @@ export default createCommand('publish', {
 
     if (options.fromArchive) {
       if (options.otp != null) {
-        log.warn(`option --otp is ignored when --from-archive is set`);
+        log.warn`option --otp is ignored when --from-archive is set`;
       }
 
       if (options.removePackageFields != null) {
-        log.warn(
-          `option --remove-package-fields is ignored when --from-archive is set`,
-        );
+        log.warn`option --remove-package-fields is ignored when --from-archive is set`;
       }
 
       if (options.build) {
-        log.warn(`option --build is ignored when --from-archive is set`);
+        log.warn`option --build is ignored when --from-archive is set`;
       }
 
       await workspaces.forEach(async (workspace) => {

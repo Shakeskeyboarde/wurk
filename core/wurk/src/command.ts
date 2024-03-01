@@ -126,7 +126,7 @@ export const createCommand = <
         process.exitCode ||= 1;
 
         if (!(error instanceof AbortError)) {
-          context.log.error(error);
+          context.log.error({ message: error });
         }
       } finally {
         workspaces.forEachSync((workspace) => {

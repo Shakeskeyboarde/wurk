@@ -46,9 +46,9 @@ export class Builder<T = unknown> {
 
           if (missingEntrypoints.length) {
             status.set('warning', 'entry points');
-            log.warn(`missing entry points:`);
+            log.warn`missing entry points:`;
             missingEntrypoints.forEach(({ type, filename }) => {
-              log.warn(`- ${fs.relative(filename)} (${type})`);
+              log.warn`- ${fs.relative(filename)} (${type})`;
             });
           } else {
             status.set('success');
@@ -62,9 +62,9 @@ export class Builder<T = unknown> {
             this.#matrix.map(async (value, index) => {
               const taskLog = log.clone({ prefix: `${log.prefix}[${index}]` });
 
-              await start(taskLog, value).catch((error) => {
+              await start(taskLog, value).catch((error: unknown) => {
                 process.exitCode ||= 1;
-                taskLog.error(error);
+                taskLog.error({ message: error });
               });
             }),
           );

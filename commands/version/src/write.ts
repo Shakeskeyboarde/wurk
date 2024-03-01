@@ -23,9 +23,11 @@ enum ChangelogSection {
 export const writeConfig = async (workspace: Workspace): Promise<void> => {
   const { log, config, fs } = workspace;
 
-  log.debug('writing config');
+  log.debug`writing config`;
 
-  await fs.writeJson('package.json', config).catch((error) => log.error(error));
+  await fs
+    .writeJson('package.json', config)
+    .catch((error: unknown) => log.error({ message: error }));
 };
 
 export const writeChangelog = async (
@@ -37,17 +39,17 @@ export const writeChangelog = async (
 
   if (!newVersion) {
     // Can't write a changelog without a version for the heading.
-    log.debug('skipping changelog write (no version)');
+    log.debug`skipping changelog write (no version)`;
     return;
   }
 
   if (newVersion === version) {
-    log.debug('skipping changelog write (no version change)');
+    log.debug`skipping changelog write (no version change)`;
     return;
   }
 
   if (semver.prerelease(newVersion)?.length) {
-    log.debug('skipping changelog write (prerelease version)');
+    log.debug`skipping changelog write (prerelease version)`;
     return;
   }
 
@@ -82,11 +84,11 @@ export const writeChangelog = async (
     previousVersionIndex >= 0 &&
     newVersion === entries[previousVersionIndex]?.version
   ) {
-    log.warn(`skipping changelog write (version exists)`);
+    log.warn`skipping changelog write (version exists)`;
     return;
   }
 
-  log.debug('writing changelog');
+  log.debug`writing changelog`;
 
   const sortedChanges = changes
     .map((change) => ({ ...change, section: getChangelogSection(change.type) }))

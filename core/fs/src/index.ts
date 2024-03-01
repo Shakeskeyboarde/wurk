@@ -93,7 +93,7 @@ export class Fs {
   async read(filename: string): Promise<Buffer | undefined> {
     return await nodeFs.promises
       .readFile(this.resolve(filename))
-      .catch((error) => {
+      .catch((error: any) => {
         if (
           error?.code === 'ENOENT' ||
           error?.code === 'EISDIR' ||
@@ -120,7 +120,7 @@ export class Fs {
   ): Promise<nodeFs.ReadStream | undefined> {
     const handle = await nodeFs.promises
       .open(this.resolve(filename), 'r')
-      .catch((error) => {
+      .catch((error: any) => {
         if (
           error?.code === 'ENOENT' ||
           error?.code === 'EISDIR' ||
@@ -151,7 +151,7 @@ export class Fs {
     ) {
       const dirEntries = await nodeFs.promises
         .opendir(current)
-        .catch((error) => {
+        .catch((error: any) => {
           if (
             error?.code === 'ENOENT' ||
             error?.code === 'ENOTDIR' ||
@@ -184,7 +184,7 @@ export class Fs {
           }
         }
       } finally {
-        await dirEntries.close().catch((error) => {
+        await dirEntries.close().catch((error: any) => {
           if (error?.code !== 'ERR_DIR_CLOSED') {
             throw error;
           }
@@ -250,7 +250,7 @@ export class Fs {
   ): Promise<nodeFs.Stats | undefined> {
     return await nodeFs.promises[options?.followSymlinks ? 'stat' : 'lstat'](
       this.resolve(filename),
-    ).catch((error) => {
+    ).catch((error: any) => {
       if (error?.code === 'ENOENT' || error?.code === 'EACCES') {
         return undefined;
       }

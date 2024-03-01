@@ -16,7 +16,7 @@ export const bump = async (
 
   // Auto-versioning does not support workspaces without versions.
   if (!version) {
-    log.debug('skipping workspace (no version)');
+    log.debug`skipping workspace (no version)`;
     return;
   }
 

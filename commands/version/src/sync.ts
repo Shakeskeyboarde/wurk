@@ -37,28 +37,24 @@ export const sync = (workspace: Workspace): Change[] => {
     // Add the update to the pending list. It will only be applied if the
     // workspace is private, selected, or if some updates are required.
     pending.push(() => {
-      log.debug(`updating ${type} "${id}" to "${newSpec}"`);
+      log.debug`updating ${type} "${id}" to "${newSpec}"`;
       config.at(type).at(id).set(newSpec);
     });
   });
 
   if (!pending.length) {
-    log.debug('no local dependency updates required');
+    log.debug`no local dependency updates required`;
     return [];
   }
 
   if (isOptional) {
-    log.debug(
-      'all local dependency version ranges are satisfied by current dependency versions',
-    );
+    log.debug`all local dependency version ranges are satisfied by current dependency versions`;
 
     // Skip updates that aren't required in unselected public workspaces,
     // because it more closely matches the intent behind selecting workspaces,
     // and because it leads to less (unnecessary) publishing.
     if (!isPrivate && isOriginalVersion) {
-      log.debug(
-        'skipping optional local dependency updates (public and no version update)',
-      );
+      log.debug`skipping optional local dependency updates (public and no version update)`;
       return [];
     }
   }

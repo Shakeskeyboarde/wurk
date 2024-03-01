@@ -11,9 +11,9 @@ import { getNpmWorkspaces } from './npm.js';
 import { loadCommandPlugins } from './plugin.js';
 
 export const main = (): void => {
-  mainAsync().catch((error) => {
+  mainAsync().catch((error: unknown) => {
     process.exitCode ||= 1;
-    log.error(error);
+    log.error({ message: error });
   });
 };
 

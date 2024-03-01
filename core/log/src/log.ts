@@ -15,12 +15,13 @@ interface LogPrintOptions {
   readonly to?: 'stdout' | 'stderr';
 }
 
-const occurrences = new Set<string>();
-
-const isFirstOccurrence = (message: string): boolean => {
-  if (occurrences.has(message)) return false;
-  occurrences.add(message);
-  return true;
+type LogFunction = {
+  (template: TemplateStringsArray, ...values: unknown[]): void;
+  (options: LogPrintOptions & { message: unknown }): void;
+  (message: string | Error): void;
+  (
+    options: LogPrintOptions,
+  ): (template: TemplateStringsArray, ...values: unknown[]) => void;
 };
 
 export class Log {
@@ -54,6 +55,38 @@ export class Log {
     this.stderr.on('data', this.#onStreamData.bind(this, 'stderr'));
     this.prefix = Ansi.strip(prefix);
     this.prefixColor = prefixColor ?? null;
+
+    this.silly = createLogFunction(
+      this._print.bind(this, 'stderr', LogLevel.silly),
+      { style: 'dim' },
+    );
+
+    this.verbose = createLogFunction(
+      this._print.bind(this, 'stderr', LogLevel.verbose),
+      { style: 'dim' },
+    );
+
+    this.info = createLogFunction(
+      this._print.bind(this, 'stdout', LogLevel.info),
+    );
+
+    this.notice = createLogFunction(
+      this._print.bind(this, 'stderr', LogLevel.notice),
+    );
+
+    this.warn = createLogFunction(
+      this._print.bind(this, 'stderr', LogLevel.warn),
+      { color: 'yellow' },
+    );
+
+    this.error = createLogFunction(
+      this._print.bind(this, 'stderr', LogLevel.error),
+      { color: 'red' },
+    );
+
+    this.print = createLogFunction(
+      this._print.bind(this, 'stdout', LogLevel.silent),
+    );
   }
 
   /**
@@ -69,71 +102,49 @@ export class Log {
   /**
    * Print a dimmed message to stderr.
    */
-  readonly silly = (value?: unknown, options?: LogPrintOptions): void => {
-    this._print(options?.to ?? 'stderr', LogLevel.silly, value, {
-      style: 'dim',
-      ...options,
-    });
-  };
+  readonly silly: LogFunction;
   /**
    * Alias for `silly`.
    */
-  readonly trace = this.silly;
+  readonly trace: LogFunction = (...args: [any]): any => {
+    return this.silly(...args);
+  };
 
   /**
    * Print a dimmed message to stderr.
    */
-  readonly verbose = (value?: unknown, options?: LogPrintOptions): void => {
-    this._print(options?.to ?? 'stderr', LogLevel.verbose, value, {
-      style: 'dim',
-      ...options,
-    });
-  };
+  readonly verbose: LogFunction;
   /**
    * Alias for `verbose`.
    */
-  readonly debug = this.verbose;
+  readonly debug: LogFunction = (...args: [any]): any => {
+    return this.verbose(...args);
+  };
 
   /**
    * Print an uncolored message to stdout.
    */
-  readonly info = (value?: unknown, options?: LogPrintOptions): void => {
-    this._print(options?.to ?? 'stdout', LogLevel.info, value, options);
-  };
+  readonly info: LogFunction;
 
   /**
    * Print an uncolored message to stderr.
    */
-  readonly notice = (value?: unknown, options?: LogPrintOptions): void => {
-    this._print(options?.to ?? 'stderr', LogLevel.notice, value, options);
-  };
+  readonly notice: LogFunction;
 
   /**
    * Print a yellow message to stderr.
    */
-  readonly warn = (value?: unknown, options?: LogPrintOptions): void => {
-    this._print(options?.to ?? 'stderr', LogLevel.warn, value, {
-      color: 'yellow',
-      ...options,
-    });
-  };
+  readonly warn: LogFunction;
 
   /**
    * Print a red message to stderr.
    */
-  readonly error = (value?: unknown, options?: LogPrintOptions): void => {
-    this._print(options?.to ?? 'stderr', LogLevel.warn, value, {
-      color: 'red',
-      ...options,
-    });
-  };
+  readonly error: LogFunction;
 
   /**
    * Print a message to stdout, regardless of log level.
    */
-  readonly print = (value?: unknown, options?: LogPrintOptions): void => {
-    this._print(options?.to ?? 'stdout', LogLevel.silent, value, options);
-  };
+  readonly print: LogFunction;
 
   /**
    * Call the flush methods on `this.stdout` and `this.stderr`.
@@ -152,9 +163,17 @@ export class Log {
     to: 'stdout' | 'stderr',
     level: LogLevel,
     value: unknown,
-    options: Omit<LogPrintOptions, 'to'> = {},
+    options: LogPrintOptions = {},
   ): void => {
-    const { once = false, prefix = true, color, style } = options;
+    if (value == null) return;
+
+    const {
+      to: toActual = to,
+      once = false,
+      prefix = true,
+      color,
+      style,
+    } = options;
 
     if (isLogLevel(level)) {
       const message = getMessageString(value);
@@ -163,7 +182,7 @@ export class Log {
       }\n`;
 
       if (!once || isFirstOccurrence(text)) {
-        process[to].write(text);
+        process[toActual].write(text);
       }
     }
   };
@@ -192,5 +211,50 @@ const getMessageString = (value: unknown): string => {
 
   return String(value);
 };
+
+const createLogFunction = (
+  print: (message: unknown, options?: LogPrintOptions) => void,
+  defaultOptions?: Omit<LogPrintOptions, 'to'>,
+): LogFunction => {
+  return ((
+    ...args:
+      | [template: TemplateStringsArray, ...values: unknown[]]
+      | [options: LogPrintOptions & { message: unknown }]
+      | [options: LogPrintOptions]
+      | [message: string | Error]
+  ):
+    | ((template: TemplateStringsArray, ...values: unknown[]) => void)
+    | void => {
+    if (args[0] instanceof Array) {
+      const [template, ...values] = args;
+      print(String.raw(template, ...values), defaultOptions);
+    } else if (typeof args[0] === 'string' || args[0] instanceof Error) {
+      const [message] = args;
+      print(message, defaultOptions);
+    } else {
+      const [options] = args;
+
+      if ('message' in options) {
+        const { message, ...rest } = options;
+        print(message, { ...defaultOptions, ...rest });
+      } else {
+        return (template: TemplateStringsArray, ...values: unknown[]): void => {
+          print(String.raw(template, ...values), {
+            ...defaultOptions,
+            ...options,
+          });
+        };
+      }
+    }
+  }) as LogFunction;
+};
+
+const isFirstOccurrence = (message: string): boolean => {
+  if (occurrences.has(message)) return false;
+  occurrences.add(message);
+  return true;
+};
+
+const occurrences = new Set<string>();
 
 export const log = new Log();

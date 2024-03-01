@@ -11,7 +11,7 @@ export const auto = async (
   // Auto-versioning does not support workspaces without versions or with
   // prerelease versions.
   if (!version || semver.prerelease(version)?.length) {
-    log.debug('workspace is unversioned or prerelease versioned');
+    log.debug`workspace is unversioned or prerelease versioned`;
     return [];
   }
 
@@ -19,21 +19,19 @@ export const auto = async (
   const meta = await npm.getMetadata();
 
   if (!meta) {
-    log.info(`using existing version for initial release (${version})`);
+    log.info`using existing version for initial release (${version})`;
     return [];
   }
 
   if (!meta.gitHead) {
-    log.warn(
-      'auto versioning requires a "gitHead" published to the NPM registry',
-    );
+    log.warn`auto versioning requires a "gitHead" published to the NPM registry`;
     return [];
   }
 
   const git = await getGit().catch(() => null);
 
   if (!git) {
-    log.warn('auto versioning requires a Git repository');
+    log.warn`auto versioning requires a Git repository`;
     return [];
   }
 
@@ -44,17 +42,17 @@ export const auto = async (
   );
 
   if (!isConventional) {
-    log.warn(`workspace has non-conventional commits`);
+    log.warn`workspace has non-conventional commits`;
   }
 
   if (!releaseType) {
-    log.info('no changes detected');
+    log.info`no changes detected`;
     return [];
   }
 
   const newVersion = new semver.SemVer(version).inc(releaseType).format();
 
-  log.info(`detected ${releaseType} changes (${version} -> ${newVersion})`);
+  log.info`detected ${releaseType} changes (${version} -> ${newVersion})`;
   config.at('version').set(newVersion);
 
   return changes;

@@ -56,9 +56,8 @@ export const depcheck = async ({
 
       if (unused?.length) {
         isSuccess = false;
-        workspaces.root.log.print(
-          `Unused dependencies:\n- ${unused.join('\n- ')}`,
-        );
+        workspaces.root.log
+          .print`Unused dependencies:\n- ${unused.join('\n- ')}`;
       }
     }
 
@@ -71,9 +70,13 @@ export const depcheck = async ({
 
       if (missing.length) {
         isSuccess = false;
-        workspaces.root.log.print(
-          `Missing dependencies:${missing.map(([dep, filenames]) => `\n- ${dep}:${filenames.map((filename) => `\n  - ${filename}`).join('')}`)}`,
-        );
+        workspaces.root.log.print`Missing dependencies:`;
+        missing.forEach(([dep, filenames]) => {
+          workspaces.root.log.print`- ${dep}:`;
+          filenames.forEach((filename) => {
+            workspaces.root.log.print`  - ${filename}`;
+          });
+        });
       }
     }
 

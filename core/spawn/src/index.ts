@@ -104,12 +104,12 @@ export const spawn = (
           : mappedArg;
     });
 
-    log.print(`> ${quote(cmd, ...mappedArgs)}`, {
+    log.print({
       to: 'stderr',
       prefix: output !== 'inherit',
-    });
+    })`> ${quote(cmd, ...mappedArgs)}`;
   } else {
-    log.debug(`> ${quote(cmd, ...args)}`);
+    log.debug`> ${quote(cmd, ...args)}`;
   }
 
   const cp = crossSpawn(cmd, args, {
@@ -172,15 +172,15 @@ export const spawn = (
 
       if (exitCode !== 0 && !allowNonZeroExitCode) {
         if (output !== 'echo' && output !== 'inherit') {
-          log.print(`> ${quote(cmd, ...args)}`, { to: 'stderr' });
+          log.print({ to: 'stderr' })`> ${quote(cmd, ...args)}`;
 
           if (data.length) {
-            log.print(
-              Buffer.concat(data.map(({ chunk }) => chunk))
+            log.print({
+              to: 'stderr',
+              message: Buffer.concat(data.map(({ chunk }) => chunk))
                 .toString('utf8')
                 .trim(),
-              { to: 'stderr' },
-            );
+            });
           }
         }
 
@@ -285,21 +285,25 @@ export class SpawnPromise extends Promise<SpawnResult> {
   }
 
   async exitCode(): Promise<number> {
-    return await this.then((result) => result.exitCode).catch((error) => {
-      if (!(error instanceof SpawnExitCodeError)) throw error;
-      return error.exitCode;
-    });
+    return await this.then((result) => result.exitCode).catch(
+      (error: unknown) => {
+        if (!(error instanceof SpawnExitCodeError)) throw error;
+        return error.exitCode;
+      },
+    );
   }
 
   async signalCode(): Promise<NodeJS.Signals | null> {
-    return await this.then((result) => result.signalCode).catch((error) => {
-      if (!(error instanceof SpawnExitCodeError)) throw error;
-      return error.signalCode;
-    });
+    return await this.then((result) => result.signalCode).catch(
+      (error: unknown) => {
+        if (!(error instanceof SpawnExitCodeError)) throw error;
+        return error.signalCode;
+      },
+    );
   }
 
   async ok(): Promise<boolean> {
-    return await this.then((result) => result.ok).catch((error) => {
+    return await this.then((result) => result.ok).catch((error: unknown) => {
       if (!(error instanceof SpawnExitCodeError)) throw error;
       return false;
     });

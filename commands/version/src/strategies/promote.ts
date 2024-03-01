@@ -5,7 +5,7 @@ export const promote = async (workspace: Workspace): Promise<void> => {
   const { log, version, config } = workspace;
 
   if (!version || !semver.prerelease(version)?.length) {
-    log.debug('skipping workspace (no version or non-prerelease version)');
+    log.debug`skipping workspace (no version or non-prerelease version)`;
     return;
   }
 

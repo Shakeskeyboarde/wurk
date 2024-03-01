@@ -79,9 +79,7 @@ export const publishFromFilesystem = async (
   assert(savedPackageJson, 'failed to read package.json file');
 
   try {
-    log.info(
-      `publishing version ${version} from filesystem to ${options.toArchive ? 'archive' : 'registry'}`,
-    );
+    log.info`publishing version ${version} from filesystem to ${options.toArchive ? 'archive' : 'registry'}`;
     await fs.writeJson('package.json', config);
     await spawn(
       'npm',
@@ -122,7 +120,7 @@ const validate = async (
   }
 
   if (!version) {
-    log.debug('workspace is unversioned');
+    log.debug`workspace is unversioned`;
     status.set('skipped', 'unversioned');
     return false;
   }
@@ -130,7 +128,7 @@ const validate = async (
   const changelog = await fs.readText('CHANGELOG.md');
 
   if (changelog && !changelog.includes(`# ${version}\n`)) {
-    log.warn(`changelog may be outdated`);
+    log.warn`changelog may be outdated`;
   }
 
   const [packed] = await spawn('npm', ['pack', '--dry-run', '--json'])
@@ -155,10 +153,10 @@ const validate = async (
   });
 
   if (missingPackEntrypoints.length) {
-    log.error(`missing packed entry points:`);
-    missingPackEntrypoints.forEach(({ type, filename }) =>
-      log.error(`- ${fs.relative(filename)} (${type})`),
-    );
+    log.error`missing packed entry points:`;
+    missingPackEntrypoints.forEach(({ type, filename }) => {
+      log.error`- ${fs.relative(filename)} (${type})`;
+    });
     status.set('failure', 'entry points');
     return false;
   }
@@ -166,7 +164,7 @@ const validate = async (
   const git = await getGit().catch(() => null);
 
   if (git && (await git.getIsDirty())) {
-    log.warn('workspace has uncommitted changes');
+    log.warn`workspace has uncommitted changes`;
     status.set('warning', 'uncommitted changes');
     return false;
   }
@@ -201,7 +199,7 @@ const validateDependency = async (
 
   if (spec.type === 'url') {
     if (spec.protocol === 'file') {
-      log.error(`dependency "${name}" is local path`);
+      log.error`dependency "${name}" is local path`;
       status.set('failure', `dependency local path`);
       return false;
     } else {
@@ -212,7 +210,7 @@ const validateDependency = async (
   }
 
   if (!version) {
-    log.error(`dependency "${name}" is unversioned`);
+    log.error`dependency "${name}" is unversioned`;
     status.set('failure', `dependency unversioned`);
     return false;
   }
@@ -224,7 +222,7 @@ const validateDependency = async (
   }
 
   if (isPrivate) {
-    log.error(`dependency "${name}" is private`);
+    log.error`dependency "${name}" is private`;
     status.set('failure', `dependency private`);
     return false;
   }
@@ -234,7 +232,7 @@ const validateDependency = async (
     const meta = await npm.getMetadata();
 
     if (version !== meta?.version) {
-      log.error(`dependency "${name}" is not published`);
+      log.error`dependency "${name}" is not published`;
       status.set('failure', `dependency unpublished`);
       return false;
     }
@@ -243,7 +241,7 @@ const validateDependency = async (
 
     if (git) {
       if (await git.getIsDirty()) {
-        log.warn(`dependency "${name}" has uncommitted changes`);
+        log.warn`dependency "${name}" has uncommitted changes`;
         status.set('warning', `dependency uncommitted changes`);
         return false;
       }
@@ -253,15 +251,15 @@ const validateDependency = async (
 
         if (head) {
           if (head !== meta.gitHead) {
-            log.warn(`dependency "${name}" is modified`);
+            log.warn`dependency "${name}" is modified`;
             status.set('warning', `dependency modified`);
             return false;
           }
         } else {
-          log.warn(`dependency "${name}" has no Git head`);
+          log.warn`dependency "${name}" has no Git head`;
         }
       } else {
-        log.warn(`dependency "${name}" has no published Git head`);
+        log.warn`dependency "${name}" has no published Git head`;
       }
     }
   }

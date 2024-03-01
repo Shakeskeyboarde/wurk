@@ -13,27 +13,21 @@ const loadCommandPlugin = async (
     });
 
     if (typeof moduleExports.default !== 'function') {
-      log.error(
-        `package "${packageId}" does not export a valid command factory`,
-      );
+      log.error`package "${packageId}" does not export a valid command factory`;
       return null;
     }
 
     const command = moduleExports.default(moduleConfig) as unknown;
 
     if (!isCommand(command)) {
-      log.error(
-        `package "${packageId}" command factory returned an invalid command`,
-      );
+      log.error`package "${packageId}" command factory returned an invalid command`;
       return null;
     }
 
     return command;
   } catch (error) {
-    log.debug(
-      `loading command package "${packageId}" threw the following error:`,
-    );
-    log.debug(error);
+    log.debug`loading command package "${packageId}" threw the following error:`;
+    log.debug({ message: error });
     return null;
   }
 };

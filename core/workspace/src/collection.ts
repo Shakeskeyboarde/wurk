@@ -438,8 +438,8 @@ export class WorkspaceCollection {
     for (const workspace of this) {
       const { log, status } = workspace;
 
-      const abort = (reason?: any): void => {
-        if (reason) log.error(reason);
+      const abort = (reason?: unknown): void => {
+        log.error({ message: reason });
         abortController.abort(reason);
       };
 

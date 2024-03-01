@@ -30,7 +30,7 @@ export const vitest = async (context: VitestContext): Promise<void> => {
   }
 
   if (!workspaceDirs.length) {
-    log.info('no vitest configurations found');
+    log.info`no vitest configurations found`;
     return;
   }
 

@@ -24,7 +24,7 @@ export const publishFromArchive = async (
   status.set('pending');
 
   if (!version) {
-    log.verbose(`workspace is unversioned`);
+    log.verbose`workspace is unversioned`;
     status.set('skipped', 'unversioned');
     return;
   }
@@ -34,7 +34,7 @@ export const publishFromArchive = async (
   );
 
   if (!(await fs.exists(filename))) {
-    log.verbose(`workspace has no archive`);
+    log.verbose`workspace has no archive`;
     status.set('skipped', 'no archive');
     return;
   }
@@ -47,7 +47,7 @@ export const publishFromArchive = async (
   const tmpFilename = fs.resolve(tmpDir, path.basename(filename));
 
   try {
-    log.info(`publishing version ${version} from archive to registry`);
+    log.info`publishing version ${version} from archive to registry`;
     await fs.copyFile(filename, tmpFilename);
     await extractPackageJson(fs, tmpFilename, tmpDir);
     await spawn(

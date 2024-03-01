@@ -15,7 +15,7 @@ export const clean = async (workspace: Workspace): Promise<void> => {
     });
 
   const promises = filenames.map(async (filename) => {
-    workspace.log.debug(`removing ignored file "${filename}"`);
+    workspace.log.debug`removing ignored file "${filename}"`;
     await workspace.fs.delete(filename, { recursive: true });
   });
 

@@ -92,23 +92,23 @@ export const printStatus = (
   }
 
   if (statusMessages) {
-    log.print(`${prefix}summary:${statusMessages}`, {
+    log.print({
       prefix: false,
       to: 'stderr',
-    });
+    })`${prefix}summary:${statusMessages}`;
   }
 
   if (process.exitCode) {
-    log.print(`${prefix}failure`, {
+    log.print({
       prefix: false,
       to: 'stderr',
       color: 'red',
-    });
+    })`${prefix}failure`;
   } else {
-    log.print(`${prefix}success`, {
+    log.print({
       prefix: false,
       to: 'stderr',
       color: 'green',
-    });
+    })`${prefix}success`;
   }
 };

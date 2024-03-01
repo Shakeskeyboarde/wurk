@@ -48,7 +48,7 @@ const runWorkspaceScripts = async (
 
   for (const script of scripts) {
     if (!scriptsJson.at(script).is('string')) {
-      log.debug(`skipping missing script "${script}"`);
+      log.debug`skipping missing script "${script}"`;
       continue;
     }
 

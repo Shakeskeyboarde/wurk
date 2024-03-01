@@ -124,8 +124,8 @@ export default createCommand('build', {
         if (stats) {
           await nodeFs.promises
             .chmod(binFilename, stats.mode | 0o111)
-            .catch((error) => {
-              workspace.log.debug(error);
+            .catch((error: unknown) => {
+              workspace.log.debug({ message: error });
             });
         }
       }

@@ -86,7 +86,7 @@ export default createCommand('version', {
       typeof strategy === 'string' && strategy.startsWith('pre');
 
     if (preid && !isPreStrategy) {
-      log.warn('option --preid only applies to "pre*" strategies');
+      log.warn`option --preid only applies to "pre*" strategies`;
     }
 
     const changes = new Map<Workspace, readonly Change[]>();
@@ -116,7 +116,7 @@ export default createCommand('version', {
 
       await workspaces.forEach(async (workspace) => {
         if (workspace.isPrivate) {
-          workspace.log.debug('skipping workspace (private)');
+          workspace.log.debug`skipping workspace (private)`;
         }
 
         changes.set(workspace, (await each(workspace)) ?? []);
@@ -138,7 +138,7 @@ export default createCommand('version', {
     // be skipped so that they don't end up referencing non-existent versions.
     await workspaces.forEach(async (workspace) => {
       if (!workspace.config.isModified) {
-        workspace.log.debug('skipping workspace update (no modifications)');
+        workspace.log.debug`skipping workspace update (no modifications)`;
         workspace.status.set('skipped', 'no modifications');
         return;
       }
@@ -192,8 +192,8 @@ export default createCommand('version', {
         .join(', ');
 
       if (releaseMessage) {
-        log.notice(`version commit message:`);
-        log.notice(`  release: ${releaseMessage}`, { color: 'blue' });
+        log.notice`version commit message:`;
+        log.notice({ color: 'blue' })`  release: ${releaseMessage}`;
       }
     }
   },
