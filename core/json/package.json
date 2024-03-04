@@ -1,0 +1,29 @@
+{
+  "name": "@wurk/json",
+  "description": "JSON utility used by Wurk.",
+  "version": "0.1.0",
+  "author": "Chris Ackerman <chris@topher.land>",
+  "license": "ISC",
+  "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/core/json/README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shakeskeyboarde/wurk.git",
+    "directory": "core/json"
+  },
+  "scripts": {
+    "build": "tsc -p src/tsconfig.json"
+  },
+  "type": "module",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    "types": "./lib/index.d.ts",
+    "default": "./lib/index.js"
+  },
+  "files": [
+    "lib",
+    "CHANGELOG.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "@wurk/import",
+  "description": "Relative dynamic import utility used by Wurk.",
+  "version": "0.1.0",
+  "author": "Chris Ackerman <chris@topher.land>",
+  "license": "ISC",
+  "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/core/import/README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shakeskeyboarde/wurk.git",
+    "directory": "core/import"
+  },
+  "scripts": {
+    "build": "tsc -p src/tsconfig.json"
+  },
+  "type": "module",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    "types": "./lib/index.d.ts",
+    "default": "./lib/index.js"
+  },
+  "files": [
+    "lib",
+    "CHANGELOG.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@types/semver": "^7.5.7",
+    "@wurk/fs": "*",
+    "@wurk/json": "*",
+    "semver": "^7.6.0"
+  }
+}

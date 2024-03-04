@@ -1,0 +1,21 @@
+{
+  "name": "Wurk API",
+  "entryPoints": ["typedoc.ts"],
+  "tsconfig": "tsconfig.json",
+  "readme": "none",
+  "groupOrder": [
+    "Functions",
+    "Classes",
+    "Variables",
+    "Enum",
+    "Interfaces",
+    "Type Aliases",
+    "*"
+  ],
+  "excludeNotDocumented": true,
+  "excludeInternal": true,
+  "disableSources": true,
+  "disableGit": true,
+  "plugin": ["typedoc-plugin-markdown"],
+  "out": "../docs/api"
+}

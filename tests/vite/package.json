@@ -1,0 +1,21 @@
+{
+  "private": true,
+  "name": "test-vite",
+  "description": "Testing the build command vite mode",
+  "version": "",
+  "scripts": {},
+  "type": "module",
+  "dependencies": {
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.1.1",
+    "vite-plugin-checker": "^0.6.4",
+    "vite-plugin-refresh": "^1.0.3",
+    "vite-plugin-svgr": "^4.2.0"
+  }
+}

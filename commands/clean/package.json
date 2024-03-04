@@ -1,0 +1,39 @@
+{
+  "name": "@wurk/command-clean",
+  "description": "Remove build output files.",
+  "version": "0.1.0",
+  "author": "Chris Ackerman <chris@topher.land>",
+  "license": "ISC",
+  "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/commands/clean/README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shakeskeyboarde/wurk.git",
+    "directory": "commands/clean"
+  },
+  "scripts": {},
+  "type": "module",
+  "types": "./lib/command.d.ts",
+  "exports": {
+    "types": "./lib/command.d.ts",
+    "default": "./lib/command.js"
+  },
+  "files": [
+    "lib",
+    "CHANGELOG.md"
+  ],
+  "keywords": [
+    "wurk",
+    "wurk-command",
+    "monorepo",
+    "workspaces",
+    "npm",
+    "command",
+    "clean"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "wurk": "*"
+  }
+}

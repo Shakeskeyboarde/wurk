@@ -1,0 +1,36 @@
+{
+  "name": "@wurk/spawn",
+  "description": "Spawn utility used by Wurk.",
+  "version": "0.1.0",
+  "author": "Chris Ackerman <chris@topher.land>",
+  "license": "ISC",
+  "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/core/spawn/README.md",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Shakeskeyboarde/wurk.git",
+    "directory": "core/spawn"
+  },
+  "scripts": {
+    "build": "tsc -p src/tsconfig.json"
+  },
+  "type": "module",
+  "types": "./lib/index.d.ts",
+  "exports": {
+    "types": "./lib/index.d.ts",
+    "default": "./lib/index.js"
+  },
+  "files": [
+    "lib",
+    "CHANGELOG.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@types/cross-spawn": "^6.0.6",
+    "@wurk/json": "*",
+    "@wurk/log": "*",
+    "cross-spawn": "^7.0.3",
+    "npm-run-path": "^5.2.0"
+  }
+}

@@ -34,17 +34,12 @@ jobs:
       - name: Build
         run: |
           npm run build
-          npx @werk/cli publish --no-build --to-archive
-
-      - name: Test
-        run: |
-          npm run lint
-          npx @werk/cli depcheck
-          npx @werk/cli vitest run --no-build
+          npx wurk publish --no-build --to-archive
+          npx wurk test --no-build
 
       - name: Publish
         run: |
           npm config set //registry.npmjs.org/:_authToken '${NPM_TOKEN}'
-          npx @werk/cli publish --from-archive
+          npx wurk publish --from-archive
         env:
           NPM_TOKEN: ${{secrets.NPM_TOKEN}}

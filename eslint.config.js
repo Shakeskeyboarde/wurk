@@ -1,14 +1,12 @@
 import rational from 'eslint-config-rational';
 
 export default rational({
-  ignores: ['**/{.git,node_modules,out,lib,dist}'],
   override: [
     {
-      files: ['packages/vite-config/src/logger.ts', 'packages/vite-config/src/plugins/*'],
+      files: ['core/cli/src/**'],
       rules: {
-        'import/no-extraneous-dependencies': 'off',
-        '@typescript-eslint/consistent-type-imports': 'off',
-        '@typescript-eslint/explicit-function-return-type': 'off',
+        'import/group-exports': 'warn',
+        'import/exports-last': 'warn',
       },
     },
   ],
