@@ -37,6 +37,8 @@ export const publishFromFilesystem = async (
     return;
   }
 
+  log.info`publishing version ${version} from filesystem to ${options.toArchive ? 'archive' : 'registry'}`;
+
   // Update dependency version ranges so that the minimum version matches the
   // current version.
   getDependencyLinks().forEach(({ type, id, spec, dependency }) => {
@@ -79,7 +81,6 @@ export const publishFromFilesystem = async (
   assert(savedPackageJson, 'failed to read package.json file');
 
   try {
-    log.info`publishing version ${version} from filesystem to ${options.toArchive ? 'archive' : 'registry'}`;
     await fs.writeJson('package.json', config);
     await spawn(
       'npm',
@@ -117,13 +118,13 @@ const validate = async (
   } = workspace;
 
   if (isPrivate) {
-    log.debug`workspace is private`;
+    log.info`workspace is private`;
     status.set('skipped', 'private');
     return false;
   }
 
   if (!version) {
-    log.debug`workspace is unversioned`;
+    log.info`workspace is unversioned`;
     status.set('skipped', 'unversioned');
     return false;
   }
@@ -132,7 +133,7 @@ const validate = async (
   const meta = await npm.getMetadata();
 
   if (version === meta?.version) {
-    log.debug`workspace is already published`;
+    log.info`workspace is already published`;
     status.set('skipped', 'already published');
     return false;
   }
