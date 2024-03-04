@@ -1,3 +1,3 @@
 # Wurk JSON
 
-JSON utilities used by Wurk.
+JSON data accessor used by Wurk.

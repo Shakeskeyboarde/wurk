@@ -201,16 +201,15 @@ class InternalCli<TResult extends UnknownResult, TName extends string>
   }
 }
 
+/**
+ * CLI definition.
+ */
 class Cli<
   TResult extends UnknownResult = UnknownResult,
   TName extends string = string,
 > {
   readonly #internal: InternalCli<TResult, TName>;
 
-  /**
-   * NOTE: Use the `Cli.create()` static method to create a new command line
-   * interface.
-   */
   private constructor(config: CliConfig<TName>) {
     this.#internal = new InternalCli(config);
   }
@@ -855,7 +854,13 @@ class Cli<
     return await this.#internal.parse(args);
   }
 
+  /**
+   * Define a new command line interface.
+   */
   static create<TName extends string>(
+    /**
+     * @type {string} The name of the command.
+     */
     name: CliName<TName>,
   ): Cli<Result<{}, {}>, TName> {
     assertValidName(name);
