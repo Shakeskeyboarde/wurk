@@ -188,7 +188,7 @@ export default createCommand('version', {
     if (versioned) {
       const releaseMessage = versioned
         .map(({ name, version }) => {
-          return `${name.replace(/^@[^/]*/u, '')}@${version}`;
+          return `${name}@${version}`;
         })
         .join(', ');
 

@@ -32,7 +32,7 @@ export const sync = (workspace: Workspace): Change[] => {
     const prefix = spec.range.match(/^(>=|\^|~)\d\S*$/u)?.[1] ?? '^';
     const newRange = `${prefix}${newVersion}`;
     const newSpec =
-      spec.name === id ? `npm:${dependency.name}@${newRange}` : newRange;
+      spec.name === id ? newRange : `npm:${dependency.name}@${newRange}`;
 
     // Add the update to the pending list. It will only be applied if the
     // workspace is private, selected, or if some updates are required.
