@@ -11,7 +11,7 @@ export const auto = async (
   // Auto-versioning does not support workspaces without versions or with
   // prerelease versions.
   if (!version || semver.prerelease(version)?.length) {
-    log.debug`workspace is unversioned or prerelease versioned`;
+    log.info`workspace is unversioned or prerelease versioned`;
     return [];
   }
 

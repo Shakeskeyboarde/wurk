@@ -9,8 +9,10 @@ export const literal = async (
   workspace: Workspace,
   options: Options,
 ): Promise<void> => {
-  const { config } = workspace;
+  const { log, config } = workspace;
   const { version } = options;
+  const newVersion = version.format();
 
-  config.at('version').set(version.format());
+  log.info`setting version to ${newVersion}`;
+  config.at('version').set(newVersion);
 };

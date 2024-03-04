@@ -16,11 +16,14 @@ export const bump = async (
 
   // Auto-versioning does not support workspaces without versions.
   if (!version) {
-    log.debug`skipping workspace (no version)`;
+    log.info`workspace is unversioned`;
     return;
   }
 
-  config
-    .at('version')
-    .set(new semver.SemVer(version).inc(releaseType, preid).format());
+  const newVersion = new semver.SemVer(version)
+    .inc(releaseType, preid)
+    .format();
+
+  log.info`bumping ${releaseType} version (${version} -> ${newVersion})`;
+  config.at('version').set(newVersion);
 };

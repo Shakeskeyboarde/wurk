@@ -5,9 +5,12 @@ export const promote = async (workspace: Workspace): Promise<void> => {
   const { log, version, config } = workspace;
 
   if (!version || !semver.prerelease(version)?.length) {
-    log.debug`skipping workspace (no version or non-prerelease version)`;
+    log.info`workspace is unversioned or non-prerelease versioned`;
     return;
   }
 
-  config.at('version').set(new semver.SemVer(version).inc('patch').format());
+  const newVersion = new semver.SemVer(version).inc('patch').format();
+
+  log.info`promoting prerelease version (${version} -> ${newVersion})`;
+  config.at('version').set(newVersion);
 };

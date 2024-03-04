@@ -20,6 +20,9 @@ export const sync = (workspace: Workspace): Change[] => {
     // we can't update the local dependency version.
     if (!newVersion) return;
 
+    // The range is a wildcard, which is never updated by the version command.
+    if (spec.range === '*' || spec.range === 'x') return;
+
     // The version range minimum is already equal to the new version.
     if (semver.minVersion(spec.range)?.format() === newVersion) return;
 
