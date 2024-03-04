@@ -88,8 +88,6 @@ Validation is always performed before publishing. This provides reasonable certa
 
 The following changes are made before publishing, and will be rolled back after publishing finishes (successfully or not). Change are only made in publishable workspaces.
 
+- Replace any local dependency wildcard (`*`) version ranges with caret version ranges.
 - Record the current commit hash under the `gitHead` key.
   - NPM should already do this for publishing. However, it is not done when packing. The field is also poorly documented even though it was added in v7, so it's possible that it might not be added in the future.
-- Update all local workspace dependency versions.
-  - Replace any wildcard (`*`) version ranges with caret version ranges.
-  - Update any non-wildcard version ranges so that the minimum version is the current version.

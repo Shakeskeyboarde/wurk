@@ -39,16 +39,14 @@ export const publishFromFilesystem = async (
 
   log.info`publishing version ${version} from filesystem to ${options.toArchive ? 'archive' : 'registry'}`;
 
-  // Update dependency version ranges so that the minimum version matches the
-  // current version.
+  // Update dependency version ranges.
   getDependencyLinks().forEach(({ type, id, spec, dependency }) => {
     if (type === 'devDependencies') return;
-    if (spec.type !== 'npm') return;
     if (!dependency.version) return;
-    if (!semver.satisfies(dependency.version, spec.range)) return;
+    if (spec.type !== 'npm') return;
+    if (spec.range !== '*' && spec.range !== 'x') return;
 
-    const prefix = spec.range.match(/^(>=|\^|~)\d\S*$/u)?.[1] ?? '^';
-    const newRange = `${prefix}${dependency.version}`;
+    const newRange = `^${dependency.version}`;
     const newSpec =
       spec.name === id ? newRange : `npm:${spec.name}@${newRange}`;
 
