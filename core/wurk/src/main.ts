@@ -3,7 +3,7 @@ import os from 'node:os';
 
 import { Cli } from '@wurk/cli';
 import { JsonAccessor } from '@wurk/json';
-import { Ansi, ANSI_COLORS, log, setLogLevel } from '@wurk/log';
+import { Ansi, getAnsiColorIterator, log, setLogLevel } from '@wurk/log';
 import { WorkspaceCollection } from '@wurk/workspace';
 
 import { env } from './env.js';
@@ -136,10 +136,15 @@ const mainAsync = async (): Promise<void> => {
           includeRootWorkspace || npmWorkspaces.length === 0,
         concurrency: parallel ? concurrency : 1,
       });
+      const allWorkspaces = new Set([...workspaces.all, workspaces.root]);
+      const colors = getAnsiColorIterator({
+        loop: true,
+        count: allWorkspaces.size,
+      });
 
-      Array.from(workspaces.all).forEach((workspace, i) => {
+      allWorkspaces.forEach((workspace) => {
         workspace.log.prefix = workspace.name;
-        workspace.log.prefixColor = ANSI_COLORS[i % ANSI_COLORS.length]!;
+        workspace.log.prefixStyle = colors.next().value;
       });
 
       workspaces.select(expressions.length ? expressions : '**');

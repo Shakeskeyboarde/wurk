@@ -4,14 +4,14 @@ import { LogStream } from './stream.js';
 
 interface LogOptions {
   readonly prefix?: string;
-  readonly prefixColor?: AnsiColor | null;
+  readonly prefixStyle?: string;
 }
 
 interface LogPrintOptions {
   readonly once?: boolean;
   readonly prefix?: boolean;
-  readonly style?: 'dim' | 'bold';
-  readonly color?: AnsiColor | null;
+  readonly modifier?: 'dim' | 'bold';
+  readonly color?: Exclude<AnsiColor, 'black' | 'white'> | null;
   readonly to?: 'stdout' | 'stderr';
 }
 
@@ -26,8 +26,8 @@ type LogFunction = {
 
 export class Log {
   #prefix = '';
-  #prefixColor: AnsiColor | null = null;
-  #prefixFormatted = '';
+  #prefixStyle = '';
+  #prefixStyled = '';
 
   readonly stdout: LogStream = new LogStream();
   readonly stderr: LogStream = new LogStream();
@@ -40,30 +40,30 @@ export class Log {
     this.#updatePrefix();
   }
 
-  get prefixColor(): AnsiColor | null {
-    return this.#prefixColor;
+  get prefixStyle(): string {
+    return this.#prefixStyle;
   }
-  set prefixColor(value: AnsiColor | null) {
-    this.#prefixColor = value;
+  set prefixStyle(value: string) {
+    this.#prefixStyle = value;
     this.#updatePrefix();
   }
 
   constructor(options: LogOptions = {}) {
-    const { prefix = '', prefixColor } = options;
+    const { prefix = '', prefixStyle = '' } = options;
 
     this.stdout.on('data', this.#onStreamData.bind(this, 'stdout'));
     this.stderr.on('data', this.#onStreamData.bind(this, 'stderr'));
     this.prefix = Ansi.strip(prefix);
-    this.prefixColor = prefixColor ?? null;
+    this.prefixStyle = prefixStyle ?? null;
 
     this.silly = createLogFunction(
       this._print.bind(this, 'stderr', LogLevel.silly),
-      { style: 'dim' },
+      { modifier: 'dim' },
     );
 
     this.verbose = createLogFunction(
       this._print.bind(this, 'stderr', LogLevel.verbose),
-      { style: 'dim' },
+      { modifier: 'dim' },
     );
 
     this.info = createLogFunction(
@@ -94,9 +94,9 @@ export class Log {
    * instance.
    */
   readonly clone = (overrides: LogOptions = {}): Log => {
-    const { prefix = this.prefix, prefixColor = this.prefixColor } = overrides;
+    const { prefix = this.prefix, prefixStyle = this.prefixStyle } = overrides;
 
-    return new Log({ prefix, prefixColor });
+    return new Log({ prefix, prefixStyle });
   };
 
   /**
@@ -191,14 +191,15 @@ export class Log {
       once = false,
       prefix = true,
       color,
-      style,
+      modifier,
     } = options;
 
     if (isLogLevel(level)) {
       const message = getMessageString(value);
-      const text = `${prefix ? this.#prefixFormatted : ''}${color ? Ansi.color[color] : ''}${style ? Ansi[style] : ''}${message}${
-        Ansi.reset
-      }\n`;
+      const prefixString = prefix ? this.#prefixStyled : '';
+      const colorString = color ? Ansi.color[color] : '';
+      const styleString = modifier ? Ansi[modifier] : '';
+      const text = `${Ansi.reset}${prefixString}${colorString}${styleString}${message}${Ansi.reset}\n`;
 
       if (!once || isFirstOccurrence(text)) {
         process[toActual].write(text);
@@ -207,8 +208,8 @@ export class Log {
   };
 
   readonly #updatePrefix = (): void => {
-    this.#prefixFormatted = this.prefix
-      ? `${Ansi.bold}${this.prefixColor ? Ansi.color[this.prefixColor] : ''}${this.prefix}:${Ansi.reset} `
+    this.#prefixStyled = this.prefix
+      ? `${this.#prefixStyle}${this.prefix}:${Ansi.reset} `
       : '';
   };
 
