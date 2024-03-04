@@ -54,7 +54,6 @@ export const publishFromArchive = async (
       'npm',
       [
         'publish',
-        '--json',
         Boolean(options.tag) && `--tag=${options.tag}`,
         Boolean(options.otp) && `--otp=${options.otp}`,
         options.dryRun && '--dry-run',
@@ -66,7 +65,7 @@ export const publishFromArchive = async (
     await fs.delete(tmpDir, { recursive: true });
   }
 
-  status.set('success', version);
+  status.set('success', `publish archive ${version}`);
 };
 
 const extractPackageJson = async (

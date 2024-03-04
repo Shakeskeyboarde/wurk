@@ -85,7 +85,6 @@ export const publishFromFilesystem = async (
       'npm',
       [
         options.toArchive ? 'pack' : 'publish',
-        '--json',
         Boolean(options.tag) && `--tag=${options.tag}`,
         Boolean(options.otp) && `--otp=${options.otp}`,
         options.dryRun && '--dry-run',
@@ -97,6 +96,7 @@ export const publishFromFilesystem = async (
   }
 
   published.add(workspace);
+  status.set('success', `${options.toArchive ? 'pack' : 'publish'} ${version}`);
 };
 
 const validate = async (
@@ -116,6 +116,8 @@ const validate = async (
   } = workspace;
 
   if (isPrivate) {
+    log.debug`workspace is private`;
+    status.set('skipped', 'private');
     return false;
   }
 
