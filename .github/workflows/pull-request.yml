@@ -32,9 +32,6 @@ jobs:
         run: |
           npm run build
           npx wurk publish --no-build --to-archive
-
-      - name: Test
-        run: |
           npx wurk test --no-build
 
       - name: Publish (Dry Run)
