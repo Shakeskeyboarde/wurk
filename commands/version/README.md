@@ -1,6 +1,14 @@
 # Wurk Version Command
 
-Update versions.
+Update workspace versions.
+
+## Getting Started
+
+Install the command in your root workspace.
+
+```sh
+npm install --save-dev @wurk/command-version
+```
 
 ## Set Versions
 
