@@ -92,7 +92,7 @@ export const getChanges = async (
       )
         ? ChangeType.none
         : CHANGE_TYPES[typeString] ?? ChangeType.fix;
-      const message = `${summary} (${hash})`;
+      const message = `${summary} (${hash.slice(0, 7)})`;
       const bodyLines = body.split(/\r?\n/u);
 
       return [
