@@ -4,55 +4,53 @@ Update versions.
 
 ## Set Versions
 
+Set workspace versions to a specific version.
+
 ```sh
 wurk version 1.2.3
 ```
 
 ## Bump Versions
 
+Increment workspace versions given a change/release type.
+
 ```sh
 wurk version patch
 ```
 
+The `--preid` option can be used with `pre*` bump types to set a prerelease identifier.
+
+```sh
+wurk version prepatch --preid alpha
+```
+
 This command is using the [semver](https://www.npmjs.com/package/semver#functions) package `inc()` function.
 
-The basic bump types are as follows.
+## Promote Versions
 
-- `major`: 1.2.3 → 2.0.0 → 3.0.0
-- `minor`: 1.2.3 → 1.3.0 → 1.4.0
-- `patch`: 1.2.3 → 1.2.4 → 1.2.5
-- `premajor`: 1.2.3 → 2.0.0-0 → 3.0.0-0
-- `preminor`: 1.2.3 → 1.3.0-0 → 1.4.0-0
-- `prepatch`: 1.2.3 → 1.2.4-0 → 1.2.5-0
-- `prerelease`: 1.2.3 → 1.2.4-0 → 1.2.4-1
+Remove the prerelease identifier from workspace prerelease versions. Has no effect on non-prerelease versions.
 
-Use the `--preid` option to set the prerelease identifier.
+```sh
+wurk version promote
+```
 
-- `premajor --preid=alpha`: 1.2.3 → 2.0.0-alpha.0 → 3.0.0-alpha.0
-- `preminor --preid=alpha`: 1.2.3 → 1.3.0-alpha.0 → 1.4.0-alpha.0
-- `prepatch --preid=alpha`: 1.2.3 → 1.2.4-alpha.0 → 1.2.5-alpha.0
-- `prerelease --preid=alpha`: 1.2.3 → 1.2.4-alpha.0 → 1.2.4-alpha.1
+## Automatic Versions
 
-Note the difference between `prepatch` and `prerelease`. The former will always bump the patch number and reset the prerelease number to zero. The later will only bump the patch number if the current version is not a prerelease, and will increment the prerelease number otherwise.
-
-## Bump Versions Automatically
-
-If you're using Git with [conventional commit](https://www.conventionalcommits.org/en/v1.0.0/#summary) messages, you can use the `auto` bump type to automatically choose the correct bump level.
+Automatically increment each workspace based on Git [conventional commits](https://www.conventionalcommits.org).
 
 ```sh
 wurk version auto
 ```
 
-This will also update the `CHANGELOG.md` file, unless the `--no-changelog` flag is set.
+The previous commit ID used to select Git log messages is retrieved from the NPM registry for the current version (see the `gitHead` field returned by `git show <package>@<version> --json`)
 
-**Note:** The `auto` bump type is intended for _releases_, so the `--preid` option is not supported. While working with prereleases, use the [basic bump command](#bump-versions) instead.
+> **Note:** The `auto` bump type does not support prerelease versions.
 
-**Note:** The `auto` bump type requires a Git repository with a clean working tree.
+> **Note:** The `auto` bump type requires a Git repository with a clean working tree that is not shallow cloned.
 
-## Dependents
+## Local Dependents
 
-When a workspace version update is _greater than a patch,_ any dependent workspaces will also be updated so that they have a minimum dependency on the new version, and the dependent's version will also be _minimally_ (prerelease or patch number) bumped.
+If a valid semver range is used for a local dependency version spec (eg. `^1.2.3` or `npm:some-package@^1.2.3`) and it is not a wildcard range (`*`), it will be updated as necessary during versioning. Updating dependency versions is deemed unnecessary if all of the following are true.
 
-## Graduating Prereleases
-
-When the current version is a prerelease, the `version` command will refuse to bump the version to a non-prerelease version. This is to prevent accidentally releasing a prerelease version. You need to explicitly [set](#set-versions) or [bump](#bump-versions) the version to a non-prerelease in this case.
+- The dependent workspace version is not being updated (ie. released).
+- All local dependency version ranges are already satisfied by local workspace versions.

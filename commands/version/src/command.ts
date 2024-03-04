@@ -30,22 +30,13 @@ export default createCommand('version', {
     return cli
       .trailer(
         `The "auto" strategy determines the next version for each workspace
-         based on semantic-like commit messages added after the closest
+         based on conventional-like commit messages added after the closest
          published previous version. Prerelease versions are not supported.`,
       )
       .trailer(
         `The "promote" strategy converts prerelease versions to their release
          equivalent by removing the prerelease identifier. The major, minor,
          and patch versions are not changed.`,
-      )
-      .trailer(
-        `All strategies also update local dependencies to match new workspace
-         versions. Workspace versions may be incremented if their dependencies
-         are updated even if the workspace unselected or unaffected by the
-         strategy. To prevent unnecessary version/publish churn, local
-         dependency ranges that already include the current workspace version
-         are not updated, unless the dependent workspace is also being updated
-         or the workspace is private (unpublishable).`,
       )
       .option('<strategy>', {
         description:
