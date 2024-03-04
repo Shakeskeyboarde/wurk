@@ -1,3 +1,5 @@
+import { inspect } from 'node:util';
+
 import { importRelative, type ImportResult } from '@wurk/import';
 import { log } from '@wurk/log';
 
@@ -20,6 +22,7 @@ const loadCommandPlugin = async (
     const command = moduleExports.default(moduleConfig) as unknown;
 
     if (!isCommand(command)) {
+      log.debug(inspect(command));
       log.error`package "${packageId}" command factory returned an invalid command`;
       return null;
     }
