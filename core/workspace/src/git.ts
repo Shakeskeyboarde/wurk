@@ -35,8 +35,6 @@ export interface GitLog {
   readonly body: string;
 }
 
-const LOG_CAP = '%x00%x00%x00';
-const LOG_SEPARATOR = ' %x00%x00 ';
 const LOG_FORMAT: Readonly<Record<keyof GitLog, string>> = {
   hash: '%H',
   author: '%an',
@@ -147,7 +145,7 @@ export class Git {
 
     const text = await this._exec([
       'log',
-      `--pretty=format:${LOG_CAP} ${formatPlaceholders.join(LOG_SEPARATOR)} ${LOG_CAP}`,
+      `--pretty=format:%x00%x00%x00 ${formatPlaceholders.join(' %x00%x00 ')} %x00%x00%x00`,
       start ? `${start}..${end}` : end,
       '--',
       this.#dir,
@@ -155,9 +153,7 @@ export class Git {
 
     return [...text.matchAll(/\0{3}(.*)\0{3}/gsu)].flatMap(
       ([, content = '']) => {
-        const values = content
-          .split(LOG_SEPARATOR)
-          .map((value) => value.trim());
+        const values = content.split(/ \0{2} /u).map((value) => value.trim());
         const log = Object.fromEntries(
           formatNames.map((name, index) => [name, values[index]]),
         );
