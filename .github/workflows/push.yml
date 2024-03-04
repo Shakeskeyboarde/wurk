@@ -9,7 +9,7 @@ concurrency:
   group: ${{ github.workflow }}
 
 env:
-  TERM: linux
+  TERM: xterm-256color
   FORCE_COLOR: 1
 
 jobs:
