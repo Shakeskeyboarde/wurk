@@ -124,23 +124,33 @@ export default createCommand('version', {
       ]);
     });
 
-    // Writing does not use `forEachIndependent` because if a workspace write
-    // fails (eg. dirty Git working tree), dependent workspace writes should
-    // be skipped so that they don't end up referencing non-existent versions.
+    // Update workspace selection to reflect the workspaces which should be
+    // published.
     await workspaces.forEach(async (workspace) => {
-      if (!workspace.config.isModified) {
-        workspace.log.debug`skipping workspace update (no modifications)`;
-        workspace.status.set('skipped', 'no modifications');
-        return;
-      }
-
-      workspace.status.set('pending');
-
       const git = await workspace.getGit().catch(() => null);
 
       if (await git?.getIsDirty()) {
         throw new Error('versioning requires a clean git repository');
       }
+
+      if (workspace.config.isModified) {
+        workspace.isSelected = true;
+      } else {
+        workspace.log.debug`skipping workspace update (no modifications)`;
+        workspace.status.set('skipped', 'no modifications');
+        workspace.isSelected = false;
+      }
+    });
+
+    // Disable iteration over non-selected workspaces.
+    workspaces.includeDependencies(false);
+    workspaces.includeDependents(false);
+
+    // Writing does not use `forEachIndependent` because if a workspace write
+    // fails (eg. dirty Git working tree), dependent workspace writes should
+    // be skipped so that they don't end up referencing non-existent versions.
+    await workspaces.forEach(async (workspace) => {
+      workspace.status.set('pending');
 
       const newVersion = workspace.config.at('version').as('string');
 
