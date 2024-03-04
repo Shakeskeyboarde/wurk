@@ -71,20 +71,21 @@ export const getAnsiColorIterator = function* <TLoop extends boolean = false>(
 ): Iterator<string, TLoop extends true ? never : undefined, undefined> {
   const { is256Enabled = IS_256_COLOR, loop = false as TLoop, count } = options;
 
-  const colors = is256Enabled
-    ? [
-        196, 202, 208, 214, 220, 226, 154, 46, 49, 51, 45, 39, 33, 21, 57, 129,
-        165, 201, 207, 171, 135, 99, 63, 69, 75, 81, 123, 86, 84, 119, 191, 228,
-        221, 215, 209, 203,
+  const colors =
+    is256Enabled && (count == null || count > 6)
+      ? [
+          196, 202, 208, 214, 220, 226, 154, 46, 49, 51, 45, 39, 33, 21, 57,
+          129, 165, 201, 207, 171, 135, 99, 63, 69, 75, 81, 123, 86, 84, 119,
+          191, 228, 221, 215, 209, 203,
 
-        /*203, 209, 215, 221, 228, 191, 119, 84, 86, 123, 81, 75, 69,
+          /*203, 209, 215, 221, 228, 191, 119, 84, 86, 123, 81, 75, 69,
         63, 99, 135, 171, 207, 199, 197,*/
-      ].map((index) => Ansi.getColor(index))
-    : (['red', 'yellow', 'green', 'cyan', 'blue', 'magenta'] as const).map(
-        (name) => {
-          return Ansi.getColor(name);
-        },
-      );
+        ].map((index) => Ansi.getColor(index))
+      : (['red', 'yellow', 'green', 'cyan', 'blue', 'magenta'] as const).map(
+          (name) => {
+            return Ansi.getColor(name);
+          },
+        );
 
   for (
     let i = 0;
