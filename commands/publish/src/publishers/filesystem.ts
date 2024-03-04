@@ -110,6 +110,7 @@ const validate = async (
     isPrivate,
     fs,
     spawn,
+    getNpm,
     getGit,
     getEntrypoints,
     getDependencyLinks,
@@ -124,6 +125,23 @@ const validate = async (
   if (!version) {
     log.debug`workspace is unversioned`;
     status.set('skipped', 'unversioned');
+    return false;
+  }
+
+  const npm = await getNpm();
+  const meta = await npm.getMetadata();
+
+  if (version === meta?.version) {
+    log.debug`workspace is already published`;
+    status.set('skipped', 'already published');
+    return false;
+  }
+
+  const git = await getGit().catch(() => null);
+
+  if (git && (await git.getIsDirty())) {
+    log.warn`workspace has uncommitted changes`;
+    status.set('warning', 'uncommitted changes');
     return false;
   }
 
@@ -160,14 +178,6 @@ const validate = async (
       log.error`- ${fs.relative(filename)} (${type})`;
     });
     status.set('failure', 'entry points');
-    return false;
-  }
-
-  const git = await getGit().catch(() => null);
-
-  if (git && (await git.getIsDirty())) {
-    log.warn`workspace has uncommitted changes`;
-    status.set('warning', 'uncommitted changes');
     return false;
   }
 
