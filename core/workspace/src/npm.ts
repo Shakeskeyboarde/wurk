@@ -51,9 +51,10 @@ export class Npm {
 
       if (!ok) return null;
 
-      const metaArray = stdoutJson
-        .as('array')
-        ?.filter((entry): entry is { version: string; gitHead?: unknown } => {
+      const metaArray = (
+        Array.isArray(stdoutJson.value) ? stdoutJson.value : [stdoutJson.value]
+      )
+        .filter((entry): entry is { version: string; gitHead?: unknown } => {
           return (
             entry != null &&
             typeof entry === 'object' &&
