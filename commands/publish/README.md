@@ -2,17 +2,23 @@
 
 Publish workspaces.
 
-**Note:** Only unpublished versions of public workspaces are published!
+## Getting Started
 
-## Install
+Install the command in your root workspace.
 
 ```sh
-npm i -D @wurk/command-publish
+npm install --save-dev @wurk/command-publish
 ```
 
-## Archives
+Run the command.
 
-To pack packages instead of publishing them immediately, set the `--to-archive` option.
+```sh
+wurk publish
+```
+
+## Publish to Archive
+
+To create package archives instead of publishing them to an NPM registry, set the `--to-archive` option.
 
 ```sh
 wurk publish --to-archive
@@ -66,15 +72,15 @@ wurk publish --dry-run
 
 Validation is always performed before publishing. This provides reasonable certainty that published packages will have resolvable dependencies based on the expected source code.
 
-1. **Ensure the Git working tree is clean.**
+1. Ensure the Git working tree is clean.
 
    - If the working tree is dirty, then there may not be any permanent record of the published code. Publishing also makes temporary changes to `package.json` files, which need to be removed be resetting the working tree.
 
-2. **Ensure local dependencies are either successfully published, or were already published from up-to-date code.**
+2. Ensure local dependencies are either successfully published, or were already published from up-to-date code.
 
    - If there are local modifications that are not already published or going to be published (no version change or filtered out), then local building and testing may not reflect the published behavior of a package.
 
-3. **Ensure package.json entry points exist and will be included in the published package.**
+3. Ensure package.json entry points exist and will be included in the published package.
 
    - If the entry points do not exist or are not included in the published package, then the package may not be usable.
 
@@ -85,5 +91,5 @@ The following changes are made before publishing, and will be rolled back after 
 - Record the current commit hash under the `gitHead` key.
   - NPM should already do this for publishing. However, it is not done when packing. The field is also poorly documented even though it was added in v7, so it's possible that it might not be added in the future.
 - Update all local workspace dependency versions.
-  - Replace any `file:` or `*` "versions" with real versions.
-  - Update any version ranges so that the minimum version is the current version.
+  - Replace any wildcard (`*`) version ranges with caret version ranges.
+  - Update any non-wildcard version ranges so that the minimum version is the current version.
