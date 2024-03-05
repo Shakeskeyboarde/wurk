@@ -56,6 +56,16 @@ The previous commit ID used to select Git log messages is retrieved from the NPM
 
 > **Note:** The `auto` bump type requires a Git repository with a clean working tree that is not shallow cloned.
 
+## Sync Versions
+
+Only synchronize local dependency versions.
+
+```sh
+wurk version sync
+```
+
 ## Local Dependents
+
+All commands synchronize local dependency versions.
 
 If a valid semver range is used for a local dependency version spec (eg. `^1.2.3` or `npm:some-package@^1.2.3`) and it is not a wildcard range (`*`), it will be updated to so that the minimum version of the version range is the new version of the dependency workspace.

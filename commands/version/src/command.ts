@@ -4,7 +4,6 @@ import { createCommand, type Workspace } from 'wurk';
 import { type Change } from './change.js';
 import { auto } from './strategies/auto.js';
 import { bump } from './strategies/bump.js';
-import { increment } from './strategies/increment.js';
 import { literal } from './strategies/literal.js';
 import { promote } from './strategies/promote.js';
 import { sync } from './sync.js';
@@ -122,8 +121,6 @@ export default createCommand('version', {
       } else {
         changes.set(workspace, sync(workspace));
       }
-
-      await increment(workspace);
     });
 
     // When a selected workspace version is updated, dependents may need a
