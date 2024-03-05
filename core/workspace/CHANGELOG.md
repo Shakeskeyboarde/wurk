@@ -1,3 +1,9 @@
+### 0.1.3 (2024-03-04)
+
+#### Notes
+
+- local dependencies updated (@wurk/log, @wurk/spawn)
+
 ### 0.1.2 (2024-03-04)
 
 #### Bug Fixes
