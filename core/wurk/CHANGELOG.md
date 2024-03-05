@@ -1,3 +1,9 @@
+### 0.1.5 (2024-03-05)
+
+#### Documentation
+
+- update version command terminology (9dc0a82)
+
 ### 0.1.4 (2024-03-05)
 
 #### Notes
