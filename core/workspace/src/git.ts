@@ -87,7 +87,14 @@ export class Git {
       assert(!(await this.getIsShallow()), `non-shallow git clone required`);
     }
 
-    return (await this._exec(['rev-parse', 'HEAD']).stdoutText()) || null;
+    return (
+      (await this._exec([
+        'log',
+        ['-n', '1'],
+        '--pretty=format:%H',
+        ['--', this.#dir],
+      ]).stdoutText()) || null
+    );
   };
 
   /**
