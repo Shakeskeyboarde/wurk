@@ -1,7 +1,7 @@
 {
   "name": "@wurk/workspace",
   "description": "Wurk workspace management.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/core/workspace/README.md",
