@@ -1,3 +1,9 @@
+### 0.1.6 (2024-03-05)
+
+#### Improvements
+
+- add --start-delay option (385816c)
+
 ### 0.1.5 (2024-03-05)
 
 #### Notes
