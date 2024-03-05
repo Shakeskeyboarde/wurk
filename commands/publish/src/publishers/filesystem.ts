@@ -146,7 +146,11 @@ const validate = async (
 
   const changelog = await fs.readText('CHANGELOG.md');
 
-  if (changelog && !changelog.includes(`# ${version}\n`)) {
+  if (
+    changelog &&
+    !changelog.includes(`# ${version} `) &&
+    !changelog.includes(`# ${version}\n`)
+  ) {
     log.warn`changelog may be outdated`;
   }
 
