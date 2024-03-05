@@ -3,11 +3,12 @@ import { createCommand, type Workspace } from 'wurk';
 
 import { type Change } from './change.js';
 import { auto } from './strategies/auto.js';
-import { bump } from './strategies/bump.js';
+import { increment } from './strategies/increment.js';
 import { literal } from './strategies/literal.js';
 import { promote } from './strategies/promote.js';
-import { sync } from './sync.js';
 import { writeChangelog, writeConfig } from './write.js';
+
+type Each = (workspace: Workspace) => Promise<readonly Change[] | void>;
 
 const STRATEGIES = {
   major: true,
@@ -19,11 +20,7 @@ const STRATEGIES = {
   prerelease: true,
   auto: true,
   promote: true,
-  sync: true,
-} as const satisfies Record<
-  semver.ReleaseType | 'auto' | 'promote' | 'sync',
-  true
->;
+} as const satisfies Record<semver.ReleaseType | 'auto' | 'promote', true>;
 
 export default createCommand('version', {
   config: (cli) => {
@@ -41,9 +38,7 @@ export default createCommand('version', {
       .option('<strategy>', {
         description:
           'major, minor, patch, premajor, preminor, prepatch, prerelease, auto, promote, or a version number',
-        parse: (
-          value,
-        ): semver.ReleaseType | 'auto' | 'promote' | 'sync' | SemVer => {
+        parse: (value): semver.ReleaseType | 'auto' | 'promote' | SemVer => {
           if (value in STRATEGIES) {
             return value as keyof typeof STRATEGIES;
           }
@@ -72,10 +67,6 @@ export default createCommand('version', {
 
     autoPrintStatus();
 
-    // When a selected workspace version is updated, dependents may need a
-    // their version and local dependency version ranges updated.
-    workspaces.includeDependents();
-
     const { strategy, preid, changelog = strategy === 'auto' } = options;
     const isPreStrategy =
       typeof strategy === 'string' && strategy.startsWith('pre');
@@ -86,45 +77,24 @@ export default createCommand('version', {
 
     const changes = new Map<Workspace, readonly Change[]>();
 
-    let each:
-      | ((
-          workspace: Workspace,
-        ) => Promise<readonly Change[] | undefined | null | void>)
-      | undefined;
+    let each: Each;
 
-    if (strategy !== 'sync') {
-      if (typeof strategy === 'string') {
-        switch (strategy) {
-          case 'auto':
-            each = auto;
-            break;
-          case 'promote':
-            each = promote;
-            break;
-          default:
-            each = (workspace) => {
-              return bump(workspace, { releaseType: strategy, preid });
-            };
-            break;
-        }
-      } else {
-        each = (workspace) => literal(workspace, { version: strategy });
+    if (typeof strategy === 'string') {
+      switch (strategy) {
+        case 'auto':
+          each = auto;
+          break;
+        case 'promote':
+          each = promote;
+          break;
+        default:
+          each = increment.bind(null, { releaseType: strategy, preid });
+          break;
       }
+    } else {
+      each = literal.bind(null, { version: strategy });
     }
 
-    await workspaces.forEach(async (workspace) => {
-      if (!workspace.isPrivate && workspace.isSelected) {
-        changes.set(workspace, [
-          ...((await each?.(workspace)) ?? []),
-          ...sync(workspace),
-        ]);
-      } else {
-        changes.set(workspace, sync(workspace));
-      }
-    });
-
-    // Update workspace selection to reflect the workspaces which should be
-    // published.
     await workspaces.forEach(async (workspace) => {
       const git = await workspace.getGit().catch(() => null);
 
@@ -132,18 +102,25 @@ export default createCommand('version', {
         throw new Error('versioning requires a clean git repository');
       }
 
-      if (workspace.config.isModified) {
-        workspace.isSelected = true;
-      } else {
-        workspace.log.debug`skipping workspace update (no modifications)`;
-        workspace.status.set('skipped', 'no modifications');
+      if (workspace.isPrivate && !workspace.version) {
+        // Unselect private workspaces if they are unversioned.
         workspace.isSelected = false;
+        return;
+      }
+
+      const workspaceChanges = await each?.(workspace);
+      const workspaceNewVersion = workspace.config.at('version').as('string');
+
+      if (!workspaceNewVersion || workspaceNewVersion === workspace.version) {
+        // Unselect workspaces where the version strategy is a no-op.
+        workspace.isSelected = false;
+        return;
+      }
+
+      if (workspaceChanges) {
+        changes.set(workspace, workspaceChanges);
       }
     });
-
-    // Disable iteration over non-selected workspaces.
-    workspaces.includeDependencies(false);
-    workspaces.includeDependents(false);
 
     // Writing does not use `forEachIndependent` because if a workspace write
     // fails (eg. dirty Git working tree), dependent workspace writes should
@@ -153,7 +130,7 @@ export default createCommand('version', {
 
       const newVersion = workspace.config.at('version').as('string');
 
-      if (workspace.version !== newVersion) {
+      if (newVersion !== workspace.version) {
         workspace.status.setDetail(`${workspace.version} -> ${newVersion}`);
       }
 
@@ -166,28 +143,25 @@ export default createCommand('version', {
       workspace.status.set('success');
     });
 
-    const updated = Array.from(workspaces).filter(({ config }) => {
-      return config.isModified;
-    });
+    if (!workspaces.iterableSize) return;
 
-    if (updated.length) {
-      await workspaces.root.spawn(
-        'npm',
-        ['update', ...updated.map(({ name }) => name)],
-        { output: 'ignore' },
-      );
-    }
+    await workspaces.root.spawn(
+      'npm',
+      ['update', ...Array.from(workspaces).map(({ name }) => name)],
+      { output: 'ignore' },
+    );
 
-    const versioned = updated.flatMap(({ name, version, config }) => {
-      const newVersion = config.at('version').as('string');
-      return newVersion && newVersion !== version
-        ? `${name}@${newVersion}`
-        : [];
-    });
+    const specs = Array.from(workspaces).flatMap(
+      ({ name, version, config }) => {
+        const newVersion = config.at('version').as('string');
 
-    if (versioned.length) {
-      log.notice`version commit message:`;
-      log.notice({ color: 'blue' })`  release: ${versioned.join(', ')}`;
-    }
+        return newVersion && newVersion !== version
+          ? `${name}@${newVersion}`
+          : [];
+      },
+    );
+
+    log.notice`version commit message:`;
+    log.notice({ color: 'blue' })`  release: ${specs.join(', ')}`;
   },
 });

@@ -7,9 +7,9 @@ interface Options {
   readonly preid: string | undefined;
 }
 
-export const bump = async (
-  workspace: Workspace,
+export const increment = async (
   options: Options,
+  workspace: Workspace,
 ): Promise<void> => {
   const { log, version, config } = workspace;
   const { releaseType, preid } = options;

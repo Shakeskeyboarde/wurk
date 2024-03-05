@@ -6,8 +6,8 @@ interface Options {
 }
 
 export const literal = async (
-  workspace: Workspace,
   options: Options,
+  workspace: Workspace,
 ): Promise<void> => {
   const { log, config } = workspace;
   const { version } = options;
