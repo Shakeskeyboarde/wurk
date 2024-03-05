@@ -226,15 +226,27 @@ const validateDependency = async (
     return false;
   }
 
+  if (isPrivate) {
+    log.error`dependency "${name}" is private`;
+    status.set('failure', `dependency private`);
+    return false;
+  }
+
   if (!semver.satisfies(version, spec.range)) {
     // The dependency version range is not satisfied by the local workspace,
     // so this is not a local dependency.
     return true;
   }
 
-  if (isPrivate) {
-    log.error`dependency "${name}" is private`;
-    status.set('failure', `dependency private`);
+  // If a non-wildcard dependency version range is used, then the min-version
+  // of the range should match the local workspace version.
+  if (
+    spec.range !== '*' &&
+    spec.range !== 'x' &&
+    semver.minVersion(spec.range)?.format() !== version
+  ) {
+    log.error`dependency "${name}" min-version does not match workspace version`;
+    status.set('failure', `dependency min-version`);
     return false;
   }
 
