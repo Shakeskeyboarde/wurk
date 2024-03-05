@@ -5,7 +5,7 @@ import { type Change, ChangeType } from './change.js';
 
 export const sync = (workspace: Workspace): Change[] => {
   const { log, config, version, isPrivate, getDependencyLinks } = workspace;
-  const pending: (() => void)[] = [];
+  const updatedNames: string[] = [];
 
   getDependencyLinks().forEach(({ type, id, spec, dependency }) => {
     // The range is not updatable.
@@ -16,6 +16,12 @@ export const sync = (workspace: Workspace): Change[] => {
     // Somehow, the version is not set. This shouldn't happen, but if it does
     // we can't update the local dependency version.
     if (!newDependencyVersion) return;
+
+    if (newDependencyVersion !== dependency.version) {
+      // Save the updated dependency name for the changelog, even if the
+      // change is not applied to the dependent workspace config.
+      updatedNames.push(dependency.name);
+    }
 
     // The range is a wildcard, which is never updated by the version command.
     if (spec.range === '*' || spec.range === 'x') return;
@@ -29,55 +35,30 @@ export const sync = (workspace: Workspace): Change[] => {
     const newSpec =
       spec.name === id ? newRange : `npm:${dependency.name}@${newRange}`;
 
-    // Add the update to the pending list. It will only be applied if the
-    // workspace is private, selected, or if some updates are required.
-    pending.push(() => {
-      log.debug`updating ${type} "${id}" to "${newSpec}"`;
-      config.at(type).at(id).set(newSpec);
-    });
+    log.debug`updating ${type} "${id}" to "${newSpec}"`;
+    config.at(type).at(id).set(newSpec);
   });
 
-  if (!pending.length) {
-    log.debug`no local dependency updates required`;
-  } else {
-    pending.forEach((update) => update());
-  }
+  if (!isPrivate && updatedNames.length && version) {
+    const newVersion = config.at('version').as('string');
+    const isVersionUpdated = Boolean(newVersion) && newVersion !== version;
 
-  const newVersion = config.at('version').as('string');
-  const isVersionUpdated = Boolean(newVersion) && newVersion !== version;
-
-  if (!isVersionUpdated && version && !isPrivate) {
-    const versionedDependencies = getDependencyLinks()
-      .filter(({ dependency }) => {
-        const newDependencyVersion = dependency.config
-          .at('version')
-          .as('string');
-
-        return (
-          newDependencyVersion && newDependencyVersion !== dependency.version
-        );
-      })
-      .map(({ dependency }) => dependency.name);
-
-    // If dependency versions are updated, then bump the workspace version
-    // so that bug fixes in dependencies are picked up by consumers of
-    // dependents.
-    if (versionedDependencies.length) {
+    if (!isVersionUpdated) {
       const newIncrementedVersion = new semver.SemVer(version)
         .inc(semver.prerelease(version)?.length ? 'prerelease' : 'patch')
         .format();
 
       config.at('version').set(newIncrementedVersion);
       log.info`increment version for dependency updates (${version} -> ${newIncrementedVersion})`;
-
-      return [
-        {
-          type: ChangeType.note,
-          message: `local dependencies updated (${versionedDependencies.join(', ')})`,
-        },
-      ];
     }
   }
 
-  return [];
+  if (!updatedNames.length) return [];
+
+  return [
+    {
+      type: ChangeType.note,
+      message: `local dependencies updated (${updatedNames.join(', ')})`,
+    },
+  ];
 };

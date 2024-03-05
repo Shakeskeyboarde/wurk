@@ -123,55 +123,6 @@ export default createCommand('version', {
       }
     });
 
-    // When a selected workspace version is updated, dependents may need a
-    // their version and local dependency version ranges updated.
-    workspaces.includeDependents();
-    workspaces.forEachSync((workspace) => {
-      const {
-        log: workspaceLog,
-        config,
-        version,
-        isPrivate,
-        getDependencyLinks,
-      } = workspace;
-
-      // Update local dependency version ranges.
-      changes.set(workspace, [
-        ...(changes.get(workspace) ?? []),
-        ...sync(workspace),
-      ]);
-
-      const newVersion = config.at('version').as('string');
-      const isVersionUpdated = newVersion && newVersion !== version;
-
-      if (!isVersionUpdated && version && !isPrivate) {
-        const isIncrementRequired = getDependencyLinks().some(
-          ({ dependency }) => {
-            const newDependencyVersion = dependency.config
-              .at('version')
-              .as('string');
-
-            return (
-              newDependencyVersion &&
-              newDependencyVersion !== dependency.version
-            );
-          },
-        );
-
-        // If dependency versions are updated, then bump the workspace version
-        // so that bug fixes in dependencies are picked up by consumers of
-        // dependents.
-        if (isIncrementRequired) {
-          const newIncrementedVersion = new semver.SemVer(version)
-            .inc(semver.prerelease(version)?.length ? 'prerelease' : 'patch')
-            .format();
-
-          config.at('version').set(newIncrementedVersion);
-          workspaceLog.info`increment version for dependency updates (${version} -> ${newIncrementedVersion})`;
-        }
-      }
-    });
-
     // Update workspace selection to reflect the workspaces which should be
     // published.
     await workspaces.forEach(async (workspace) => {
