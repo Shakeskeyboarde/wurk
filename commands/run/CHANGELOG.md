@@ -1,3 +1,9 @@
+### 0.1.4 (2024-03-05)
+
+#### Notes
+
+- local dependencies updated (wurk)
+
 ### 0.1.3 (2024-03-04)
 
 #### Notes
