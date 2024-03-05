@@ -47,18 +47,22 @@ export const sync = (workspace: Workspace): Change[] => {
   const isVersionUpdated = Boolean(newVersion) && newVersion !== version;
 
   if (!isVersionUpdated && version && !isPrivate) {
-    const isIncrementRequired = getDependencyLinks().some(({ dependency }) => {
-      const newDependencyVersion = dependency.config.at('version').as('string');
+    const versionedDependencies = getDependencyLinks()
+      .filter(({ dependency }) => {
+        const newDependencyVersion = dependency.config
+          .at('version')
+          .as('string');
 
-      return (
-        newDependencyVersion && newDependencyVersion !== dependency.version
-      );
-    });
+        return (
+          newDependencyVersion && newDependencyVersion !== dependency.version
+        );
+      })
+      .map(({ dependency }) => dependency.name);
 
     // If dependency versions are updated, then bump the workspace version
     // so that bug fixes in dependencies are picked up by consumers of
     // dependents.
-    if (isIncrementRequired) {
+    if (versionedDependencies.length) {
       const newIncrementedVersion = new semver.SemVer(version)
         .inc(semver.prerelease(version)?.length ? 'prerelease' : 'patch')
         .format();
@@ -66,7 +70,12 @@ export const sync = (workspace: Workspace): Change[] => {
       config.at('version').set(newIncrementedVersion);
       log.info`increment version for dependency updates (${version} -> ${newIncrementedVersion})`;
 
-      return [{ type: ChangeType.note, message: 'local dependencies updated' }];
+      return [
+        {
+          type: ChangeType.note,
+          message: `local dependencies updated (${versionedDependencies.join(', ')})`,
+        },
+      ];
     }
   }
 
