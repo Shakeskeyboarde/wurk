@@ -28,7 +28,7 @@ export interface SpawnOptions {
   /**
    * Current working directory of the child process.
    */
-  readonly cwd?: string | URL;
+  readonly cwd?: string;
   /**
    * Child process environment.
    */
