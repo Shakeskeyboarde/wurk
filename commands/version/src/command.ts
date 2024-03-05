@@ -178,21 +178,16 @@ export default createCommand('version', {
       );
     }
 
-    const versioned = updated.filter(({ version, config }) => {
-      return version !== config.at('version').as('string');
+    const versioned = updated.flatMap(({ name, version, config }) => {
+      const newVersion = config.at('version').as('string');
+      return newVersion && newVersion !== version
+        ? `${name}@${newVersion}`
+        : [];
     });
 
-    if (versioned) {
-      const releaseMessage = versioned
-        .map(({ name, version }) => {
-          return `${name}@${version}`;
-        })
-        .join(', ');
-
-      if (releaseMessage) {
-        log.notice`version commit message:`;
-        log.notice({ color: 'blue' })`  release: ${releaseMessage}`;
-      }
+    if (versioned.length) {
+      log.notice`version commit message:`;
+      log.notice({ color: 'blue' })`  release: ${versioned.join(', ')}`;
     }
   },
 });
