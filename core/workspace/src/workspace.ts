@@ -279,7 +279,11 @@ export class Workspace {
    * Spawn a child process.
    */
   readonly spawn: Spawn = (command, args, options) => {
-    return spawn(command, args, { log: this.log, cwd: this.dir, ...options });
+    return spawn(command, args, {
+      log: this.log,
+      ...options,
+      cwd: this.fs.resolve(options?.cwd ?? '.'),
+    });
   };
 
   /**
