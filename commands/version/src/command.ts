@@ -115,13 +115,45 @@ export default createCommand('version', {
     }
 
     // When a selected workspace version is updated, dependents may need a
-    // their local dependency version ranges updates to match the new version.
+    // their version and local dependency version ranges updated.
     workspaces.includeDependents();
     workspaces.forEachSync((workspace) => {
+      const { config, version, isPrivate, getDependencyLinks } = workspace;
+
+      // Update local dependency version ranges.
       changes.set(workspace, [
         ...(changes.get(workspace) ?? []),
         ...sync(workspace),
       ]);
+
+      const newVersion = config.at('version').as('string');
+      const isVersionUpdated = newVersion && newVersion !== version;
+
+      if (!isVersionUpdated && version && !isPrivate) {
+        const isIncrementRequired = getDependencyLinks().some(
+          ({ dependency }) => {
+            const newDependencyVersion = dependency.config
+              .at('version')
+              .as('string');
+
+            return (
+              newDependencyVersion &&
+              newDependencyVersion !== dependency.version
+            );
+          },
+        );
+
+        // If dependency versions are updated, then bump the workspace version
+        // so that bug fixes in dependencies are picked up by consumers of
+        // dependents.
+        if (isIncrementRequired) {
+          const newIncrementedVersion = new semver.SemVer(version)
+            .inc(semver.prerelease(version)?.length ? 'prerelease' : 'patch')
+            .format();
+
+          config.at('version').set(newIncrementedVersion);
+        }
+      }
     });
 
     // Update workspace selection to reflect the workspaces which should be
@@ -154,9 +186,7 @@ export default createCommand('version', {
 
       const newVersion = workspace.config.at('version').as('string');
 
-      if (workspace.version === newVersion) {
-        workspace.status.setDetail('dependency updates');
-      } else {
+      if (workspace.version !== newVersion) {
         workspace.status.setDetail(`${workspace.version} -> ${newVersion}`);
       }
 

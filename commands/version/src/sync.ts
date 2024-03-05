@@ -4,9 +4,8 @@ import { type Workspace } from 'wurk';
 import { type Change, ChangeType } from './change.js';
 
 export const sync = (workspace: Workspace): Change[] => {
-  const { log, config, version, isPrivate, getDependencyLinks } = workspace;
+  const { log, config, getDependencyLinks } = workspace;
   const pending: (() => void)[] = [];
-  const isOriginalVersion = version === config.at('version').as('string');
 
   getDependencyLinks().forEach(({ type, id, spec, dependency }) => {
     // The range is not updatable.
@@ -43,19 +42,6 @@ export const sync = (workspace: Workspace): Change[] => {
   }
 
   pending.forEach((update) => update());
-
-  // Increment the workspace version if workspace dependencies are being
-  // updated, the workspace version has not already been updated by a
-  // versioning strategy, and the workspace is not private.
-  if (version && isOriginalVersion && !isPrivate) {
-    config
-      .at('version')
-      .set(
-        new semver.SemVer(version)
-          .inc(semver.prerelease(version)?.length ? 'prerelease' : 'patch')
-          .format(),
-      );
-  }
 
   return [
     { type: ChangeType.note, message: 'update local dependency versions' },
