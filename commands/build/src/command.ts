@@ -1,3 +1,4 @@
+import assert from 'node:assert';
 import nodeFs from 'node:fs';
 
 import { createCommand, type Workspace } from 'wurk';
@@ -27,6 +28,19 @@ export default createCommand('build', {
         '--start',
         'continuously build on source code changes and start development servers',
       )
+      .option('--start-delay <seconds>', {
+        description: 'delay starting each workspace (implies --start)',
+        parse: (value) => {
+          const seconds = Number.parseInt(value, 10);
+
+          assert(
+            !Number.isNaN(seconds) && seconds > 0,
+            'start delay must be a positive number',
+          );
+
+          return seconds;
+        },
+      })
       .option('--clean', { hidden: true })
       .option('--no-clean', 'do not clean the build directory before building')
       .optionNegation('clean', 'noClean')
@@ -39,6 +53,10 @@ export default createCommand('build', {
       .optionNegation('includeDependencies', 'noIncludeDependencies')
       .action(async ({ name, options }) => {
         if (name === 'start') {
+          options.start = true;
+        }
+
+        if (options.startDelay != null) {
           options.start = true;
         }
       });
@@ -154,6 +172,8 @@ export default createCommand('build', {
 
       log.info`starting...`;
 
+      let delayPromise = Promise.resolve();
+
       await Promise.all(
         Array.from(workspaces).map(async (workspace) => {
           const tasks = workspaceStartTasks.get(workspace);
@@ -162,6 +182,14 @@ export default createCommand('build', {
 
           await Promise.all(
             tasks.map(async (task) => {
+              if (options.startDelay != null) {
+                await (delayPromise = delayPromise.then(() => {
+                  return new Promise<void>((resolve) => {
+                    setTimeout(() => resolve(), options.startDelay! * 1000);
+                  });
+                }));
+              }
+
               await task();
             }),
           );
