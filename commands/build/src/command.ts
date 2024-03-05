@@ -2,7 +2,7 @@ import nodeFs from 'node:fs';
 
 import { createCommand, type Workspace } from 'wurk';
 
-import { type Builder, type BuilderFactory } from './builder.js';
+import { type BuilderFactory } from './builder.js';
 import { getRollupBuilder } from './builders/rollup.js';
 import { getScriptBuilder } from './builders/script.js';
 import { getTscBuilder } from './builders/tsc.js';
@@ -57,31 +57,34 @@ export default createCommand('build', {
     }
 
     await workspaces.forEach(async (workspace) => {
-      const builders: (Builder | null)[] = [];
       const scriptBuilder = await getScriptBuilder(workspace);
+      const buildTasks: (() => Promise<void>)[] = [];
+      const startTasks: (() => Promise<void>)[] = [];
 
-      if (scriptBuilder) {
-        // If the scripts builder is enabled, then it overrides all other
-        // builders. Script building is intended as a way to bypass the
-        // auto detection logic of this command.
-        builders.push(scriptBuilder);
+      if (scriptBuilder?.build && scriptBuilder?.start) {
+        buildTasks.push(scriptBuilder.build);
+        startTasks.push(scriptBuilder.start);
       } else {
+        if (scriptBuilder?.build) {
+          buildTasks.push(scriptBuilder.build);
+        }
+
+        if (scriptBuilder?.start) {
+          startTasks.push(scriptBuilder.start);
+        }
+
         for (const factory of BUILDER_FACTORIES) {
-          builders.push(await factory(workspace));
+          const builder = await factory(workspace);
+
+          if (!scriptBuilder?.build && builder?.build) {
+            buildTasks.push(builder.build);
+          }
+
+          if (!scriptBuilder?.start && builder?.start) {
+            startTasks.push(builder.start);
+          }
         }
       }
-
-      const buildTasks = builders
-        .map((builder) => builder?.build)
-        .filter((build): build is Exclude<typeof build, null | undefined> => {
-          return Boolean(build);
-        });
-
-      const startTasks = builders
-        .map((builder) => builder?.start)
-        .filter((start): start is Exclude<typeof start, null | undefined> => {
-          return Boolean(start);
-        });
 
       if (!buildTasks.length) {
         workspace.status.set('skipped', 'no build tasks');

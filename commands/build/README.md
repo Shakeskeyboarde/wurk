@@ -43,7 +43,7 @@ wurk build --start
 
 ## Package Scripts
 
-The `wurk:build` and `wurk:start` package scripts are special. If _either_ script is present, it disables automatic tool detection and running, for both building and starting. These scripts serve as an escape hatch for workspaces where auto detection won't work.
+The `wurk:build` and `wurk:start` package scripts are special. If `wurk:build` is present, it disables all other tools that might be used to build the workspace. Likewise, if `work:start` is present, it is the only thing that will be run to start a workspace. These scripts serve as an escape hatch for workspaces where tool/configuration auto detection won't work.
 
 File: `package.json`
 
