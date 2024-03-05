@@ -7,13 +7,11 @@ import { Builder, type BuilderFactory } from '../builder.js';
 export const getViteBuilder: BuilderFactory = async (workspace) => {
   const { fs, spawn } = workspace;
 
-  const filenames = await fs
-    .find(['vite.config*.*', 'src/vite.config*.*'])
-    .then((entries) => {
-      return entries.map((entry) => {
-        return fs.relative(entry.fullpath());
-      });
+  const filenames = await fs.find(['vite.config*.*']).then((entries) => {
+    return entries.map((entry) => {
+      return fs.relative(entry.fullpath());
     });
+  });
 
   if (!filenames.length) return null;
 

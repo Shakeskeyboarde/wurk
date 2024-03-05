@@ -7,13 +7,11 @@ import { Builder, type BuilderFactory } from '../builder.js';
 export const getRollupBuilder: BuilderFactory = async (workspace) => {
   const { fs, spawn } = workspace;
 
-  const filenames = await fs
-    .find(['rollup.config*.*', 'src/rollup.config*.*'])
-    .then((entries) => {
-      return entries.map((entry) => {
-        return fs.relative(entry.fullpath());
-      });
+  const filenames = await fs.find(['rollup.config*.*']).then((entries) => {
+    return entries.map((entry) => {
+      return fs.relative(entry.fullpath());
     });
+  });
 
   if (!filenames.length) return null;
 
