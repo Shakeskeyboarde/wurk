@@ -24,7 +24,7 @@ export default createCommand('test', {
         '--depcheck-missing',
         'show depcheck missing dependencies (all types)',
       )
-      .optionDefault('build', () => true)
+      .optionDefault('build', true)
       .optionNegation('build', 'noBuild');
   },
 

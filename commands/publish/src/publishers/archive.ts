@@ -1,5 +1,4 @@
 import assert from 'node:assert';
-import crypto from 'node:crypto';
 import path from 'node:path';
 import zlib from 'node:zlib';
 
@@ -19,7 +18,7 @@ export const publishFromArchive = async (
   context: PublishFromArchiveContext,
 ): Promise<void> => {
   const { options, workspace } = context;
-  const { log, name, version, status, fs, spawn } = workspace;
+  const { log, dir, name, version, status, fs, spawn } = workspace;
 
   status.set('pending');
 
@@ -45,26 +44,22 @@ export const publishFromArchive = async (
    * This is a subdirectory of the workspace directory so that .npmrc files
    * in parent directories are still in effect.
    */
-  const tmpDir = fs.resolve(`.${crypto.randomUUID()}.tmp`);
+  const tmpDir = await fs.temp(dir, 'publish-archive');
   const tmpFilename = fs.resolve(tmpDir, path.basename(filename));
 
-  try {
-    await fs.copyFile(filename, tmpFilename);
-    await extractPackageJson(fs, tmpFilename, tmpDir);
-    await spawn(
-      'npm',
-      [
-        'publish',
-        Boolean(options.tag) && `--tag=${options.tag}`,
-        Boolean(options.otp) && `--otp=${options.otp}`,
-        options.dryRun && '--dry-run',
-        tmpFilename,
-      ],
-      { cwd: tmpDir, output: 'echo' },
-    );
-  } finally {
-    await fs.delete(tmpDir, { recursive: true });
-  }
+  await fs.copyFile(filename, tmpFilename);
+  await extractPackageJson(fs, tmpFilename, tmpDir);
+  await spawn(
+    'npm',
+    [
+      'publish',
+      Boolean(options.tag) && `--tag=${options.tag}`,
+      Boolean(options.otp) && `--otp=${options.otp}`,
+      options.dryRun && '--dry-run',
+      tmpFilename,
+    ],
+    { cwd: tmpDir, output: 'echo' },
+  );
 
   status.set('success', `publish archive ${version}`);
 };

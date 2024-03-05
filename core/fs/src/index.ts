@@ -321,9 +321,15 @@ export class Fs {
    * Create a temporary directory that is automatically cleaned up when the
    * process exists.
    */
-  async temp(prefix = 'wurk'): Promise<string> {
+  async temp(...prefix: string[]): Promise<string> {
+    const dirs = prefix.slice(0, -1);
+    const basename = prefix.at(-1) ?? '';
     const dir = await nodeFs.promises.mkdtemp(
-      path.join(os.tmpdir(), `${prefix}-`),
+      path.resolve(
+        os.tmpdir(),
+        ...dirs,
+        `.wurk${basename ? `-${basename}-` : '-'}`,
+      ),
       { encoding: 'utf8' },
     );
 

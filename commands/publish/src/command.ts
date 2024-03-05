@@ -47,7 +47,7 @@ export default createCommand('publish', {
       });
     } else {
       if (
-        options.build &&
+        options.build !== false &&
         workspaces.root.config.at('scripts').at('build').is('string')
       ) {
         await workspaces.root.spawn('npm', ['run', 'build'], {
