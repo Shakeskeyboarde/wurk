@@ -4,6 +4,7 @@ import { createCommand, type Workspace } from 'wurk';
 import { type Change } from './change.js';
 import { auto } from './strategies/auto.js';
 import { bump } from './strategies/bump.js';
+import { increment } from './strategies/increment.js';
 import { literal } from './strategies/literal.js';
 import { promote } from './strategies/promote.js';
 import { sync } from './sync.js';
@@ -72,6 +73,10 @@ export default createCommand('version', {
 
     autoPrintStatus();
 
+    // When a selected workspace version is updated, dependents may need a
+    // their version and local dependency version ranges updated.
+    workspaces.includeDependents();
+
     const { strategy, preid, changelog = strategy === 'auto' } = options;
     const isPreStrategy =
       typeof strategy === 'string' && strategy.startsWith('pre');
@@ -82,11 +87,13 @@ export default createCommand('version', {
 
     const changes = new Map<Workspace, readonly Change[]>();
 
-    if (strategy !== 'sync') {
-      let each: (
-        workspace: Workspace,
-      ) => Promise<readonly Change[] | undefined | null | void>;
+    let each:
+      | ((
+          workspace: Workspace,
+        ) => Promise<readonly Change[] | undefined | null | void>)
+      | undefined;
 
+    if (strategy !== 'sync') {
       if (typeof strategy === 'string') {
         switch (strategy) {
           case 'auto':
@@ -104,21 +111,32 @@ export default createCommand('version', {
       } else {
         each = (workspace) => literal(workspace, { version: strategy });
       }
-
-      await workspaces.forEach(async (workspace) => {
-        if (workspace.isPrivate) {
-          workspace.log.debug`skipping workspace (private)`;
-        }
-
-        changes.set(workspace, (await each(workspace)) ?? []);
-      });
     }
+
+    await workspaces.forEach(async (workspace) => {
+      if (!workspace.isPrivate && workspace.isSelected) {
+        changes.set(workspace, [
+          ...((await each?.(workspace)) ?? []),
+          ...sync(workspace),
+        ]);
+      } else {
+        changes.set(workspace, sync(workspace));
+      }
+
+      await increment(workspace);
+    });
 
     // When a selected workspace version is updated, dependents may need a
     // their version and local dependency version ranges updated.
     workspaces.includeDependents();
     workspaces.forEachSync((workspace) => {
-      const { config, version, isPrivate, getDependencyLinks } = workspace;
+      const {
+        log: workspaceLog,
+        config,
+        version,
+        isPrivate,
+        getDependencyLinks,
+      } = workspace;
 
       // Update local dependency version ranges.
       changes.set(workspace, [
@@ -152,6 +170,7 @@ export default createCommand('version', {
             .format();
 
           config.at('version').set(newIncrementedVersion);
+          workspaceLog.info`increment version for dependency updates (${version} -> ${newIncrementedVersion})`;
         }
       }
     });
