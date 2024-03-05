@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import { type Log } from 'wurk';
 
 import { Builder, type BuilderFactory } from '../builder.js';
@@ -25,10 +27,10 @@ export const getRollupBuilder: BuilderFactory = async (workspace) => {
       [
         watch && '--watch',
         '--config',
-        filename,
+        path.basename(filename),
         filename.endsWith('.ts') && ['--configPlugin', 'typescript'],
       ],
-      { log, output: 'echo' },
+      { log, output: 'echo', cwd: path.dirname(filename) },
     );
   };
 

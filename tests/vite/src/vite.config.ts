@@ -5,15 +5,10 @@ import refresh from 'vite-plugin-refresh';
 import svg from 'vite-plugin-svgr';
 
 export default defineConfig({
-  plugins: [
-    react(),
-    checker({ typescript: { tsconfigPath: 'src/tsconfig.json' } }),
-    refresh(),
-    svg(),
-  ],
+  plugins: [react(), checker({ typescript: true }), refresh(), svg()],
   build: {
     target: 'esnext',
-    outDir: 'dist/root',
+    outDir: '../dist/src',
     emptyOutDir: false,
   },
 });

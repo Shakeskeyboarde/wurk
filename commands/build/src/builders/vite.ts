@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import { type Log } from 'wurk';
 
 import { Builder, type BuilderFactory } from '../builder.js';
@@ -20,10 +22,11 @@ export const getViteBuilder: BuilderFactory = async (workspace) => {
     log: Log,
     filename: string,
   ): Promise<void> => {
-    await spawn('vite', [watch ? 'serve' : 'build', '--config', filename], {
-      log,
-      output: 'echo',
-    });
+    await spawn(
+      'vite',
+      [watch ? 'serve' : 'build', '--config', path.basename(filename)],
+      { log, output: 'echo', cwd: path.dirname(filename) },
+    );
   };
 
   return new Builder('vite', workspace, {

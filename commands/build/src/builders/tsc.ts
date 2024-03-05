@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import { JsonAccessor, type Log } from 'wurk';
 
 import { Builder, type BuilderFactory } from '../builder.js';
@@ -31,7 +33,7 @@ export const getTscBuilder: BuilderFactory = async (workspace) => {
         ? '-p'
         : null;
 
-    return flag ? [[flag, filename]] : [];
+    return flag ? [{ flag, filename }] : [];
   });
 
   if (!matrix.length) return null;
@@ -39,9 +41,13 @@ export const getTscBuilder: BuilderFactory = async (workspace) => {
   const tsc = async (
     watch: boolean,
     log: Log,
-    args: string[],
+    options: { readonly flag: string; readonly filename: string },
   ): Promise<void> => {
-    await spawn('tsc', [watch && '--watch', ...args], { log, output: 'echo' });
+    await spawn(
+      'tsc',
+      [watch && '--watch', options.flag, path.basename(options.filename)],
+      { log, output: 'echo', cwd: path.dirname(options.filename) },
+    );
   };
 
   return new Builder('tsc', workspace, {

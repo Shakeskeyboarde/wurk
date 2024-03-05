@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import { type Log } from 'wurk';
 
 import { Builder, type BuilderFactory } from '../builder.js';
@@ -22,8 +24,11 @@ export const getTypeDocBuilder: BuilderFactory = async (workspace) => {
   ): Promise<void> => {
     await spawn(
       'typedoc',
-      [['--options', filename], watch && ['--watch', '--preserveWatchOutput']],
-      { log, output: 'echo' },
+      [
+        ['--options', path.basename(filename)],
+        watch && ['--watch', '--preserveWatchOutput'],
+      ],
+      { log, output: 'echo', cwd: path.dirname(filename) },
     );
   };
 
