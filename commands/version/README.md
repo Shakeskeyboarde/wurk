@@ -58,7 +58,4 @@ The previous commit ID used to select Git log messages is retrieved from the NPM
 
 ## Local Dependents
 
-If a valid semver range is used for a local dependency version spec (eg. `^1.2.3` or `npm:some-package@^1.2.3`) and it is not a wildcard range (`*`), it will be updated as necessary during versioning. Updating dependency versions is deemed unnecessary if all of the following are true.
-
-- The dependent workspace version is not being updated (ie. released).
-- All local dependency version ranges are already satisfied by local workspace versions.
+If a valid semver range is used for a local dependency version spec (eg. `^1.2.3` or `npm:some-package@^1.2.3`) and it is not a wildcard range (`*`), it will be updated to so that the minimum version of the version range is the new version of the dependency workspace.

@@ -8,8 +8,6 @@ export const sync = (workspace: Workspace): Change[] => {
   const pending: (() => void)[] = [];
   const isOriginalVersion = version === config.at('version').as('string');
 
-  let isOptional = true;
-
   getDependencyLinks().forEach(({ type, id, spec, dependency }) => {
     // The range is not updatable.
     if (spec.type !== 'npm') return;
@@ -25,12 +23,6 @@ export const sync = (workspace: Workspace): Change[] => {
 
     // The version range minimum is already equal to the new version.
     if (semver.minVersion(spec.range)?.format() === newVersion) return;
-
-    if (!semver.satisfies(newVersion, spec.range)) {
-      // The new version is not compatible with the range, so the range must
-      // be updated.
-      isOptional = false;
-    }
 
     const prefix = spec.range.match(/^(>=|\^|~)\d\S*$/u)?.[1] ?? '^';
     const newRange = `${prefix}${newVersion}`;
@@ -48,18 +40,6 @@ export const sync = (workspace: Workspace): Change[] => {
   if (!pending.length) {
     log.debug`no local dependency updates required`;
     return [];
-  }
-
-  if (isOptional) {
-    log.debug`all local dependency version ranges are satisfied by current dependency versions`;
-
-    // Skip updates that aren't required in unselected public workspaces,
-    // because it more closely matches the intent behind selecting workspaces,
-    // and because it leads to less (unnecessary) publishing.
-    if (!isPrivate && isOriginalVersion) {
-      log.debug`skipping optional local dependency updates (public and no version update)`;
-      return [];
-    }
   }
 
   pending.forEach((update) => update());
