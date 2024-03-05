@@ -802,19 +802,6 @@ class Cli<
   }
 
   /**
-   * Set the parent command for help text generation.
-   *
-   * NOTE: The parent is set automatically when the `command()` method is
-   * used to add a command.
-   */
-  setParent(value: Cli | null): Cli<TResult, TName> {
-    return new Cli({
-      ...this.#internal,
-      parent: value ? value.#internal : null,
-    });
-  }
-
-  /**
    * Set a custom help text formatter.
    *
    * NOTE: Commands inherit the help text formatter of their parent unless a
@@ -858,9 +845,6 @@ class Cli<
    * Define a new command line interface.
    */
   static create<TName extends string>(
-    /**
-     * @type {string} The name of the command.
-     */
     name: CliName<TName>,
   ): Cli<Result<{}, {}>, TName> {
     assertValidName(name);
