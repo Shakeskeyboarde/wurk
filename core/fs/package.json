@@ -1,7 +1,7 @@
 {
   "name": "@wurk/fs",
   "description": "File system implementation used by Wurk.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/core/fs/README.md",
