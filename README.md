@@ -1,3 +1,3 @@
 # Wurk Monorepo
 
-Start by reading about [Wurk](core/wurk/README.md).
+Wurk is a lightweight, extensible build system for monorepos or single packages. Read more about it on [NPM](https://www.npmjs.com/package/wurk).
