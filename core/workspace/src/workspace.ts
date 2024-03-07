@@ -304,8 +304,8 @@ export class Workspace {
   >(
     name: string,
     versionRange?: string,
-  ): Promise<ImportResult<TExports>> => {
-    return await importRelative(name, { dir: this.dir, versionRange });
+  ): Promise<ImportResult<TExports> | null> => {
+    return await importRelative(name, { cwd: this.dir, versionRange });
   };
 
   /**
@@ -318,7 +318,7 @@ export class Workspace {
   readonly importRelativeResolve = async (
     name: string,
     versionRange?: string,
-  ): Promise<ImportResolved> => {
-    return await importRelativeResolve(name, { dir: this.dir, versionRange });
+  ): Promise<ImportResolved | null> => {
+    return await importRelativeResolve(name, { cwd: this.dir, versionRange });
   };
 }
