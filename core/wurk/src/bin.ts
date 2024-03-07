@@ -6,15 +6,15 @@ import { log } from '@wurk/log';
 
 import type * as MainExports from './main.js';
 
-const { main } = await importRelativeResolve('wurk')
-  .then((value) => {
-    return import(path.join(value.moduleDir, 'lib/main.js')) as Promise<
-      typeof MainExports
-    >;
-  })
-  .catch(() => {
+const { main } = await importRelativeResolve('wurk').then(
+  async (value): Promise<typeof MainExports> => {
+    if (value?.dir != null) {
+      return await import(path.join(value.dir, 'lib/main.js'));
+    }
+
     log.warn`using globally installed Wurk`;
-    return import('./main.js');
-  });
+    return await import('./main.js');
+  },
+);
 
 main();

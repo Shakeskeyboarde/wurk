@@ -1,5 +1,5 @@
 import { Cli, type CliName, type EmptyResult } from '@wurk/cli';
-import { type ImportResult } from '@wurk/import';
+import { type JsonAccessor } from '@wurk/json';
 import { isLogLevel, LogLevel } from '@wurk/log';
 import {
   AbortError,
@@ -15,10 +15,7 @@ import { CommandContext } from './context.js';
 export type CommandConfigCallback<
   TResult extends EmptyResult,
   TName extends string,
-> = (
-  cli: Cli<EmptyResult, TName>,
-  commandPackage: ImportResult['moduleConfig'],
-) => Cli<TResult, TName>;
+> = (cli: Cli<EmptyResult, TName>, config: JsonAccessor) => Cli<TResult, TName>;
 
 /**
  * Action callback for a Wurk command plugin.
@@ -53,11 +50,6 @@ export interface Command<
   readonly init: (workspaces: WorkspaceCollection) => void;
 }
 
-export type CommandFactory<
-  TResult extends EmptyResult = EmptyResult,
-  TName extends string = string,
-> = (commandPackage: ImportResult['moduleConfig']) => Command<TResult, TName>;
-
 /**
  * Create a Wurk command plugin.
  *
@@ -88,7 +80,7 @@ export const createCommand = <
   name: CliName<TName>,
   hooks: CommandHooks<TResult, TName> | CommandActionCallback,
 ): unknown => {
-  const factory: CommandFactory<TResult, TName> = (commandPackage) => {
+  return new CommandFactory((config) => {
     let workspaces: WorkspaceCollection | undefined;
 
     const {
@@ -101,11 +93,11 @@ export const createCommand = <
 
     const cli = configHook(
       Cli.create(name)
-        .description(commandPackage.at('description').as('string'))
-        .version(commandPackage.at('version').as('string'))
+        .description(config.at('description').as('string'))
+        .version(config.at('version').as('string'))
         .optionHelp()
         .optionVersion(),
-      commandPackage,
+      config,
     ).action(async (result) => {
       if (!workspaces) throw new Error('command not initialized');
 
@@ -160,18 +152,16 @@ export const createCommand = <
     };
 
     return { cli, init };
-  };
-
-  return factory;
+  });
 };
 
-export const isCommand = (value: unknown): value is Command => {
-  return (
-    value != null &&
-    typeof value === 'object' &&
-    'cli' in value &&
-    value.cli instanceof Cli &&
-    'init' in value &&
-    typeof value.init === 'function'
-  );
-};
+export class CommandFactory<
+  TResult extends EmptyResult = EmptyResult,
+  TName extends string = string,
+> {
+  readonly load: (config: JsonAccessor) => Command<TResult, TName>;
+
+  constructor(load: (config: JsonAccessor) => Command<TResult, TName>) {
+    this.load = load;
+  }
+}

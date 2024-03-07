@@ -1,33 +1,27 @@
-import { inspect } from 'node:util';
-
-import { importRelative, type ImportResult } from '@wurk/import';
+import { importRelative } from '@wurk/import';
+import { type JsonAccessor } from '@wurk/json';
 import { log } from '@wurk/log';
 
-import { type Command, isCommand } from './command.js';
+import { type Command, CommandFactory } from './command.js';
 
 const loadCommandPlugin = async (
   rootDir: string,
   packageId: string,
 ): Promise<Command | null> => {
   try {
-    const { moduleExports, moduleConfig } = await importRelative(packageId, {
-      dir: rootDir,
-    });
+    const result = await importRelative(packageId, { cwd: rootDir });
 
-    if (typeof moduleExports.default !== 'function') {
-      log.error`package "${packageId}" does not export a valid command factory`;
+    if (result == null) {
+      log.error`package "${packageId}" could not be imported`;
       return null;
     }
 
-    const command = moduleExports.default(moduleConfig) as unknown;
-
-    if (!isCommand(command)) {
-      log.debug(inspect(command));
+    if (!(result.exports.default instanceof CommandFactory)) {
       log.error`package "${packageId}" command factory returned an invalid command`;
       return null;
     }
 
-    return command;
+    return result.exports.default.load(result.config);
   } catch (error) {
     log.debug`loading command package "${packageId}" threw the following error:`;
     log.debug({ message: error });
@@ -37,15 +31,15 @@ const loadCommandPlugin = async (
 
 export const loadCommandPlugins = async (
   rootDir: string,
-  rootPackage: ImportResult['moduleConfig'],
+  rootConfig: JsonAccessor,
 ): Promise<Command[]> => {
   const packageIds = Array.from(
     new Set([
       ...[
-        ...rootPackage.at('dependencies').keys('object'),
-        ...rootPackage.at('devDependencies').keys('object'),
-        ...rootPackage.at('peerDependencies').keys('object'),
-        ...rootPackage.at('optionalDependencies').keys('object'),
+        ...rootConfig.at('dependencies').keys('object'),
+        ...rootConfig.at('devDependencies').keys('object'),
+        ...rootConfig.at('peerDependencies').keys('object'),
+        ...rootConfig.at('optionalDependencies').keys('object'),
       ].filter((packageId) =>
         /^(?:(?:.*\/)?w[eu]rk-command-|@(?:werk|wurk)\/command-).*$/u.test(
           packageId,
