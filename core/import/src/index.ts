@@ -27,7 +27,7 @@ export interface ImportResult<
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const EVAL_RESOLVE = await fs.readText(
-  path.resolve(__dirname, 'eval', 'resolve.js'),
+  path.resolve(__dirname, '..', 'eval', 'resolve.js'),
 );
 
 assert(EVAL_RESOLVE, 'failed to read "../eval/resolve.js"');
