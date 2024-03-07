@@ -159,7 +159,7 @@ export class Workspace {
   readonly isPrivate: boolean;
 
   /**
-   * True if this is the workspaces root package.
+   * True if this is the root workspace.
    */
   readonly isRoot: boolean = false;
 

@@ -347,7 +347,7 @@ ___
 
 • `Readonly` **isRoot**: `boolean`
 
-True if this is the workspaces root package.
+True if this is the workspaces root workspace.
 
 ___
 
