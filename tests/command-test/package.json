@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "test-test",
+  "name": "tests-command-test",
   "description": "Testing the test command",
   "version": "",
   "scripts": {},
