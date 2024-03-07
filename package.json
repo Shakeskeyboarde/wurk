@@ -12,9 +12,8 @@
   "scripts": {
     "lint": "eslint --max-warnings=0 .",
     "build-scripts": "npm -ws --if-present run build && npm update --silent --progress=false wurk",
-    "build": "npm run build-scripts && wurk --clear -p build",
-    "test": "npm run build && wurk test --no-build",
-    "start": "npm run build && wurk --clear",
+    "build": "npm run build-scripts && wurk --clear -p run build",
+    "test": "npm run build && wurk test --clear --no-build",
     "clean": "npm start -- clean",
     "modernize": "npx npm-check-updates@latest -i --workspaces --root --format group"
   },
@@ -42,7 +41,6 @@
     "@types/eslint": "^8.56.2",
     "@types/node": "^20.11.17",
     "@vitest/coverage-v8": "^1.2.2",
-    "@wurk/command-build": "*",
     "@wurk/command-clean": "*",
     "@wurk/command-exec": "*",
     "@wurk/command-list": "*",
