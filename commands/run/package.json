@@ -10,7 +10,9 @@
     "url": "git+https://github.com/Shakeskeyboarde/wurk.git",
     "directory": "commands/run"
   },
-  "scripts": {},
+  "scripts": {
+    "build": "tsc -p src/tsconfig.json"
+  },
   "type": "module",
   "types": "./lib/command.d.ts",
   "exports": {
