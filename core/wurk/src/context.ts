@@ -4,12 +4,15 @@ import {
   type Result,
   type UnknownResult,
 } from '@wurk/cli';
+import { Git } from '@wurk/git';
 import { Log } from '@wurk/log';
+import { type PackageManager } from '@wurk/pm';
 import { type WorkspaceCollection } from '@wurk/workspace';
 
 interface ContextOptions<TResult extends UnknownResult> {
   readonly result: TResult;
   readonly workspaces: WorkspaceCollection;
+  readonly pm: PackageManager;
   readonly autoPrintStatus: (enabled?: boolean) => void;
 }
 
@@ -31,6 +34,11 @@ export class CommandContext<TResult extends UnknownResult>
    * Collection of all workspaces in the project.
    */
   readonly workspaces: WorkspaceCollection;
+
+  /**
+   * Package manager utilities.
+   */
+  readonly pm: PackageManager;
 
   /**
    * When enabled, a status summary for all workspaces will be printed after
@@ -55,13 +63,25 @@ export class CommandContext<TResult extends UnknownResult>
   }
 
   constructor(options: ContextOptions<TResult>) {
-    const { result, workspaces, autoPrintStatus } = options;
+    const { result, workspaces, pm, autoPrintStatus } = options;
 
     this.#result = result;
     this.log = new Log();
     this.workspaces = workspaces;
+    this.pm = pm;
     this.autoPrintStatus = autoPrintStatus;
   }
+
+  /**
+   * Create a Git API instance for the workspace directory.
+   *
+   * Throws:
+   * - If Git is not installed (ENOENT)
+   * - If the directory is not a repo (ENOREPO)
+   */
+  readonly createGit = async (): Promise<Git> => {
+    return await Git.create({ dir: this.workspaces.root.dir, log: this.log });
+  };
 
   getHelpText = (error?: unknown): string => {
     return this.#result.getHelpText(error);

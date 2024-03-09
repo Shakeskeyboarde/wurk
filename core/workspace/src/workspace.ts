@@ -1,18 +1,9 @@
 import { Fs } from '@wurk/fs';
-import {
-  importRelative,
-  importRelativeResolve,
-  type ImportResolved,
-  type ImportResult,
-} from '@wurk/import';
 import { type JsonAccessor } from '@wurk/json';
 import { Log } from '@wurk/log';
-import { type Spawn, spawn } from '@wurk/spawn';
+import { createSpawn } from '@wurk/spawn';
 
-import { clean } from './clean.js';
 import { type Entrypoint, getEntrypoints } from './entrypoint.js';
-import { Git } from './git.js';
-import { Npm } from './npm.js';
 import { type DependencySpec } from './spec.js';
 import { Status } from './status.js';
 
@@ -242,83 +233,10 @@ export class Workspace {
   };
 
   /**
-   * Get an NPM API instance for the workspace directory.
-   *
-   * Throws:
-   * - If NPM is not installed (ENOENT)
-   */
-  readonly getNpm = async (): Promise<Npm> => {
-    return await Npm.create({
-      name: this.name,
-      version: this.version,
-      log: this.log,
-    });
-  };
-
-  /**
-   * Get a Git API instance for the workspace directory.
-   *
-   * Throws:
-   * - If Git is not installed (ENOENT)
-   * - If the directory is not a repo (ENOGITREPO)
-   */
-  readonly getGit = async (): Promise<Git> => {
-    return await Git.create({ dir: this.dir, log: this.log });
-  };
-
-  /**
-   * Remove files and directories from the workspace which are ignored by
-   * Git, _except_ for `node_modules` and dot-files (eg. `.gitignore`,
-   * `.vscode`, etc.).
-   */
-  readonly clean = async (): Promise<void> => {
-    await clean(this);
-  };
-
-  /**
    * Spawn a child process.
    */
-  readonly spawn: Spawn = (command, args, options) => {
-    return spawn(command, args, {
-      log: this.log,
-      ...options,
-      cwd: this.fs.resolve(options?.cwd ?? '.'),
-    });
-  };
-
-  /**
-   * Import relative to the workspace directory, instead of relative to the
-   * current file. This method should be used to import optional command
-   * dependencies, because it allows per-workspace package installation.
-   *
-   * The `versionRange` option can be a semver range, just like a dependency
-   * in your `package.json` file.
-   *
-   * **Note:** There's no way to infer the type of the imported module.
-   * However, TypeScript type imports are not emitted in compiled code,
-   * so you can safely import the module type, and then use this method
-   * to import the implementation.
-   */
-  readonly importRelative = async <
-    TExports extends Record<string, any> = Record<string, unknown>,
-  >(
-    name: string,
-    versionRange?: string,
-  ): Promise<ImportResult<TExports> | null> => {
-    return await importRelative(name, { cwd: this.dir, versionRange });
-  };
-
-  /**
-   * Find a package relative to the workspace directory, and return all of
-   * the package info except its exports.
-   *
-   * The `versionRange` option can be a semver range, just like a dependency
-   * in your `package.json` file.
-   */
-  readonly importRelativeResolve = async (
-    name: string,
-    versionRange?: string,
-  ): Promise<ImportResolved | null> => {
-    return await importRelativeResolve(name, { cwd: this.dir, versionRange });
-  };
+  readonly spawn = createSpawn(() => ({
+    log: this.log,
+    cwd: this.dir,
+  }));
 }

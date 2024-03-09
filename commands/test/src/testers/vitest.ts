@@ -1,4 +1,4 @@
-import path from 'node:path';
+import nodePath from 'node:path';
 
 import { type Log, type WorkspaceCollection } from 'wurk';
 
@@ -20,12 +20,11 @@ export const vitest = async (context: VitestContext): Promise<void> => {
   const workspaceDirs: string[] = [];
 
   for (const workspace of workspaces) {
-    const isConfigFound = await workspace.fs
-      .find(['vitest.config.*', 'vite.config.*'])
-      .then((entries) => Boolean(entries.length));
+    const { dir, fs } = workspace;
+    const configs = await fs.find(['vitest.config.*', 'vite.config.*']);
 
-    if (isConfigFound) {
-      workspaceDirs.push(workspace.dir);
+    if (configs.length) {
+      workspaceDirs.push(dir);
     }
   }
 
@@ -35,7 +34,7 @@ export const vitest = async (context: VitestContext): Promise<void> => {
   }
 
   const tmpDir = await workspaces.root.fs.temp('vitest');
-  const tmpConfig = path.join(tmpDir, 'vitest.workspace.json');
+  const tmpConfig = nodePath.join(tmpDir, 'vitest.workspace.json');
 
   await workspaces.root.fs.writeJson(tmpConfig, workspaceDirs);
   await workspaces.root.spawn('vitest', ['run', `--workspace=${tmpConfig}`], {

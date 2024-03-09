@@ -3,6 +3,7 @@ interface Env {
   WURK_WORKSPACE_EXPRESSIONS?: string;
   WURK_INCLUDE_ROOT_WORKSPACE?: string;
   WURK_PARALLEL?: string;
+  WURK_STREAM?: string;
   WURK_CONCURRENCY?: string;
 }
 

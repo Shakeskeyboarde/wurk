@@ -10,8 +10,7 @@ import {
 
 import {
   Cli,
-  CliActionError,
-  CliParseError,
+  CliUsageError,
   type InferCliResult,
   type InferResultOptions,
   type UnknownResult,
@@ -65,7 +64,7 @@ const check = <const TCli extends Cli>(
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-const cli = (name = 'test') => Cli.create(name).setExit(false);
+const cli = (name = 'test') => Cli.create(name).setExitOnError(false);
 
 beforeEach(() => {
   vitest.spyOn(process, 'exit').mockImplementation(() => {
@@ -95,7 +94,7 @@ describe('named', () => {
 
   test('required', async () => {
     await check(cli().option('-a', { required: true }), '').rejects.toThrow(
-      CliParseError,
+      CliUsageError,
     );
     await check(cli().option('-a', { required: true }), '-a').result({
       options: { a: true },
@@ -120,7 +119,7 @@ describe('named', () => {
 
   test('required value', async () => {
     await check(cli().option('--foo <value>'), '--foo').rejects.toThrow(
-      CliParseError,
+      CliUsageError,
     );
     await check(cli().option('--foo <value>'), '--foo=bar').result({
       options: { foo: 'bar' },
@@ -137,7 +136,7 @@ describe('named', () => {
 
   test('variadic value', async () => {
     await check(cli().option('--foo <value...>'), '--foo').rejects.toThrow(
-      CliParseError,
+      CliUsageError,
     );
     await check(cli().option('--foo <value...>'), '--foo=bar').result({
       options: { foo: ['bar'] },
@@ -194,7 +193,7 @@ describe('named', () => {
   });
 
   test('unknown', async () => {
-    await check(cli().option('-a'), '-b').rejects.toThrow(CliParseError);
+    await check(cli().option('-a'), '-b').rejects.toThrow(CliUsageError);
   });
 
   test('key override', async () => {
@@ -208,7 +207,7 @@ describe('named', () => {
     await check(
       cli().option('-a <value>', { mapped: true }),
       '-a foo',
-    ).rejects.toThrow(CliParseError);
+    ).rejects.toThrow(CliUsageError);
     await check(
       cli().option('-a <value>', { mapped: true }),
       '-a.a foo -a.b bar',
@@ -242,7 +241,7 @@ describe('positional', () => {
   });
 
   test('required', async () => {
-    await check(cli().option('<foo>'), '').rejects.toThrow(CliParseError);
+    await check(cli().option('<foo>'), '').rejects.toThrow(CliUsageError);
     await check(cli().option('<foo>'), 'bar').result({
       options: { foo: 'bar' },
       parsed: ['foo'],
@@ -250,7 +249,7 @@ describe('positional', () => {
   });
 
   test('variadic', async () => {
-    await check(cli().option('<foo...>'), '').rejects.toThrow(CliParseError);
+    await check(cli().option('<foo...>'), '').rejects.toThrow(CliUsageError);
     await check(cli().option('<foo...>'), 'bar').result({
       options: { foo: ['bar'] },
       parsed: ['foo'],
@@ -285,7 +284,7 @@ describe('positional', () => {
 
   test('unknown', async () => {
     await check(cli().option('<foo>'), 'bar baz').rejects.toThrow(
-      CliParseError,
+      CliUsageError,
     );
   });
 
@@ -304,7 +303,7 @@ describe('positional', () => {
       options: { foo: '-a' },
       parsed: ['foo'],
     });
-    await check(cli().option('<foo>'), '-a').rejects.toThrow(CliParseError);
+    await check(cli().option('<foo>'), '-a').rejects.toThrow(CliUsageError);
   });
 });
 
@@ -344,11 +343,11 @@ describe('actions', () => {
     await check(
       cli().option('-a').option('-b').optionConflict('a', 'b'),
       '-a -b',
-    ).rejects.toThrow(CliParseError);
+    ).rejects.toThrow(CliUsageError);
     await check(
       cli().option('-a').option('-b').optionConflict('a', 'b'),
       '-b -c',
-    ).rejects.toThrow(CliParseError);
+    ).rejects.toThrow(CliUsageError);
     await check(
       cli().option('-a').option('-b').optionConflict('a', 'b'),
       '-a',
@@ -400,17 +399,12 @@ describe('actions', () => {
   test('error', async () => {
     const cause = new Error('test');
 
-    try {
-      await cli()
-        .action(() => {
-          throw cause;
-        })
-        .parse([]);
-      expect.unreachable('should have thrown');
-    } catch (error) {
-      expect(error).toBeInstanceOf(CliActionError);
-      expect((error as CliActionError).cause).toBe(cause);
-    }
+    await check(
+      cli().action(async () => {
+        throw cause;
+      }),
+      '',
+    ).rejects.toThrow(cause);
   });
 });
 
@@ -545,7 +539,7 @@ describe('command', () => {
     await check(
       cli().option('-a').command(cli().name('b').setGreedy().option('-b')),
       'b -b -a',
-    ).rejects.toThrow(CliParseError);
+    ).rejects.toThrow(CliUsageError);
     await check(
       cli().option('-a').command(cli().name('b').option('-b')),
       'b -b -a',
@@ -664,20 +658,13 @@ describe('exit', () => {
     `);
   });
 
-  test('auto throw', async () => {
-    await check(
-      Cli.create('test').setExit(() => {}),
-      '-a',
-    ).rejects.toThrow(CliParseError);
-  });
-
   test('action error', async () => {
     const errorSpy = vitest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
     await check(
       Cli.create('test')
-        .setExit(true)
+        .setExitOnError(true)
         .action(() => {
           throw new Error('test');
         }),

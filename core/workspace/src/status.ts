@@ -58,10 +58,10 @@ export const printStatus = (
   let statusLogLevel: LogLevel = LogLevel.notice;
 
   const statusMessages = Array.from(entries)
-    .flatMap((workspace): string[] => {
+    .flatMap(({ status, name }): string[] => {
       let statusMessage: string;
 
-      switch (workspace.status.value) {
+      switch (status.value) {
         case StatusValue.skipped:
           statusMessage = `${Ansi.dim}skipped${Ansi.reset}`;
           break;
@@ -80,7 +80,7 @@ export const printStatus = (
       }
 
       return [
-        `\n  ${workspace.name}: ${statusMessage}${workspace.status.detail ? ` ${Ansi.reset}${Ansi.dim}(${workspace.status.detail})${Ansi.reset}` : ''}`,
+        `\n  ${name}: ${statusMessage}${status.detail ? ` ${Ansi.reset}${Ansi.dim}(${status.detail})${Ansi.reset}` : ''}`,
       ];
     })
     .join('');

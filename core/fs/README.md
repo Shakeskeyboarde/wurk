@@ -1,3 +1,3 @@
 # Wurk File System
 
-File system implementation used by Wurk.
+File system utilities used by Wurk.

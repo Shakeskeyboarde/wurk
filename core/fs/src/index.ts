@@ -1,13 +1,13 @@
 import nodeFs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
-import type stream from 'node:stream';
+import nodeOs from 'node:os';
+import nodePath from 'node:path';
+import type nodeStream from 'node:stream';
 
 import { JsonAccessor } from '@wurk/json';
 import { glob, type Path } from 'glob';
 
 export interface FsOptions {
-  readonly cwd?: string;
+  readonly cwd?: FsPath;
 }
 
 export interface FsReadStreamOptions
@@ -41,19 +41,9 @@ export interface FsStatOptions {
 
 export interface FsFindOptions {
   readonly patterns: string | string[];
-  readonly cwd?: string;
+  readonly cwd?: FsPath;
   readonly includeDirs?: boolean;
   readonly stat?: boolean;
-}
-
-export interface FsFindUpOptions {
-  readonly cwd?: string;
-  readonly includeDirs?: boolean;
-  readonly stat?: boolean;
-  /**
-   * Stop traversing to higher parent directories when matches are found.
-   */
-  readonly stopTraversingOnFound?: boolean;
 }
 
 export interface FsDirEntry extends Omit<nodeFs.Dirent, 'path' | 'parentPath'> {
@@ -75,22 +65,24 @@ export interface FsDirEntry extends Omit<nodeFs.Dirent, 'path' | 'parentPath'> {
   recurse(enabled?: boolean): void;
 }
 
+export type FsPath = string | undefined | FsPath[];
+
 export class Fs {
   readonly cwd: string;
 
   constructor(options?: FsOptions) {
-    this.cwd = options?.cwd ?? '.';
+    this.cwd = nodePath.join(...getPathParts(options?.cwd));
   }
 
-  resolve(...paths: string[]): string {
-    return path.resolve(this.cwd, ...paths);
+  resolve(...paths: FsPath[]): string {
+    return nodePath.resolve(this.cwd, ...getPathParts(paths));
   }
 
-  relative(...paths: string[]): string {
-    return path.relative(this.cwd, path.join(...paths));
+  relative(...paths: FsPath[]): string {
+    return nodePath.relative(this.cwd, this.resolve(paths));
   }
 
-  async read(filename: string): Promise<Buffer | undefined> {
+  async read(...filename: FsPath[]): Promise<Buffer | undefined> {
     return await nodeFs.promises
       .readFile(this.resolve(filename))
       .catch((error: any) => {
@@ -106,16 +98,18 @@ export class Fs {
       });
   }
 
-  async readText(filename: string): Promise<string | undefined> {
-    return await this.read(filename).then((buffer) => buffer?.toString('utf8'));
+  async readText(...filename: FsPath[]): Promise<string | undefined> {
+    return await this.read(filename).then((buffer) => {
+      return buffer?.toString('utf8');
+    });
   }
 
-  async readJson(filename: string): Promise<JsonAccessor> {
+  async readJson(...filename: FsPath[]): Promise<JsonAccessor> {
     return await this.readText(filename).then(JsonAccessor.parse);
   }
 
   async readStream(
-    filename: string,
+    filename: FsPath,
     options?: FsReadStreamOptions,
   ): Promise<nodeFs.ReadStream | undefined> {
     const handle = await nodeFs.promises
@@ -139,7 +133,7 @@ export class Fs {
    * Iterate over a directory and optionally it's subdirectories (breadth first).
    */
   async readDir(
-    dir: string,
+    dir: FsPath,
     callback: (entry: FsDirEntry) => Promise<void | boolean>,
   ): Promise<void> {
     const queue: string[] = [this.resolve(dir)];
@@ -171,7 +165,7 @@ export class Fs {
 
           const entry: FsDirEntry = Object.assign(dirEntry, {
             recurse: (enabled = true) => void (recurse = enabled),
-            fullpath: path.join(current, dirEntry.name),
+            fullpath: nodePath.join(current, dirEntry.name),
           });
 
           if ((await callback(entry)) === false) {
@@ -193,24 +187,28 @@ export class Fs {
     }
   }
 
-  async write(filename: string, data: Buffer | stream.Readable): Promise<void> {
-    await this.writeDir(path.dirname(filename));
-    await nodeFs.promises.writeFile(this.resolve(filename), data);
+  async write(
+    filename: FsPath,
+    data: Buffer | nodeStream.Readable,
+  ): Promise<void> {
+    const absFilename = this.resolve(filename);
+    await this.writeDir(nodePath.dirname(absFilename));
+    await nodeFs.promises.writeFile(absFilename, data);
   }
 
-  async writeText(filename: string, data: string): Promise<void> {
+  async writeText(filename: FsPath, data: string): Promise<void> {
     await this.write(
       filename,
       Buffer.from(data.endsWith('\n') ? data : data + '\n', 'utf8'),
     );
   }
 
-  async writeJson(filename: string, data: unknown): Promise<void> {
+  async writeJson(filename: FsPath, data: unknown): Promise<void> {
     await this.writeText(filename, JSON.stringify(data, null, 2));
   }
 
   async writeStream(
-    filename: string,
+    filename: FsPath,
     options?: FsWriteStreamOptions,
   ): Promise<nodeFs.WriteStream> {
     const handle = await nodeFs.promises.open(
@@ -225,19 +223,18 @@ export class Fs {
     });
   }
 
-  async writeDir(dir: string): Promise<void> {
+  async writeDir(...dir: FsPath[]): Promise<void> {
     await nodeFs.promises.mkdir(this.resolve(dir), { recursive: true });
   }
 
-  async copyFile(source: string, destination: string): Promise<void> {
-    await this.writeDir(path.dirname(destination));
-    await nodeFs.promises.copyFile(
-      this.resolve(source),
-      this.resolve(destination),
-    );
+  async copyFile(source: FsPath, destination: FsPath): Promise<void> {
+    const absSource = this.resolve(source);
+    const absDestination = this.resolve(destination);
+    await this.writeDir(nodePath.dirname(absDestination));
+    await nodeFs.promises.copyFile(absSource, absDestination);
   }
 
-  async delete(filename: string, options?: FsDeleteOptions): Promise<void> {
+  async delete(filename: FsPath, options?: FsDeleteOptions): Promise<void> {
     await nodeFs.promises.rm(this.resolve(filename), {
       ...options,
       force: true,
@@ -245,7 +242,7 @@ export class Fs {
   }
 
   async stat(
-    filename: string,
+    filename: FsPath,
     options?: FsStatOptions,
   ): Promise<nodeFs.Stats | undefined> {
     return await nodeFs.promises[options?.followSymlinks ? 'stat' : 'lstat'](
@@ -262,7 +259,7 @@ export class Fs {
   /**
    * Returns true if the file exists and is accessible.
    */
-  async exists(filename: string, options?: FsStatOptions): Promise<boolean> {
+  async exists(filename: FsPath, options?: FsStatOptions): Promise<boolean> {
     return await this.stat(filename, options)
       .then(Boolean)
       .catch(() => false);
@@ -278,7 +275,7 @@ export class Fs {
 
     return await glob(patterns, {
       withFileTypes: true,
-      cwd: options?.cwd ?? this.cwd,
+      cwd: options?.cwd == null ? this.cwd : this.resolve(options.cwd),
       nodir: !options?.includeDirs,
       stat: options?.stat,
     }).then((paths) => {
@@ -286,47 +283,17 @@ export class Fs {
     });
   }
 
-  async findUp(
-    patterns: string | string[],
-    options?: FsFindUpOptions,
-  ): Promise<Path[]> {
-    const results = new Map<string, Path>();
-    const next = async (cwd: string): Promise<string | undefined> => {
-      const matches = await glob(patterns, {
-        withFileTypes: true,
-        cwd,
-        nodir: !options?.includeDirs,
-        stat: options?.stat,
-      });
-
-      for (const match of matches) {
-        results.set(match.fullpath(), match);
-      }
-
-      if (options?.stopTraversingOnFound && results.size > 0) {
-        return;
-      }
-
-      const parentDir = path.dirname(cwd);
-
-      return parentDir !== cwd ? await next(parentDir) : undefined;
-    };
-
-    await next(path.resolve(options?.cwd ?? this.cwd));
-
-    return Array.from(results.values());
-  }
-
   /**
    * Create a temporary directory that is automatically cleaned up when the
    * process exists.
    */
-  async temp(...prefix: string[]): Promise<string> {
-    const dirs = prefix.slice(0, -1);
-    const basename = prefix.at(-1) ?? '';
+  async temp(...prefix: FsPath[]): Promise<string> {
+    const parts = getPathParts(prefix);
+    const dirs = parts.slice(0, -1);
+    const basename = parts.at(-1) ?? '';
     const dir = await nodeFs.promises.mkdtemp(
-      path.resolve(
-        os.tmpdir(),
+      nodePath.resolve(
+        nodeOs.tmpdir(),
         ...dirs,
         `.wurk${basename ? `-${basename}-` : '-'}`,
       ),
@@ -344,5 +311,13 @@ export class Fs {
     return dir;
   }
 }
+
+export const getPathParts = (value: FsPath): string[] => {
+  return Array.isArray(value)
+    ? value.flatMap((valueN) => getPathParts(valueN))
+    : typeof value === 'string'
+      ? [value]
+      : [];
+};
 
 export const fs = new Fs();

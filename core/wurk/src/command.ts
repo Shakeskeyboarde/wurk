@@ -1,6 +1,7 @@
 import { Cli, type CliName, type EmptyResult } from '@wurk/cli';
 import { type JsonAccessor } from '@wurk/json';
 import { isLogLevel, LogLevel } from '@wurk/log';
+import { type PackageManager } from '@wurk/pm';
 import {
   AbortError,
   StatusValue,
@@ -50,6 +51,10 @@ export interface Command<
   readonly init: (workspaces: WorkspaceCollection) => void;
 }
 
+export interface CommandLazyConfig {
+  readonly workspaces: WorkspaceCollection;
+}
+
 /**
  * Create a Wurk command plugin.
  *
@@ -80,7 +85,7 @@ export const createCommand = <
   name: CliName<TName>,
   hooks: CommandHooks<TResult, TName> | CommandActionCallback,
 ): unknown => {
-  return new CommandFactory((config) => {
+  return new CommandFactory((pm, config) => {
     let workspaces: WorkspaceCollection | undefined;
 
     const {
@@ -106,6 +111,7 @@ export const createCommand = <
       const context = new CommandContext({
         result,
         workspaces,
+        pm,
         autoPrintStatus: (enabled = true) => {
           isAutoPrintStatusEnabled = enabled;
         },
@@ -121,12 +127,12 @@ export const createCommand = <
           context.log.error({ message: error });
         }
       } finally {
-        workspaces.forEachSync((workspace) => {
-          if (workspace.status.value === StatusValue.pending) {
-            workspace.status.set(StatusValue.failure);
+        workspaces.forEachSync(({ status }) => {
+          if (status.value === StatusValue.pending) {
+            status.set(StatusValue.failure);
           }
 
-          if (workspace.status.value >= StatusValue.failure) {
+          if (status.value >= StatusValue.failure) {
             process.exitCode ||= 1;
           }
         });
@@ -159,9 +165,10 @@ export class CommandFactory<
   TResult extends EmptyResult = EmptyResult,
   TName extends string = string,
 > {
-  readonly load: (config: JsonAccessor) => Command<TResult, TName>;
-
-  constructor(load: (config: JsonAccessor) => Command<TResult, TName>) {
-    this.load = load;
-  }
+  constructor(
+    readonly load: (
+      pm: PackageManager,
+      config: JsonAccessor,
+    ) => Command<TResult, TName>,
+  ) {}
 }

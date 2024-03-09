@@ -1,33 +1,33 @@
-import assert from 'node:assert';
-import os from 'node:os';
+import nodeAssert from 'node:assert';
+import nodePath from 'node:path';
+import nodeUrl from 'node:url';
 
-import { Cli } from '@wurk/cli';
+import { Cli, CliUsageError } from '@wurk/cli';
+import { fs } from '@wurk/fs';
 import { JsonAccessor } from '@wurk/json';
-import { Ansi, getAnsiColorIterator, log, setLogLevel } from '@wurk/log';
+import { getAnsiColorIterator, log, setLogLevel } from '@wurk/log';
+import { createPackageManager } from '@wurk/pm';
 import { WorkspaceCollection } from '@wurk/workspace';
 
 import { env } from './env.js';
-import { getNpmWorkspaces } from './npm.js';
 import { loadCommandPlugins } from './plugin.js';
 
-export const main = (): void => {
-  mainAsync().catch((error: unknown) => {
-    process.exitCode ||= 1;
-    log.error({ message: error });
-  });
-};
-
 const mainAsync = async (): Promise<void> => {
-  const { version, description, npmRoot } = await import('./config.js');
+  const __dirname = nodePath.dirname(nodeUrl.fileURLToPath(import.meta.url));
+  const config = await fs.readJson(nodePath.join(__dirname, '../package.json'));
+  const version = config.at('version').as('string');
+  const description = config.at('description').as('string');
+  const pm = await createPackageManager();
+  const rootConfig = await fs.readJson(pm.rootDir, 'package.json');
 
-  process.chdir(npmRoot.dir);
+  process.chdir(pm.rootDir);
   process.chdir = () => {
     throw new Error(
       'command plugin tried to change the working directory (unsupported)',
     );
   };
 
-  const commandPlugins = await loadCommandPlugins(npmRoot.dir, npmRoot.config);
+  const commandPlugins = await loadCommandPlugins(pm, rootConfig);
 
   let cli = Cli.create('wurk')
     .description(description)
@@ -53,31 +53,27 @@ const mainAsync = async (): Promise<void> => {
     })
 
     // Parallelization Options:
-    .option('-p, --parallel', {
-      description: 'process workspaces in parallel',
-      group: 'Parallelization Options',
-    })
-    .option('--no-parallel', {
-      description: 'process workspaces serially',
-      group: 'Parallelization Options',
-      hidden: true,
-    })
-    .optionNegation('parallel', 'noParallel')
-    .option('-c, --concurrency <count>', {
+    .option('--parallel', {
       description:
-        'number of workspaces to process in parallel (<number>, "auto", "all")',
+        'process all workspaces simultaneously without topological awaiting',
+      group: 'Parallelization Options',
+    })
+    .option('--stream', {
+      description: 'process workspaces concurrently with topological awaiting',
+      group: 'Parallelization Options',
+    })
+    .option('--concurrency <count>', {
+      description: 'maximum number of simultaneous streaming workspaces',
       group: 'Parallelization Options',
       parse: (value) => {
-        const concurrency = getConcurrency(value);
-        assert(
-          concurrency > 0,
-          'concurrency must be a non-zero positive number',
-        );
-        return concurrency;
+        const count = Number(value);
+        nodeAssert(Number.isInteger(count), 'concurrency must be an integer');
+        nodeAssert(count > 0, 'concurrency must be a non-zero positive number');
+        return count;
       },
     })
     .optionAction('concurrency', ({ result }) => {
-      result.options.parallel = true;
+      result.options.stream = true;
     })
 
     // Logging Options:
@@ -88,26 +84,26 @@ const mainAsync = async (): Promise<void> => {
       key: null,
       parse: setLogLevel,
     })
-    .option('--clear', {
-      description: 'clear the screen on startup',
-      group: 'Logging Options',
-    })
-    .option('--no-clear', {
-      description: 'do not clear the screen on startup',
-      group: 'Logging Options',
-      hidden: true,
-    })
-    .optionNegation('clear', 'noClear')
+
+    // Command Fallback:
+    .setCommandOptional()
+    .setUnknownNamedOptionAllowed()
+    .option('[script]', 'run a root package script')
+    .option('[script-args...]', 'arguments for the script')
 
     .action(async ({ options, command }) => {
       const {
-        clear = false,
         expressions = JsonAccessor.parse(env.WURK_WORKSPACE_EXPRESSIONS)
           .as('array', [] as unknown[])
           .filter((value): value is string => typeof value === 'string'),
-        includeRootWorkspace = env.WURK_INCLUDE_ROOT_WORKSPACE === 'true',
-        parallel = env.WURK_PARALLEL === 'true',
-        concurrency = getConcurrency(env.WURK_CONCURRENCY),
+        includeRootWorkspace = JsonAccessor.parse(
+          env.WURK_INCLUDE_ROOT_WORKSPACE,
+        ).as('boolean', false),
+        parallel = JsonAccessor.parse(env.WURK_PARALLEL).as('boolean', false),
+        stream = JsonAccessor.parse(env.WURK_STREAM).as('boolean', false),
+        concurrency = JsonAccessor.parse(env.WURK_CONCURRENCY).as('number'),
+        script,
+        scriptArgs,
       } = options;
       const running = env.WURK_RUNNING_COMMANDS?.split(/\s*,\s*/u) ?? [];
       const commandName = Object.keys(command).at(0)!;
@@ -120,21 +116,32 @@ const mainAsync = async (): Promise<void> => {
 
       env.WURK_RUNNING_COMMANDS = [...running, commandName].join(',');
 
-      if (clear && !running.length) {
-        process.stdout.write(Ansi.clear);
-      }
+      const workspaceDirs = await pm.getWorkspaces();
+      const workspaceEntries = await Promise.all(
+        workspaceDirs.map(async (workspaceDir) => {
+          const workspaceConfig = await fs.readJson(
+            workspaceDir,
+            'package.json',
+          );
 
-      const npmWorkspaces = await getNpmWorkspaces();
+          if (!workspaceConfig.at('name')) {
+            throw new Error(`workspace at "${workspaceDir}" has no name`);
+          }
+
+          return [workspaceDir, workspaceConfig] as const;
+        }),
+      );
       const workspaces = new WorkspaceCollection({
-        root: npmRoot.config,
-        rootDir: npmRoot.dir,
-        workspaces: npmWorkspaces.map((npmWorkspace) => [
-          npmWorkspace.dir,
-          npmWorkspace.config,
-        ]),
-        includeRootWorkspace:
-          includeRootWorkspace || npmWorkspaces.length === 0,
-        concurrency: parallel ? concurrency : 1,
+        root: rootConfig,
+        rootDir: pm.rootDir,
+        workspaces: workspaceEntries,
+        includeRootWorkspace,
+        concurrency,
+        defaultIterationMethod: parallel
+          ? 'forEachParallel'
+          : stream
+            ? 'forEachStream'
+            : 'forEachSequential',
       });
       const allWorkspaces = new Set([...workspaces.all, workspaces.root]);
       const colors = getAnsiColorIterator({
@@ -151,31 +158,40 @@ const mainAsync = async (): Promise<void> => {
       commandPlugins.forEach((commandPlugin) => commandPlugin.init(workspaces));
 
       env.WURK_WORKSPACE_EXPRESSIONS = JSON.stringify(expressions);
-      env.WURK_INCLUDE_ROOT_WORKSPACE = String(includeRootWorkspace);
-      env.WURK_PARALLEL = String(parallel);
-      env.WURK_CONCURRENCY = String(concurrency);
+      env.WURK_INCLUDE_ROOT_WORKSPACE = JSON.stringify(includeRootWorkspace);
+      env.WURK_PARALLEL = JSON.stringify(parallel);
+      env.WURK_STREAM = JSON.stringify(stream);
+      env.WURK_CONCURRENCY = JSON.stringify(concurrency);
+
+      if (script) {
+        if (
+          workspaces.root.config.at('scripts').at(script).as('string') == null
+        ) {
+          throw new Error(
+            `"${script}" is not a command or root package script`,
+          );
+        }
+
+        await pm.spawnPackageScript(script, scriptArgs, { output: 'inherit' });
+      }
     });
 
   for (const commandPlugin of commandPlugins) {
     cli = cli.command(commandPlugin.cli);
   }
 
-  await cli.parse();
+  await cli
+    .setExitOnError(false)
+    .parse()
+    .catch((error: unknown) => {
+      process.exitCode ||= 1;
+
+      if (error instanceof CliUsageError) {
+        cli.printHelp(error);
+      } else {
+        log.error({ message: error });
+      }
+    });
 };
 
-const getConcurrency = (value: string | undefined): number => {
-  value = value?.toLocaleLowerCase();
-
-  switch (value) {
-    case undefined:
-    case 'auto':
-      return os.cpus().length + 1;
-    case 'all':
-    case 'infinite':
-    case 'infinity':
-    case 'unlimited':
-      return Number.POSITIVE_INFINITY;
-    default:
-      return Number.parseInt(value, 10);
-  }
-};
+await mainAsync();

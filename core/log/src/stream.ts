@@ -20,7 +20,12 @@ export class LogStream extends Transform {
     process.on('exit', this.#onExit);
   }
 
-  end(
+  flush(): this {
+    this.#send(true);
+    return this;
+  }
+
+  override end(
     ...args: [unknown?, (BufferEncoding | (() => void))?, (() => void)?]
   ): this {
     if (args.length > 0) {
@@ -35,12 +40,7 @@ export class LogStream extends Transform {
     return this.flush();
   }
 
-  flush(): this {
-    this.#send(true);
-    return this;
-  }
-
-  _transform(
+  override _transform(
     chunk: Buffer,
     _encoding: BufferEncoding,
     callback: TransformCallback,
@@ -62,12 +62,14 @@ export class LogStream extends Transform {
     callback();
   }
 
-  _flush(callback: TransformCallback): void {
+  override _flush(callback: TransformCallback): void {
     this.flush();
     callback();
   }
 
-  _destroy(...[error, callback]: Parameters<Transform['_destroy']>): void {
+  override _destroy(
+    ...[error, callback]: Parameters<Transform['_destroy']>
+  ): void {
     this.flush();
     process.removeListener('exit', this.#onExit);
     process.setMaxListeners(process.getMaxListeners() - 1);

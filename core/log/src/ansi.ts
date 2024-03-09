@@ -1,4 +1,4 @@
-import tty from 'node:tty';
+import nodeTty from 'node:tty';
 
 import ansiRegex from 'ansi-regex';
 
@@ -7,8 +7,8 @@ export type AnsiColor = (typeof ANSI_COLORS)[number];
 const ANSI_REGEXP = new RegExp(ansiRegex().source, 'gu');
 
 const IS_TTY =
-  tty.isatty(1) &&
-  tty.isatty(2) &&
+  nodeTty.isatty(1) &&
+  nodeTty.isatty(2) &&
   Boolean(process.env.TERM && process.env.TERM !== 'dumb');
 
 const IS_COLOR = process.env.NO_COLOR
@@ -31,7 +31,6 @@ export const ANSI_COLORS = [
 ] as const;
 
 export const Ansi = {
-  clear: IS_TTY ? '\u001B[3J\u001B[2J\u001B[H' : '',
   reset: IS_COLOR ? '\u001B[0m' : '',
   bold: IS_COLOR ? '\u001B[1m' : '',
   dim: IS_COLOR ? '\u001B[2m' : '',

@@ -1,10 +1,15 @@
-import assert from 'node:assert';
-import path from 'node:path';
+import nodeAssert from 'node:assert';
+import nodePath from 'node:path';
 
 import semver from 'semver';
-import { type Workspace, type WorkspaceLink } from 'wurk';
+import {
+  type Git,
+  type PackageManager,
+  type Workspace,
+  type WorkspaceLink,
+} from 'wurk';
 
-interface PublishFromFilesystemContext {
+interface Context {
   readonly options: {
     readonly toArchive?: boolean;
     readonly tag?: string;
@@ -12,28 +17,22 @@ interface PublishFromFilesystemContext {
     readonly removePackageFields?: readonly string[];
     readonly dryRun?: boolean;
   };
+  readonly pm: PackageManager;
+  readonly git: Git | null;
   readonly workspace: Workspace;
   readonly published: Set<Workspace>;
 }
 
 export const publishFromFilesystem = async (
-  context: PublishFromFilesystemContext,
+  context: Context,
 ): Promise<void> => {
-  const { options, workspace, published } = context;
-  const {
-    status,
-    log,
-    fs,
-    config,
-    version,
-    spawn,
-    getGit,
-    getDependencyLinks,
-  } = workspace;
+  const { options, pm, git, workspace, published } = context;
+  const { status, log, fs, config, version, spawn, getDependencyLinks } =
+    workspace;
 
   status.set('pending');
 
-  if (!(await validate(workspace, published))) {
+  if (!(await validate(pm, git, workspace, published))) {
     return;
   }
 
@@ -61,7 +60,6 @@ export const publishFromFilesystem = async (
       .set(undefined);
   });
 
-  const git = await getGit().catch(() => null);
   const head = await git?.getHead();
 
   if (head) {
@@ -76,7 +74,7 @@ export const publishFromFilesystem = async (
    */
   const savedPackageJson = await fs.readText('package.json');
 
-  assert(savedPackageJson, 'failed to read package.json file');
+  nodeAssert(savedPackageJson, 'failed to read package.json file');
 
   try {
     await fs.writeJson('package.json', config);
@@ -99,18 +97,19 @@ export const publishFromFilesystem = async (
 };
 
 const validate = async (
+  pm: PackageManager,
+  git: Git | null,
   workspace: Workspace,
   published: Set<Workspace>,
 ): Promise<boolean> => {
   const {
     log,
     status,
+    name,
     version,
     isPrivate,
     fs,
     spawn,
-    getNpm,
-    getGit,
     getEntrypoints,
     getDependencyLinks,
   } = workspace;
@@ -127,18 +126,15 @@ const validate = async (
     return false;
   }
 
-  const npm = await getNpm();
-  const meta = await npm.getMetadata();
+  const meta = await pm.getMetadata(name, version);
 
-  if (version === meta?.version) {
+  if (meta) {
     log.info`workspace is already published`;
     status.set('skipped', 'already published');
     return false;
   }
 
-  const git = await getGit().catch(() => null);
-
-  if (git && (await git.getIsDirty())) {
+  if (await git?.getIsDirty()) {
     log.warn`workspace has uncommitted changes`;
     status.set('warning', 'uncommitted changes');
     return false;
@@ -169,7 +165,7 @@ const validate = async (
       // True if the pack filename does not "match" the entry filename. The
       // relative path starts with ".." if the pack filename is not equal to
       // and not a subpath of the entry filename.
-      return path
+      return nodePath
         .relative(entry.filename, fs.resolve(packEntry.path))
         .startsWith('..');
     });
@@ -185,7 +181,7 @@ const validate = async (
   }
 
   for (const link of getDependencyLinks()) {
-    if (!(await validateDependency(workspace, link, published))) {
+    if (!(await validateDependency(pm, git, workspace, link, published))) {
       return false;
     }
   }
@@ -194,12 +190,14 @@ const validate = async (
 };
 
 const validateDependency = async (
+  pm: PackageManager,
+  git: Git | null,
   workspace: Workspace,
   { type, spec, dependency }: WorkspaceLink,
   published: Set<Workspace>,
 ): Promise<boolean> => {
   const { log, status } = workspace;
-  const { name, version, isPrivate, getNpm, getGit } = dependency;
+  const { dir, name, version, isPrivate } = dependency;
 
   if (type === 'devDependencies') {
     // Dev dependencies are not used after publishing, so they don't need
@@ -255,26 +253,23 @@ const validateDependency = async (
   }
 
   if (!published.has(dependency)) {
-    const npm = await getNpm();
-    const meta = await npm.getMetadata();
+    const meta = await pm.getMetadata(name, version);
 
-    if (version !== meta?.version) {
+    if (!meta) {
       log.error`dependency "${name}" is not published`;
       status.set('failure', `dependency unpublished`);
       return false;
     }
 
-    const git = await getGit().catch(() => null);
-
     if (git) {
-      if (await git.getIsDirty()) {
+      if (await git.getIsDirty(dir)) {
         log.warn`dependency "${name}" has uncommitted changes`;
         status.set('warning', `dependency uncommitted changes`);
         return false;
       }
 
       if (meta.gitHead) {
-        const head = await git.getHead();
+        const head = await git.getHead({ dir });
 
         if (head) {
           if (head !== meta.gitHead) {

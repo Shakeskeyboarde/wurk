@@ -1,4 +1,3 @@
-import { type CliActionError, CliParseError } from './error.js';
 import {
   type InferResultCommand,
   type InferResultOptions,
@@ -28,21 +27,4 @@ type OptionAction<
   readonly key: TKey;
 }) => void | Promise<void>;
 
-type ExitAction = (
-  error: CliParseError | CliActionError,
-) => void | Promise<void>;
-
-const defaultExitAction: ExitAction = (error) => {
-  if (error instanceof CliParseError) {
-    error.cli.printHelp(error);
-    process.exitCode ||= 1;
-  } else {
-    console.error(String(error));
-    process.exitCode ||= 2;
-  }
-
-  // eslint-disable-next-line unicorn/no-process-exit
-  process.exit();
-};
-
-export { type Action, defaultExitAction, type ExitAction, type OptionAction };
+export { type Action, type OptionAction };

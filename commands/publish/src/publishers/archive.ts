@@ -1,11 +1,11 @@
-import assert from 'node:assert';
-import path from 'node:path';
-import zlib from 'node:zlib';
+import nodeAssert from 'node:assert';
+import nodePath from 'node:path';
+import nodeZlib from 'node:zlib';
 
 import { extract } from 'tar-stream';
 import { type Fs, type Workspace } from 'wurk';
 
-interface PublishFromArchiveContext {
+interface Context {
   readonly options: {
     readonly tag?: string;
     readonly otp?: string;
@@ -14,9 +14,7 @@ interface PublishFromArchiveContext {
   readonly workspace: Workspace;
 }
 
-export const publishFromArchive = async (
-  context: PublishFromArchiveContext,
-): Promise<void> => {
+export const publishFromArchive = async (context: Context): Promise<void> => {
   const { options, workspace } = context;
   const { log, dir, name, version, status, fs, spawn } = workspace;
 
@@ -45,7 +43,7 @@ export const publishFromArchive = async (
    * in parent directories are still in effect.
    */
   const tmpDir = await fs.temp(dir, 'publish-archive');
-  const tmpFilename = fs.resolve(tmpDir, path.basename(filename));
+  const tmpFilename = fs.resolve(tmpDir, nodePath.basename(filename));
 
   await fs.copyFile(filename, tmpFilename);
   await extractPackageJson(fs, tmpFilename, tmpDir);
@@ -71,10 +69,10 @@ const extractPackageJson = async (
 ): Promise<void> => {
   const readable = await fs.readStream(tgz);
 
-  assert(readable, 'failed to read workspace archive');
+  nodeAssert(readable, 'failed to read workspace archive');
 
   try {
-    const extractor = readable.pipe(zlib.createGunzip()).pipe(extract());
+    const extractor = readable.pipe(nodeZlib.createGunzip()).pipe(extract());
 
     for await (const entry of extractor) {
       if (entry.header.name === 'package/package.json') {

@@ -1,26 +1,8 @@
-import semver, { type SemVer } from 'semver';
 import { createCommand, type Workspace } from 'wurk';
 
 import { type Change } from './change.js';
-import { auto } from './strategies/auto.js';
-import { increment } from './strategies/increment.js';
-import { literal } from './strategies/literal.js';
-import { promote } from './strategies/promote.js';
+import { getStrategyCallback, parseStrategy } from './strategy.js';
 import { writeChangelog, writeConfig } from './write.js';
-
-type Each = (workspace: Workspace) => Promise<readonly Change[] | void>;
-
-const STRATEGIES = {
-  major: true,
-  minor: true,
-  patch: true,
-  premajor: true,
-  preminor: true,
-  prepatch: true,
-  prerelease: true,
-  auto: true,
-  promote: true,
-} as const satisfies Record<semver.ReleaseType | 'auto' | 'promote', true>;
 
 export default createCommand('version', {
   config: (cli) => {
@@ -38,17 +20,7 @@ export default createCommand('version', {
       .option('<strategy>', {
         description:
           'major, minor, patch, premajor, preminor, prepatch, prerelease, auto, promote, or a version number',
-        parse: (value): semver.ReleaseType | 'auto' | 'promote' | SemVer => {
-          if (value in STRATEGIES) {
-            return value as keyof typeof STRATEGIES;
-          }
-
-          try {
-            return new semver.SemVer(value);
-          } catch {
-            throw new Error('invalid strategy');
-          }
-        },
+        parse: parseStrategy,
       })
       .option('--preid <id>', 'set the identifier for prerelease versions')
       .option(
@@ -63,55 +35,38 @@ export default createCommand('version', {
   },
 
   action: async (context) => {
-    const { log, workspaces, options, autoPrintStatus } = context;
-
-    autoPrintStatus();
-
+    const { log, pm, workspaces, options, autoPrintStatus, createGit } =
+      context;
+    const git = await createGit().catch(() => null);
     const { strategy, preid, changelog = strategy === 'auto' } = options;
     const isPreStrategy =
       typeof strategy === 'string' && strategy.startsWith('pre');
+    const changes = new Map<Workspace, readonly Change[]>();
+    const callback = getStrategyCallback(strategy, pm, git, preid);
+
+    autoPrintStatus();
 
     if (preid && !isPreStrategy) {
       log.warn`option --preid only applies to "pre*" strategies`;
     }
 
-    const changes = new Map<Workspace, readonly Change[]>();
-
-    let each: Each;
-
-    if (typeof strategy === 'string') {
-      switch (strategy) {
-        case 'auto':
-          each = auto;
-          break;
-        case 'promote':
-          each = promote;
-          break;
-        default:
-          each = increment.bind(null, { releaseType: strategy, preid });
-          break;
-      }
-    } else {
-      each = literal.bind(null, { version: strategy });
-    }
-
     await workspaces.forEach(async (workspace) => {
-      const git = await workspace.getGit().catch(() => null);
+      const { config, version, isPrivate } = workspace;
 
       if (await git?.getIsDirty()) {
         throw new Error('versioning requires a clean git repository');
       }
 
-      if (workspace.isPrivate && !workspace.version) {
+      if (isPrivate && !version) {
         // Unselect private workspaces if they are unversioned.
         workspace.isSelected = false;
         return;
       }
 
-      const workspaceChanges = await each?.(workspace);
-      const workspaceNewVersion = workspace.config.at('version').as('string');
+      const workspaceChanges = await callback(workspace);
+      const workspaceNewVersion = config.at('version').as('string');
 
-      if (!workspaceNewVersion || workspaceNewVersion === workspace.version) {
+      if (!workspaceNewVersion || workspaceNewVersion === version) {
         // Unselect workspaces where the version strategy is a no-op.
         workspace.isSelected = false;
         return;
@@ -122,16 +77,18 @@ export default createCommand('version', {
       }
     });
 
-    // Writing does not use `forEachIndependent` because if a workspace write
+    // Writing does not use `forEachParallel` because if a workspace write
     // fails (eg. dirty Git working tree), dependent workspace writes should
     // be skipped so that they don't end up referencing non-existent versions.
     await workspaces.forEach(async (workspace) => {
-      workspace.status.set('pending');
+      const { status, config, version } = workspace;
 
-      const newVersion = workspace.config.at('version').as('string');
+      status.set('pending');
 
-      if (newVersion !== workspace.version) {
-        workspace.status.setDetail(`${workspace.version} -> ${newVersion}`);
+      const newVersion = config.at('version').as('string');
+
+      if (newVersion !== version) {
+        status.setDetail(`${version} -> ${newVersion}`);
       }
 
       await writeConfig(workspace);
@@ -140,7 +97,7 @@ export default createCommand('version', {
         await writeChangelog(workspace, changes.get(workspace));
       }
 
-      workspace.status.set('success');
+      status.set('success');
     });
 
     if (!workspaces.iterableSize) return;

@@ -16,8 +16,14 @@
   "type": "module",
   "types": "./lib/index.d.ts",
   "exports": {
-    "types": "./lib/index.d.ts",
-    "default": "./lib/index.js"
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./main": {
+      "types": "./lib/main.d.ts",
+      "default": "./lib/main.js"
+    }
   },
   "bin": {
     "wurk": "lib/bin.js"
@@ -54,9 +60,10 @@
   "dependencies": {
     "@wurk/cli": "*",
     "@wurk/fs": "*",
-    "@wurk/import": "*",
+    "@wurk/git": "*",
     "@wurk/json": "*",
     "@wurk/log": "*",
+    "@wurk/pm": "*",
     "@wurk/spawn": "*",
     "@wurk/workspace": "*"
   }

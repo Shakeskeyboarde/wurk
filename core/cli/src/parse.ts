@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import { type PartialCli } from './cli.js';
-import { CliParseError } from './error.js';
+import { CliUsageError } from './error.js';
 import { type Named } from './named.js';
 import { type Positional } from './positional.js';
 import { type UnknownResult } from './result.js';
@@ -180,22 +180,18 @@ const parseRecursive = async (
     if (option.type === 'named') {
       if (option.mapped) {
         if (mappedKey == null) {
-          throw new CliParseError(
+          throw new CliUsageError(
             `option "${option.usage}" does not support dot notation`,
-            { cli: cli },
           );
         }
       } else if (/* not mapped and */ mappedKey != null) {
-        throw new CliParseError(
+        throw new CliUsageError(
           `option "${option.usage}" requires dot notation`,
-          { cli: cli },
         );
       }
 
       if (option.value === 'required' && valueArgs.length === 0) {
-        throw new CliParseError(`option "${option.usage}" requires a value`, {
-          cli: cli,
-        });
+        throw new CliUsageError(`option "${option.usage}" requires a value`);
       }
     }
 
@@ -400,12 +396,12 @@ const parseRecursive = async (
       !isUnknownNamedOptionAllowed &&
       !isDoubleHyphenFound
     ) {
-      throw new CliParseError(`unknown option "${args[0]}"`, { cli: cli });
+      throw new CliUsageError(`unknown option "${args[0]}"`);
     }
 
     if (await tryPositional()) continue;
 
-    throw new CliParseError(`unexpected argument "${args[0]}"`, { cli: cli });
+    throw new CliUsageError(`unexpected argument "${args[0]}"`);
   }
 
   if (!isCommandFound) {
@@ -422,9 +418,7 @@ const parseRecursive = async (
       (!(key in result.options) || result.options[key] === undefined)
     ) {
       if (required) {
-        throw new CliParseError(`missing required option "${usage}"`, {
-          cli: cli,
-        });
+        throw new CliUsageError(`missing required option "${usage}"`);
       }
 
       const getDefault = key in optionDefaults && optionDefaults[key];
@@ -436,10 +430,7 @@ const parseRecursive = async (
   }
 
   if (positional[0]?.required) {
-    throw new CliParseError(
-      `missing required option "${positional[0].usage}"`,
-      { cli: cli },
-    );
+    throw new CliUsageError(`missing required option "${positional[0].usage}"`);
   }
 
   for (const { key } of positional) {
@@ -453,7 +444,7 @@ const parseRecursive = async (
   }
 
   if (!isCommandFound && !isCommandOptional && commands.length) {
-    throw new CliParseError('missing required command', { cli: cli });
+    throw new CliUsageError('missing required command');
   }
 
   return result;
@@ -466,7 +457,11 @@ const parse = async (
   cli: ParserCli,
   args: readonly string[],
 ): Promise<UnknownResult> => {
-  return await parseRecursive([...args], cli);
+  try {
+    return await parseRecursive([...args], cli);
+  } catch (error) {
+    throw CliUsageError.from(error);
+  }
 };
 
 export { parse };

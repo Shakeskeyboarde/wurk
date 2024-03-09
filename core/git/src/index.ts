@@ -1,13 +1,8 @@
-import assert from 'node:assert';
-import path from 'node:path';
+import nodeAssert from 'node:assert';
+import nodePath from 'node:path';
 
 import { type Log, log as defaultLog } from '@wurk/log';
-import {
-  spawn,
-  type SpawnOptions,
-  type SpawnPromise,
-  type SpawnSparseArgs,
-} from '@wurk/spawn';
+import { createSpawn } from '@wurk/spawn';
 
 export interface GitOptions {
   readonly dir: string;
@@ -15,10 +10,12 @@ export interface GitOptions {
 }
 
 export interface GitHeadOptions {
+  readonly dir?: string;
   readonly allowShallow?: boolean;
 }
 
 export interface GitLogOptions extends GitHeadOptions {
+  readonly dir?: string;
   readonly start?: string | null;
   readonly end?: string;
 }
@@ -63,16 +60,20 @@ export class Git {
    * Return true if the instance directory is a shallow Git clone.
    */
   readonly getIsShallow = async (): Promise<boolean> => {
-    return await this._exec(['rev-parse', '--is-shallow-repository']).then(
-      ({ stdoutText }) => stdoutText !== 'false',
-    );
+    return await this._spawn('git', [
+      'rev-parse',
+      '--is-shallow-repository',
+    ]).then(({ stdoutText }) => stdoutText !== 'false');
   };
 
   /**
    * Return the root directory of the Git repository.
    */
   readonly getRoot = async (): Promise<string> => {
-    return await this._exec(['rev-parse', '--show-toplevel']).stdoutText();
+    return await this._spawn('git', [
+      'rev-parse',
+      '--show-toplevel',
+    ]).stdoutText();
   };
 
   /**
@@ -84,15 +85,18 @@ export class Git {
     options?: GitHeadOptions,
   ): Promise<string | null> => {
     if (!options?.allowShallow) {
-      assert(!(await this.getIsShallow()), `non-shallow git clone required`);
+      nodeAssert(
+        !(await this.getIsShallow()),
+        `non-shallow git clone required`,
+      );
     }
 
     return (
-      (await this._exec([
+      (await this._spawn('git', [
         'log',
         ['-n', '1'],
         '--pretty=format:%H',
-        ['--', this.#dir],
+        ['--', options?.dir ?? '.'],
       ]).stdoutText()) || null
     );
   };
@@ -101,14 +105,14 @@ export class Git {
    * Get a list of all the files in the instance directory which are
    * ignored by Git (`.gitignore`).
    */
-  readonly getIgnored = async (): Promise<string[]> => {
+  readonly getIgnored = async (dir?: string): Promise<string[]> => {
     const [gitRoot, gitIgnoredText] = await Promise.all([
       await this.getRoot(),
-      await this._exec([
+      await this._spawn('git', [
         'status',
         '--ignored',
         '--porcelain',
-        this.#dir,
+        dir ?? '.',
       ]).stdoutText(),
     ]);
 
@@ -118,14 +122,14 @@ export class Git {
         const match = line.match(/^!! (.*)$/u);
         return match ? [match[1]!] : [];
       })
-      .map((file) => path.resolve(gitRoot, file));
+      .map((file) => nodePath.resolve(gitRoot, file));
   };
 
   /**
    * Return true if the Git working tree is dirty.
    */
-  readonly getIsDirty = async (): Promise<boolean> => {
-    return await this._exec(['status', '--porcelain', this.#dir])
+  readonly getIsDirty = async (dir?: string): Promise<boolean> => {
+    return await this._spawn('git', ['status', '--porcelain', dir ?? '.'])
       .stdoutText()
       .then(Boolean);
   };
@@ -138,7 +142,10 @@ export class Git {
    */
   readonly getLogs = async (options?: GitLogOptions): Promise<GitLog[]> => {
     if (!options?.allowShallow) {
-      assert(!(await this.getIsShallow()), `non-shallow git clone required`);
+      nodeAssert(
+        !(await this.getIsShallow()),
+        `non-shallow git clone required`,
+      );
     }
 
     const start = options?.start?.trim();
@@ -150,12 +157,12 @@ export class Git {
       ([, placeholder]) => placeholder,
     );
 
-    const text = await this._exec([
+    const text = await this._spawn('git', [
       'log',
       `--pretty=format:%x00%x00%x00 ${formatPlaceholders.join(' %x00%x00 ')} %x00%x00%x00`,
       start ? `${start}..${end}` : end,
       '--',
-      this.#dir,
+      options?.dir ?? '.',
     ]).stdoutText();
 
     return [...text.matchAll(/\0{3}(.*)\0{3}/gsu)].flatMap(
@@ -170,35 +177,29 @@ export class Git {
     );
   };
 
-  protected readonly _exec = (
-    args: SpawnSparseArgs,
-    options?: Omit<SpawnOptions, 'cwd' | 'log' | 'output'>,
-  ): SpawnPromise => {
-    return spawn('git', args, {
-      ...options,
-      log: this.#log,
-      cwd: this.#dir,
-      output: 'buffer',
-    });
-  };
+  protected readonly _spawn = createSpawn(() => ({
+    log: this.#log,
+    cwd: this.#dir,
+    output: 'buffer',
+  }));
 
   /**
    * Get a Git API instance.
    *
    * Throws:
    * - If Git is not installed (ENOENT)
-   * - If the directory is not a repo (ENOGITREPO)
+   * - If the directory is not a repo (ENOREPO)
    */
   static async create(options: GitOptions): Promise<Git> {
     const git = new Git({ dir: options.dir, log: options.log });
 
-    const { exitCode } = await git._exec(['status'], {
+    const { exitCode } = await git._spawn('git', ['status'], {
       allowNonZeroExitCode: true,
     });
 
     if (exitCode) {
       throw Object.assign(new Error('git repo is required'), {
-        code: 'ENOGITREPO',
+        code: 'ENOREPO',
       });
     }
 

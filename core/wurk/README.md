@@ -1,46 +1,56 @@
 # Wurk
 
-Wurk is a declarative, extensible build system for monorepos or single packages.
+Wurk is a lightweight, extensible build system for monorepos or single packages.
 
-- Run one command per logical task.
-- Leverage the power of community with custom commands.
+- Be declarative and leverage the power of community with custom commands.
 - Orchestrate tasks across multiple interrelated workspaces.
 - Stay flexible and transparent without adding complexity.
 
+Read about the motivation for this project [here](./README-MOTIVATION.md).
+
 ## Prerequisites
 
-- [Node.js®](https://nodejs.org/) is required.
-- [NPM](https://www.npmjs.com/) is required.
-- [Git](https://git-scm.com/) is recommended but optional
-- [TypeScript](https://www.typescriptlang.org/) is recommended but optional.
+- [Node.js®](https://nodejs.org/)
+- [NPM](https://www.npmjs.com/), [PNPM](https://pnpm.io/), or [Yarn](https://yarnpkg.com/)
+- [Git](https://git-scm.com/) (recommended)
 
 ## Getting Started
 
-Install Wurk and any [commands](#commands) you want as a dev dependencies of your project root.
+Install Wurk and any [Wurk commands](#commands) you want as dev dependencies of your root workspace.
 
 ```sh
-npm install --save-dev wurk @wurk/command-build
+npm install --save-dev wurk @wurk/command-run
 ```
 
-Run a Wurk command. For example the [build](https://npmjs.com/package/@wurk/command-build) command (installed above) will automatically invoke Rollup, Vite, TypeScript, and/or TypeDoc, based on the presence of configuration files for each of these tools.
+Run a Wurk command. For example the [run](https://npmjs.com/package/@wurk/command-run) command (installed above) runs package.json scripts in each workspace where they exist.
 
 ```sh
-npx wurk build
+npx wurk run build
 ```
 
-(Optional) Install Wurk globally to avoid having to use `npx`. When `wurk` is executed, it delegates to the locally installed version, so `wurk build` becomes equivalent to `npx wurk build`.
+(Optional) Install Wurk globally to avoid having to use `npx`. When `wurk` is executed, it delegates to the locally installed version, so `wurk run build` becomes equivalent to `npx wurk run build`.
 
 ```sh
 npm install --global wurk
 ```
 
-(Optional) Delegate root workspace NPM scripts to Wurk. This keeps your package scripts clean and allows developers to use NPM commands instead of invoking Wurk directly.
+If you use a command that does not match an installed Wurk command package, then Wurk will run a matching root workspace.json script. This may be useful
+because Wurk options (eg. selecting workspaces using the `-w` option) are inherited by spawned Wurk subprocesses, allowing package filtering to be
+applied to package.json scripts that are composed of other Wurk CLI commands.
+
+```sh
+# Run the build script from the root workspace.json file.
+wurk build
+```
+
+(Optional) Delegate root workspace.json scripts to Wurk.
 
 ```json
 {
   "scripts": {
-    "build": "wurk build",
-    "test": "wurk test",
+    "build": "wurk run build",
+    "lint": "wurk run eslint .",
+    "test": "wurk build && wurk lint && wurk vitest",
     "create-release": "wurk version auto",
     "release": "wurk publish",
     "clean": "wurk clean"
@@ -61,7 +71,7 @@ The following "official" commands are available.
 - [clean](https://www.npmjs.com/package/@wurk/command-clean): Remove Git ignored files, but leave dependencies and dotfiles alone.
 - [list](https://www.npmjs.com/package/@wurk/command-list): List workspaces.
 
-Run `npm install --save-dev @wurk/command-<name>` in your project root to install any of these commands.
+Run `npm install --save-dev @wurk/command-<name>` in your root workspace to install any of these commands.
 
 See the [API docs](./docs/api/README.md) for information on creating your own custom commands.
 
@@ -93,12 +103,13 @@ Options which reduce the number of workspaces that are processed.
 
 ### Parallelization Options
 
-- `-p, --parallel`
-  - Process workspaces in parallel.
-  - This option implies the `--concurrency=auto` option.
+- `--parallel`
+  - Process all workspaces simultaneously without topological awaiting.
+- `--stream`
+  - Process workspaces concurrently with topological awaiting.
 - `-c, --concurrency <count>`
-  - Set the number workspaces to process in parallel. The count can be a number, "auto", or "all". The default is is "auto", which is equivalent to one greater than the number of CPU cores (cores + 1).
-  - This option implies the `--parallel` option.
+  - Set the number workspaces to process simultaneously when streaming. The default is one greater than the number of CPU cores (cores + 1).
+  - This option implies the `--stream` option.
 
 > By default, workspaces are processed serially (one at a time). This is generally the slowest option, but also the safest.
 

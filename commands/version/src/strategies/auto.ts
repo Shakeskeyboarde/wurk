@@ -1,12 +1,14 @@
 import semver, { type ReleaseType } from 'semver';
-import { type Fs, type Git, type Workspace } from 'wurk';
+import { type Fs, type Git, type PackageManager, type Workspace } from 'wurk';
 
 import { type Change, ChangeType } from '../change.js';
 
 export const auto = async (
+  pm: PackageManager,
+  git: Git,
   workspace: Workspace,
 ): Promise<readonly Change[]> => {
-  const { log, config, version, fs, getNpm, getGit } = workspace;
+  const { log, config, name, version, fs } = workspace;
 
   // Auto-versioning does not support workspaces without versions or with
   // prerelease versions.
@@ -15,8 +17,7 @@ export const auto = async (
     return [];
   }
 
-  const npm = await getNpm();
-  const meta = await npm.getMetadata();
+  const meta = await pm.getMetadata(name, `<=${version}`);
 
   if (!meta) {
     log.info`using existing version for initial release (${version})`;
@@ -25,13 +26,6 @@ export const auto = async (
 
   if (!meta.gitHead) {
     log.warn`auto versioning requires a "gitHead" published to the NPM registry`;
-    return [];
-  }
-
-  const git = await getGit().catch(() => null);
-
-  if (!git) {
-    log.warn`auto versioning requires a Git repository`;
     return [];
   }
 

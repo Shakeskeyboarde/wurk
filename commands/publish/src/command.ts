@@ -26,7 +26,14 @@ export default createCommand('publish', {
       .option('--dry-run', 'perform a dry-run for validation');
   },
 
-  action: async ({ log, options, workspaces, autoPrintStatus }) => {
+  action: async ({
+    log,
+    pm,
+    options,
+    workspaces,
+    autoPrintStatus,
+    createGit,
+  }) => {
     autoPrintStatus();
 
     if (options.fromArchive) {
@@ -56,9 +63,10 @@ export default createCommand('publish', {
       }
 
       const published = new Set<Workspace>();
+      const git = await createGit().catch(() => null);
 
       await workspaces.forEach(async (workspace) => {
-        await publishFromFilesystem({ options, workspace, published });
+        await publishFromFilesystem({ options, pm, git, workspace, published });
       });
     }
   },

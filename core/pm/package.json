@@ -1,14 +1,14 @@
 {
-  "name": "@wurk/workspace",
-  "description": "Wurk workspace management.",
+  "name": "@wurk/pm",
+  "description": "Package manager SDK for Wurk.",
   "version": "0.1.3",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
-  "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/core/workspace/README.md",
+  "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/core/pm/README.md",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Shakeskeyboarde/wurk.git",
-    "directory": "core/workspace"
+    "directory": "core/pm"
   },
   "scripts": {
     "build": "tsc -p src/tsconfig.json"
@@ -27,13 +27,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@types/semver": "^7.5.7",
     "@wurk/fs": "*",
-    "@wurk/json": "*",
-    "@wurk/log": "*",
     "@wurk/spawn": "*",
-    "async-sema": "^3.1.1",
-    "minimatch": "^9.0.3",
     "semver": "^7.6.0"
   }
 }

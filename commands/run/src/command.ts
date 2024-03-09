@@ -27,7 +27,7 @@ export default createCommand('run', {
     if (scripts[0] === 'start' && scripts.length === 1) {
       // If the start script is run by itself, it should generally be run
       // in all workspaces simultaneously.
-      await workspaces.forEachIndependent((workspace) => {
+      await workspaces.forEachParallel((workspace) => {
         return runWorkspaceScripts(workspace, scripts, options.args);
       });
     } else {

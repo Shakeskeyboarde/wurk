@@ -1,10 +1,6 @@
+/* eslint-disable unicorn/no-process-exit */
 /* eslint-disable max-lines */
-import {
-  type Action,
-  defaultExitAction,
-  type ExitAction,
-  type OptionAction,
-} from './action.js';
+import { type Action, type OptionAction } from './action.js';
 import {
   assertNoCommandsWithRequiredPositionalOption,
   assertNoDefaultCommandWithPositionalOption,
@@ -19,7 +15,7 @@ import {
   assertVariadicPositionalOptionLast,
 } from './assert.js';
 import { optionHelpTag, optionVersionTag } from './constants.js';
-import { CliActionError, CliError, CliParseError } from './error.js';
+import { CliUsageError } from './error.js';
 import { defaultHelpFormatter, type HelpFormatter } from './help.js';
 import {
   type AnyNamedConfig,
@@ -77,7 +73,7 @@ interface CliConfig<TName extends string = string> {
   readonly actions?: readonly Action[];
   readonly optionActions?: Readonly<Record<string, OptionAction[]>>;
   readonly optionDefaults?: Readonly<Record<string, () => unknown>>;
-  readonly exitAction?: ExitAction | null;
+  readonly isExitOnErrorEnabled?: boolean;
   readonly isUnknownNamedOptionAllowed?: boolean;
   readonly isShortOptionMergingAllowed?: boolean;
   readonly isCommandOptional?: boolean;
@@ -121,7 +117,7 @@ class InternalCli<TResult extends UnknownResult, TName extends string>
   readonly actions: readonly Action[];
   readonly optionActions: Readonly<Record<string, OptionAction[]>>;
   readonly optionDefaults: Readonly<Record<string, () => unknown>>;
-  readonly exitAction: ExitAction | null;
+  readonly isExitOnErrorEnabled: boolean;
   readonly isUnknownNamedOptionAllowed: boolean;
   readonly isShortOptionMergingAllowed: boolean;
   readonly isCommandOptional: boolean;
@@ -142,8 +138,7 @@ class InternalCli<TResult extends UnknownResult, TName extends string>
     this.actions = config.actions ?? [];
     this.optionActions = config.optionActions ?? {};
     this.optionDefaults = config.optionDefaults ?? {};
-    this.exitAction =
-      config.exitAction !== undefined ? config.exitAction : defaultExitAction;
+    this.isExitOnErrorEnabled = config.isExitOnErrorEnabled ?? false;
     this.isUnknownNamedOptionAllowed =
       config.isUnknownNamedOptionAllowed ?? false;
     this.isShortOptionMergingAllowed =
@@ -178,23 +173,18 @@ class InternalCli<TResult extends UnknownResult, TName extends string>
 
     try {
       result = (await parse(this, args)) as TResult;
-    } catch (error) {
-      const argsError = CliParseError.from(error, { cli: this });
-      await this.exitAction?.(argsError);
-      throw argsError;
-    }
-
-    try {
       await run(this, result);
     } catch (error) {
-      const argsError =
-        error instanceof CliError
-          ? error
-          : CliActionError.from(error, { cli: this });
+      if (!this.isExitOnErrorEnabled) throw error;
 
-      await this.exitAction?.(argsError);
+      if (error instanceof CliUsageError) {
+        this.printHelp(error);
+      } else {
+        console.error(String(error));
+      }
 
-      throw argsError;
+      process.exitCode ||= 1;
+      process.exit();
     }
 
     return result;
@@ -722,24 +712,8 @@ class Cli<
    * NOTE: If set to `true`, help text is printed for parsing errors, and the
    * stringified error is always printed.
    */
-  setExit(
-    value: boolean | ((error: CliParseError | CliActionError) => void),
-  ): Cli<TResult, TName> {
-    let action: ExitAction | null;
-
-    switch (value) {
-      case true:
-        action = defaultExitAction;
-        break;
-      case false:
-        action = null;
-        break;
-      default:
-        action = value;
-        break;
-    }
-
-    return new Cli({ ...this.#internal, exitAction: action });
+  setExitOnError(value = true): Cli<TResult, TName> {
+    return new Cli({ ...this.#internal, isExitOnErrorEnabled: value });
   }
 
   /**

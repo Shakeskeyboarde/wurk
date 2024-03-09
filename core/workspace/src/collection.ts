@@ -1,5 +1,6 @@
 /* eslint-disable max-lines */
-import path from 'node:path';
+import nodeOs from 'node:os';
+import nodePath from 'node:path';
 
 import { type JsonAccessor } from '@wurk/json';
 import { type Log, log as defaultLog } from '@wurk/log';
@@ -29,6 +30,9 @@ export type WorkspaceCallback = (
  * Workspace collection options.
  */
 export interface WorkspaceCollectionOptions {
+  /**
+   * Logger for workspace collection operations.
+   */
   readonly log?: Log;
 
   /**
@@ -55,10 +59,19 @@ export interface WorkspaceCollectionOptions {
   readonly includeRootWorkspace?: boolean;
 
   /**
-   * Maximum workspaces which may be processed in parallel using the
-   * asynchronous `forEach*` methods.
+   * Maximum workspaces which may be processed simultaneously using the
+   * asynchronous `forEachStream()` method. Also affects the `forEach()`
+   * method if the `defaultIterationMethod` option is set to `forEachStream`.
    */
   readonly concurrency?: number;
+
+  /**
+   * Default iteration method.
+   */
+  readonly defaultIterationMethod?:
+    | 'forEachParallel'
+    | 'forEachStream'
+    | 'forEachSequential';
 }
 
 /**
@@ -150,10 +163,10 @@ export class WorkspaceCollection {
       workspaces.push(root);
     }
 
-    options.workspaces?.forEach(([dir, config]) => {
+    for (const [dir, config] of options.workspaces ?? []) {
       const workspace: Workspace = new Workspace({
         dir,
-        relativeDir: path.relative(root.dir, dir),
+        relativeDir: nodePath.relative(root.dir, dir),
         config,
         getDependencyLinks: (linkOptions) => {
           return this.getDependencyLinks(workspace, linkOptions);
@@ -164,7 +177,7 @@ export class WorkspaceCollection {
       });
 
       workspaces.push(workspace);
-    });
+    }
 
     Array.from(workspaces.values())
       .flatMap((dependent) => {
@@ -222,7 +235,8 @@ export class WorkspaceCollection {
     });
 
     this.root = root;
-    this.concurrency = getSafeConcurrency(options.concurrency);
+    this.forEach = this[options.defaultIterationMethod ?? 'forEachSequential'];
+    this.concurrency = options.concurrency ?? nodeOs.cpus().length + 1;
     this.all = new GeneratorIterable(() =>
       getDepthFirstGenerator(this.#workspaces, (current) => {
         return this.#dependencyLinks
@@ -300,37 +314,58 @@ export class WorkspaceCollection {
   }
 
   /**
-   * Iterate over selected workspaces in parallel, ensuring that each
-   * workspace's local (selected) dependencies are processed before the
-   * workspace itself.
+   * Iterate over selected workspaces. This method will behave like one of
+   * the other `forEach*` methods, depending on the collection configuration.
    */
   async forEach(
     callback: WorkspaceCallback,
     signal?: AbortSignal,
   ): Promise<void> {
-    await this._forEachAsync(callback, { signal });
+    await this.forEachSequential(callback, signal);
   }
 
   /**
    * Iterate over selected workspaces in parallel, without regard for
-   * interdependency.
+   * topology or concurrency limits.
    */
-  async forEachIndependent(
+  async forEachParallel(
     callback: WorkspaceCallback,
     signal?: AbortSignal,
   ): Promise<void> {
-    await this._forEachAsync(callback, { signal, independent: true });
+    await this._forEachAsync(callback, {
+      signal,
+      stream: false,
+      concurrency: -1,
+    });
   }
 
   /**
-   * Iterate over selected workspaces sequentially (ie. one at a time,
-   * serially, non-parallel).
+   * Iterate over selected workspaces in parallel, with topological awaiting
+   * and concurrency limits.
+   */
+  async forEachStream(
+    callback: WorkspaceCallback,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    await this._forEachAsync(callback, {
+      signal,
+      stream: true,
+      concurrency: this.concurrency,
+    });
+  }
+
+  /**
+   * Iterate over selected workspaces sequentially, without any concurrency.
    */
   async forEachSequential(
     callback: WorkspaceCallback,
     signal?: AbortSignal,
   ): Promise<void> {
-    await this._forEachAsync(callback, { signal, concurrency: 1 });
+    await this._forEachAsync(callback, {
+      signal,
+      stream: false,
+      concurrency: 1,
+    });
   }
 
   /**
@@ -413,23 +448,22 @@ export class WorkspaceCollection {
   protected async _forEachAsync(
     callback: WorkspaceCallback,
     options: {
-      signal?: AbortSignal;
-      concurrency?: number;
-      independent?: boolean;
-    } = {},
+      readonly signal: AbortSignal | undefined;
+      readonly concurrency: number;
+      readonly stream: boolean;
+    },
   ): Promise<void> {
-    const {
-      signal: outerSignal,
-      concurrency = this.concurrency,
-      independent = false,
-    } = options;
+    const { signal: outerSignal, concurrency, stream } = options;
 
     if (outerSignal?.aborted) return;
 
     const abortController = new AbortController();
     const { signal } = abortController;
     const promises = new Map<Workspace, Promise<void>>();
-    const semaphore = new Sema(getSafeConcurrency(concurrency));
+    const semaphore =
+      concurrency < 0 || Number.isNaN(concurrency)
+        ? null
+        : new Sema(concurrency);
 
     outerSignal?.addEventListener('abort', () => abortController.abort(), {
       once: true,
@@ -444,10 +478,10 @@ export class WorkspaceCollection {
       };
 
       const promise = (async () => {
-        await semaphore.acquire();
+        await semaphore?.acquire();
 
         try {
-          if (!independent) {
+          if (stream) {
             const links = this.getDependencyLinks(workspace, {
               recursive: true,
             });
@@ -465,7 +499,7 @@ export class WorkspaceCollection {
           status.set(StatusValue.failure);
           abort(error);
         } finally {
-          semaphore.release();
+          semaphore?.release();
         }
       })();
 
@@ -479,7 +513,3 @@ export class WorkspaceCollection {
     }
   }
 }
-
-const getSafeConcurrency = (value: number | undefined): number => {
-  return Math.min(Math.max(1, Math.trunc(Number(value) || 0)), 100);
-};
