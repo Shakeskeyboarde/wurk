@@ -190,12 +190,8 @@ const mainAsync = async (): Promise<void> => {
     .catch((error: unknown) => {
       process.exitCode ||= 1;
 
-      if (error instanceof CliUsageError) {
-        cli.printHelp(error);
-      }
-      else {
-        log.error({ message: error });
-      }
+      if (error instanceof CliUsageError) cli.printHelp(error);
+      else log.error({ message: error });
     });
 };
 

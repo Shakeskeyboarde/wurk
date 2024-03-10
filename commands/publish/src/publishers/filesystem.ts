@@ -137,9 +137,7 @@ const validate = async (
   }
 
   if (await git?.getIsDirty()) {
-    log.warn`workspace has uncommitted changes`;
-    status.set('warning', 'uncommitted changes');
-    return false;
+    throw new Error('workspace has uncommitted changes');
   }
 
   const changelog = await fs.readText('CHANGELOG.md');
@@ -175,18 +173,14 @@ const validate = async (
     });
 
   if (missingPackEntrypoints.length) {
-    log.error`missing packed entry points:`;
     missingPackEntrypoints.forEach(({ type, filename }) => {
-      log.error`- ${fs.relative(filename)} (${type})`;
+      log.error`missing ${type} "${fs.relative(filename)}"`;
     });
-    status.set('failure', 'entry points');
-    return false;
+    throw new Error('missing packed entry points');
   }
 
   for (const link of getDependencyLinks()) {
-    if (!(await validateDependency(pm, git, workspace, link, published))) {
-      return false;
-    }
+    await validateDependency(pm, git, workspace, link, published);
   }
 
   return true;
@@ -198,50 +192,41 @@ const validateDependency = async (
   workspace: Workspace,
   { type, spec, dependency }: WorkspaceLink,
   published: Set<Workspace>,
-): Promise<boolean> => {
-  const { log, status } = workspace;
+): Promise<void> => {
+  const { log } = workspace;
   const { dir, name, version, isPrivate } = dependency;
 
   if (type === 'devDependencies') {
     // Dev dependencies are not used after publishing, so they don't need
     // validation.
-    return true;
+    return;
   }
 
   if (spec.type === 'tag') {
     // Dependencies on tagged versions are not local dependencies.
-    return true;
+    return;
   }
 
   if (spec.type === 'url') {
-    if (spec.protocol === 'file') {
-      log.error`dependency "${name}" is local path`;
-      status.set('failure', `dependency local path`);
-      return false;
-    }
-    else {
-      // Dependencies on non-file URLs (eg. `git`, `https`) are not local
-      // dependencies.
-      return true;
-    }
+    // Dependencies on non-file URLs (eg. `git`, `https`) are not local
+    // dependencies.
+    if (spec.protocol !== 'file') return;
+
+    throw new Error(`dependency "${name}" is local path`);
   }
 
   if (!version) {
-    log.error`dependency "${name}" is unversioned`;
-    status.set('failure', `dependency unversioned`);
-    return false;
+    throw new Error(`dependency "${name}" is unversioned`);
   }
 
   if (isPrivate) {
-    log.error`dependency "${name}" is private`;
-    status.set('failure', `dependency private`);
-    return false;
+    throw new Error(`dependency "${name}" is private`);
   }
 
   if (!semver.satisfies(version, spec.range)) {
     // The dependency version range is not satisfied by the local workspace,
     // so this is not a local dependency.
-    return true;
+    return;
   }
 
   // If a non-wildcard dependency version range is used, then the min-version
@@ -253,25 +238,19 @@ const validateDependency = async (
       .minVersion(spec.range)
       ?.format() !== version
   ) {
-    log.error`dependency "${name}" min-version does not match workspace version`;
-    status.set('failure', `dependency min-version`);
-    return false;
+    throw new Error(`dependency "${name}" min-version does not match workspace version`);
   }
 
   if (!published.has(dependency)) {
     const meta = await pm.getMetadata(name, version);
 
     if (!meta) {
-      log.error`dependency "${name}" is not published`;
-      status.set('failure', `dependency unpublished`);
-      return false;
+      throw new Error(`dependency "${name}" is not published`);
     }
 
     if (git) {
       if (await git.getIsDirty(dir)) {
-        log.warn`dependency "${name}" has uncommitted changes`;
-        status.set('warning', `dependency uncommitted changes`);
-        return false;
+        throw new Error(`dependency "${name}" has uncommitted changes`);
       }
 
       if (meta.gitHead) {
@@ -279,9 +258,7 @@ const validateDependency = async (
 
         if (head) {
           if (head !== meta.gitHead) {
-            log.warn`dependency "${name}" is modified`;
-            status.set('warning', `dependency modified`);
-            return false;
+            throw new Error(`dependency "${name}" is modified`);
           }
         }
         else {
@@ -293,6 +270,4 @@ const validateDependency = async (
       }
     }
   }
-
-  return true;
 };

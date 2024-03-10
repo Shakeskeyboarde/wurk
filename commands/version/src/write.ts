@@ -22,12 +22,8 @@ enum ChangelogSection {
 
 export const writeConfig = async (workspace: Workspace): Promise<void> => {
   const { log, config, fs } = workspace;
-
   log.debug`writing config`;
-
-  await fs
-    .writeJson('package.json', config)
-    .catch((error: unknown) => log.error({ message: error }));
+  await fs.writeJson('package.json', config);
 };
 
 export const writeChangelog = async (
@@ -80,7 +76,7 @@ export const writeChangelog = async (
   });
 
   if (previousVersionIndex >= 0 && newVersion === entries[previousVersionIndex]?.version) {
-    log.warn`skipping changelog write (version exists)`;
+    log.warn`changelog already has an entry for ${newVersion}`;
     return;
   }
 
