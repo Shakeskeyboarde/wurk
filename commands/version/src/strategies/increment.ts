@@ -25,5 +25,7 @@ export const increment = async (
     .format();
 
   log.info`bumping ${releaseType} version (${version} -> ${newVersion})`;
-  config.at('version').set(newVersion);
+  config
+    .at('version')
+    .set(newVersion);
 };

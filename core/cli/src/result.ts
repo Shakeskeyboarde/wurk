@@ -61,9 +61,9 @@ interface PartialResult<
   readonly command: {
     readonly [P in keyof TCommand]:
       | PartialResult<
-          InferResultOptions<TCommand[P]>,
-          InferResultCommand<TCommand[P]>
-        >
+        InferResultOptions<TCommand[P]>,
+        InferResultCommand<TCommand[P]>
+      >
       | undefined;
   };
 }

@@ -9,8 +9,12 @@ export const promote = async (workspace: Workspace): Promise<void> => {
     return;
   }
 
-  const newVersion = new semver.SemVer(version).inc('patch').format();
+  const newVersion = new semver.SemVer(version)
+    .inc('patch')
+    .format();
 
   log.info`promoting prerelease version (${version} -> ${newVersion})`;
-  config.at('version').set(newVersion);
+  config
+    .at('version')
+    .set(newVersion);
 };

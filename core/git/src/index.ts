@@ -63,7 +63,8 @@ export class Git {
     return await this._spawn('git', [
       'rev-parse',
       '--is-shallow-repository',
-    ]).then(({ stdoutText }) => stdoutText !== 'false');
+    ])
+      .then(({ stdoutText }) => stdoutText !== 'false');
   };
 
   /**
@@ -73,7 +74,8 @@ export class Git {
     return await this._spawn('git', [
       'rev-parse',
       '--show-toplevel',
-    ]).stdoutText();
+    ])
+      .stdoutText();
   };
 
   /**
@@ -81,9 +83,7 @@ export class Git {
    * directory. This may not actually be HEAD if the instance directory
    * was not modified in the current HEAD commit.
    */
-  readonly getHead = async (
-    options?: GitHeadOptions,
-  ): Promise<string | null> => {
+  readonly getHead = async (options?: GitHeadOptions): Promise<string | null> => {
     if (!options?.allowShallow) {
       nodeAssert(
         !(await this.getIsShallow()),
@@ -97,7 +97,8 @@ export class Git {
         ['-n', '1'],
         '--pretty=format:%H',
         ['--', options?.dir ?? '.'],
-      ]).stdoutText()) || null
+      ])
+        .stdoutText()) || null
     );
   };
 
@@ -113,7 +114,8 @@ export class Git {
         '--ignored',
         '--porcelain',
         dir ?? '.',
-      ]).stdoutText(),
+      ])
+        .stdoutText(),
     ]);
 
     return gitIgnoredText
@@ -153,9 +155,7 @@ export class Git {
     const formatEntries = Object.entries(LOG_FORMAT);
     const formatNames = formatEntries.map(([name]) => name);
 
-    const formatPlaceholders = formatEntries.map(
-      ([, placeholder]) => placeholder,
-    );
+    const formatPlaceholders = formatEntries.map(([, placeholder]) => placeholder);
 
     const text = await this._spawn('git', [
       'log',
@@ -163,18 +163,17 @@ export class Git {
       start ? `${start}..${end}` : end,
       '--',
       options?.dir ?? '.',
-    ]).stdoutText();
+    ])
+      .stdoutText();
 
-    return [...text.matchAll(/\0{3}(.*)\0{3}/gsu)].flatMap(
-      ([, content = '']) => {
-        const values = content.split(/ \0{2} /u).map((value) => value.trim());
-        const log = Object.fromEntries(
-          formatNames.map((name, index) => [name, values[index]]),
-        );
+    return [...text.matchAll(/\0{3}(.*)\0{3}/gsu)].flatMap(([, content = '']) => {
+      const values = content
+        .split(/ \0{2} /u)
+        .map((value) => value.trim());
+      const log = Object.fromEntries(formatNames.map((name, index) => [name, values[index]]));
 
-        return log as unknown as GitLog;
-      },
-    );
+      return log as unknown as GitLog;
+    });
   };
 
   protected readonly _spawn = createSpawn(() => ({

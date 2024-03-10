@@ -52,10 +52,14 @@ export default createCommand('publish', {
       await workspaces.forEach(async (workspace) => {
         await publishFromArchive({ options, workspace });
       });
-    } else {
+    }
+    else {
       if (
-        options.build !== false &&
-        workspaces.root.config.at('scripts').at('build').is('string')
+        options.build !== false
+        && workspaces.root.config
+          .at('scripts')
+          .at('build')
+          .is('string')
       ) {
         await workspaces.root.spawn('npm', ['run', 'build'], {
           output: 'inherit',
@@ -63,7 +67,8 @@ export default createCommand('publish', {
       }
 
       const published = new Set<Workspace>();
-      const git = await createGit().catch(() => null);
+      const git = await createGit()
+        .catch(() => null);
 
       await workspaces.forEach(async (workspace) => {
         await publishFromFilesystem({ options, pm, git, workspace, published });

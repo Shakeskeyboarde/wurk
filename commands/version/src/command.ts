@@ -7,16 +7,12 @@ import { writeChangelog, writeConfig } from './write.js';
 export default createCommand('version', {
   config: (cli) => {
     return cli
-      .trailer(
-        `The "auto" strategy determines the next version for each workspace
+      .trailer(`The "auto" strategy determines the next version for each workspace
          based on conventional-like commit messages added after the closest
-         published previous version. Prerelease versions are not supported.`,
-      )
-      .trailer(
-        `The "promote" strategy converts prerelease versions to their release
+         published previous version. Prerelease versions are not supported.`)
+      .trailer(`The "promote" strategy converts prerelease versions to their release
          equivalent by removing the prerelease identifier. The major, minor,
-         and patch versions are not changed.`,
-      )
+         and patch versions are not changed.`)
       .option('<strategy>', {
         description:
           'major, minor, patch, premajor, preminor, prepatch, prerelease, auto, promote, or a version number',
@@ -35,12 +31,13 @@ export default createCommand('version', {
   },
 
   action: async (context) => {
-    const { log, pm, workspaces, options, autoPrintStatus, createGit } =
-      context;
-    const git = await createGit().catch(() => null);
+    const { log, pm, workspaces, options, autoPrintStatus, createGit }
+      = context;
+    const git = await createGit()
+      .catch(() => null);
     const { strategy, preid, changelog = strategy === 'auto' } = options;
-    const isPreStrategy =
-      typeof strategy === 'string' && strategy.startsWith('pre');
+    const isPreStrategy
+      = typeof strategy === 'string' && strategy.startsWith('pre');
     const changes = new Map<Workspace, readonly Change[]>();
     const callback = getStrategyCallback(strategy, pm, git, preid);
 
@@ -64,7 +61,9 @@ export default createCommand('version', {
       }
 
       const workspaceChanges = await callback(workspace);
-      const workspaceNewVersion = config.at('version').as('string');
+      const workspaceNewVersion = config
+        .at('version')
+        .as('string');
 
       if (!workspaceNewVersion || workspaceNewVersion === version) {
         // Unselect workspaces where the version strategy is a no-op.
@@ -85,7 +84,9 @@ export default createCommand('version', {
 
       status.set('pending');
 
-      const newVersion = config.at('version').as('string');
+      const newVersion = config
+        .at('version')
+        .as('string');
 
       if (newVersion !== version) {
         status.setDetail(`${version} -> ${newVersion}`);
@@ -104,19 +105,21 @@ export default createCommand('version', {
 
     await workspaces.root.spawn(
       'npm',
-      ['update', ...Array.from(workspaces).map(({ name }) => name)],
+      ['update', ...Array.from(workspaces)
+        .map(({ name }) => name)],
       { output: 'ignore' },
     );
 
-    const specs = Array.from(workspaces).flatMap(
-      ({ name, version, config }) => {
-        const newVersion = config.at('version').as('string');
+    const specs = Array.from(workspaces)
+      .flatMap(({ name, version, config }) => {
+        const newVersion = config
+          .at('version')
+          .as('string');
 
         return newVersion && newVersion !== version
           ? `${name}@${newVersion}`
           : [];
-      },
-    );
+      });
 
     log.notice`version commit message:`;
     log.notice({ color: 'blue' })`  release: ${specs.join(', ')}`;

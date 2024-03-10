@@ -104,9 +104,7 @@ type CliName<TName extends string> = Exclude<
   '' | `-${string}` | `${string}${'|' | ' ' | '\r' | '\n' | '\t'}${string}`
 >;
 
-class InternalCli<TResult extends UnknownResult, TName extends string>
-  implements Required<CliConfig<TName>>
-{
+class InternalCli<TResult extends UnknownResult, TName extends string> implements Required<CliConfig<TName>> {
   readonly name: TName;
   readonly aliases: readonly string[];
   readonly descriptions: readonly string[];
@@ -139,10 +137,8 @@ class InternalCli<TResult extends UnknownResult, TName extends string>
     this.optionActions = config.optionActions ?? {};
     this.optionDefaults = config.optionDefaults ?? {};
     this.isExitOnErrorEnabled = config.isExitOnErrorEnabled ?? false;
-    this.isUnknownNamedOptionAllowed =
-      config.isUnknownNamedOptionAllowed ?? false;
-    this.isShortOptionMergingAllowed =
-      config.isShortOptionMergingAllowed ?? false;
+    this.isUnknownNamedOptionAllowed = config.isUnknownNamedOptionAllowed ?? false;
+    this.isShortOptionMergingAllowed = config.isShortOptionMergingAllowed ?? false;
     this.isCommandOptional = config.isCommandOptional ?? false;
     this.isGreedy = config.isGreedy ?? false;
     this.isDefault = config.isDefault ?? false;
@@ -166,20 +162,20 @@ class InternalCli<TResult extends UnknownResult, TName extends string>
     console[error ? 'error' : 'log'](this.getHelpText(error));
   }
 
-  async parse(
-    args: readonly string[] = process.argv.slice(2),
-  ): Promise<TResult> {
+  async parse(args: readonly string[] = process.argv.slice(2)): Promise<TResult> {
     let result: TResult;
 
     try {
       result = (await parse(this, args)) as TResult;
       await run(this, result);
-    } catch (error) {
+    }
+    catch (error) {
       if (!this.isExitOnErrorEnabled) throw error;
 
       if (error instanceof CliUsageError) {
         this.printHelp(error);
-      } else {
+      }
+      else {
         console.error(String(error));
       }
 
@@ -215,9 +211,7 @@ class Cli<
   /**
    * Add one or more aliases to the command.
    */
-  alias<TAlias extends string>(
-    ...aliases: readonly [CliName<TAlias>, ...CliName<TAlias>[]]
-  ): Cli<TResult, TName> {
+  alias<TAlias extends string>(...aliases: readonly [CliName<TAlias>, ...CliName<TAlias>[]]): Cli<TResult, TName> {
     aliases.forEach(assertValidName);
 
     return new Cli({
@@ -229,9 +223,7 @@ class Cli<
   /**
    * Add a paragraph to the start of the command help text.
    */
-  description(
-    description: string | null | undefined | false | 0 | 0n,
-  ): Cli<TResult, TName> {
+  description(description: string | null | undefined | false | 0 | 0n): Cli<TResult, TName> {
     return new Cli({
       ...this.#internal,
       descriptions: description
@@ -243,9 +235,7 @@ class Cli<
   /**
    * Add a paragraph to the end of the command help text.
    */
-  trailer(
-    trailer: string | null | undefined | false | 0 | 0n,
-  ): Cli<TResult, TName> {
+  trailer(trailer: string | null | undefined | false | 0 | 0n): Cli<TResult, TName> {
     return new Cli({
       ...this.#internal,
       trailers: trailer
@@ -262,9 +252,7 @@ class Cli<
    * the `versionOption()` method, and no other options conflict with the `-v`
    * or `--version` option names.
    */
-  version(
-    version: string | null | undefined | false | 0 | 0n,
-  ): Cli<TResult, TName> {
+  version(version: string | null | undefined | false | 0 | 0n): Cli<TResult, TName> {
     let next: Cli<TResult, TName> = new Cli({
       ...this.#internal,
       version: version || this.#internal.version,
@@ -284,14 +272,16 @@ class Cli<
    * - Must begin with a hyphen followed by a name (eg. `-a` or `--abc`).
    *   - Names cannot contain whitespace or the following reserved characters: `=,|.<>[]`
    * - Aliases can be separating a comma or pipe (eg. `-a, --abc` or `-a | --abc`).
-   * - The last alias may be followed by a "positional" value placeholder (eg. `--option <value>` or `--option=<value>`).
+   * - The last alias may be followed by a "positional" value placeholder
+   *   (eg. `--option <value>` or `--option=<value>`).
    * - The option key defaults to the last alias converted to camel case (eg. `-f, --foo-bar` becomes `fooBar`).
    *
    * Positional Options:
    * - Must be wrapped in angle brackets (`<value>`) for required or square brackets (`[value]`) for non-required.
    * - Names cannot contain whitespace or the following reserved characters: `=,|.<>[]`
    * - Names may be followed by a trailing ellipsis to indicate a variadic option (eg. `<value...>` or `[value...]`).
-   * - The option key defaults to the name (with ellipses removed) converted to camel case (eg. `<foo-bar...>` becomes `fooBar`).
+   * - The option key defaults to the name (with ellipses removed) converted to camel case
+   *   (eg. `<foo-bar...>` becomes `fooBar`).
    */
   option<
     TUsage extends NamedUsageString,
@@ -310,15 +300,15 @@ class Cli<
   ): Cli<
     TKey extends string
       ? Result<
-          UnionProps<
-            InferResultOptions<TResult>,
-            Record<
-              TKey,
+        UnionProps<
+          InferResultOptions<TResult>,
+          Record<
+            TKey,
               TParsedValue | (TRequired extends true ? never : undefined)
-            >
-          >,
-          InferResultCommand<TResult>
-        >
+          >
+        >,
+        InferResultCommand<TResult>
+      >
       : TResult,
     TName
   >;
@@ -334,15 +324,15 @@ class Cli<
   ): Cli<
     TKey extends string
       ? Result<
-          UnionProps<
-            InferResultOptions<TResult>,
-            Record<
-              TKey,
+        UnionProps<
+          InferResultOptions<TResult>,
+          Record<
+            TKey,
               TParsedValue | (TRequired extends true ? never : undefined)
-            >
-          >,
-          InferResultCommand<TResult>
-        >
+          >
+        >,
+        InferResultCommand<TResult>
+      >
       : TResult,
     TName
   >;
@@ -400,9 +390,9 @@ class Cli<
     config:
       | string
       | Omit<
-          AnyNamedConfig,
+        AnyNamedConfig,
           'key' | 'required' | 'mapped' | 'parse' | 'meta'
-        > = {},
+      > = {},
   ): Cli<TResult, TName> {
     const options = this.#internal.options.filter(({ meta }) => {
       return meta !== optionHelpTag;
@@ -455,13 +445,11 @@ class Cli<
     config:
       | string
       | Omit<
-          AnyNamedConfig,
+        AnyNamedConfig,
           'key' | 'required' | 'mapped' | 'parse' | 'meta'
-        > = {},
+      > = {},
   ): Cli<TResult, TName> {
-    const options = this.#internal.options.filter(
-      ({ meta }) => meta !== optionVersionTag,
-    );
+    const options = this.#internal.options.filter(({ meta }) => meta !== optionVersionTag);
 
     if (usage === undefined) {
       usage = (['-v', '--version']
@@ -518,9 +506,7 @@ class Cli<
       KeyOf<PickByType<InferResultOptions<TResult>, boolean>>,
       TKey0 | TKey1
     >[],
-  >(
-    ...keys: [key0: TKey0, key1: TKey1, ...keyN: UniqueArray<TKeyN>]
-  ): Cli<
+  >(...keys: [key0: TKey0, key1: TKey1, ...keyN: UniqueArray<TKeyN>]): Cli<
     Result<
       UnionProps<
         Omit<InferResultOptions<TResult>, TKey0 | TKey1 | TKeyN[number]>,
@@ -528,8 +514,8 @@ class Cli<
           TKey0 | TKey1 | TKeyN[number],
           | boolean
           | (keyof PickRequired<InferResultOptions<TResult>> extends never
-              ? undefined
-              : never)
+            ? undefined
+            : never)
         >
       >,
       InferResultCommand<TResult>
@@ -565,9 +551,9 @@ class Cli<
       TKey0 | TKey1
     >[],
   >(...keys: [key0: TKey0, key1: TKey1, ...keyN: TKeyN]): Cli<TResult, TName> {
-    const options = keys.map(
-      (key) => this.#internal.options.find((option) => option.key === key)!,
-    );
+    const options = keys.map((key) => {
+      return this.#internal.options.find((option) => option.key === key)!;
+    });
 
     assertNotConflictingTwoPositionalOptions(options);
 
@@ -576,13 +562,8 @@ class Cli<
 
       return current.optionAction(key, ({ result }) => {
         options.forEach((otherOption) => {
-          if (
-            key !== otherOption.key &&
-            result.parsed.has(otherOption.key as any)
-          ) {
-            throw new Error(
-              `option "${option.usage}" conflicts with "${otherOption.usage}"`,
-            );
+          if (key !== otherOption.key && result.parsed.has(otherOption.key as any)) {
+            throw new Error(`option "${option.usage}" conflicts with "${otherOption.usage}"`);
           }
         });
       });
@@ -616,22 +597,22 @@ class Cli<
     key: TKey,
     factory:
       | Extract<
-          InferResultOptions<TResult>[TKey],
-          null | boolean | number | bigint | string
-        >
+        InferResultOptions<TResult>[TKey],
+        null | boolean | number | bigint | string
+      >
       | (() =>
-          | Exclude<InferResultOptions<TResult>[TKey], undefined>
-          | Promise<Exclude<InferResultOptions<TResult>[TKey], undefined>>),
+      | Exclude<InferResultOptions<TResult>[TKey], undefined>
+      | Promise<Exclude<InferResultOptions<TResult>[TKey], undefined>>),
   ): Cli<
-    Result<
-      UnionProps<
-        Omit<InferResultOptions<TResult>, TKey>,
-        Record<TKey, Exclude<InferResultOptions<TResult>[TKey], undefined>>
+      Result<
+        UnionProps<
+          Omit<InferResultOptions<TResult>, TKey>,
+          Record<TKey, Exclude<InferResultOptions<TResult>[TKey], undefined>>
+        >,
+        InferResultCommand<TResult>
       >,
-      InferResultCommand<TResult>
-    >,
-    TName
-  > {
+      TName
+    > {
     return new Cli({
       ...this.#internal,
       optionDefaults: {
@@ -652,15 +633,15 @@ class Cli<
   command<TCommandName extends string, TCommandResult extends UnknownResult>(
     command: Cli<TCommandResult, TCommandName>,
   ): Cli<
-    Result<
-      InferResultOptions<TResult>,
-      UnionProps<
-        InferResultCommand<TResult>,
-        Record<TCommandName, TCommandResult | undefined>
-      >
-    >,
-    TName
-  > {
+      Result<
+        InferResultOptions<TResult>,
+        UnionProps<
+          InferResultCommand<TResult>,
+          Record<TCommandName, TCommandResult | undefined>
+        >
+      >,
+      TName
+    > {
     assertUniqueCommandName(this.#internal, command.#internal);
     assertNoRequiredPositionalOptionsWithCommand(this.#internal);
     assertNoPositionalOptionsWithDefaultCommand(
@@ -809,18 +790,14 @@ class Cli<
    * used. Any extra leading arguments must be removed when explicitly
    * providing `args`.
    */
-  async parse(
-    args: readonly string[] = process.argv.slice(2),
-  ): Promise<TResult> {
+  async parse(args: readonly string[] = process.argv.slice(2)): Promise<TResult> {
     return await this.#internal.parse(args);
   }
 
   /**
    * Define a new command line interface.
    */
-  static create<TName extends string>(
-    name: CliName<TName>,
-  ): Cli<Result<{}, {}>, TName> {
+  static create<TName extends string>(name: CliName<TName>): Cli<Result<{}, {}>, TName> {
     assertValidName(name);
     return new Cli({ name });
   }

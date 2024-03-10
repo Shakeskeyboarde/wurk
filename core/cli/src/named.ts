@@ -73,10 +73,9 @@ const createNamed = (
   usage: string,
   configOrDescription: AnyNamedConfig | string = {},
 ): Named => {
-  const config =
-    typeof configOrDescription === 'string'
-      ? { description: configOrDescription }
-      : configOrDescription;
+  const config = typeof configOrDescription === 'string'
+    ? { description: configOrDescription }
+    : configOrDescription;
   const parsedUsage = parseUsage(usage);
 
   return {
@@ -90,52 +89,48 @@ const createNamed = (
     mapped: config.mapped ?? false,
     meta: config.meta,
     parse:
-      config.parse ??
-      (config.mapped
+      config.parse ?? (config.mapped
         ? parsedUsage.variadic
           ? (
-              value: Record<string, boolean | string[]>,
-              prev: Record<string, (boolean | string)[]> | undefined,
-            ) =>
-              ({
-                ...prev,
-                ...Object.fromEntries(
-                  Object.entries(value).map(([k, v]) => [
-                    k,
-                    [...(prev?.[k] ?? []), ...(Array.isArray(v) ? v : [v])],
-                  ]),
-                ),
-              }) satisfies Record<string, (boolean | string)[]>
+            value: Record<string, boolean | string[]>,
+            prev: Record<string, (boolean | string)[]> | undefined,
+          ) => ({
+            ...prev,
+            ...Object.fromEntries(Object.entries(value)
+              .map(([k, v]) => [
+                k,
+                [...(prev?.[k] ?? []), ...(Array.isArray(v) ? v : [v])],
+              ])),
+          }) satisfies Record<string, (boolean | string)[]>
           : (
-              value: Record<string, boolean | string>,
-              prev: Record<string, boolean | string> | undefined,
-            ): Record<string, boolean | string> => ({
-              ...prev,
-              ...value,
-            })
+            value: Record<string, boolean | string>,
+            prev: Record<string, boolean | string> | undefined,
+          ): Record<string, boolean | string> => ({
+            ...prev,
+            ...value,
+          })
         : parsedUsage.variadic
           ? (
-              value: boolean | string[],
-              prev: (boolean | string)[] | undefined,
-            ) =>
-              [
-                ...(prev ?? []),
-                ...(Array.isArray(value) ? value : [value]),
-              ] satisfies (boolean | string)[]
+            value: boolean | string[],
+            prev: (boolean | string)[] | undefined,
+          ) => [
+            ...(prev ?? []),
+            ...(Array.isArray(value) ? value : [value]),
+          ] satisfies (boolean | string)[]
           : (value: boolean | string): boolean | string => value),
   };
 };
 
 const parseUsage = (usage: string): NamedUsage => {
-  const match = usage.match(
-    /^(-[^\s=,|.<>[\]]+(?:(?:, ?| ?\| ?)-[^\s=,|.<>[\]]*)*)(?:[ =](?:<([^\s=,|.<>[\]]+)(\.{3})?>|\[([^\s=,|.<>[\]]+)(\.{3})?\]))?$/u,
-  );
+  const match = usage.match(/^(-[^\s=,|.<>[\]]+(?:(?:, ?| ?\| ?)-[^\s=,|.<>[\]]*)*)(?:[ =](?:<([^\s=,|.<>[\]]+)(\.{3})?>|\[([^\s=,|.<>[\]]+)(\.{3})?\]))?$/u);
 
   if (!match) {
     throw new Error(`invalid named option "${usage}"`);
   }
 
-  const names = match[1]!.split(/[,|]/u).map((name) => name.trim());
+  const names = match[1]!
+    .split(/[,|]/u)
+    .map((name) => name.trim());
   const key = camelCase(names.at(-1)!);
   const value = Boolean(match[2] || match[4]);
   const required = Boolean(match[2]);

@@ -44,10 +44,14 @@ export const auto = async (
     return [];
   }
 
-  const newVersion = new semver.SemVer(version).inc(releaseType).format();
+  const newVersion = new semver.SemVer(version)
+    .inc(releaseType)
+    .format();
 
   log.info`detected ${releaseType} changes (${version} -> ${newVersion})`;
-  config.at('version').set(newVersion);
+  config
+    .at('version')
+    .set(newVersion);
 
   return changes;
 };
@@ -66,9 +70,7 @@ export const getChanges = async (
   let isConventional = true;
   let changes: Change[] = logs
     .flatMap(({ hash, subject, body }): Change[] => {
-      const subjectMatch = subject.match(
-        /^\s*([a-z][a-z- ]+(?<=[a-z]))\s*(?:\((.*?)\)\s*)?(?:!\s*)?:(.*)$/iu,
-      );
+      const subjectMatch = subject.match(/^\s*([a-z][a-z- ]+(?<=[a-z]))\s*(?:\((.*?)\)\s*)?(?:!\s*)?:(.*)$/iu);
 
       if (!subjectMatch) {
         isConventional = false;
@@ -77,13 +79,12 @@ export const getChanges = async (
 
       let [, typeString = '', project, summary = ''] = subjectMatch;
 
-      typeString = typeString.trim().toLowerCase();
+      typeString = typeString.trim()
+        .toLowerCase();
       project = project?.trim();
       summary = summary.trim();
 
-      const type = /none|internal|version(?:ed|ing)|releas(?:ed?|ing)/u.test(
-        typeString,
-      )
+      const type = /none|internal|version(?:ed|ing)|releas(?:ed?|ing)/u.test(typeString)
         ? ChangeType.none
         : CHANGE_TYPES[typeString] ?? ChangeType.fix;
       const message = `${summary} (${hash.slice(0, 7)})`;
@@ -92,9 +93,7 @@ export const getChanges = async (
       return [
         { type, project, message },
         ...bodyLines.flatMap((line) => {
-          const lineMatch = line.match(
-            /^\s*break(?:s|ing(?:[ -]?changes?)?)?\s*(?:!\s*)?:(.*)$/imu,
-          );
+          const lineMatch = line.match(/^\s*break(?:s|ing(?:[ -]?changes?)?)?\s*(?:!\s*)?:(.*)$/imu);
 
           if (!lineMatch) return [];
 
@@ -127,9 +126,9 @@ export const getChanges = async (
       .readText('CHANGELOG.md')
       .then((text) => text ?? '');
 
-    changes = changes.filter(
-      (change) => !changeLogText.includes(` ${change.message}\n`),
-    );
+    changes = changes.filter((change) => {
+      return !changeLogText.includes(` ${change.message}\n`);
+    });
   }
 
   const releaseType = getReleaseType(changes);
@@ -137,9 +136,7 @@ export const getChanges = async (
   return { isConventional, releaseType, changes };
 };
 
-const getReleaseType = (
-  changes: readonly Change[],
-): Exclude<ReleaseType, `pre${string}`> | null => {
+const getReleaseType = (changes: readonly Change[]): Exclude<ReleaseType, `pre${string}`> | null => {
   const changeType = changes.reduce<ChangeType>(
     (current, change) => Math.max(current, change.type),
     ChangeType.none,

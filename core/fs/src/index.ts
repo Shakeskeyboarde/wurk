@@ -87,9 +87,9 @@ export class Fs {
       .readFile(this.resolve(filename))
       .catch((error: any) => {
         if (
-          error?.code === 'ENOENT' ||
-          error?.code === 'EISDIR' ||
-          error?.code === 'EACCES'
+          error?.code === 'ENOENT'
+          || error?.code === 'EISDIR'
+          || error?.code === 'EACCES'
         ) {
           return undefined;
         }
@@ -99,13 +99,15 @@ export class Fs {
   }
 
   async readText(...filename: FsPath[]): Promise<string | undefined> {
-    return await this.read(filename).then((buffer) => {
-      return buffer?.toString('utf8');
-    });
+    return await this.read(filename)
+      .then((buffer) => {
+        return buffer?.toString('utf8');
+      });
   }
 
   async readJson(...filename: FsPath[]): Promise<JsonAccessor> {
-    return await this.readText(filename).then(JsonAccessor.parse);
+    return await this.readText(filename)
+      .then(JsonAccessor.parse);
   }
 
   async readStream(
@@ -116,9 +118,9 @@ export class Fs {
       .open(this.resolve(filename), 'r')
       .catch((error: any) => {
         if (
-          error?.code === 'ENOENT' ||
-          error?.code === 'EISDIR' ||
-          error?.code === 'EACCES'
+          error?.code === 'ENOENT'
+          || error?.code === 'EISDIR'
+          || error?.code === 'EACCES'
         ) {
           return undefined;
         }
@@ -147,9 +149,9 @@ export class Fs {
         .opendir(current)
         .catch((error: any) => {
           if (
-            error?.code === 'ENOENT' ||
-            error?.code === 'ENOTDIR' ||
-            error?.code === 'EACCES'
+            error?.code === 'ENOENT'
+            || error?.code === 'ENOTDIR'
+            || error?.code === 'EACCES'
           ) {
             return undefined;
           }
@@ -177,12 +179,15 @@ export class Fs {
             queue.push(entry.fullpath);
           }
         }
-      } finally {
-        await dirEntries.close().catch((error: any) => {
-          if (error?.code !== 'ERR_DIR_CLOSED') {
-            throw error;
-          }
-        });
+      }
+      finally {
+        await dirEntries
+          .close()
+          .catch((error: any) => {
+            if (error?.code !== 'ERR_DIR_CLOSED') {
+              throw error;
+            }
+          });
       }
     }
   }
@@ -245,15 +250,14 @@ export class Fs {
     filename: FsPath,
     options?: FsStatOptions,
   ): Promise<nodeFs.Stats | undefined> {
-    return await nodeFs.promises[options?.followSymlinks ? 'stat' : 'lstat'](
-      this.resolve(filename),
-    ).catch((error: any) => {
-      if (error?.code === 'ENOENT' || error?.code === 'EACCES') {
-        return undefined;
-      }
+    return await nodeFs.promises[options?.followSymlinks ? 'stat' : 'lstat'](this.resolve(filename))
+      .catch((error: any) => {
+        if (error?.code === 'ENOENT' || error?.code === 'EACCES') {
+          return undefined;
+        }
 
-      throw error;
-    });
+        throw error;
+      });
   }
 
   /**
@@ -265,22 +269,21 @@ export class Fs {
       .catch(() => false);
   }
 
-  async find(
-    optionsOrPatterns: FsFindOptions | string | string[],
-  ): Promise<Path[]> {
-    const { patterns, ...options } =
-      typeof optionsOrPatterns === 'string' || Array.isArray(optionsOrPatterns)
-        ? { patterns: optionsOrPatterns }
-        : optionsOrPatterns;
+  async find(optionsOrPatterns: FsFindOptions | string | string[]): Promise<Path[]> {
+    const { patterns, ...options } = typeof optionsOrPatterns === 'string' || Array.isArray(optionsOrPatterns)
+      ? { patterns: optionsOrPatterns }
+      : optionsOrPatterns;
 
     return await glob(patterns, {
       withFileTypes: true,
       cwd: options?.cwd == null ? this.cwd : this.resolve(options.cwd),
       nodir: !options?.includeDirs,
       stat: options?.stat,
-    }).then((paths) => {
-      return paths.sort((a, b) => a.fullpath().localeCompare(b.fullpath()));
-    });
+    })
+      .then((paths) => {
+        return paths.sort((a, b) => a.fullpath()
+          .localeCompare(b.fullpath()));
+      });
   }
 
   /**
@@ -303,7 +306,8 @@ export class Fs {
     process.on('exit', () => {
       try {
         nodeFs.rmSync(dir, { recursive: true, force: true });
-      } catch {
+      }
+      catch {
         // ignore
       }
     });

@@ -237,22 +237,20 @@ export class WorkspaceCollection {
     this.root = root;
     this.forEach = this[options.defaultIterationMethod ?? 'forEachSequential'];
     this.concurrency = options.concurrency ?? nodeOs.cpus().length + 1;
-    this.all = new GeneratorIterable(() =>
-      getDepthFirstGenerator(this.#workspaces, (current) => {
-        return this.#dependencyLinks
-          .get(current)
-          ?.map((link) => link.dependency);
-      }),
-    );
+    this.all = new GeneratorIterable(() => getDepthFirstGenerator(this.#workspaces, (current) => {
+      return this.#dependencyLinks
+        .get(current)
+        ?.map((link) => link.dependency);
+    }));
   }
 
   *[Symbol.iterator](): Iterator<Workspace> {
     for (const workspace of this.all) {
       if (
-        workspace.isSelected !== false &&
-        (workspace.isSelected ||
-          (this.#includeDependencies && workspace.isDependencyOfSelected) ||
-          (this.#includeDependents && workspace.isDependentOfSelected))
+        workspace.isSelected !== false
+        && (workspace.isSelected
+        || (this.#includeDependencies && workspace.isDependencyOfSelected)
+        || (this.#includeDependents && workspace.isDependentOfSelected))
       ) {
         yield workspace;
       }
@@ -292,9 +290,10 @@ export class WorkspaceCollection {
    * [minimatch](https://www.npmjs.com/package/minimatch) package.
    */
   select(condition: SelectCondition): void {
-    select(this.all, condition).forEach((isSelected, workspace) => {
-      workspace.isSelected = isSelected;
-    });
+    select(this.all, condition)
+      .forEach((isSelected, workspace) => {
+        workspace.isSelected = isSelected;
+      });
   }
 
   /**
@@ -388,13 +387,11 @@ export class WorkspaceCollection {
     let links = this.#dependencyLinks.get(workspace) ?? [];
 
     if (options?.recursive) {
-      links = Array.from(
-        getDepthFirstGenerator(
-          links,
-          (current) => this.#dependencyLinks.get(current.dependency),
-          options?.filter,
-        ),
-      );
+      links = Array.from(getDepthFirstGenerator(
+        links,
+        (current) => this.#dependencyLinks.get(current.dependency),
+        options?.filter,
+      ));
     }
 
     return links;
@@ -411,13 +408,11 @@ export class WorkspaceCollection {
     let links = this.#dependentLinks.get(workspace) ?? [];
 
     if (options?.recursive) {
-      links = Array.from(
-        getDepthFirstGenerator(
-          links,
-          (current) => this.#dependentLinks.get(current.dependent),
-          options?.filter,
-        ),
-      );
+      links = Array.from(getDepthFirstGenerator(
+        links,
+        (current) => this.#dependentLinks.get(current.dependent),
+        options?.filter,
+      ));
     }
 
     return links;
@@ -432,13 +427,12 @@ export class WorkspaceCollection {
     if (options?.condition) {
       const selected = select(this.all, options.condition);
 
-      workspaces = Array.from(this.all).filter((workspace) => {
-        return (
-          workspace.status.value !== StatusValue.skipped ||
-          selected.get(workspace)
-        );
-      });
-    } else {
+      workspaces = Array.from(this.all)
+        .filter((workspace) => {
+          return workspace.status.value !== StatusValue.skipped || selected.get(workspace);
+        });
+    }
+    else {
       workspaces = this.all;
     }
 
@@ -460,10 +454,9 @@ export class WorkspaceCollection {
     const abortController = new AbortController();
     const { signal } = abortController;
     const promises = new Map<Workspace, Promise<void>>();
-    const semaphore =
-      concurrency < 0 || Number.isNaN(concurrency)
-        ? null
-        : new Sema(concurrency);
+    const semaphore = concurrency < 0 || Number.isNaN(concurrency)
+      ? null
+      : new Sema(concurrency);
 
     outerSignal?.addEventListener('abort', () => abortController.abort(), {
       once: true,
@@ -495,10 +488,12 @@ export class WorkspaceCollection {
           if (signal.aborted) return;
 
           await callback(workspace, signal, abort);
-        } catch (error) {
+        }
+        catch (error) {
           status.set(StatusValue.failure);
           abort(error);
-        } finally {
+        }
+        finally {
           semaphore?.release();
         }
       })();

@@ -20,7 +20,9 @@ export default createCommand('run', {
   },
 
   action: async ({ workspaces, options }) => {
-    const scripts = options.scriptsCsv.split(/\s*,\s*/u).filter(Boolean);
+    const scripts = options.scriptsCsv
+      .split(/\s*,\s*/u)
+      .filter(Boolean);
 
     if (scripts.length === 0) return;
 
@@ -30,7 +32,8 @@ export default createCommand('run', {
       await workspaces.forEachParallel((workspace) => {
         return runWorkspaceScripts(workspace, scripts, options.args);
       });
-    } else {
+    }
+    else {
       await workspaces.forEach((workspace) => {
         return runWorkspaceScripts(workspace, scripts, options.args);
       });
@@ -47,7 +50,9 @@ const runWorkspaceScripts = async (
   const scriptsJson = config.at('scripts');
 
   for (const script of scripts) {
-    if (!scriptsJson.at(script).is('string')) {
+    if (!scriptsJson
+      .at(script)
+      .is('string')) {
       log.debug`skipping missing script "${script}"`;
       continue;
     }

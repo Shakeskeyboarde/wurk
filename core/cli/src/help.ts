@@ -36,10 +36,10 @@ const formatUsage = (cli: HelpCli): string => {
 
   const named = cli.options.filter((option) => {
     return (
-      option.type === 'named' &&
-      !option.hidden &&
-      option.meta !== optionHelpTag &&
-      option.meta !== optionVersionTag
+      option.type === 'named'
+      && !option.hidden
+      && option.meta !== optionHelpTag
+      && option.meta !== optionVersionTag
     );
   });
   const isNamedRequired = cli.options.some(({ required }) => required);
@@ -71,15 +71,16 @@ const formatUsage = (cli: HelpCli): string => {
   });
   const optionVersion = cli.options.find((option): option is Named => {
     return (
-      option.type === 'named' &&
-      option.meta === optionVersionTag &&
-      !option.hidden
+      option.type === 'named'
+      && option.meta === optionVersionTag
+      && !option.hidden
     );
   });
 
   if (commandUsage) {
     result += `${prefix}${wrap(`${namedUsage}${commandUsage}`, columns, newline)}`;
-  } else {
+  }
+  else {
     result += `${prefix}${wrap(`${namedUsage}${positionalUsage}`, columns, newline)}`;
   }
 
@@ -119,8 +120,8 @@ const formatOptions = (
   const newline = '\n' + ' '.repeat(usageLength + 4);
   const result = options.reduce((previous, { usage, description }) => {
     return (
-      previous +
-      `\n  ${description ? `${usage.padEnd(usageLength)}  ${wrap(description, columns, newline)}` : usage}`
+      previous
+      + `\n  ${description ? `${usage.padEnd(usageLength)}  ${wrap(description, columns, newline)}` : usage}`
     );
   }, `${group}:`);
 
@@ -143,19 +144,20 @@ const formatCommands = (commands: readonly HelpCli[]): string => {
   );
   const columns = process.stdout.columns - nameLength - 4;
   const newline = '\n' + ' '.repeat(nameLength + 4);
-  const result = Object.entries(commandMap).reduce(
-    (previous, [name, { descriptions, isDefault }]) => {
-      const description = `${descriptions[0] ?? ''}${isDefault ? ` (default)` : ''}`;
+  const result = Object.entries(commandMap)
+    .reduce(
+      (previous, [name, { descriptions, isDefault }]) => {
+        const description = `${descriptions[0] ?? ''}${isDefault ? ` (default)` : ''}`;
 
-      return (
-        previous +
-        (description
-          ? `\n  ${name.padEnd(nameLength)}  ${wrap(description, columns, newline)}`
-          : `\n  ${name}`)
-      );
-    },
-    'Commands:',
-  );
+        return (
+          previous
+          + (description
+            ? `\n  ${name.padEnd(nameLength)}  ${wrap(description, columns, newline)}`
+            : `\n  ${name}`)
+        );
+      },
+      'Commands:',
+    );
 
   return result;
 };
@@ -169,15 +171,6 @@ const formatError = (error: unknown): string => {
 const format = (cli: HelpCli, error: unknown): string => {
   const groups = Object.entries(
     cli.options.reduce<Record<string, (Named | Positional)[]>>(
-      (result, option) => {
-        const groupName =
-          option.group || (option.type === 'named' ? 'Options' : 'Arguments');
-
-        return {
-          ...result,
-          [groupName]: [...(result[groupName] ?? []), option],
-        };
-      },
       {},
     ),
   );

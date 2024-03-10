@@ -100,9 +100,9 @@ const parseRecursive = async (
     return option.type === 'named';
   });
 
-  const positional = options.filter(
-    (option): option is Positional => option.type === 'positional',
-  );
+  const positional = options.filter((option): option is Positional => {
+    return option.type === 'positional';
+  });
 
   const result: ParserResult = {
     options: Object.create(null),
@@ -144,9 +144,7 @@ const parseRecursive = async (
    * argument which cannot be used as a value is encountered (eg. a named
    * option), or there are no more arguments.
    */
-  const getOptionValueArgs = async (
-    option: Named | Positional,
-  ): Promise<string[]> => {
+  const getOptionValueArgs = async (option: Named | Positional): Promise<string[]> => {
     if (option.type === 'named' && !option.value) return [];
 
     const valueArgs: string[] = [];
@@ -180,14 +178,11 @@ const parseRecursive = async (
     if (option.type === 'named') {
       if (option.mapped) {
         if (mappedKey == null) {
-          throw new CliUsageError(
-            `option "${option.usage}" does not support dot notation`,
-          );
+          throw new CliUsageError(`option "${option.usage}" does not support dot notation`);
         }
-      } else if (/* not mapped and */ mappedKey != null) {
-        throw new CliUsageError(
-          `option "${option.usage}" requires dot notation`,
-        );
+      }
+      else if (/* not mapped and */ mappedKey != null) {
+        throw new CliUsageError(`option "${option.usage}" requires dot notation`);
       }
 
       if (option.value === 'required' && valueArgs.length === 0) {
@@ -195,20 +190,19 @@ const parseRecursive = async (
       }
     }
 
-    let value: ParserNamedOptionValue =
-      valueArgs.length === 0
-        ? // There are no values, so this must be a named option which does
-          // not accept a value or has an optional value which was not
-          // provided. Either way, it behaves like a flag (boolean).
-          // Positional options will always have at least one value.
-          true
-        : option.variadic
-          ? // The option accepts multiple values, so use the array as-is.
-            valueArgs
-          : // The option accepts a single value, so use the first array value.
-            // This should be the only value because the `getValueArgs`
-            // function should not collect more then the option accepts.
-            valueArgs[0]!;
+    let value: ParserNamedOptionValue = valueArgs.length === 0
+    // There are no values, so this must be a named option which does
+    // not accept a value or has an optional value which was not
+    // provided. Either way, it behaves like a flag (boolean).
+    // Positional options will always have at least one value.
+      ? true
+      : option.variadic
+      // The option accepts multiple values, so use the array as-is.
+        ? valueArgs
+      // The option accepts a single value, so use the first array value.
+      // This should be the only value because the `getValueArgs`
+      // function should not collect more then the option accepts.
+        : valueArgs[0]!;
 
     if (mappedKey != null) {
       // The option is mapped (supports dot notation), so wrap the value in an
@@ -273,10 +267,9 @@ const parseRecursive = async (
       ? [integralValue]
       : await getOptionValueArgs(option);
     const valueRaw = getOptionValue(option, valueArgs, mappedKey);
-    const valuePrev =
-      option.key && option.key in result.options
-        ? result.options[option.key]
-        : keylessValues.get(option);
+    const valuePrev = option.key && option.key in result.options
+      ? result.options[option.key]
+      : keylessValues.get(option);
     const value = option.parse(valueRaw, valuePrev, result, option.key);
 
     keylessValues.set(option, value);
@@ -392,9 +385,9 @@ const parseRecursive = async (
     if (await tryDefaultCommand()) continue;
 
     if (
-      args[0]!.startsWith('-') &&
-      !isUnknownNamedOptionAllowed &&
-      !isDoubleHyphenFound
+      args[0]!.startsWith('-')
+      && !isUnknownNamedOptionAllowed
+      && !isDoubleHyphenFound
     ) {
       throw new CliUsageError(`unknown option "${args[0]}"`);
     }
@@ -414,8 +407,8 @@ const parseRecursive = async (
 
   for (const { key, usage, required } of named) {
     if (
-      key != null &&
-      (!(key in result.options) || result.options[key] === undefined)
+      key != null
+      && (!(key in result.options) || result.options[key] === undefined)
     ) {
       if (required) {
         throw new CliUsageError(`missing required option "${usage}"`);
@@ -459,7 +452,8 @@ const parse = async (
 ): Promise<UnknownResult> => {
   try {
     return await parseRecursive([...args], cli);
-  } catch (error) {
+  }
+  catch (error) {
     throw CliUsageError.from(error);
   }
 };

@@ -91,67 +91,73 @@ export const createCommand = <
     const {
       config: configHook = (value: unknown) => value as Cli<TResult, TName>,
       action: actionHook,
-    } =
-      typeof hooks === 'function'
-        ? { action: hooks as CommandActionCallback<TResult> }
-        : hooks;
+    } = typeof hooks === 'function'
+      ? { action: hooks as CommandActionCallback<TResult> }
+      : hooks;
 
     const cli = configHook(
       Cli.create(name)
-        .description(config.at('description').as('string'))
-        .version(config.at('version').as('string'))
+        .description(config
+          .at('description')
+          .as('string'))
+        .version(config
+          .at('version')
+          .as('string'))
         .optionHelp()
         .optionVersion(),
       config,
-    ).action(async (result) => {
-      if (!workspaces) throw new Error('command not initialized');
+    )
+      .action(async (result) => {
+        if (!workspaces) throw new Error('command not initialized');
 
-      let isAutoPrintStatusEnabled = false;
+        let isAutoPrintStatusEnabled = false;
 
-      const context = new CommandContext({
-        result,
-        workspaces,
-        pm,
-        autoPrintStatus: (enabled = true) => {
-          isAutoPrintStatusEnabled = enabled;
-        },
-      });
-      const initialSelection = Array.from(workspaces);
-
-      try {
-        await actionHook(context);
-      } catch (error) {
-        process.exitCode ||= 1;
-
-        if (!(error instanceof AbortError)) {
-          context.log.error({ message: error });
-        }
-      } finally {
-        workspaces.forEachSync(({ status }) => {
-          if (status.value === StatusValue.pending) {
-            status.set(StatusValue.failure);
-          }
-
-          if (status.value >= StatusValue.failure) {
-            process.exitCode ||= 1;
-          }
+        const context = new CommandContext({
+          result,
+          workspaces,
+          pm,
+          autoPrintStatus: (enabled = true) => {
+            isAutoPrintStatusEnabled = enabled;
+          },
         });
+        const initialSelection = Array.from(workspaces);
 
-        if (isAutoPrintStatusEnabled) {
-          workspaces.printStatus({
-            prefix: result.name,
-            condition: isLogLevel(LogLevel.verbose)
-              ? undefined
-              : (workspace) => {
+        try {
+          await actionHook(context);
+        }
+        catch (error) {
+          process.exitCode ||= 1;
+
+          if (!(error instanceof AbortError)) {
+            context.log.error({ message: error });
+          }
+        }
+        finally {
+          workspaces.forEachSync(({ status }) => {
+            if (status.value === StatusValue.pending) {
+              status.set(StatusValue.failure);
+            }
+
+            if (status.value >= StatusValue.failure) {
+              process.exitCode ||= 1;
+            }
+          });
+
+          if (isAutoPrintStatusEnabled) {
+            workspaces.printStatus({
+              prefix: result.name,
+              condition: isLogLevel(LogLevel.verbose)
+                ? undefined
+                : (workspace) => {
                   return (
-                    workspace.status.value !== StatusValue.skipped ||
-                    initialSelection.includes(workspace)
+                    workspace.status.value !== StatusValue.skipped
+                    || initialSelection.includes(workspace)
                   );
                 },
-          });
+            });
+          }
         }
-      }
-    });
+      });
 
     const init = (newWorkspaces: WorkspaceCollection): void => {
       workspaces = newWorkspaces;
@@ -165,10 +171,8 @@ export class CommandFactory<
   TResult extends EmptyResult = EmptyResult,
   TName extends string = string,
 > {
-  constructor(
-    readonly load: (
-      pm: PackageManager,
-      config: JsonAccessor,
-    ) => Command<TResult, TName>,
-  ) {}
+  constructor(readonly load: (
+    pm: PackageManager,
+    config: JsonAccessor,
+  ) => Command<TResult, TName>) {}
 }

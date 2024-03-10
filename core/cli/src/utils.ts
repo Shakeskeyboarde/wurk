@@ -50,7 +50,8 @@ const wrap = (text: string, columns: number, newline = '\n'): string => {
       if (lineLength > 0 && word.length + spaceLength > columns) {
         result += newline;
         lineLength = 0;
-      } else if (spaceLength) {
+      }
+      else if (spaceLength) {
         result += ' ';
         lineLength += 1;
       }
@@ -58,7 +59,8 @@ const wrap = (text: string, columns: number, newline = '\n'): string => {
       result += word;
       lineLength += word.length;
       spaceLength = 0;
-    } else if (space && lineLength) {
+    }
+    else if (space && lineLength) {
       spaceLength = 1;
     }
   }

@@ -26,9 +26,10 @@ export const publishFromArchive = async (context: Context): Promise<void> => {
     return;
   }
 
-  const filename = fs.resolve(
-    `${name.replace(/^@/u, '').replace(/\//gu, '-')}-${version}.tgz`,
-  );
+  const basename = name
+    .replace(/^@/u, '')
+    .replace(/\//gu, '-');
+  const filename = fs.resolve(`${basename}-${version}.tgz`);
 
   if (!(await fs.exists(filename))) {
     log.info`workspace has no archive`;
@@ -72,7 +73,9 @@ const extractPackageJson = async (
   nodeAssert(readable, 'failed to read workspace archive');
 
   try {
-    const extractor = readable.pipe(nodeZlib.createGunzip()).pipe(extract());
+    const extractor = readable
+      .pipe(nodeZlib.createGunzip())
+      .pipe(extract());
 
     for await (const entry of extractor) {
       if (entry.header.name === 'package/package.json') {
@@ -82,7 +85,8 @@ const extractPackageJson = async (
 
       entry.resume();
     }
-  } finally {
+  }
+  finally {
     readable.close();
   }
 };

@@ -20,8 +20,7 @@ interface ContextOptions<TResult extends UnknownResult> {
  * Context passed to Wurk command action hook.
  */
 export class CommandContext<TResult extends UnknownResult>
-  implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>>
-{
+implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>> {
   readonly #result: TResult;
 
   /**

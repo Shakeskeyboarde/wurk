@@ -35,6 +35,7 @@ export class Log {
   get prefix(): string {
     return this.#prefix;
   }
+
   set prefix(value: string) {
     this.#prefix = Ansi.strip(value);
     this.#updatePrefix();
@@ -43,6 +44,7 @@ export class Log {
   get prefixStyle(): string {
     return this.#prefixStyle;
   }
+
   set prefixStyle(value: string) {
     this.#prefixStyle = value;
     this.#updatePrefix();
@@ -66,13 +68,9 @@ export class Log {
       { modifier: 'dim' },
     );
 
-    this.info = createLogFunction(
-      this._print.bind(this, 'stdout', LogLevel.info),
-    );
+    this.info = createLogFunction(this._print.bind(this, 'stdout', LogLevel.info));
 
-    this.notice = createLogFunction(
-      this._print.bind(this, 'stderr', LogLevel.notice),
-    );
+    this.notice = createLogFunction(this._print.bind(this, 'stderr', LogLevel.notice));
 
     this.warn = createLogFunction(
       this._print.bind(this, 'stderr', LogLevel.warn),
@@ -84,9 +82,7 @@ export class Log {
       { color: 'red' },
     );
 
-    this.print = createLogFunction(
-      this._print.bind(this, 'stdout', LogLevel.silent),
-    );
+    this.print = createLogFunction(this._print.bind(this, 'stdout', LogLevel.silent));
   }
 
   /**
@@ -105,9 +101,7 @@ export class Log {
    * already a prefix, then the suffix is appended as a subscript
    * (ie. `prefix[suffix]`). Blank, boolean, or nullish suffixes are ignored.
    */
-  readonly sub = (
-    suffix: number | string | boolean | null | undefined,
-  ): Log => {
+  readonly sub = (suffix: number | string | boolean | null | undefined): Log => {
     return this.clone({
       prefix:
         suffix === '' || typeof suffix === 'boolean' || suffix == null
@@ -222,28 +216,29 @@ const createLogFunction = (
   print: (message: unknown, options?: LogPrintOptions) => void,
   defaultOptions?: Omit<LogPrintOptions, 'to'>,
 ): LogFunction => {
-  return ((
-    ...args:
-      | [template: TemplateStringsArray, ...values: unknown[]]
-      | [options: LogPrintOptions & { message: unknown }]
-      | [options: LogPrintOptions]
-      | [message: string | Error]
-  ):
+  return ((...args:
+    | [template: TemplateStringsArray, ...values: unknown[]]
+    | [options: LogPrintOptions & { message: unknown }]
+    | [options: LogPrintOptions]
+    | [message: string | Error]):
     | ((template: TemplateStringsArray, ...values: unknown[]) => void)
     | void => {
     if (args[0] instanceof Array) {
       const [template, ...values] = args;
       print(getTemplateString(template, values), defaultOptions);
-    } else if (typeof args[0] === 'string' || args[0] instanceof Error) {
+    }
+    else if (typeof args[0] === 'string' || args[0] instanceof Error) {
       const [message] = args;
       print(message, defaultOptions);
-    } else {
+    }
+    else {
       const [options] = args;
 
       if ('message' in options) {
         const { message, ...rest } = options;
         print(message, { ...defaultOptions, ...rest });
-      } else {
+      }
+      else {
         return (template: TemplateStringsArray, ...values: unknown[]): void => {
           print(getTemplateString(template, values), {
             ...defaultOptions,
@@ -259,9 +254,11 @@ const getTemplateString = (
   template: TemplateStringsArray,
   values: unknown[],
 ): string => {
-  return template.slice(1).reduce((acc, part, i) => {
-    return acc + String(values[i]) + part;
-  }, template[0]!);
+  return template
+    .slice(1)
+    .reduce((acc, part, i) => {
+      return acc + String(values[i]) + part;
+    }, template[0]!);
 };
 
 const getMessageString = (value: unknown): string => {

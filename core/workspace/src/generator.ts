@@ -1,10 +1,10 @@
-export const getDepthFirstGenerator = function* <T>(
+export const getDepthFirstGenerator = function *<T>(
   root: Iterable<T>,
   getRelated: (current: T) => Iterable<T> | undefined,
   filter: (current: T) => boolean = () => true,
 ): Generator<T> {
   const marked = new Set<T>();
-  const next = function* (values: Iterable<T> | undefined): Generator<T> {
+  const next = function *(values: Iterable<T> | undefined): Generator<T> {
     if (!values) return;
 
     for (const value of values) {

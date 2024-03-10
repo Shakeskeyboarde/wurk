@@ -14,5 +14,7 @@ export const literal = async (
   const newVersion = version.format();
 
   log.info`setting version to ${newVersion}`;
-  config.at('version').set(newVersion);
+  config
+    .at('version')
+    .set(newVersion);
 };

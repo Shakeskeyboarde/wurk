@@ -12,16 +12,14 @@ export enum LogLevel {
   silly = 60,
 }
 
-export const setLogLevel = (
-  level:
-    | LogLevel
-    | LogLevelString
-    | 'trace'
-    | 'debug'
-    | (string & {})
-    | undefined
-    | null,
-): void => {
+export const setLogLevel = (level:
+  | LogLevel
+  | LogLevelString
+  | 'trace'
+  | 'debug'
+  | (string & {})
+  | undefined
+  | null): void => {
   if (typeof level === 'string') {
     switch (level) {
       case 'trace':
@@ -34,7 +32,8 @@ export const setLogLevel = (
         if (!isLogLevelString(level)) return;
         break;
     }
-  } else if (level != null) {
+  }
+  else if (level != null) {
     level = LogLevel[level] as keyof typeof LogLevel;
   }
 

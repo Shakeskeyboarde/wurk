@@ -41,10 +41,9 @@ export const vitest = async (context: VitestContext): Promise<void> => {
     log: log,
     output: 'inherit',
     logCommand: {
-      mapArgs: (arg) =>
-        arg.startsWith('--workspace=')
-          ? { literal: '--workspace=<temp-config>' }
-          : arg,
+      mapArgs: (arg) => arg.startsWith('--workspace=')
+        ? { literal: '--workspace=<temp-config>' }
+        : arg,
     },
   });
 };

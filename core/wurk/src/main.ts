@@ -15,16 +15,18 @@ import { loadCommandPlugins } from './plugin.js';
 const mainAsync = async (): Promise<void> => {
   const __dirname = nodePath.dirname(nodeUrl.fileURLToPath(import.meta.url));
   const config = await fs.readJson(nodePath.join(__dirname, '../package.json'));
-  const version = config.at('version').as('string');
-  const description = config.at('description').as('string');
+  const version = config
+    .at('version')
+    .as('string');
+  const description = config
+    .at('description')
+    .as('string');
   const pm = await createPackageManager();
   const rootConfig = await fs.readJson(pm.rootDir, 'package.json');
 
   process.chdir(pm.rootDir);
   process.chdir = () => {
-    throw new Error(
-      'command plugin tried to change the working directory (unsupported)',
-    );
+    throw new Error('command plugin tried to change the working directory (unsupported)');
   };
 
   const commandPlugins = await loadCommandPlugins(pm, rootConfig);
@@ -96,17 +98,20 @@ const mainAsync = async (): Promise<void> => {
         expressions = JsonAccessor.parse(env.WURK_WORKSPACE_EXPRESSIONS)
           .as('array', [] as unknown[])
           .filter((value): value is string => typeof value === 'string'),
-        includeRootWorkspace = JsonAccessor.parse(
-          env.WURK_INCLUDE_ROOT_WORKSPACE,
-        ).as('boolean', false),
-        parallel = JsonAccessor.parse(env.WURK_PARALLEL).as('boolean', false),
-        stream = JsonAccessor.parse(env.WURK_STREAM).as('boolean', false),
-        concurrency = JsonAccessor.parse(env.WURK_CONCURRENCY).as('number'),
+        includeRootWorkspace = JsonAccessor.parse(env.WURK_INCLUDE_ROOT_WORKSPACE)
+          .as('boolean', false),
+        parallel = JsonAccessor.parse(env.WURK_PARALLEL)
+          .as('boolean', false),
+        stream = JsonAccessor.parse(env.WURK_STREAM)
+          .as('boolean', false),
+        concurrency = JsonAccessor.parse(env.WURK_CONCURRENCY)
+          .as('number'),
         script,
         scriptArgs,
       } = options;
       const running = env.WURK_RUNNING_COMMANDS?.split(/\s*,\s*/u) ?? [];
-      const commandName = Object.keys(command).at(0)!;
+      const commandName = Object.keys(command)
+        .at(0)!;
 
       if (running.includes(commandName)) {
         // Block commands from recursively calling themselves, even indirectly.
@@ -117,20 +122,18 @@ const mainAsync = async (): Promise<void> => {
       env.WURK_RUNNING_COMMANDS = [...running, commandName].join(',');
 
       const workspaceDirs = await pm.getWorkspaces();
-      const workspaceEntries = await Promise.all(
-        workspaceDirs.map(async (workspaceDir) => {
-          const workspaceConfig = await fs.readJson(
-            workspaceDir,
-            'package.json',
-          );
+      const workspaceEntries = await Promise.all(workspaceDirs.map(async (workspaceDir) => {
+        const workspaceConfig = await fs.readJson(
+          workspaceDir,
+          'package.json',
+        );
 
-          if (!workspaceConfig.at('name')) {
-            throw new Error(`workspace at "${workspaceDir}" has no name`);
-          }
+        if (!workspaceConfig.at('name')) {
+          throw new Error(`workspace at "${workspaceDir}" has no name`);
+        }
 
-          return [workspaceDir, workspaceConfig] as const;
-        }),
-      );
+        return [workspaceDir, workspaceConfig] as const;
+      }));
       const workspaces = new WorkspaceCollection({
         root: rootConfig,
         rootDir: pm.rootDir,
@@ -165,11 +168,12 @@ const mainAsync = async (): Promise<void> => {
 
       if (script) {
         if (
-          workspaces.root.config.at('scripts').at(script).as('string') == null
+          workspaces.root.config
+            .at('scripts')
+            .at(script)
+            .as('string') == null
         ) {
-          throw new Error(
-            `"${script}" is not a command or root package script`,
-          );
+          throw new Error(`"${script}" is not a command or root package script`);
         }
 
         await pm.spawnPackageScript(script, scriptArgs, { output: 'inherit' });
@@ -188,7 +192,8 @@ const mainAsync = async (): Promise<void> => {
 
       if (error instanceof CliUsageError) {
         cli.printHelp(error);
-      } else {
+      }
+      else {
         log.error({ message: error });
       }
     });

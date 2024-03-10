@@ -48,10 +48,10 @@ export interface SpawnOptions {
   readonly logCommand?:
     | boolean
     | {
-        readonly mapArgs?: (
-          arg: string,
-        ) => boolean | string | LiteralArg | null | (string | LiteralArg)[];
-      };
+      readonly mapArgs?: (
+        arg: string,
+      ) => boolean | string | LiteralArg | null | (string | LiteralArg)[];
+    };
   /**
    * Do not throw an error if the child process exits with a non-zero status.
    */
@@ -78,8 +78,7 @@ export const spawn = (
   const args = getArgs(sparseArgs);
 
   if (logCommand) {
-    const mapArgs =
-      (typeof logCommand === 'object' && logCommand.mapArgs) || ((arg) => arg);
+    const mapArgs = (typeof logCommand === 'object' && logCommand.mapArgs) || ((arg) => arg);
     const mappedArgs = args.flatMap((arg) => {
       const mappedArg = mapArgs(arg);
       return mappedArg == null
@@ -95,7 +94,8 @@ export const spawn = (
       to: 'stderr',
       prefix: output !== 'inherit',
     })`> ${quote(cmd, ...mappedArgs)}`;
-  } else {
+  }
+  else {
     log.debug`> ${quote(cmd, ...args)}`;
   }
 
@@ -133,13 +133,10 @@ export const spawn = (
   const data: { stream: 'stdout' | 'stderr'; chunk: Buffer }[] = [];
 
   if (output === 'buffer') {
-    cp.stdout?.on('data', (chunk: Buffer) =>
-      data.push({ stream: 'stdout', chunk }),
-    );
-    cp.stderr?.on('data', (chunk: Buffer) =>
-      data.push({ stream: 'stderr', chunk }),
-    );
-  } else if (output === 'echo') {
+    cp.stdout?.on('data', (chunk: Buffer) => data.push({ stream: 'stdout', chunk }));
+    cp.stderr?.on('data', (chunk: Buffer) => data.push({ stream: 'stderr', chunk }));
+  }
+  else if (output === 'echo') {
     cp.stdout?.pipe(log.stdout);
     cp.stderr?.pipe(log.stderr);
   }
@@ -150,13 +147,11 @@ export const spawn = (
 
   const promise = new Promise<SpawnResult>((resolve, reject) => {
     cp.on('error', (error: Error & { code?: unknown }) => {
-      reject(
-        error?.code === 'ENOENT'
-          ? Object.assign(new Error(`${cmd} is required`, { cause: error }), {
-              code: error.code,
-            })
-          : error,
-      );
+      reject(error?.code === 'ENOENT'
+        ? Object.assign(new Error(`${cmd} is required`, { cause: error }), {
+          code: error.code,
+        })
+        : error);
     });
 
     cp.on('close', (exitCode, signalCode) => {
@@ -186,27 +181,25 @@ export const spawn = (
       try {
         const result: SpawnResult = {
           get stdout() {
-            return Buffer.concat(
-              data
-                .filter(({ stream }) => stream === 'stdout')
-                .map(({ chunk }) => chunk),
-            );
+            return Buffer.concat(data
+              .filter(({ stream }) => stream === 'stdout')
+              .map(({ chunk }) => chunk));
           },
           get stdoutText() {
-            return result.stdout.toString('utf8').trim();
+            return result.stdout.toString('utf8')
+              .trim();
           },
           get stdoutJson() {
             return JsonAccessor.parse(result.stdoutText);
           },
           get stderr() {
-            return Buffer.concat(
-              data
-                .filter(({ stream }) => stream === 'stderr')
-                .map(({ chunk }) => chunk),
-            );
+            return Buffer.concat(data
+              .filter(({ stream }) => stream === 'stderr')
+              .map(({ chunk }) => chunk));
           },
           get stderrText() {
-            return result.stderr.toString('utf8').trim();
+            return result.stderr.toString('utf8')
+              .trim();
           },
           get stderrJson() {
             return JsonAccessor.parse(result.stderrText);
@@ -215,7 +208,8 @@ export const spawn = (
             return Buffer.concat(data.map(({ chunk }) => chunk));
           },
           get combinedText() {
-            return result.combined.toString('utf8').trim();
+            return result.combined.toString('utf8')
+              .trim();
           },
           exitCode,
           signalCode,
@@ -223,7 +217,8 @@ export const spawn = (
         };
 
         resolve(result);
-      } catch (error) {
+      }
+      catch (error) {
         reject(error);
       }
     });
@@ -243,9 +238,8 @@ export const createSpawn = (getDefaultOptions: () => SpawnOptions): Spawn => {
       ...defaultOptions,
       ...options,
       cwd: nodePath.resolve(
-        ...[defaultOptions.cwd, options?.cwd].filter((value): value is string =>
-          Boolean(value),
-        ),
+        ...[defaultOptions.cwd, options?.cwd]
+          .filter((value): value is string => Boolean(value)),
       ),
       env: {
         ...defaultOptions.env,

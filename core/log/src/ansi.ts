@@ -6,10 +6,9 @@ export type AnsiColor = (typeof ANSI_COLORS)[number];
 
 const ANSI_REGEXP = new RegExp(ansiRegex().source, 'gu');
 
-const IS_TTY =
-  nodeTty.isatty(1) &&
-  nodeTty.isatty(2) &&
-  Boolean(process.env.TERM && process.env.TERM !== 'dumb');
+const IS_TTY = nodeTty.isatty(1)
+  && nodeTty.isatty(2)
+  && Boolean(process.env.TERM && process.env.TERM !== 'dumb');
 
 const IS_COLOR = process.env.NO_COLOR
   ? false
@@ -44,9 +43,10 @@ export const Ansi = {
     cyan: IS_COLOR ? '\u001B[36;96m' : '',
     white: IS_COLOR ? '\u001B[37;97m' : '',
   } as const,
-  color256: Array.from({ length: 256 }).map((_, i) => {
-    return IS_256_COLOR ? (`\u001B[38;5;${i}m` as const) : '';
-  }) as readonly string[] & { length: 256 },
+  color256: Array.from({ length: 256 })
+    .map((_, i) => {
+      return IS_256_COLOR ? (`\u001B[38;5;${i}m` as const) : '';
+    }) as readonly string[] & { length: 256 },
   getColor: (color: AnsiColor | number): string => {
     return typeof color === 'number'
       ? Ansi.color256[color % Ansi.color256.length]!
@@ -61,13 +61,11 @@ export const Ansi = {
  * Iterates over colors which are useful for color coding text. This does not
  * include white and black, or colors which are too similar to differentiate.
  */
-export const getAnsiColorIterator = function* <TLoop extends boolean = false>(
-  options: {
-    readonly is256Enabled?: boolean;
-    readonly loop?: TLoop;
-    readonly count?: number;
-  } = {},
-): Iterator<string, TLoop extends true ? never : undefined, undefined> {
+export const getAnsiColorIterator = function *<TLoop extends boolean = false>(options: {
+  readonly is256Enabled?: boolean;
+  readonly loop?: TLoop;
+  readonly count?: number;
+} = {}): Iterator<string, TLoop extends true ? never : undefined, undefined> {
   const { is256Enabled = IS_256_COLOR, loop = false as TLoop, count } = options;
 
   if (is256Enabled && (count == null || count > 6)) {

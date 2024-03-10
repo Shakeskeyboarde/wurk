@@ -9,9 +9,9 @@ import { type KeyOf } from './types.js';
 type Action<TResult extends UnknownResult = UnknownResult> = (
   result: TResult,
 ) =>
-  | void
-  | ((result: TResult) => void | Promise<void>)
-  | Promise<void | ((result: TResult) => void | Promise<void>)>;
+| void
+| ((result: TResult) => void | Promise<void>)
+| Promise<void | ((result: TResult) => void | Promise<void>)>;
 
 type OptionAction<
   TResult extends UnknownResult = UnknownResult,

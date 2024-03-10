@@ -104,7 +104,8 @@ export const printStatus = (
       to: 'stderr',
       color: 'red',
     })`${prefix}failure`;
-  } else {
+  }
+  else {
     log.print({
       prefix: false,
       to: 'stderr',

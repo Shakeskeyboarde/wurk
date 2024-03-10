@@ -175,9 +175,8 @@ export class Workspace {
    * True if this workspace is a dependency of any selected workspace.
    */
   get isDependencyOfSelected(): boolean {
-    return this.getDependentLinks({ recursive: true }).some(
-      (link) => link.dependent.isSelected,
-    );
+    return this.getDependentLinks({ recursive: true })
+      .some((link) => link.dependent.isSelected);
   }
 
   /**
@@ -185,9 +184,8 @@ export class Workspace {
    * workspace.
    */
   get isDependentOfSelected(): boolean {
-    return this.getDependencyLinks({ recursive: true }).some(
-      (link) => link.dependency.isSelected,
-    );
+    return this.getDependencyLinks({ recursive: true })
+      .some((link) => link.dependency.isSelected);
   }
 
   /**
@@ -198,9 +196,15 @@ export class Workspace {
     this.dir = options.dir;
     this.relativeDir = options.relativeDir || '.';
     this.config = options.config.copy();
-    this.name = this.config.at('name').as('string', '');
-    this.version = this.config.at('version').as('string');
-    this.isPrivate = this.config.at('private').as('boolean', false);
+    this.name = this.config
+      .at('name')
+      .as('string', '');
+    this.version = this.config
+      .at('version')
+      .as('string');
+    this.isPrivate = this.config
+      .at('private')
+      .as('boolean', false);
     this.isRoot = this.relativeDir === '.';
     this.log = new Log();
     this.fs = new Fs({ cwd: this.dir });

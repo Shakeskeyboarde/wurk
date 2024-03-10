@@ -7,11 +7,9 @@ export class SpawnExitCodeError extends Error {
     exitCode: number,
     signalCode: NodeJS.Signals | null,
   ) {
-    super(
-      exitCode !== 0
-        ? `process "${cmd}" exited with a non-zero status (${exitCode})`
-        : `process "${cmd}" failed`,
-    );
+    super(exitCode !== 0
+      ? `process "${cmd}" exited with a non-zero status (${exitCode})`
+      : `process "${cmd}" failed`);
 
     this.exitCode = exitCode;
     this.signalCode = signalCode;

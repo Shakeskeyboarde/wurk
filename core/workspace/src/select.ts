@@ -49,11 +49,8 @@ export const select = (
   return selected;
 };
 
-const createMatchers = (
-  condition: SelectCondition,
-): ((workspace: Workspace) => Required<SelectResult> | null)[] => {
-  const matchers: ((workspace: Workspace) => Required<SelectResult> | null)[] =
-    [];
+const createMatchers = (condition: SelectCondition): ((workspace: Workspace) => Required<SelectResult> | null)[] => {
+  const matchers: ((workspace: Workspace) => Required<SelectResult> | null)[] = [];
   const conditions = (Array.isArray(condition) ? condition : [condition]) as (
     | string
     | SelectPredicate
@@ -65,37 +62,33 @@ const createMatchers = (
       return;
     }
 
-    matchers.push(
-      ((predicate: SelectPredicate, workspace: Workspace) => {
-        const result = predicate(workspace);
+    matchers.push(((predicate: SelectPredicate, workspace: Workspace) => {
+      const result = predicate(workspace);
 
-        if (result == null) {
-          return null;
-        }
+      if (result == null) {
+        return null;
+      }
 
-        if (typeof result === 'boolean') {
-          return {
-            isSelected: result,
-            includeDependencies: false,
-            includeDependents: false,
-          };
-        }
-
+      if (typeof result === 'boolean') {
         return {
-          isSelected: result.isSelected,
-          includeDependencies: result.includeDependencies ?? false,
-          includeDependents: result.includeDependents ?? false,
+          isSelected: result,
+          includeDependencies: false,
+          includeDependents: false,
         };
-      }).bind(null, value),
-    );
+      }
+
+      return {
+        isSelected: result.isSelected,
+        includeDependencies: result.includeDependencies ?? false,
+        includeDependents: result.includeDependents ?? false,
+      };
+    }).bind(null, value));
   });
 
   return matchers;
 };
 
-const createExpressionMatcher = (
-  expression: string,
-): ((workspace: Workspace) => Required<SelectResult> | null) => {
+const createExpressionMatcher = (expression: string): ((workspace: Workspace) => Required<SelectResult> | null) => {
   const [
     ,
     leadingEllipses,
@@ -147,15 +140,13 @@ const createExpressionMatcher = (
       break;
     case 'p':
     case 'private':
-      match = (workspace) =>
-        String(workspace.isPrivate) === pattern.toLocaleLowerCase();
+      match = (workspace) => String(workspace.isPrivate) === pattern.toLocaleLowerCase();
       break;
     default:
       throw new Error(`invalid expression scope "${scope}"`);
   }
 
-  return (workspace) =>
-    match(workspace)
-      ? { isSelected, includeDependencies, includeDependents }
-      : null;
+  return (workspace) => match(workspace)
+    ? { isSelected, includeDependencies, includeDependents }
+    : null;
 };

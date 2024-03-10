@@ -22,12 +22,16 @@ export class Npm extends PackageManager {
       '--quiet',
       '--json',
       '.workspace',
-    ]).stdoutJson();
+    ])
+      .stdoutJson();
 
     return (
       results.map((result): string => {
         return (
-          result.at('realpath').as('string') ?? result.at('path').as('string')!
+          result
+            .at('realpath')
+            .as('string') ?? result.at('path')
+            .as('string')!
         );
       }) ?? []
     );
@@ -57,10 +61,10 @@ export class Npm extends PackageManager {
     const metaArray = array
       .filter((entry): entry is { version: string; gitHead?: unknown } => {
         return (
-          entry != null &&
-          typeof entry === 'object' &&
-          'version' in entry &&
-          typeof entry.version === 'string'
+          entry != null
+          && typeof entry === 'object'
+          && 'version' in entry
+          && typeof entry.version === 'string'
         );
       })
       .sort((a, b) => semver.rcompare(a.version, b.version));

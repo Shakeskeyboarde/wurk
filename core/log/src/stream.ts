@@ -25,9 +25,7 @@ export class LogStream extends Transform {
     return this;
   }
 
-  override end(
-    ...args: [unknown?, (BufferEncoding | (() => void))?, (() => void)?]
-  ): this {
+  override end(...args: [unknown?, (BufferEncoding | (() => void))?, (() => void)?]): this {
     if (args.length > 0) {
       this.write.call(this, ...(args as Parameters<this['write']>));
     }
@@ -67,9 +65,7 @@ export class LogStream extends Transform {
     callback();
   }
 
-  override _destroy(
-    ...[error, callback]: Parameters<Transform['_destroy']>
-  ): void {
+  override _destroy(...[error, callback]: Parameters<Transform['_destroy']>): void {
     this.flush();
     process.removeListener('exit', this.#onExit);
     process.setMaxListeners(process.getMaxListeners() - 1);
@@ -97,7 +93,8 @@ export class LogStream extends Transform {
       // If we're flushing, write the last unterminated line.
       this.push(value.slice(lastIndex));
       clearTimeout(this.#timeout);
-    } else {
+    }
+    else {
       this.#buffer = value.slice(lastIndex);
     }
   };

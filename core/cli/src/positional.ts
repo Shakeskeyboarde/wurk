@@ -35,11 +35,11 @@ type PositionalUsageString = `<${string}>` | `[${string}]`;
 
 type InferPositionalKey<TUsage extends PositionalUsageString> =
   TUsage extends `${
-    | `<${infer TLabel}${'' | '...'}>`
-    | `[${infer TLabel}${'' | '...'}]`}`
+  | `<${infer TLabel}${'' | '...'}>`
+  | `[${infer TLabel}${'' | '...'}]`}`
     ? CamelCase<
-        Exclude<TLabel, `${string}${'<' | '>' | '[' | ']' | '.'}${string}`>
-      >
+      Exclude<TLabel, `${string}${'<' | '>' | '[' | ']' | '.'}${string}`>
+    >
     : never;
 
 type InferPositionalRequired<TUsage extends PositionalUsageString> =
@@ -59,10 +59,9 @@ const createPositional = (
   usage: string,
   configOrDescription: AnyPositionalConfig | string = {},
 ): Positional => {
-  const config =
-    typeof configOrDescription === 'string'
-      ? { description: configOrDescription }
-      : configOrDescription;
+  const config = typeof configOrDescription === 'string'
+    ? { description: configOrDescription }
+    : configOrDescription;
   const parsedUsage = parseUsage(usage);
 
   return {
@@ -80,9 +79,7 @@ const createPositional = (
 };
 
 const parseUsage = (usage: string): PositionalUsage => {
-  const match = usage.match(
-    /^(?:<([^\s=,|.<>[\]]+)(\.{3})?>|\[([^\s=,|.<>[\]]+)(\.{3})?\])$/u,
-  );
+  const match = usage.match(/^(?:<([^\s=,|.<>[\]]+)(\.{3})?>|\[([^\s=,|.<>[\]]+)(\.{3})?\])$/u);
 
   if (!match) {
     throw new Error(`invalid positional "${usage}"`);

@@ -35,7 +35,9 @@ export const writeChangelog = async (
   changes: readonly Change[] = [],
 ): Promise<void> => {
   const { log, name, version, config, fs } = workspace;
-  const newVersion = config.at('version').as('string');
+  const newVersion = config
+    .at('version')
+    .as('string');
 
   if (!newVersion) {
     // Can't write a changelog without a version for the heading.
@@ -53,18 +55,15 @@ export const writeChangelog = async (
     return;
   }
 
-  const content = await fs.readText('CHANGELOG.md').then((text) => {
-    return text ?? '';
-  });
+  const content = await fs.readText('CHANGELOG.md')
+    .then((text) => {
+      return text ?? '';
+    });
 
   /**
    * Change log entries sorted by version in descending order.
    */
-  const entries = [
-    ...content.matchAll(
-      /^#+ (\d+\.\d+\.\d+(?:-[a-z\d.+-]*)?)(?:.(?!^#+ \d+\.\d+\.\d))*.?/gmsu,
-    ),
-  ]
+  const entries = [...content.matchAll(/^#+ (\d+\.\d+\.\d+(?:-[a-z\d.+-]*)?)(?:.(?!^#+ \d+\.\d+\.\d))*.?/gmsu)]
     .map((entry) => ({
       version: entry[1] as string,
       text: entry[0].trimEnd() + '\n',
@@ -80,10 +79,7 @@ export const writeChangelog = async (
     return semver.lte(entry.version, newVersion);
   });
 
-  if (
-    previousVersionIndex >= 0 &&
-    newVersion === entries[previousVersionIndex]?.version
-  ) {
+  if (previousVersionIndex >= 0 && newVersion === entries[previousVersionIndex]?.version) {
     log.warn`skipping changelog write (version exists)`;
     return;
   }
@@ -103,11 +99,8 @@ export const writeChangelog = async (
     const nameParts = name.split('/');
     const project = change.project
       ?.split('/')
-      .filter(
-        (part) =>
-          !nameParts.includes(part.toLocaleLowerCase()) &&
-          !nameParts[nameParts.length - 1]?.includes(part.toLocaleLowerCase()),
-      )
+      .filter((part) => !nameParts.includes(part.toLocaleLowerCase())
+      && !nameParts[nameParts.length - 1]?.includes(part.toLocaleLowerCase()))
       .join('/');
 
     if (section !== change.section) {
@@ -123,12 +116,15 @@ export const writeChangelog = async (
   if (previousVersionIndex < 0) {
     // Append to the end of the changelog (new lowest version).
     entries.push(newEntry);
-  } else {
+  }
+  else {
     // Insert before the previous (next lowest) version in the changelog.
     entries.splice(previousVersionIndex, 0, newEntry);
   }
 
-  const result = entries.map((entry) => entry.text).join('\n');
+  const result = entries
+    .map((entry) => entry.text)
+    .join('\n');
 
   await fs.writeText('CHANGELOG.md', result);
 };
@@ -142,8 +138,12 @@ const getDate = (): string => {
 
   return [
     now.getFullYear(),
-    (now.getMonth() + 1).toString(10).padStart(2, '0'),
-    now.getDate().toString(10).padStart(2, '0'),
+    (now.getMonth() + 1)
+      .toString(10)
+      .padStart(2, '0'),
+    now.getDate()
+      .toString(10)
+      .padStart(2, '0'),
   ].join('-');
 };
 

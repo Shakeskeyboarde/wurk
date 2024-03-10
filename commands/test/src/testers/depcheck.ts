@@ -42,7 +42,8 @@ export const depcheck = async ({
     if (!stdoutJson.exists()) {
       if (exitCode) {
         throw new SpawnExitCodeError('depcheck', exitCode, null);
-      } else {
+      }
+      else {
         throw new Error('depcheck did not produce json output');
       }
     }
@@ -55,7 +56,9 @@ export const depcheck = async ({
       'optionalDependencies',
       ...(options.depcheckDev ? ['devDependencies'] : []),
     ]) {
-      const unused = stdoutJson.at(depType).as('array');
+      const unused = stdoutJson
+        .at(depType)
+        .as('array');
 
       if (unused?.length) {
         isSuccess = false;
@@ -65,11 +68,12 @@ export const depcheck = async ({
     }
 
     if (options.depcheckMissing) {
-      const missing = Object.entries(
-        stdoutJson.at('missing').as('object', {}),
-      ).filter((entry): entry is [string, unknown[]] => {
-        return Array.isArray(entry[1]);
-      });
+      const missing = Object.entries(stdoutJson
+        .at('missing')
+        .as('object', {}))
+        .filter((entry): entry is [string, unknown[]] => {
+          return Array.isArray(entry[1]);
+        });
 
       if (missing.length) {
         isSuccess = false;

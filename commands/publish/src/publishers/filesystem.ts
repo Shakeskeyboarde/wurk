@@ -23,12 +23,9 @@ interface Context {
   readonly published: Set<Workspace>;
 }
 
-export const publishFromFilesystem = async (
-  context: Context,
-): Promise<void> => {
+export const publishFromFilesystem = async (context: Context): Promise<void> => {
   const { options, pm, git, workspace, published } = context;
-  const { status, log, fs, config, version, spawn, getDependencyLinks } =
-    workspace;
+  const { status, log, fs, config, version, spawn, getDependencyLinks } = workspace;
 
   status.set('pending');
 
@@ -39,18 +36,20 @@ export const publishFromFilesystem = async (
   log.info`publishing version ${version} from filesystem to ${options.toArchive ? 'archive' : 'registry'}`;
 
   // Update dependency version ranges.
-  getDependencyLinks().forEach(({ type, id, spec, dependency }) => {
-    if (type === 'devDependencies') return;
-    if (!dependency.version) return;
-    if (spec.type !== 'npm') return;
-    if (spec.range !== '*' && spec.range !== 'x') return;
+  getDependencyLinks()
+    .forEach(({ type, id, spec, dependency }) => {
+      if (type === 'devDependencies') return;
+      if (!dependency.version) return;
+      if (spec.type !== 'npm') return;
+      if (spec.range !== '*' && spec.range !== 'x') return;
 
-    const newRange = `^${dependency.version}`;
-    const newSpec =
-      spec.name === id ? newRange : `npm:${spec.name}@${newRange}`;
+      const newRange = `^${dependency.version}`;
+      const newSpec = spec.name === id ? newRange : `npm:${spec.name}@${newRange}`;
 
-    config.at(type).at(id).set(newSpec);
-  });
+      config.at(type)
+        .at(id)
+        .set(newSpec);
+    });
 
   // Remove fields from the package.json file.
   options.removePackageFields?.forEach((field) => {
@@ -66,7 +65,9 @@ export const publishFromFilesystem = async (
     // Set "gitHead" in the package.json file. NPM publish should do this
     // automatically. But, it doesn't do it for packing. It's also not
     // documented well even though it is definitely added intentionally in v7.
-    config.at('gitHead').set(head);
+    config
+      .at('gitHead')
+      .set(head);
   }
 
   /**
@@ -88,7 +89,8 @@ export const publishFromFilesystem = async (
       ],
       { output: 'echo' },
     );
-  } finally {
+  }
+  finally {
     await fs.writeText('package.json', savedPackageJson);
   }
 
@@ -143,9 +145,9 @@ const validate = async (
   const changelog = await fs.readText('CHANGELOG.md');
 
   if (
-    changelog &&
-    !changelog.includes(`# ${version} `) &&
-    !changelog.includes(`# ${version}\n`)
+    changelog
+    && !changelog.includes(`# ${version} `)
+    && !changelog.includes(`# ${version}\n`)
   ) {
     log.warn`changelog may be outdated`;
   }
@@ -158,18 +160,19 @@ const validate = async (
       return json.value as [{ files: { path: string }[] }];
     });
 
-  const missingPackEntrypoints = getEntrypoints().filter((entry) => {
+  const missingPackEntrypoints = getEntrypoints()
+    .filter((entry) => {
     // The entrypoint is missing if every pack filename mismatches the
     // filename.
-    return packed.files.every((packEntry) => {
+      return packed.files.every((packEntry) => {
       // True if the pack filename does not "match" the entry filename. The
       // relative path starts with ".." if the pack filename is not equal to
       // and not a subpath of the entry filename.
-      return nodePath
-        .relative(entry.filename, fs.resolve(packEntry.path))
-        .startsWith('..');
+        return nodePath
+          .relative(entry.filename, fs.resolve(packEntry.path))
+          .startsWith('..');
+      });
     });
-  });
 
   if (missingPackEntrypoints.length) {
     log.error`missing packed entry points:`;
@@ -215,7 +218,8 @@ const validateDependency = async (
       log.error`dependency "${name}" is local path`;
       status.set('failure', `dependency local path`);
       return false;
-    } else {
+    }
+    else {
       // Dependencies on non-file URLs (eg. `git`, `https`) are not local
       // dependencies.
       return true;
@@ -243,9 +247,11 @@ const validateDependency = async (
   // If a non-wildcard dependency version range is used, then the min-version
   // of the range should match the local workspace version.
   if (
-    spec.range !== '*' &&
-    spec.range !== 'x' &&
-    semver.minVersion(spec.range)?.format() !== version
+    spec.range !== '*'
+    && spec.range !== 'x'
+    && semver
+      .minVersion(spec.range)
+      ?.format() !== version
   ) {
     log.error`dependency "${name}" min-version does not match workspace version`;
     status.set('failure', `dependency min-version`);
@@ -277,10 +283,12 @@ const validateDependency = async (
             status.set('warning', `dependency modified`);
             return false;
           }
-        } else {
+        }
+        else {
           log.warn`dependency "${name}" has no Git head`;
         }
-      } else {
+      }
+      else {
         log.warn`dependency "${name}" has no published Git head`;
       }
     }

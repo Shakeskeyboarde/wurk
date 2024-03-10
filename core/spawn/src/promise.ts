@@ -50,27 +50,26 @@ export class SpawnPromise extends Promise<SpawnResult> {
   }
 
   async exitCode(): Promise<number> {
-    return await this.then((result) => result.exitCode).catch(
-      (error: unknown) => {
+    return await this.then((result) => result.exitCode)
+      .catch((error: unknown) => {
         if (!(error instanceof SpawnExitCodeError)) throw error;
         return error.exitCode;
-      },
-    );
+      });
   }
 
   async signalCode(): Promise<NodeJS.Signals | null> {
-    return await this.then((result) => result.signalCode).catch(
-      (error: unknown) => {
+    return await this.then((result) => result.signalCode)
+      .catch((error: unknown) => {
         if (!(error instanceof SpawnExitCodeError)) throw error;
         return error.signalCode;
-      },
-    );
+      });
   }
 
   async ok(): Promise<boolean> {
-    return await this.then((result) => result.ok).catch((error: unknown) => {
-      if (!(error instanceof SpawnExitCodeError)) throw error;
-      return false;
-    });
+    return await this.then((result) => result.ok)
+      .catch((error: unknown) => {
+        if (!(error instanceof SpawnExitCodeError)) throw error;
+        return false;
+      });
   }
 }

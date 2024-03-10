@@ -22,16 +22,20 @@ export const getEntrypoints = (workspace: Workspace): readonly Entrypoint[] => {
   const addEntryPoints = (type: Entrypoint['type'], value: unknown): void => {
     if (typeof value === 'string') {
       entryPoints.push(new Entrypoint(fs, type, fs.resolve(value)));
-    } else if (Array.isArray(value)) {
+    }
+    else if (Array.isArray(value)) {
       value.forEach((subValue) => addEntryPoints(type, subValue));
-    } else if (typeof value === 'object' && value !== null) {
-      Object.values(value).forEach((subValue) => {
-        addEntryPoints(type, subValue);
-      });
+    }
+    else if (typeof value === 'object' && value !== null) {
+      Object.values(value)
+        .forEach((subValue) => {
+          addEntryPoints(type, subValue);
+        });
     }
   };
 
-  if (config.at('license').exists()) {
+  if (config.at('license')
+    .exists()) {
     addEntryPoints('license', 'LICENSE');
   }
 
@@ -80,9 +84,9 @@ export class Entrypoint {
 
         return isNotEmpty;
       }
-    } else {
-      const filenames =
-        this.filename === 'LICENSE' ? ['LICENSE', 'LICENCE'] : [this.filename];
+    }
+    else {
+      const filenames = this.filename === 'LICENSE' ? ['LICENSE', 'LICENCE'] : [this.filename];
 
       for (const filename of filenames) {
         if (await this.#fs.exists(filename)) {

@@ -13,20 +13,24 @@ export const loadCommandPlugins = async (
   pm: PackageManager,
   config: JsonAccessor,
 ): Promise<Command[]> => {
-  const ids = Array.from(
-    new Set([
-      ...[
-        ...config.at('dependencies').keys('object'),
-        ...config.at('devDependencies').keys('object'),
-        ...config.at('peerDependencies').keys('object'),
-        ...config.at('optionalDependencies').keys('object'),
-      ].filter((packageId) =>
-        /^(?:(?:.*\/)?w[eu]rk-command-|@(?:werk|wurk)\/command-).*$/u.test(
-          packageId,
-        ),
-      ),
-    ]),
-  ).sort();
+  const ids = Array.from(new Set([
+    ...[
+      ...config
+        .at('dependencies')
+        .keys('object'),
+      ...config
+        .at('devDependencies')
+        .keys('object'),
+      ...config
+        .at('peerDependencies')
+        .keys('object'),
+      ...config
+        .at('optionalDependencies')
+        .keys('object'),
+    ]
+      .filter((packageId) => /^(?:(?:.*\/)?w[eu]rk-command-|@(?:werk|wurk)\/command-).*$/u.test(packageId)),
+  ]))
+    .sort();
 
   const commands: Command[] = [];
 
@@ -62,7 +66,8 @@ const loadCommandPlugin = async (
     }
 
     return exports.default.load(pm, config);
-  } catch (error) {
+  }
+  catch (error) {
     log.debug`could not load command package "${id}"`;
     log.debug({ message: error });
     return null;
@@ -77,7 +82,9 @@ const getCommandConfig = async (
 
   do {
     const config = await fs.readJson(nodePath.join(dir, 'package.json'));
-    const name = config.at('name').as('string');
+    const name = config
+      .at('name')
+      .as('string');
 
     if (name === id) {
       return config;

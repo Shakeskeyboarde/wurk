@@ -43,9 +43,8 @@ export default createCommand('test', {
         env: {
           // Declare the workspaces that should be built if the build script
           // runs another Wurk command (eg. wurk build).
-          WURK_WORKSPACE_EXPRESSIONS: JSON.stringify(
-            Array.from(workspaces).map(({ name }) => name),
-          ),
+          WURK_WORKSPACE_EXPRESSIONS: JSON.stringify(Array.from(workspaces)
+            .map(({ name }) => name)),
         },
         output: 'inherit',
       });

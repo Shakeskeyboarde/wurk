@@ -28,7 +28,8 @@ export const parseStrategy = (value: string): Strategy => {
 
   try {
     return new semver.SemVer(value);
-  } catch {
+  }
+  catch {
     throw new Error('invalid strategy');
   }
 };

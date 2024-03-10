@@ -8,22 +8,19 @@ import { Yarn } from './implementations/yarn.js';
 import { YarnClassic } from './implementations/yarn-classic.js';
 import { type PackageManager } from './pm.js';
 
-export const createPackageManager = async (
-  dir = '.',
-): Promise<PackageManager> => {
+export const createPackageManager = async (dir = '.'): Promise<PackageManager> => {
   const cacheKey = fs.resolve(dir);
 
   let promise = cache.get(cacheKey);
 
   if (!promise) {
-    promise = getPromise(dir).then((pm) => {
-      if (pm) {
-        return pm;
-      } else {
+    promise = getPromise(dir)
+      .then((pm) => {
+        if (pm) return pm;
+
         const parentDir = nodePath.dirname(dir);
         return parentDir === dir ? null : getPromise(parentDir);
-      }
-    });
+      });
 
     cache.set(dir, promise);
   }
@@ -40,7 +37,9 @@ export const createPackageManager = async (
 const getPromise = async (rootDir: string): Promise<PackageManager | null> => {
   const configFilename = fs.resolve(rootDir, 'package.json');
   const config = await fs.readJson(configFilename);
-  const packageManager = config.at('packageManager').as('string');
+  const packageManager = config
+    .at('packageManager')
+    .as('string');
 
   // There's a "packageManager" field in the "package.json" file, so this is
   // a root.
@@ -49,9 +48,7 @@ const getPromise = async (rootDir: string): Promise<PackageManager | null> => {
 
     // The field value doesn't even loosely match the expected format.
     if (!match) {
-      throw new Error(
-        `invalid package manager "${packageManager}" in "${configFilename}"`,
-      );
+      throw new Error(`invalid package manager "${packageManager}" in "${configFilename}"`);
     }
 
     const [id = '', version = '*'] = match.slice(1);
@@ -66,15 +63,15 @@ const getPromise = async (rootDir: string): Promise<PackageManager | null> => {
           ? new YarnClassic({ rootDir })
           : new Yarn({ rootDir });
       default:
-        throw new Error(
-          `unsupported package manager "${id}" in "${configFilename}`,
-        );
+        throw new Error(`unsupported package manager "${id}" in "${configFilename}`);
     }
   }
 
   // There's a "workspaces" field in the `package.json` file, so this is is
   // a non-PNPM root.
-  if (config.at('workspaces').exists()) {
+  if (config
+    .at('workspaces')
+    .exists()) {
     const yarnLock = await fs.readText([rootDir, 'yarn.lock']);
 
     // There's a yarn.lock file so this is a Yarn root.
@@ -87,7 +84,8 @@ const getPromise = async (rootDir: string): Promise<PackageManager | null> => {
 
     // No yarn.lock, so assume NPM (no need to check for package-lock.json)
     return new Npm({ rootDir });
-  } else if (await fs.exists([rootDir, 'pnpm-lock.yaml'])) {
+  }
+  else if (await fs.exists([rootDir, 'pnpm-lock.yaml'])) {
     return new Pnpm({ rootDir });
   }
 

@@ -20,10 +20,7 @@ type Split<
   : [Trim<TString, TSpace>];
 
 type CamelCase<T> = T extends string
-  ? Trim<
-      T,
-      '-' | '_' | '.' | Whitespace
-    > extends `${infer TLeft}${'-' | '_' | '.' | Whitespace}${infer TRight}`
+  ? Trim<T, '-' | '_' | '.' | Whitespace> extends `${infer TLeft}${'-' | '_' | '.' | Whitespace}${infer TRight}`
     ? `${Lowercase<TLeft>}${Capitalize<CamelCase<TRight>>}`
     : Lowercase<Trim<T, '-' | '_' | '.' | Whitespace>>
   : never;
@@ -50,10 +47,10 @@ type PickRequired<TObject extends object> = {
 
 type UnionProps<T0 extends object, T1 extends object> = any extends any
   ? Simplify<{
-      [P in keyof T0 | keyof T1]:
-        | (P extends keyof T0 ? T0[P] : never)
-        | (P extends keyof T1 ? T1[P] : never);
-    }>
+    [P in keyof T0 | keyof T1]:
+      | (P extends keyof T0 ? T0[P] : never)
+      | (P extends keyof T1 ? T1[P] : never);
+  }>
   : never;
 
 type KeyOf<T> = Extract<keyof T, string>;

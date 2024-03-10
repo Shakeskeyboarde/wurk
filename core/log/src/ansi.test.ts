@@ -19,6 +19,7 @@ test('print 256 color iterator', () => {
     console.log(`${color.value}color ${i}${Ansi.reset}`);
   }
 
-  const color = getAnsiColorIterator({ is256Enabled: true }).next();
+  const color = getAnsiColorIterator({ is256Enabled: true })
+    .next();
   console.log(`${color.value}color 0${Ansi.reset}`);
 });
