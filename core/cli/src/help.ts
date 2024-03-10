@@ -145,19 +145,16 @@ const formatCommands = (commands: readonly HelpCli[]): string => {
   const columns = process.stdout.columns - nameLength - 4;
   const newline = '\n' + ' '.repeat(nameLength + 4);
   const result = Object.entries(commandMap)
-    .reduce(
-      (previous, [name, { descriptions, isDefault }]) => {
-        const description = `${descriptions[0] ?? ''}${isDefault ? ` (default)` : ''}`;
+    .reduce((previous, [name, { descriptions, isDefault }]) => {
+      const description = `${descriptions[0] ?? ''}${isDefault ? ` (default)` : ''}`;
 
-        return (
-          previous
-          + (description
-            ? `\n  ${name.padEnd(nameLength)}  ${wrap(description, columns, newline)}`
-            : `\n  ${name}`)
-        );
-      },
-      'Commands:',
-    );
+      return (
+        previous
+        + (description
+          ? `\n  ${name.padEnd(nameLength)}  ${wrap(description, columns, newline)}`
+          : `\n  ${name}`)
+      );
+    }, 'Commands:');
 
   return result;
 };
@@ -170,9 +167,15 @@ const formatError = (error: unknown): string => {
 
 const format = (cli: HelpCli, error: unknown): string => {
   const groups = Object.entries(
-    cli.options.reduce<Record<string, (Named | Positional)[]>>(
-      {},
-    ),
+    cli.options.reduce<Record<string, (Named | Positional)[]>>((result, option) => {
+      const groupName
+            = option.group || (option.type === 'named' ? 'Options' : 'Arguments');
+
+      return {
+        ...result,
+        [groupName]: [...(result[groupName] ?? []), option],
+      };
+    }, {}),
   );
 
   return [
