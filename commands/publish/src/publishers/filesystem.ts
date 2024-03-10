@@ -245,7 +245,7 @@ const validateDependency = async (
     const meta = await pm.getMetadata(name, version);
 
     if (!meta) {
-      throw new Error(`dependency "${name}" is not published`);
+      throw new Error(`dependency "${name}" version is not published`);
     }
 
     if (git) {
@@ -258,7 +258,7 @@ const validateDependency = async (
 
         if (head) {
           if (head !== meta.gitHead) {
-            throw new Error(`dependency "${name}" is modified`);
+            throw new Error(`dependency "${name}" Git head does not match published head`);
           }
         }
         else {
