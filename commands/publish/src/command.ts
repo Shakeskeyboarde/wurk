@@ -20,9 +20,6 @@ export default createCommand('publish', {
         'remove fields from the package.json file',
       )
       .optionConflict('removePackageFields', 'fromArchive')
-      .option('--build', { hidden: true })
-      .option('--no-build', 'skip building workspaces')
-      .optionNegation('build', 'noBuild')
       .option('--dry-run', 'perform a dry-run for validation');
   },
 
@@ -42,27 +39,11 @@ export default createCommand('publish', {
         log.warn`option --remove-package-fields is ignored when --from-archive is set`;
       }
 
-      if (options.build) {
-        log.warn`option --build is ignored when --from-archive is set`;
-      }
-
       await workspaces.forEach(async (workspace) => {
         await publishFromArchive({ options, workspace });
       });
     }
     else {
-      if (
-        options.build !== false
-        && workspaces.root.config
-          .at('scripts')
-          .at('build')
-          .is('string')
-      ) {
-        await workspaces.root.spawn('npm', ['run', 'build'], {
-          output: 'inherit',
-        });
-      }
-
       const published = new Set<Workspace>();
       const git = await createGit()
         .catch(() => null);

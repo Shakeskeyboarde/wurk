@@ -7,11 +7,6 @@ import { vitest } from './testers/vitest.js';
 export default createCommand('test', {
   config: (cli) => {
     return cli
-      .option('--build', { hidden: true })
-      .option(
-        '--no-build',
-        "skip running the root workspace's build script before testing",
-      )
       .option('--include-dependents', { hidden: true })
       .option(
         '--no-include-dependents',
@@ -23,32 +18,17 @@ export default createCommand('test', {
       .option(
         '--depcheck-missing',
         'show depcheck missing dependencies (all types)',
-      )
-      .optionDefault('build', true)
-      .optionNegation('build', 'noBuild');
+      );
   },
 
   action: async (context) => {
     const { options, workspaces } = context;
 
     if (options.includeDependents) {
-      // Include dependents in case there are integration tests
       workspaces.includeDependents();
     }
 
     if (!workspaces.iterableSize) return;
-
-    if (options.build) {
-      await workspaces.root.spawn('npm', ['run', '--if-present', 'build'], {
-        env: {
-          // Declare the workspaces that should be built if the build script
-          // runs another Wurk command (eg. wurk build).
-          WURK_WORKSPACE_EXPRESSIONS: JSON.stringify(Array.from(workspaces)
-            .map(({ name }) => name)),
-        },
-        output: 'inherit',
-      });
-    }
 
     await depcheck(context);
     await eslint(context);
