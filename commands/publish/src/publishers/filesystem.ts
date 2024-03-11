@@ -113,19 +113,19 @@ const validate = async (
   } = workspace;
 
   if (isPrivate) {
-    log.info`workspace is private (skipped)`;
+    log.info`workspace is private`;
     return false;
   }
 
   if (!version) {
-    log.info`workspace is unversioned (skipped)`;
+    log.info`workspace is unversioned`;
     return false;
   }
 
   const meta = await pm.getMetadata(name, version);
 
   if (meta) {
-    log.info`workspace is already published (skipped)`;
+    log.info`workspace is already published`;
     return false;
   }
 

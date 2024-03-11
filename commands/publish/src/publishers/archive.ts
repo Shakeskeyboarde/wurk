@@ -20,7 +20,7 @@ export const publishFromArchive = async (context: Context): Promise<void> => {
   const { log, dir, name, version, spawn } = workspace;
 
   if (!version) {
-    log.info`workspace is unversioned (skipped)`;
+    log.info`workspace is unversioned`;
     return;
   }
 
@@ -32,7 +32,7 @@ export const publishFromArchive = async (context: Context): Promise<void> => {
     .then(() => true, () => false);
 
   if (!exists) {
-    log.info`workspace has no archive (skipped)`;
+    log.info`workspace has no archive`;
     return;
   }
 
