@@ -225,13 +225,13 @@ ___
 
 ### spawn
 
-• `Readonly` **spawn**: (`cmd`: `string`, `sparseArgs?`: `SpawnSparseArgs`, `options?`: `SpawnOptions`) => `SpawnPromise`
+• `Readonly` **spawn**: (`cmd`: `string`, `sparseArgs?`: `SpawnSparseArgs`, `options?`: `SpawnOptions`) => `Promise`\<`SpawnResult`\>
 
 Spawn a child process.
 
 #### Type declaration
 
-▸ (`cmd`, `sparseArgs?`, `options?`): `SpawnPromise`
+▸ (`cmd`, `sparseArgs?`, `options?`): `Promise`\<`SpawnResult`\>
 
 Spawn a child process.
 
@@ -245,7 +245,7 @@ Spawn a child process.
 
 ##### Returns
 
-`SpawnPromise`
+`Promise`\<`SpawnResult`\>
 
 ___
 

@@ -1,4 +1,4 @@
-import { createSpawn, type SpawnOptions, type SpawnPromise } from '@wurk/spawn';
+import { createSpawn, type SpawnOptions, type SpawnResult } from '@wurk/spawn';
 
 export interface PackageMetadata {
   readonly version: string;
@@ -55,7 +55,7 @@ export abstract class PackageManager {
     script: string,
     args?: readonly string[],
     options?: SpawnOptions,
-  ): SpawnPromise;
+  ): Promise<SpawnResult>;
 
   /**
    * Spawn a new NodeJS process, making a best attempt to use the same NodeJS
@@ -64,7 +64,7 @@ export abstract class PackageManager {
   abstract spawnNode(
     args: readonly string[],
     options?: SpawnOptions,
-  ): SpawnPromise;
+  ): Promise<SpawnResult>;
 
   /**
    * Limited equivalent of `npm install` (no arguments) which restores

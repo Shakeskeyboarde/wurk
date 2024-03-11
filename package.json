@@ -12,15 +12,13 @@
   "scripts": {
     "lint": "eslint --max-warnings=0 .",
     "build-scripts": "npm -ws --if-present run build && npm update --silent --progress=false wurk",
-    "build": "npm run build-scripts && wurk --stream run build",
-    "test": "npm run build && wurk test --no-build",
-    "clean": "npm start -- clean",
+    "build": "npm run build-scripts && wurk run build --stream",
+    "test": "npm run build && wurk exec depcheck --skip-missing && wurk exec eslint src --max-warnings=0 && wurk vitest run",
     "modernize": "npx npm-check-updates@latest -i --workspaces --root --format group"
   },
   "workspaces": [
     "core/cli",
     "core/json",
-    "core/fs",
     "core/log",
     "core/spawn",
     "core/git",
@@ -49,8 +47,8 @@
     "@wurk/command-list": "*",
     "@wurk/command-publish": "*",
     "@wurk/command-run": "*",
-    "@wurk/command-test": "*",
     "@wurk/command-version": "*",
+    "@wurk/command-vitest": "*",
     "depcheck": "^1.4.7",
     "eslint": "^8.56.0",
     "eslint-config-rational": "^4.0.5",

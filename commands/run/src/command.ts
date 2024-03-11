@@ -15,7 +15,6 @@ export default createCommand('run', {
         key: 'scriptsCsv',
       })
       .option('[args...]', 'arguments passed to scripts')
-      .setGreedy()
       .setUnknownNamedOptionAllowed();
   },
 

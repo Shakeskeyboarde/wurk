@@ -5,7 +5,6 @@ export default createCommand('exec', {
     return cli
       .option('<executable>', 'executable to run in each workspace')
       .option('[args...]', 'arguments passed to the executable')
-      .setGreedy()
       .setUnknownNamedOptionAllowed();
   },
 

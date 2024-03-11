@@ -1,7 +1,7 @@
 import { Cli, type CliName, type EmptyResult } from '@wurk/cli';
 import { type JsonAccessor } from '@wurk/json';
 import { type PackageManager } from '@wurk/pm';
-import { AbortError, type WorkspaceCollection } from '@wurk/workspace';
+import { type WorkspaceCollection } from '@wurk/workspace';
 
 import { CommandContext } from './context.js';
 
@@ -107,16 +107,7 @@ export const createCommand = <
 
         const context = new CommandContext({ result, workspaces, pm });
 
-        try {
-          await actionHook(context);
-        }
-        catch (error) {
-          process.exitCode ||= 1;
-
-          if (!(error instanceof AbortError)) {
-            context.log.error({ message: error });
-          }
-        }
+        await actionHook(context);
       });
 
     const init = (newWorkspaces: WorkspaceCollection): void => {

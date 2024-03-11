@@ -1,6 +1,6 @@
 import {
   type SpawnOptions,
-  type SpawnPromise,
+  type SpawnResult,
   type SpawnSparseArgs,
 } from '@wurk/spawn';
 import semver from 'semver';
@@ -17,13 +17,12 @@ export class Npm extends PackageManager {
   }
 
   async getWorkspaces(): Promise<readonly string[]> {
-    const results = await this._spawn('npm', [
+    const { stdoutJson: results } = await this._spawn('npm', [
       'query',
       '--quiet',
       '--json',
       '.workspace',
-    ])
-      .stdoutJson();
+    ]);
 
     return (
       results.map((result): string => {
@@ -82,14 +81,14 @@ export class Npm extends PackageManager {
     script: string,
     args: SpawnSparseArgs = [],
     options?: SpawnOptions | undefined,
-  ): SpawnPromise {
+  ): Promise<SpawnResult> {
     return this._spawn('npm', ['run', '--', script, ...args], options);
   }
 
   spawnNode(
     args: readonly string[],
     options?: SpawnOptions | undefined,
-  ): SpawnPromise {
+  ): Promise<SpawnResult> {
     return this._spawn('node', args, options);
   }
 

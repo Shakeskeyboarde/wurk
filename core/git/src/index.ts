@@ -58,22 +58,24 @@ export class Git {
    * Return true if the instance directory is a shallow Git clone.
    */
   readonly getIsShallow = async (): Promise<boolean> => {
-    return await this._spawn('git', [
+    const { stdoutText } = await this._spawn('git', [
       'rev-parse',
       '--is-shallow-repository',
-    ])
-      .then(({ stdoutText }) => stdoutText !== 'false');
+    ]);
+
+    return stdoutText !== 'false';
   };
 
   /**
    * Return the root directory of the Git repository.
    */
   readonly getRoot = async (): Promise<string> => {
-    return await this._spawn('git', [
+    const { stdoutText } = await this._spawn('git', [
       'rev-parse',
       '--show-toplevel',
-    ])
-      .stdoutText();
+    ]);
+
+    return stdoutText;
   };
 
   /**
@@ -89,15 +91,14 @@ export class Git {
       );
     }
 
-    return (
-      (await this._spawn('git', [
-        'log',
-        ['-n', '1'],
-        '--pretty=format:%H',
-        ['--', dir],
-      ])
-        .stdoutText()) || null
-    );
+    const { stdoutText } = await this._spawn('git', [
+      'log',
+      ['-n', '1'],
+      '--pretty=format:%H',
+      ['--', dir],
+    ]);
+
+    return stdoutText || null;
   };
 
   /**
@@ -105,18 +106,17 @@ export class Git {
    * ignored by Git (`.gitignore`).
    */
   readonly getIgnored = async (dir: string): Promise<string[]> => {
-    const [gitRoot, gitIgnoredText] = await Promise.all([
+    const [gitRoot, gitIgnored] = await Promise.all([
       await this.getRoot(),
       await this._spawn('git', [
         'status',
         '--ignored',
         '--porcelain',
         dir ?? '.',
-      ])
-        .stdoutText(),
+      ]),
     ]);
 
-    return gitIgnoredText
+    return gitIgnored.stdoutText
       .split(/\r?\n/u)
       .flatMap((line): [string] | [] => {
         const match = line.match(/^!! (.*)$/u);
@@ -129,9 +129,9 @@ export class Git {
    * Return true if the Git working tree is dirty.
    */
   readonly getIsDirty = async (dir: string): Promise<boolean> => {
-    return await this._spawn('git', ['status', '--porcelain', dir ?? '.'])
-      .stdoutText()
-      .then(Boolean);
+    const { stdoutText } = await this._spawn('git', ['status', '--porcelain', dir ?? '.']);
+
+    return Boolean(stdoutText);
   };
 
   /**
@@ -155,16 +155,15 @@ export class Git {
 
     const formatPlaceholders = formatEntries.map(([, placeholder]) => placeholder);
 
-    const text = await this._spawn('git', [
+    const { stdoutText } = await this._spawn('git', [
       'log',
       `--pretty=format:%x00%x00%x00 ${formatPlaceholders.join(' %x00%x00 ')} %x00%x00%x00`,
       start ? `${start}..${end}` : end,
       '--',
       dir,
-    ])
-      .stdoutText();
+    ]);
 
-    return [...text.matchAll(/\0{3}(.*)\0{3}/gsu)].flatMap(([, content = '']) => {
+    return [...stdoutText.matchAll(/\0{3}(.*)\0{3}/gsu)].flatMap(([, content = '']) => {
       const values = content
         .split(/ \0{2} /u)
         .map((value) => value.trim());

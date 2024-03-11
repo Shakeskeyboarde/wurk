@@ -681,14 +681,8 @@ class Cli<
   }
 
   /**
-   * Set the exit action to take when an error occurs while parsing or running
-   * command actions.
-   *
-   * - `true`: Exit with a non-zero status (default).
-   * - `false`: Throw the error.
-   * - `Function`: Run the callback for custom error handling. If the callback
-   * returns without throwing an error or exiting the process, the error will
-   * be thrown automatically.
+   * Exit the process with a non-zero status code if an error occurs while
+   * parsing or executing an action.
    *
    * NOTE: If set to `true`, help text is printed for parsing errors, and the
    * stringified error is always printed.

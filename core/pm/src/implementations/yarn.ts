@@ -1,4 +1,4 @@
-import { type SpawnOptions, type SpawnPromise } from '@wurk/spawn';
+import { type SpawnOptions, type SpawnResult } from '@wurk/spawn';
 
 import {
   PackageManager,
@@ -26,14 +26,14 @@ export class Yarn extends PackageManager {
     script: string,
     args?: readonly string[],
     options?: SpawnOptions | undefined,
-  ): SpawnPromise {
+  ): Promise<SpawnResult> {
     throw new Error('not implemented');
   }
 
   spawnNode(
     args: readonly string[],
     options?: SpawnOptions | undefined,
-  ): SpawnPromise {
+  ): Promise<SpawnResult> {
     throw new Error('not implemented');
   }
 

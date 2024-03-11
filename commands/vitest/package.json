@@ -1,14 +1,14 @@
 {
-  "name": "@wurk/command-test",
+  "name": "@wurk/command-vitest",
   "description": "Run Vitest.",
   "version": "0.1.4",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
-  "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/commands/test/README.md",
+  "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/commands/vitest/README.md",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Shakeskeyboarde/wurk.git",
-    "directory": "commands/test"
+    "directory": "commands/vitest"
   },
   "scripts": {
     "build": "tsc -p src/tsconfig.json"

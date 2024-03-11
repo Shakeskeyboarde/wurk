@@ -65,8 +65,7 @@ const check = <const TCli extends Cli>(
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-const cli = (name = 'test') => Cli.create(name)
-  .setExitOnError(false);
+const cli = (name = 'test') => Cli.create(name);
 
 beforeEach(() => {
   vitest.spyOn(process, 'exit')
@@ -869,7 +868,8 @@ describe('exit', () => {
     const errorSpy = vitest
       .spyOn(console, 'error')
       .mockImplementation(() => {});
-    await check(Cli.create('test'), '-a').rejects.toThrow('process.exit');
+    await check(Cli.create('test')
+      .setExitOnError(true), '-a').rejects.toThrow('process.exit');
     expect(errorSpy.mock.calls.at(0)
       ?.at(0))
       .toMatchInlineSnapshot(`

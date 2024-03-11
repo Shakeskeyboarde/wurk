@@ -144,13 +144,10 @@ const validate = async (
     log.warn`changelog may be outdated`;
   }
 
-  const [packed] = await spawn('npm', ['pack', '--dry-run', '--json'])
-    .stdoutJson()
-    .then((json) => {
-      // If the NPM pack command returns an unexpected JSON structure, it
-      // should cause an error.
-      return json.value as [{ files: { path: string }[] }];
-    });
+  const { stdoutJson } = await spawn('npm', ['pack', '--dry-run', '--json']);
+  // If the NPM pack command returns an unexpected JSON structure, it
+  // should cause an error.
+  const [packed] = stdoutJson.value as [{ files: { path: string }[] }];
 
   const missingPackEntrypoints = getEntrypoints()
     .filter((entry) => {
