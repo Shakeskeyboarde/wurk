@@ -31,7 +31,7 @@ export default createCommand('version', {
   },
 
   action: async (context) => {
-    const { log, pm, workspaces, options, autoPrintStatus, createGit }
+    const { log, pm, workspaces, options, createGit }
       = context;
     const git = await createGit()
       .catch(() => null);
@@ -40,8 +40,6 @@ export default createCommand('version', {
       = typeof strategy === 'string' && strategy.startsWith('pre');
     const changes = new Map<Workspace, readonly Change[]>();
     const callback = getStrategyCallback(strategy, pm, git, preid);
-
-    autoPrintStatus();
 
     if (preid && !isPreStrategy) {
       log.warn`option --preid only applies to "pre*" strategies`;
@@ -80,25 +78,11 @@ export default createCommand('version', {
     // fails (eg. dirty Git working tree), dependent workspace writes should
     // be skipped so that they don't end up referencing non-existent versions.
     await workspaces.forEach(async (workspace) => {
-      const { status, config, version } = workspace;
-
-      status.set('pending');
-
-      const newVersion = config
-        .at('version')
-        .as('string');
-
-      if (newVersion !== version) {
-        status.setDetail(`${version} -> ${newVersion}`);
-      }
-
       await writeConfig(workspace);
 
       if (changelog) {
         await writeChangelog(workspace, changes.get(workspace));
       }
-
-      status.set('success');
     });
 
     if (!workspaces.iterableSize) return;

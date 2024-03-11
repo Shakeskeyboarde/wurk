@@ -9,7 +9,9 @@ Workspace collection options.
 ### Properties
 
 - [concurrency](WorkspaceCollectionOptions.md#concurrency)
+- [defaultIterationMethod](WorkspaceCollectionOptions.md#defaultiterationmethod)
 - [includeRootWorkspace](WorkspaceCollectionOptions.md#includerootworkspace)
+- [log](WorkspaceCollectionOptions.md#log)
 - [root](WorkspaceCollectionOptions.md#root)
 - [rootDir](WorkspaceCollectionOptions.md#rootdir)
 - [workspaces](WorkspaceCollectionOptions.md#workspaces)
@@ -20,8 +22,17 @@ Workspace collection options.
 
 • `Optional` `Readonly` **concurrency**: `number`
 
-Maximum workspaces which may be processed in parallel using the
-asynchronous `forEach*` methods.
+Maximum workspaces which may be processed simultaneously using the
+asynchronous `forEachStream()` method. Also affects the `forEach()`
+method if the `defaultIterationMethod` option is set to `forEachStream`.
+
+___
+
+### defaultIterationMethod
+
+• `Optional` `Readonly` **defaultIterationMethod**: ``"forEachParallel"`` \| ``"forEachStream"`` \| ``"forEachSequential"``
+
+Default iteration method.
 
 ___
 
@@ -30,6 +41,14 @@ ___
 • `Optional` `Readonly` **includeRootWorkspace**: `boolean`
 
 Whether or not to include the root workspace in iteration.
+
+___
+
+### log
+
+• `Optional` `Readonly` **log**: `Log`
+
+Logger for workspace collection operations.
 
 ___
 

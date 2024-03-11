@@ -25,11 +25,10 @@ interface Context {
 
 export const publishFromFilesystem = async (context: Context): Promise<void> => {
   const { options, pm, git, workspace, published } = context;
-  const { status, log, dir, config, version, spawn, getDependencyLinks } = workspace;
-
-  status.set('pending');
+  const { log, dir, config, version, spawn, getDependencyLinks } = workspace;
 
   if (!(await validate(pm, git, workspace, published))) {
+    log.info('not publishing');
     return;
   }
 
@@ -94,7 +93,6 @@ export const publishFromFilesystem = async (context: Context): Promise<void> => 
   }
 
   published.add(workspace);
-  status.set('success', `${options.toArchive ? 'pack' : 'publish'} ${version}`);
 };
 
 const validate = async (
@@ -105,7 +103,6 @@ const validate = async (
 ): Promise<boolean> => {
   const {
     log,
-    status,
     dir,
     name,
     version,
@@ -116,22 +113,19 @@ const validate = async (
   } = workspace;
 
   if (isPrivate) {
-    log.info`workspace is private`;
-    status.set('skipped', 'private');
+    log.info`workspace is private (skipped)`;
     return false;
   }
 
   if (!version) {
-    log.info`workspace is unversioned`;
-    status.set('skipped', 'unversioned');
+    log.info`workspace is unversioned (skipped)`;
     return false;
   }
 
   const meta = await pm.getMetadata(name, version);
 
   if (meta) {
-    log.info`workspace is already published`;
-    status.set('skipped', 'already published');
+    log.info`workspace is already published (skipped)`;
     return false;
   }
 
@@ -180,7 +174,9 @@ const validate = async (
   }
 
   for (const link of getDependencyLinks()) {
-    await validateDependency(pm, git, workspace, link, published);
+    if (!await validateDependency(pm, git, workspace, link, published)) {
+      return false;
+    }
   }
 
   return true;
@@ -192,25 +188,27 @@ const validateDependency = async (
   workspace: Workspace,
   { type, spec, dependency }: WorkspaceLink,
   published: Set<Workspace>,
-): Promise<void> => {
+): Promise<boolean> => {
   const { log } = workspace;
   const { dir, name, version, isPrivate } = dependency;
 
   if (type === 'devDependencies') {
     // Dev dependencies are not used after publishing, so they don't need
     // validation.
-    return;
+    return true;
   }
 
   if (spec.type === 'tag') {
     // Dependencies on tagged versions are not local dependencies.
-    return;
+    return true;
   }
 
   if (spec.type === 'url') {
-    // Dependencies on non-file URLs (eg. `git`, `https`) are not local
-    // dependencies.
-    if (spec.protocol !== 'file') return;
+    if (spec.protocol !== 'file') {
+      // Dependencies on non-file URLs (eg. `git`, `https`) are not local
+      // dependencies.
+      return true;
+    }
 
     throw new Error(`dependency "${name}" is local path`);
   }
@@ -226,7 +224,7 @@ const validateDependency = async (
   if (!semver.satisfies(version, spec.range)) {
     // The dependency version range is not satisfied by the local workspace,
     // so this is not a local dependency.
-    return;
+    return true;
   }
 
   // If a non-wildcard dependency version range is used, then the min-version
@@ -245,7 +243,8 @@ const validateDependency = async (
     const meta = await pm.getMetadata(name, version);
 
     if (!meta) {
-      throw new Error(`dependency "${name}" version is not published`);
+      log.info(`dependency "${name}" version is not published`);
+      return false;
     }
 
     if (git) {
@@ -258,7 +257,8 @@ const validateDependency = async (
 
         if (head) {
           if (head !== meta.gitHead) {
-            throw new Error(`dependency "${name}" Git head does not match published head`);
+            log.info(`dependency "${name}" Git head does not match published head`);
+            return false;
           }
         }
         else {
@@ -270,4 +270,6 @@ const validateDependency = async (
       }
     }
   }
+
+  return true;
 };

@@ -1,12 +1,7 @@
 import { Cli, type CliName, type EmptyResult } from '@wurk/cli';
 import { type JsonAccessor } from '@wurk/json';
-import { isLogLevel, LogLevel } from '@wurk/log';
 import { type PackageManager } from '@wurk/pm';
-import {
-  AbortError,
-  StatusValue,
-  type WorkspaceCollection,
-} from '@wurk/workspace';
+import { AbortError, type WorkspaceCollection } from '@wurk/workspace';
 
 import { CommandContext } from './context.js';
 
@@ -110,17 +105,7 @@ export const createCommand = <
       .action(async (result) => {
         if (!workspaces) throw new Error('command not initialized');
 
-        let isAutoPrintStatusEnabled = false;
-
-        const context = new CommandContext({
-          result,
-          workspaces,
-          pm,
-          autoPrintStatus: (enabled = true) => {
-            isAutoPrintStatusEnabled = enabled;
-          },
-        });
-        const initialSelection = Array.from(workspaces);
+        const context = new CommandContext({ result, workspaces, pm });
 
         try {
           await actionHook(context);
@@ -130,31 +115,6 @@ export const createCommand = <
 
           if (!(error instanceof AbortError)) {
             context.log.error({ message: error });
-          }
-        }
-        finally {
-          workspaces.forEachSync(({ status }) => {
-            if (status.value === StatusValue.pending) {
-              status.set(StatusValue.failure);
-            }
-
-            if (status.value >= StatusValue.failure) {
-              process.exitCode ||= 1;
-            }
-          });
-
-          if (isAutoPrintStatusEnabled) {
-            workspaces.printStatus({
-              prefix: result.name,
-              condition: isLogLevel(LogLevel.verbose)
-                ? undefined
-                : (workspace) => {
-                  return (
-                    workspace.status.value !== StatusValue.skipped
-                    || initialSelection.includes(workspace)
-                  );
-                },
-            });
           }
         }
       });

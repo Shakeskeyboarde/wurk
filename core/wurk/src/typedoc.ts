@@ -11,5 +11,4 @@ export type {
   WorkspaceLink,
   WorkspaceLinkOptions,
   WorkspaceOptions,
-  WorkspacePrintStatusOptions,
 } from './index.js';

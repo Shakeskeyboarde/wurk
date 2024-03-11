@@ -17,13 +17,10 @@ interface Context {
 
 export const publishFromArchive = async (context: Context): Promise<void> => {
   const { options, workspace } = context;
-  const { log, dir, name, version, status, spawn } = workspace;
-
-  status.set('pending');
+  const { log, dir, name, version, spawn } = workspace;
 
   if (!version) {
-    log.info`workspace is unversioned`;
-    status.set('skipped', 'unversioned');
+    log.info`workspace is unversioned (skipped)`;
     return;
   }
 
@@ -35,8 +32,7 @@ export const publishFromArchive = async (context: Context): Promise<void> => {
     .then(() => true, () => false);
 
   if (!exists) {
-    log.info`workspace has no archive`;
-    status.set('skipped', 'no archive');
+    log.info`workspace has no archive (skipped)`;
     return;
   }
 
@@ -62,8 +58,6 @@ export const publishFromArchive = async (context: Context): Promise<void> => {
     ],
     { cwd: tmpDir, output: 'echo' },
   );
-
-  status.set('success', `publish archive ${version}`);
 };
 
 const extractPackageJson = async (

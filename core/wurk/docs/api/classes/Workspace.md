@@ -17,17 +17,11 @@ Workspace information and utilities.
 
 ### Properties
 
-- [clean](Workspace.md#clean)
 - [config](Workspace.md#config)
 - [dir](Workspace.md#dir)
-- [fs](Workspace.md#fs)
 - [getDependencyLinks](Workspace.md#getdependencylinks)
 - [getDependentLinks](Workspace.md#getdependentlinks)
 - [getEntrypoints](Workspace.md#getentrypoints)
-- [getGit](Workspace.md#getgit)
-- [getNpm](Workspace.md#getnpm)
-- [importRelative](Workspace.md#importrelative)
-- [importRelativeResolve](Workspace.md#importrelativeresolve)
 - [isPrivate](Workspace.md#isprivate)
 - [isRoot](Workspace.md#isroot)
 - [isSelected](Workspace.md#isselected)
@@ -35,7 +29,6 @@ Workspace information and utilities.
 - [name](Workspace.md#name)
 - [relativeDir](Workspace.md#relativedir)
 - [spawn](Workspace.md#spawn)
-- [status](Workspace.md#status)
 - [version](Workspace.md#version)
 
 ## Accessors
@@ -84,28 +77,6 @@ collections instead, which create their own workspace instances.
 
 ## Properties
 
-### clean
-
-• `Readonly` **clean**: () => `Promise`\<`void`\>
-
-Remove files and directories from the workspace which are ignored by
-Git, _except_ for `node_modules` and dot-files (eg. `.gitignore`,
-`.vscode`, etc.).
-
-#### Type declaration
-
-▸ (): `Promise`\<`void`\>
-
-Remove files and directories from the workspace which are ignored by
-Git, _except_ for `node_modules` and dot-files (eg. `.gitignore`,
-`.vscode`, etc.).
-
-##### Returns
-
-`Promise`\<`void`\>
-
-___
-
 ### config
 
 • `Readonly` **config**: `JsonAccessor`
@@ -119,14 +90,6 @@ ___
 • `Readonly` **dir**: `string`
 
 Absolute path of the workspace directory.
-
-___
-
-### fs
-
-• `Readonly` **fs**: `Fs`
-
-File system utilities relative to this workspace's directory.
 
 ___
 
@@ -200,140 +163,6 @@ readonly `Entrypoint`[]
 
 ___
 
-### getGit
-
-• `Readonly` **getGit**: () => `Promise`\<`Git`\>
-
-Get a Git API instance for the workspace directory.
-
-Throws:
-- If Git is not installed (ENOENT)
-- If the directory is not a repo (ENOGITREPO)
-
-#### Type declaration
-
-▸ (): `Promise`\<`Git`\>
-
-Get a Git API instance for the workspace directory.
-
-Throws:
-- If Git is not installed (ENOENT)
-- If the directory is not a repo (ENOGITREPO)
-
-##### Returns
-
-`Promise`\<`Git`\>
-
-___
-
-### getNpm
-
-• `Readonly` **getNpm**: () => `Promise`\<`Npm`\>
-
-Get an NPM API instance for the workspace directory.
-
-Throws:
-- If NPM is not installed (ENOENT)
-
-#### Type declaration
-
-▸ (): `Promise`\<`Npm`\>
-
-Get an NPM API instance for the workspace directory.
-
-Throws:
-- If NPM is not installed (ENOENT)
-
-##### Returns
-
-`Promise`\<`Npm`\>
-
-___
-
-### importRelative
-
-• `Readonly` **importRelative**: \<TExports\>(`name`: `string`, `versionRange?`: `string`) => `Promise`\<`ImportResult`\<`TExports`\>\>
-
-Import relative to the workspace directory, instead of relative to the
-current file. This method should be used to import optional command
-dependencies, because it allows per-workspace package installation.
-
-The `versionRange` option can be a semver range, just like a dependency
-in your `package.json` file.
-
-**Note:** There's no way to infer the type of the imported module.
-However, TypeScript type imports are not emitted in compiled code,
-so you can safely import the module type, and then use this method
-to import the implementation.
-
-#### Type declaration
-
-▸ \<`TExports`\>(`name`, `versionRange?`): `Promise`\<`ImportResult`\<`TExports`\>\>
-
-Import relative to the workspace directory, instead of relative to the
-current file. This method should be used to import optional command
-dependencies, because it allows per-workspace package installation.
-
-The `versionRange` option can be a semver range, just like a dependency
-in your `package.json` file.
-
-**Note:** There's no way to infer the type of the imported module.
-However, TypeScript type imports are not emitted in compiled code,
-so you can safely import the module type, and then use this method
-to import the implementation.
-
-##### Type parameters
-
-| Name | Type |
-| :------ | :------ |
-| `TExports` | extends `Record`\<`string`, `any`\> = `Record`\<`string`, `unknown`\> |
-
-##### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `name` | `string` |
-| `versionRange?` | `string` |
-
-##### Returns
-
-`Promise`\<`ImportResult`\<`TExports`\>\>
-
-___
-
-### importRelativeResolve
-
-• `Readonly` **importRelativeResolve**: (`name`: `string`, `versionRange?`: `string`) => `Promise`\<`ImportResolved`\>
-
-Find a package relative to the workspace directory, and return all of
-the package info except its exports.
-
-The `versionRange` option can be a semver range, just like a dependency
-in your `package.json` file.
-
-#### Type declaration
-
-▸ (`name`, `versionRange?`): `Promise`\<`ImportResolved`\>
-
-Find a package relative to the workspace directory, and return all of
-the package info except its exports.
-
-The `versionRange` option can be a semver range, just like a dependency
-in your `package.json` file.
-
-##### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `name` | `string` |
-| `versionRange?` | `string` |
-
-##### Returns
-
-`Promise`\<`ImportResolved`\>
-
-___
-
 ### isPrivate
 
 • `Readonly` **isPrivate**: `boolean`
@@ -347,7 +176,7 @@ ___
 
 • `Readonly` **isRoot**: `boolean`
 
-True if this is the workspaces root workspace.
+True if this is the root workspace.
 
 ___
 
@@ -417,15 +246,6 @@ Spawn a child process.
 ##### Returns
 
 `SpawnPromise`
-
-___
-
-### status
-
-• `Readonly` **status**: `Status`
-
-Workspace status tracking, used to (optionally) print a collective
-status message for multiple workspaces.
 
 ___
 

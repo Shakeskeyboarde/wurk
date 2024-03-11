@@ -21,7 +21,6 @@ Wurk API
 - [WorkspaceLink](interfaces/WorkspaceLink.md)
 - [WorkspaceLinkOptions](interfaces/WorkspaceLinkOptions.md)
 - [WorkspaceOptions](interfaces/WorkspaceOptions.md)
-- [WorkspacePrintStatusOptions](interfaces/WorkspacePrintStatusOptions.md)
 
 ### Type Aliases
 
@@ -108,7 +107,7 @@ ___
 
 ### CommandConfigCallback
 
-Ƭ **CommandConfigCallback**\<`TResult`, `TName`\>: (`cli`: `Cli`\<`EmptyResult`, `TName`\>, `commandPackage`: `ImportResult`[``"moduleConfig"``]) => `Cli`\<`TResult`, `TName`\>
+Ƭ **CommandConfigCallback**\<`TResult`, `TName`\>: (`cli`: `Cli`\<`EmptyResult`, `TName`\>, `config`: `JsonAccessor`) => `Cli`\<`TResult`, `TName`\>
 
 Configuration callback for a Wurk command plugin.
 
@@ -121,14 +120,14 @@ Configuration callback for a Wurk command plugin.
 
 #### Type declaration
 
-▸ (`cli`, `commandPackage`): `Cli`\<`TResult`, `TName`\>
+▸ (`cli`, `config`): `Cli`\<`TResult`, `TName`\>
 
 ##### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `cli` | `Cli`\<`EmptyResult`, `TName`\> |
-| `commandPackage` | `ImportResult`[``"moduleConfig"``] |
+| `config` | `JsonAccessor` |
 
 ##### Returns
 

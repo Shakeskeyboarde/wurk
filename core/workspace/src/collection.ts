@@ -10,7 +10,6 @@ import { AbortError } from './error.js';
 import { GeneratorIterable, getDepthFirstGenerator } from './generator.js';
 import { select, type SelectCondition } from './select.js';
 import { getSpec } from './spec.js';
-import { printStatus, StatusValue } from './status.js';
 import {
   Workspace,
   type WorkspaceLink,
@@ -72,25 +71,6 @@ export interface WorkspaceCollectionOptions {
     | 'forEachParallel'
     | 'forEachStream'
     | 'forEachSequential';
-}
-
-/**
- * Options for printing the status summary of the workspaces.
- */
-export interface WorkspacePrintStatusOptions {
-  /**
-   * Prefix for status summary headers (eg. `${prefix} summary:`,
-   * `${prefix} success`).
-   */
-  readonly prefix?: string;
-
-  /**
-   * Selection conditions for workspaces to include in the status summary.
-   * If omitted, all workspaces will be included. If provided, selected
-   * workspaces will be included, as well as any workspace with a non-skipped
-   * status.
-   */
-  readonly condition?: SelectCondition;
 }
 
 /**
@@ -418,27 +398,6 @@ export class WorkspaceCollection {
     return links;
   }
 
-  /**
-   * Print a status summary for the workspaces.
-   */
-  printStatus(options?: WorkspacePrintStatusOptions): void {
-    let workspaces: Iterable<Workspace>;
-
-    if (options?.condition) {
-      const selected = select(this.all, options.condition);
-
-      workspaces = Array.from(this.all)
-        .filter((workspace) => {
-          return workspace.status.value !== StatusValue.skipped || selected.get(workspace);
-        });
-    }
-    else {
-      workspaces = this.all;
-    }
-
-    printStatus(this.#log, workspaces, options?.prefix);
-  }
-
   protected async _forEachAsync(
     callback: WorkspaceCallback,
     options: {
@@ -463,7 +422,7 @@ export class WorkspaceCollection {
     });
 
     for (const workspace of this) {
-      const { log, status } = workspace;
+      const { log } = workspace;
 
       const abort = (reason?: unknown): void => {
         log.error({ message: reason });
@@ -490,7 +449,6 @@ export class WorkspaceCollection {
           await callback(workspace, signal, abort);
         }
         catch (error) {
-          status.set(StatusValue.failure);
           abort(error);
         }
         finally {

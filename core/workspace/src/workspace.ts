@@ -4,7 +4,6 @@ import { createSpawn } from '@wurk/spawn';
 
 import { type Entrypoint, getEntrypoints } from './entrypoint.js';
 import { type DependencySpec } from './spec.js';
-import { Status } from './status.js';
 
 /**
  * Workspace configuration.
@@ -107,12 +106,6 @@ export class Workspace {
   readonly log: Log;
 
   /**
-   * Workspace status tracking, used to (optionally) print a collective
-   * status message for multiple workspaces.
-   */
-  readonly status: Status;
-
-  /**
    * Absolute path of the workspace directory.
    */
   readonly dir: string;
@@ -201,7 +194,6 @@ export class Workspace {
       .as('boolean', false);
     this.isRoot = this.relativeDir === '.';
     this.log = new Log();
-    this.status = new Status(this.name);
     this.getDependencyLinks = options.getDependencyLinks ?? (() => []);
     this.getDependentLinks = options.getDependentLinks ?? (() => []);
   }

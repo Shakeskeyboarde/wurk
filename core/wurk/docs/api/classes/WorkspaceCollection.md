@@ -30,14 +30,14 @@ included the root workspace), regardless of selection status.
 ### Methods
 
 - [forEach](WorkspaceCollection.md#foreach)
-- [forEachIndependent](WorkspaceCollection.md#foreachindependent)
+- [forEachParallel](WorkspaceCollection.md#foreachparallel)
 - [forEachSequential](WorkspaceCollection.md#foreachsequential)
+- [forEachStream](WorkspaceCollection.md#foreachstream)
 - [forEachSync](WorkspaceCollection.md#foreachsync)
 - [getDependencyLinks](WorkspaceCollection.md#getdependencylinks)
 - [getDependentLinks](WorkspaceCollection.md#getdependentlinks)
 - [includeDependencies](WorkspaceCollection.md#includedependencies)
 - [includeDependents](WorkspaceCollection.md#includedependents)
-- [printStatus](WorkspaceCollection.md#printstatus)
 - [select](WorkspaceCollection.md#select)
 
 ### Properties
@@ -97,9 +97,8 @@ Create a new workspace collection.
 
 ▸ **forEach**(`callback`, `signal?`): `Promise`\<`void`\>
 
-Iterate over selected workspaces in parallel, ensuring that each
-workspace's local (selected) dependencies are processed before the
-workspace itself.
+Iterate over selected workspaces. This method will behave like one of
+the other `forEach*` methods, depending on the collection configuration.
 
 #### Parameters
 
@@ -114,12 +113,12 @@ workspace itself.
 
 ___
 
-### forEachIndependent
+### forEachParallel
 
-▸ **forEachIndependent**(`callback`, `signal?`): `Promise`\<`void`\>
+▸ **forEachParallel**(`callback`, `signal?`): `Promise`\<`void`\>
 
 Iterate over selected workspaces in parallel, without regard for
-interdependency.
+topology or concurrency limits.
 
 #### Parameters
 
@@ -138,8 +137,27 @@ ___
 
 ▸ **forEachSequential**(`callback`, `signal?`): `Promise`\<`void`\>
 
-Iterate over selected workspaces sequentially (ie. one at a time,
-serially, non-parallel).
+Iterate over selected workspaces sequentially, without any concurrency.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `callback` | [`WorkspaceCallback`](../README.md#workspacecallback) |
+| `signal?` | `AbortSignal` |
+
+#### Returns
+
+`Promise`\<`void`\>
+
+___
+
+### forEachStream
+
+▸ **forEachStream**(`callback`, `signal?`): `Promise`\<`void`\>
+
+Iterate over selected workspaces in parallel, with topological awaiting
+and concurrency limits.
 
 #### Parameters
 
@@ -243,24 +261,6 @@ workspaces, as long as the dependency is not _explicitly_ excluded.
 | Name | Type |
 | :------ | :------ |
 | `enabled?` | `boolean` |
-
-#### Returns
-
-`void`
-
-___
-
-### printStatus
-
-▸ **printStatus**(`options?`): `void`
-
-Print a status summary for the workspaces.
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `options?` | [`WorkspacePrintStatusOptions`](../interfaces/WorkspacePrintStatusOptions.md) |
 
 #### Returns
 

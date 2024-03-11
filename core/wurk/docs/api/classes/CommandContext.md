@@ -16,39 +16,33 @@ Context passed to Wurk command action hook.
 
 ## Table of contents
 
+### Methods
+
+- [createGit](CommandContext.md#creategit)
+
 ### Properties
 
-- [autoPrintStatus](CommandContext.md#autoprintstatus)
 - [log](CommandContext.md#log)
+- [pm](CommandContext.md#pm)
 - [workspaces](CommandContext.md#workspaces)
 
+## Methods
+
+### createGit
+
+▸ **createGit**(): `Promise`\<`Git`\>
+
+Create a Git API instance for the workspace directory.
+
+Throws:
+- If Git is not installed (ENOENT)
+- If the directory is not a repo (ENOREPO)
+
+#### Returns
+
+`Promise`\<`Git`\>
+
 ## Properties
-
-### autoPrintStatus
-
-• `Readonly` **autoPrintStatus**: (`enabled?`: `boolean`) => `void`
-
-When enabled, a status summary for all workspaces will be printed after
-the command completes, even if an error is thrown.
-
-#### Type declaration
-
-▸ (`enabled?`): `void`
-
-When enabled, a status summary for all workspaces will be printed after
-the command completes, even if an error is thrown.
-
-##### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `enabled?` | `boolean` |
-
-##### Returns
-
-`void`
-
-___
 
 ### log
 
@@ -56,6 +50,14 @@ ___
 
 Global logger for the command. This logger has no prefix unless one is
 set by the command.
+
+___
+
+### pm
+
+• `Readonly` **pm**: `PackageManager`
+
+Package manager utilities.
 
 ___
 

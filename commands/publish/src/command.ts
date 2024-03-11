@@ -31,11 +31,8 @@ export default createCommand('publish', {
     pm,
     options,
     workspaces,
-    autoPrintStatus,
     createGit,
   }) => {
-    autoPrintStatus();
-
     if (options.fromArchive) {
       if (options.otp != null) {
         log.warn`option --otp is ignored when --from-archive is set`;

@@ -13,7 +13,6 @@ interface ContextOptions<TResult extends UnknownResult> {
   readonly result: TResult;
   readonly workspaces: WorkspaceCollection;
   readonly pm: PackageManager;
-  readonly autoPrintStatus: (enabled?: boolean) => void;
 }
 
 /**
@@ -39,12 +38,6 @@ implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>> {
    */
   readonly pm: PackageManager;
 
-  /**
-   * When enabled, a status summary for all workspaces will be printed after
-   * the command completes, even if an error is thrown.
-   */
-  readonly autoPrintStatus: (enabled?: boolean) => void;
-
   get name(): string {
     return this.#result.name;
   }
@@ -62,13 +55,12 @@ implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>> {
   }
 
   constructor(options: ContextOptions<TResult>) {
-    const { result, workspaces, pm, autoPrintStatus } = options;
+    const { result, workspaces, pm } = options;
 
     this.#result = result;
     this.log = new Log();
     this.workspaces = workspaces;
     this.pm = pm;
-    this.autoPrintStatus = autoPrintStatus;
   }
 
   /**

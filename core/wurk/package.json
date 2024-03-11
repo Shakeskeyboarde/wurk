@@ -11,7 +11,7 @@
     "directory": "core/wurk"
   },
   "scripts": {
-    "build": "tsc -p src/tsconfig.json && chmod +x lib/bin.js"
+    "build": "tsc -p src/tsconfig.json && chmod +x lib/bin.js && typedoc --options typedoc.json"
   },
   "type": "module",
   "types": "./lib/index.d.ts",
