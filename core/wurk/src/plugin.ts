@@ -1,8 +1,8 @@
+import nodeFs from 'node:fs/promises';
 import nodePath from 'node:path';
 import nodeUrl from 'node:url';
 
-import { fs } from '@wurk/fs';
-import { type JsonAccessor } from '@wurk/json';
+import { JsonAccessor } from '@wurk/json';
 import { log } from '@wurk/log';
 import { type PackageManager } from '@wurk/pm';
 
@@ -81,7 +81,13 @@ const getCommandConfig = async (
   let dir = nodePath.dirname(nodeUrl.fileURLToPath(entry));
 
   do {
-    const config = await fs.readJson(nodePath.join(dir, 'package.json'));
+    const configFilename = nodePath.join(dir, 'package.json');
+    const config = await nodeFs.readFile(configFilename, 'utf8')
+      .catch((error: any) => {
+        if (error?.code === 'ENOENT') return '';
+        throw error;
+      })
+      .then(JsonAccessor.parse);
     const name = config
       .at('name')
       .as('string');

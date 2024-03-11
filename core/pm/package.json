@@ -27,7 +27,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@wurk/fs": "*",
+    "@wurk/json": "*",
     "@wurk/spawn": "*",
     "semver": "^7.6.0"
   }

@@ -1,6 +1,7 @@
+import nodeFs from 'node:fs/promises';
 import nodePath from 'node:path';
 
-import { fs } from '@wurk/fs';
+import { JsonAccessor } from '@wurk/json';
 
 import { Npm } from './implementations/npm.js';
 import { Pnpm } from './implementations/pnpm.js';
@@ -9,7 +10,7 @@ import { YarnClassic } from './implementations/yarn-classic.js';
 import { type PackageManager } from './pm.js';
 
 export const createPackageManager = async (dir = '.'): Promise<PackageManager> => {
-  const cacheKey = fs.resolve(dir);
+  const cacheKey = nodePath.resolve(dir);
 
   let promise = cache.get(cacheKey);
 
@@ -35,8 +36,9 @@ export const createPackageManager = async (dir = '.'): Promise<PackageManager> =
 };
 
 const getPromise = async (rootDir: string): Promise<PackageManager | null> => {
-  const configFilename = fs.resolve(rootDir, 'package.json');
-  const config = await fs.readJson(configFilename);
+  const configFilename = nodePath.resolve(rootDir, 'package.json');
+  const config = await nodeFs.readFile(configFilename, 'utf8')
+    .then(JsonAccessor.parse);
   const packageManager = config
     .at('packageManager')
     .as('string');
@@ -72,7 +74,12 @@ const getPromise = async (rootDir: string): Promise<PackageManager | null> => {
   if (config
     .at('workspaces')
     .exists()) {
-    const yarnLock = await fs.readText([rootDir, 'yarn.lock']);
+    const yarnLockFilename = nodePath.resolve(rootDir, 'yarn.lock');
+    const yarnLock = await nodeFs.readFile(yarnLockFilename, 'utf8')
+      .catch((error: any) => {
+        if (error?.code === 'ENOENT') return null;
+        throw error;
+      });
 
     // There's a yarn.lock file so this is a Yarn root.
     if (yarnLock != null) {
@@ -85,8 +92,14 @@ const getPromise = async (rootDir: string): Promise<PackageManager | null> => {
     // No yarn.lock, so assume NPM (no need to check for package-lock.json)
     return new Npm({ rootDir });
   }
-  else if (await fs.exists([rootDir, 'pnpm-lock.yaml'])) {
-    return new Pnpm({ rootDir });
+  else {
+    const pnpmLockFilename = nodePath.resolve(rootDir, 'pnpm-lock.yaml');
+    const pnpmLockExists = await nodeFs.access(pnpmLockFilename)
+      .then(() => true, () => false);
+
+    if (pnpmLockExists) {
+      return new Pnpm({ rootDir });
+    }
   }
 
   return null;

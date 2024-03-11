@@ -1,3 +1,5 @@
+import nodeFs from 'node:fs/promises';
+import nodeOs from 'node:os';
 import nodePath from 'node:path';
 
 import { type Log, type WorkspaceCollection } from 'wurk';
@@ -20,10 +22,10 @@ export const vitest = async (context: VitestContext): Promise<void> => {
   const workspaceDirs: string[] = [];
 
   for (const workspace of workspaces) {
-    const { dir, fs } = workspace;
-    const configs = await fs.find(['vitest.config.*', 'vite.config.*']);
+    const { dir } = workspace;
+    const hasConfig = await getConfigExists(dir);
 
-    if (configs.length) {
+    if (hasConfig) {
       workspaceDirs.push(dir);
     }
   }
@@ -33,10 +35,10 @@ export const vitest = async (context: VitestContext): Promise<void> => {
     return;
   }
 
-  const tmpDir = await workspaces.root.fs.temp('vitest');
+  const tmpDir = await nodeFs.mkdtemp(nodePath.resolve(nodeOs.tmpdir(), 'wurk-vitest-'));
   const tmpConfig = nodePath.join(tmpDir, 'vitest.workspace.json');
 
-  await workspaces.root.fs.writeJson(tmpConfig, workspaceDirs);
+  await nodeFs.writeFile(tmpConfig, JSON.stringify(workspaceDirs, null, 2));
   await workspaces.root.spawn('vitest', ['run', `--workspace=${tmpConfig}`], {
     log: log,
     output: 'inherit',
@@ -46,4 +48,25 @@ export const vitest = async (context: VitestContext): Promise<void> => {
         : arg,
     },
   });
+};
+
+const getConfigExists = async (dir: string): Promise<boolean> => {
+  const handle = await nodeFs.opendir(dir);
+
+  try {
+    for await (const entry of handle) {
+      if (entry.name.startsWith('vitest.config.') || entry.name.startsWith('vite.config.')) {
+        return true;
+      }
+    }
+  }
+  finally {
+    await handle.close()
+      .catch((error: any) => {
+        if (error?.code === 'ERR_DIR_CLOSED') return;
+        throw error;
+      });
+  }
+
+  return false;
 };

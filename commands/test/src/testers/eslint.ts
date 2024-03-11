@@ -1,3 +1,5 @@
+import nodePath from 'node:path';
+
 import { type Log, type WorkspaceCollection } from 'wurk';
 
 interface EslintContext {
@@ -19,7 +21,7 @@ export const eslint = async ({
 
   const workspaceDirs = Array.from(workspaces)
     .filter(({ isSelected }) => isSelected)
-    .map(({ dir }) => workspaces.root.fs.relative(dir));
+    .map(({ dir }) => nodePath.relative(workspaces.root.dir, dir));
 
   await workspaces.root.spawn(
     'eslint',

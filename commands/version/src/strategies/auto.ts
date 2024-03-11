@@ -1,5 +1,8 @@
+import nodeFs from 'node:fs/promises';
+import nodePath from 'node:path';
+
 import semver, { type ReleaseType } from 'semver';
-import { type Fs, type Git, type PackageManager, type Workspace } from 'wurk';
+import { type Git, type GitLog, type PackageManager, type Workspace } from 'wurk';
 
 import { type Change, ChangeType } from '../change.js';
 
@@ -8,7 +11,7 @@ export const auto = async (
   git: Git,
   workspace: Workspace,
 ): Promise<readonly Change[]> => {
-  const { log, config, name, version, fs } = workspace;
+  const { log, dir, config, name, version } = workspace;
 
   // Auto-versioning does not support workspaces without versions or with
   // prerelease versions.
@@ -29,11 +32,14 @@ export const auto = async (
     return [];
   }
 
-  const { isConventional, releaseType, changes } = await getChanges(
-    fs,
-    git,
-    meta.gitHead,
-  );
+  const changelogFilename = nodePath.resolve(dir, 'CHANGELOG.md');
+  const changelog = await nodeFs.readFile(changelogFilename, 'utf8')
+    .catch((error: any) => {
+      if (error?.code === 'ENOENT') return '';
+      throw error;
+    });
+  const logs = await git.getLogs({ start: meta.gitHead, dir });
+  const { isConventional, releaseType, changes } = await getChanges(logs, changelog);
 
   if (!isConventional) {
     log.warn`workspace has non-conventional commits`;
@@ -57,18 +63,16 @@ export const auto = async (
 };
 
 export const getChanges = async (
-  fs: Fs,
-  git: Git,
-  publishedHead: string,
+  logs: GitLog[],
+  changelog: string,
 ): Promise<{
   isConventional: boolean;
   releaseType: null | Exclude<ReleaseType, `pre${string}`>;
   changes: readonly Change[];
 }> => {
-  const logs = await git.getLogs({ start: publishedHead });
-
   let isConventional = true;
-  let changes: Change[] = logs
+
+  const changes: Change[] = logs
     .flatMap(({ hash, subject, body }): Change[] => {
       const subjectMatch = subject.match(/^\s*([a-z][a-z- ]+(?<=[a-z]))\s*(?:\((.*?)\)\s*)?(?:!\s*)?:(.*)$/iu);
 
@@ -118,18 +122,10 @@ export const getChanges = async (
           return `&#${char.charCodeAt(0)};`;
         }),
       };
+    })
+    .filter((change) => {
+      return !changelog.includes(` ${change.message}\n`);
     });
-
-  if (changes.length) {
-    // Remove duplicate changelog entries.
-    const changeLogText = await fs
-      .readText('CHANGELOG.md')
-      .then((text) => text ?? '');
-
-    changes = changes.filter((change) => {
-      return !changeLogText.includes(` ${change.message}\n`);
-    });
-  }
 
   const releaseType = getReleaseType(changes);
 

@@ -59,7 +59,6 @@
   },
   "dependencies": {
     "@wurk/cli": "*",
-    "@wurk/fs": "*",
     "@wurk/git": "*",
     "@wurk/json": "*",
     "@wurk/log": "*",

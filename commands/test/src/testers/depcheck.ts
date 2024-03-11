@@ -1,3 +1,5 @@
+import nodePath from 'node:path';
+
 import { type Log, SpawnExitCodeError, type WorkspaceCollection } from 'wurk';
 
 interface DepcheckContext {
@@ -24,7 +26,7 @@ export const depcheck = async ({
 
   const workspaceDirs = Array.from(workspaces)
     .filter(({ isSelected }) => isSelected)
-    .map(({ dir }) => workspaces.root.fs.relative(dir));
+    .map(({ dir }) => nodePath.relative(workspaces.root.dir, dir));
 
   if (!workspaceDirs.length) return;
 

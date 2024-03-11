@@ -257,10 +257,18 @@ export class JsonAccessor {
     return new Object(this.value);
   }
 
+  /**
+   * Returns the `value` property of this object.
+   */
   toJSON(): unknown {
     return this.value;
   }
 
+  /**
+   * Return a JSON string of the `value` property of this object.
+   *
+   * Equivalent to `JSON.stringify(accessor, null, 2) ?? ''`.
+   */
   toString(): string {
     return JSON.stringify(this, null, 2) ?? '';
   }

@@ -1,4 +1,4 @@
-import nodeAssert from 'node:assert';
+import nodeFs from 'node:fs/promises';
 import nodePath from 'node:path';
 
 import semver from 'semver';
@@ -25,7 +25,7 @@ interface Context {
 
 export const publishFromFilesystem = async (context: Context): Promise<void> => {
   const { options, pm, git, workspace, published } = context;
-  const { status, log, fs, config, version, spawn, getDependencyLinks } = workspace;
+  const { status, log, dir, config, version, spawn, getDependencyLinks } = workspace;
 
   status.set('pending');
 
@@ -73,12 +73,11 @@ export const publishFromFilesystem = async (context: Context): Promise<void> => 
   /**
    * All package changes are temporary and will be reverted after publishing.
    */
-  const savedPackageJson = await fs.readText('package.json');
-
-  nodeAssert(savedPackageJson, 'failed to read package.json file');
+  const configFilename = nodePath.resolve(dir, 'package.json');
+  const savedConfig = await nodeFs.readFile(configFilename, { encoding: 'utf8' });
 
   try {
-    await fs.writeJson('package.json', config);
+    await nodeFs.writeFile(configFilename, config.toString());
     await spawn(
       'npm',
       [
@@ -91,7 +90,7 @@ export const publishFromFilesystem = async (context: Context): Promise<void> => 
     );
   }
   finally {
-    await fs.writeText('package.json', savedPackageJson);
+    await nodeFs.writeFile(configFilename, savedConfig);
   }
 
   published.add(workspace);
@@ -107,10 +106,10 @@ const validate = async (
   const {
     log,
     status,
+    dir,
     name,
     version,
     isPrivate,
-    fs,
     spawn,
     getEntrypoints,
     getDependencyLinks,
@@ -140,7 +139,8 @@ const validate = async (
     throw new Error('workspace has uncommitted changes');
   }
 
-  const changelog = await fs.readText('CHANGELOG.md');
+  const changelogFilename = nodePath.resolve(dir, 'CHANGELOG.md');
+  const changelog = await nodeFs.readFile(changelogFilename, { encoding: 'utf8' });
 
   if (
     changelog
@@ -167,14 +167,14 @@ const validate = async (
       // relative path starts with ".." if the pack filename is not equal to
       // and not a subpath of the entry filename.
         return nodePath
-          .relative(entry.filename, fs.resolve(packEntry.path))
+          .relative(entry.filename, nodePath.resolve(dir, packEntry.path))
           .startsWith('..');
       });
     });
 
   if (missingPackEntrypoints.length) {
     missingPackEntrypoints.forEach(({ type, filename }) => {
-      log.error`missing ${type} "${fs.relative(filename)}"`;
+      log.error`missing ${type} "${nodePath.relative(dir, filename)}"`;
     });
     throw new Error('missing packed entry points');
   }

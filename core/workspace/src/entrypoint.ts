@@ -1,4 +1,7 @@
-import { type Fs } from '@wurk/fs';
+import nodeFs from 'node:fs/promises';
+import nodePath from 'node:path';
+
+import { glob } from 'glob';
 
 import { type Workspace } from './workspace.js';
 
@@ -17,11 +20,19 @@ const WORKSPACE_ENTRYPOINT_TYPES = [
 ] as const;
 
 export const getEntrypoints = (workspace: Workspace): readonly Entrypoint[] => {
-  const { config, fs } = workspace;
+  const { dir, config } = workspace;
   const entryPoints: Entrypoint[] = [];
   const addEntryPoints = (type: Entrypoint['type'], value: unknown): void => {
     if (typeof value === 'string') {
-      entryPoints.push(new Entrypoint(fs, type, fs.resolve(value)));
+      const entryPath = value.includes('\\') || nodePath.win32.isAbsolute(value)
+        // Looks like a windows path, so just resolve it. Hopefully, the
+        // system is running Windows.
+        ? nodePath.resolve(dir, value)
+        // Looks like a posix path, so resolve it with posix semantics so that
+        // it works with globbing.
+        : nodePath.posix.resolve(dir, value);
+
+      entryPoints.push(new Entrypoint(type, entryPath));
     }
     else if (Array.isArray(value)) {
       value.forEach((subValue) => addEntryPoints(type, subValue));
@@ -52,44 +63,42 @@ export const getEntrypoints = (workspace: Workspace): readonly Entrypoint[] => {
 };
 
 export class Entrypoint {
-  readonly #fs: Fs;
   readonly type: EntrypointType;
   readonly filename: string;
 
-  constructor(fs: Fs, type: EntrypointType, filename: string) {
-    this.#fs = fs;
+  constructor(type: EntrypointType, filename: string) {
     this.type = type;
     this.filename = filename;
   }
 
   async exists(): Promise<boolean> {
-    if (this.type === 'files') {
-      const entries = await this.#fs.find({
-        patterns: this.filename,
-        includeDirs: true,
-      });
+    if (this.type === 'files' && !nodePath.win32.isAbsolute(this.filename)) {
+      const stream = glob.stream([this.filename, `${this.filename}/**`], { nodir: true });
 
-      if (entries.some((entry) => entry.isFile())) {
-        return true;
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        for await (const _ of stream) {
+          return true;
+        }
       }
-
-      /**
-       * If the pattern didn't match any files, then check to see if any
-       * matched directories contain any files.
-       */
-      if (!this.filename.endsWith('/**')) {
-        const isNotEmpty = await this.#fs
-          .find(`${this.filename}/**`)
-          .then((files) => Boolean(files.length));
-
-        return isNotEmpty;
+      finally {
+        stream.destroy();
       }
     }
     else {
-      const filenames = this.filename === 'LICENSE' ? ['LICENSE', 'LICENCE'] : [this.filename];
+      const filenames = this.type === 'license'
+        && (nodePath.basename(this.filename) === 'LICENSE' || nodePath.basename(this.filename) === 'LICENCE')
+        ? [
+          nodePath.resolve(nodePath.dirname(this.filename), 'LICENSE'),
+          nodePath.resolve(nodePath.dirname(this.filename), 'LICENCE'),
+        ]
+        : [this.filename];
 
       for (const filename of filenames) {
-        if (await this.#fs.exists(filename)) {
+        const exists = await nodeFs.access(filename)
+          .then(() => true, () => false);
+
+        if (exists) {
           return true;
         }
       }

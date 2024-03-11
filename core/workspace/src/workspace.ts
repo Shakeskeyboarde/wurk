@@ -1,4 +1,3 @@
-import { Fs } from '@wurk/fs';
 import { type JsonAccessor } from '@wurk/json';
 import { Log } from '@wurk/log';
 import { createSpawn } from '@wurk/spawn';
@@ -108,11 +107,6 @@ export class Workspace {
   readonly log: Log;
 
   /**
-   * File system utilities relative to this workspace's directory.
-   */
-  readonly fs: Fs;
-
-  /**
    * Workspace status tracking, used to (optionally) print a collective
    * status message for multiple workspaces.
    */
@@ -207,7 +201,6 @@ export class Workspace {
       .as('boolean', false);
     this.isRoot = this.relativeDir === '.';
     this.log = new Log();
-    this.fs = new Fs({ cwd: this.dir });
     this.status = new Status(this.name);
     this.getDependencyLinks = options.getDependencyLinks ?? (() => []);
     this.getDependentLinks = options.getDependentLinks ?? (() => []);

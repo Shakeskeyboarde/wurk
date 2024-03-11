@@ -1,3 +1,6 @@
+import nodeFs from 'node:fs/promises';
+import nodePath from 'node:path';
+
 import semver from 'semver';
 import { type Workspace } from 'wurk';
 
@@ -21,16 +24,19 @@ enum ChangelogSection {
 }
 
 export const writeConfig = async (workspace: Workspace): Promise<void> => {
-  const { log, config, fs } = workspace;
+  const { log, dir, config } = workspace;
+  const configFilename = nodePath.resolve(dir, 'package.json');
+
   log.debug`writing config`;
-  await fs.writeJson('package.json', config);
+
+  await nodeFs.writeFile(configFilename, config.toString());
 };
 
 export const writeChangelog = async (
   workspace: Workspace,
   changes: readonly Change[] = [],
 ): Promise<void> => {
-  const { log, name, version, config, fs } = workspace;
+  const { log, dir, name, version, config } = workspace;
   const newVersion = config
     .at('version')
     .as('string');
@@ -51,15 +57,17 @@ export const writeChangelog = async (
     return;
   }
 
-  const content = await fs.readText('CHANGELOG.md')
-    .then((text) => {
-      return text ?? '';
+  const changelogFilename = nodePath.resolve(dir, 'CHANGELOG.md');
+  const changelogContent = await nodeFs.readFile(changelogFilename, 'utf8')
+    .catch((error: any) => {
+      if (error?.code === 'ENOENT') return '';
+      throw error;
     });
 
   /**
    * Change log entries sorted by version in descending order.
    */
-  const entries = [...content.matchAll(/^#+ (\d+\.\d+\.\d+(?:-[a-z\d.+-]*)?)(?:.(?!^#+ \d+\.\d+\.\d))*.?/gmsu)]
+  const entries = [...changelogContent.matchAll(/^#+ (\d+\.\d+\.\d+(?:-[a-z\d.+-]*)?)(?:.(?!^#+ \d+\.\d+\.\d))*.?/gmsu)]
     .map((entry) => ({
       version: entry[1] as string,
       text: entry[0].trimEnd() + '\n',
@@ -122,7 +130,7 @@ export const writeChangelog = async (
     .map((entry) => entry.text)
     .join('\n');
 
-  await fs.writeText('CHANGELOG.md', result);
+  await nodeFs.writeFile(changelogFilename, result);
 };
 
 const getHeadingPrefix = (version: string): '#' | '##' | '###' => {

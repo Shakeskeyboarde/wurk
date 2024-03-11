@@ -1,9 +1,11 @@
+import nodeFs from 'node:fs';
+
 import { createCommand } from 'wurk';
 
 export default createCommand('clean', async ({ createGit, workspaces }) => {
   const git = await createGit();
 
-  await workspaces.forEach(async ({ log, fs }) => {
+  await workspaces.forEach(async ({ log }) => {
     const filenames = (await git.getIgnored()).filter((filename) => {
       // Don't clean node_modules and dot-files.
       return !/(?:^|[\\/])(?:node_modules(?:[\\/]|$)|\.)/u.test(filename);
@@ -11,7 +13,7 @@ export default createCommand('clean', async ({ createGit, workspaces }) => {
 
     const promises = filenames.map(async (filename) => {
       log.debug`removing ignored file "${filename}"`;
-      await fs.delete(filename, { recursive: true });
+      await nodeFs.promises.rm(filename, { recursive: true, force: true });
     });
 
     await Promise.all(promises);

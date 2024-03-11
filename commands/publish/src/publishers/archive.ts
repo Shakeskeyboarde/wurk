@@ -1,9 +1,10 @@
 import nodeAssert from 'node:assert';
+import nodeFs from 'node:fs/promises';
 import nodePath from 'node:path';
 import nodeZlib from 'node:zlib';
 
 import { extract } from 'tar-stream';
-import { type Fs, type Workspace } from 'wurk';
+import { type Workspace } from 'wurk';
 
 interface Context {
   readonly options: {
@@ -16,7 +17,7 @@ interface Context {
 
 export const publishFromArchive = async (context: Context): Promise<void> => {
   const { options, workspace } = context;
-  const { log, dir, name, version, status, fs, spawn } = workspace;
+  const { log, dir, name, version, status, spawn } = workspace;
 
   status.set('pending');
 
@@ -29,9 +30,11 @@ export const publishFromArchive = async (context: Context): Promise<void> => {
   const basename = name
     .replace(/^@/u, '')
     .replace(/\//gu, '-');
-  const filename = fs.resolve(`${basename}-${version}.tgz`);
+  const filename = nodePath.resolve(dir, `${basename}-${version}.tgz`);
+  const exists = await nodeFs.access(filename)
+    .then(() => true, () => false);
 
-  if (!(await fs.exists(filename))) {
+  if (!exists) {
     log.info`workspace has no archive`;
     status.set('skipped', 'no archive');
     return;
@@ -43,11 +46,11 @@ export const publishFromArchive = async (context: Context): Promise<void> => {
    * This is a subdirectory of the workspace directory so that .npmrc files
    * in parent directories are still in effect.
    */
-  const tmpDir = await fs.temp(dir, 'publish-archive');
-  const tmpFilename = fs.resolve(tmpDir, nodePath.basename(filename));
+  const tmpDir = await nodeFs.mkdtemp(nodePath.resolve(dir, '.wurk-publish-archive-'));
+  const tmpFilename = nodePath.resolve(tmpDir, nodePath.basename(filename));
 
-  await fs.copyFile(filename, tmpFilename);
-  await extractPackageJson(fs, tmpFilename, tmpDir);
+  await nodeFs.copyFile(filename, tmpFilename);
+  await extractPackageJson(tmpFilename, tmpDir);
   await spawn(
     'npm',
     [
@@ -64,11 +67,11 @@ export const publishFromArchive = async (context: Context): Promise<void> => {
 };
 
 const extractPackageJson = async (
-  fs: Fs,
   tgz: string,
   tmpDir: string,
 ): Promise<void> => {
-  const readable = await fs.readStream(tgz);
+  const handle = await nodeFs.open(tgz, 'r');
+  const readable = handle.createReadStream();
 
   nodeAssert(readable, 'failed to read workspace archive');
 
@@ -79,14 +82,16 @@ const extractPackageJson = async (
 
     for await (const entry of extractor) {
       if (entry.header.name === 'package/package.json') {
-        await fs.write(fs.resolve(tmpDir, 'package.json'), entry);
-        return;
+        await nodeFs.writeFile(nodePath.resolve(tmpDir, 'package.json'), entry);
       }
-
-      entry.resume();
+      else {
+        // Skip the entry to allow the next entry to be read.
+        entry.resume();
+      }
     }
   }
   finally {
-    readable.close();
+    readable.destroy();
+    await handle.close();
   }
 };

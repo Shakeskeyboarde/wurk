@@ -1,7 +1,6 @@
 export * from './command.js';
 export * from './context.js';
 export * from '@wurk/cli';
-export * from '@wurk/fs';
 export * from '@wurk/git';
 export * from '@wurk/json';
 export * from '@wurk/log';

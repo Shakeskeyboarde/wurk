@@ -1,9 +1,9 @@
 import nodeAssert from 'node:assert';
+import nodeFs from 'node:fs/promises';
 import nodePath from 'node:path';
 import nodeUrl from 'node:url';
 
 import { Cli, CliUsageError } from '@wurk/cli';
-import { fs } from '@wurk/fs';
 import { JsonAccessor } from '@wurk/json';
 import { getAnsiColorIterator, log, setLogLevel } from '@wurk/log';
 import { createPackageManager } from '@wurk/pm';
@@ -12,17 +12,23 @@ import { WorkspaceCollection } from '@wurk/workspace';
 import { env } from './env.js';
 import { loadCommandPlugins } from './plugin.js';
 
+const __dirname = nodePath.dirname(nodeUrl.fileURLToPath(import.meta.url));
+
 const mainAsync = async (): Promise<void> => {
-  const __dirname = nodePath.dirname(nodeUrl.fileURLToPath(import.meta.url));
-  const config = await fs.readJson(nodePath.join(__dirname, '../package.json'));
+  const configFilename = nodePath.join(__dirname, '../package.json');
+  const config = await nodeFs.readFile(configFilename, 'utf8')
+    .then(JsonAccessor.parse);
   const version = config
     .at('version')
     .as('string');
   const description = config
     .at('description')
     .as('string');
+
   const pm = await createPackageManager();
-  const rootConfig = await fs.readJson(pm.rootDir, 'package.json');
+  const rootConfigFilename = nodePath.join(pm.rootDir, 'package.json');
+  const rootConfig = await nodeFs.readFile(rootConfigFilename, 'utf8')
+    .then(JsonAccessor.parse);
 
   process.chdir(pm.rootDir);
   process.chdir = () => {
@@ -123,10 +129,9 @@ const mainAsync = async (): Promise<void> => {
 
       const workspaceDirs = await pm.getWorkspaces();
       const workspaceEntries = await Promise.all(workspaceDirs.map(async (workspaceDir) => {
-        const workspaceConfig = await fs.readJson(
-          workspaceDir,
-          'package.json',
-        );
+        const workspaceConfigFilename = nodePath.join(workspaceDir, 'package.json');
+        const workspaceConfig = await nodeFs.readFile(workspaceConfigFilename, 'utf8')
+          .then(JsonAccessor.parse);
 
         if (!workspaceConfig.at('name')) {
           throw new Error(`workspace at "${workspaceDir}" has no name`);
