@@ -58,7 +58,7 @@ export const publishFromFilesystem = async (context: Context): Promise<void> => 
       .set(undefined);
   });
 
-  const head = await git?.getHead();
+  const head = await git?.getHead(dir);
 
   if (head) {
     // Set "gitHead" in the package.json file. NPM publish should do this
@@ -129,7 +129,7 @@ const validate = async (
     return false;
   }
 
-  if (await git?.getIsDirty()) {
+  if (await git?.getIsDirty(dir)) {
     throw new Error('workspace has uncommitted changes');
   }
 
@@ -173,13 +173,15 @@ const validate = async (
     throw new Error('missing packed entry points');
   }
 
+  let hasValidDependencies = true;
+
   for (const link of getDependencyLinks()) {
     if (!await validateDependency(pm, git, workspace, link, published)) {
-      return false;
+      hasValidDependencies = false;
     }
   }
 
-  return true;
+  return hasValidDependencies;
 };
 
 const validateDependency = async (
@@ -253,7 +255,7 @@ const validateDependency = async (
       }
 
       if (meta.gitHead) {
-        const head = await git.getHead({ dir });
+        const head = await git.getHead(dir);
 
         if (head) {
           if (head !== meta.gitHead) {

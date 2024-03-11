@@ -10,12 +10,10 @@ export interface GitOptions {
 }
 
 export interface GitHeadOptions {
-  readonly dir?: string;
   readonly allowShallow?: boolean;
 }
 
 export interface GitLogOptions extends GitHeadOptions {
-  readonly dir?: string;
   readonly start?: string | null;
   readonly end?: string;
 }
@@ -83,7 +81,7 @@ export class Git {
    * directory. This may not actually be HEAD if the instance directory
    * was not modified in the current HEAD commit.
    */
-  readonly getHead = async (options?: GitHeadOptions): Promise<string | null> => {
+  readonly getHead = async (dir: string, options?: GitHeadOptions): Promise<string | null> => {
     if (!options?.allowShallow) {
       nodeAssert(
         !(await this.getIsShallow()),
@@ -96,7 +94,7 @@ export class Git {
         'log',
         ['-n', '1'],
         '--pretty=format:%H',
-        ['--', options?.dir ?? '.'],
+        ['--', dir],
       ])
         .stdoutText()) || null
     );
@@ -106,7 +104,7 @@ export class Git {
    * Get a list of all the files in the instance directory which are
    * ignored by Git (`.gitignore`).
    */
-  readonly getIgnored = async (dir?: string): Promise<string[]> => {
+  readonly getIgnored = async (dir: string): Promise<string[]> => {
     const [gitRoot, gitIgnoredText] = await Promise.all([
       await this.getRoot(),
       await this._spawn('git', [
@@ -130,7 +128,7 @@ export class Git {
   /**
    * Return true if the Git working tree is dirty.
    */
-  readonly getIsDirty = async (dir?: string): Promise<boolean> => {
+  readonly getIsDirty = async (dir: string): Promise<boolean> => {
     return await this._spawn('git', ['status', '--porcelain', dir ?? '.'])
       .stdoutText()
       .then(Boolean);
@@ -142,7 +140,7 @@ export class Git {
    * **Note:** This method will throw an error if the directory is part of a
    * shallow Git clone.
    */
-  readonly getLogs = async (options?: GitLogOptions): Promise<GitLog[]> => {
+  readonly getLogs = async (dir: string, options?: GitLogOptions): Promise<GitLog[]> => {
     if (!options?.allowShallow) {
       nodeAssert(
         !(await this.getIsShallow()),
@@ -162,7 +160,7 @@ export class Git {
       `--pretty=format:%x00%x00%x00 ${formatPlaceholders.join(' %x00%x00 ')} %x00%x00%x00`,
       start ? `${start}..${end}` : end,
       '--',
-      options?.dir ?? '.',
+      dir,
     ])
       .stdoutText();
 

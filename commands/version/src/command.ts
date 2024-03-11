@@ -46,9 +46,9 @@ export default createCommand('version', {
     }
 
     await workspaces.forEach(async (workspace) => {
-      const { config, version, isPrivate } = workspace;
+      const { dir, config, version, isPrivate } = workspace;
 
-      if (await git?.getIsDirty()) {
+      if (await git?.getIsDirty(dir)) {
         throw new Error('versioning requires a clean git repository');
       }
 

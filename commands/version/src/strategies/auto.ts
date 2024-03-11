@@ -38,7 +38,7 @@ export const auto = async (
       if (error?.code === 'ENOENT') return '';
       throw error;
     });
-  const logs = await git.getLogs({ start: meta.gitHead, dir });
+  const logs = await git.getLogs(dir, { start: meta.gitHead });
   const { isConventional, releaseType, changes } = await getChanges(logs, changelog);
 
   if (!isConventional) {

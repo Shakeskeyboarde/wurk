@@ -5,8 +5,8 @@ import { createCommand } from 'wurk';
 export default createCommand('clean', async ({ createGit, workspaces }) => {
   const git = await createGit();
 
-  await workspaces.forEach(async ({ log }) => {
-    const filenames = (await git.getIgnored()).filter((filename) => {
+  await workspaces.forEach(async ({ log, dir }) => {
+    const filenames = (await git.getIgnored(dir)).filter((filename) => {
       // Don't clean node_modules and dot-files.
       return !/(?:^|[\\/])(?:node_modules(?:[\\/]|$)|\.)/u.test(filename);
     });
