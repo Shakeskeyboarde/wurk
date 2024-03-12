@@ -145,8 +145,8 @@ const validate = async (
   }
 
   const { stdoutJson } = await spawn('npm', ['pack', '--dry-run', '--json']);
-  // If the NPM pack command returns an unexpected JSON structure, it
-  // should cause an error.
+  // If the NPM pack command returns an unexpected JSON structure, let if fail
+  // naturally.
   const [packed] = stdoutJson.value as [{ files: { path: string }[] }];
 
   const missingPackEntrypoints = getEntrypoints()
