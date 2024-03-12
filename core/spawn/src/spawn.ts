@@ -10,8 +10,7 @@ import { SpawnExitCodeError } from './error.js';
 import { quote } from './quote.js';
 import { type SpawnResult } from './result.js';
 
-type SpawnInput = Buffer | 'inherit';
-type SpawnOutput = 'ignore' | 'inherit' | 'echo' | 'buffer';
+type SpawnStdio = 'ignore' | 'inherit' | 'echo' | 'buffer';
 
 export interface SpawnOptions {
   /**
@@ -28,14 +27,17 @@ export interface SpawnOptions {
    */
   readonly paths?: readonly string[];
   /**
+   * Method of handling the child process input and output streams. Defaults
+   * to `buffer` which stores stream output in memory and ignores stdin.
+   *
+   * The input stream is only inherited if this is set to `inherit`, and the
+   * `input` option is not set.
+   */
+  readonly stdio?: SpawnStdio;
+  /**
    * Data to write to the child process stdin.
    */
-  readonly input?: SpawnInput;
-  /**
-   * Method of handling the output streams. Defaults to `buffer` which stores
-   * stream output in memory.
-   */
-  readonly output?: SpawnOutput;
+  readonly input?: Buffer;
   /**
    * Logger to use for logging.
    */
@@ -74,7 +76,7 @@ export const spawn = (
 ): Promise<SpawnResult> => {
   let promise: Promise<SpawnResult>;
 
-  if (options.input === 'inherit' || options.output === 'inherit') {
+  if (options.stdio === 'inherit') {
     // If a stream is inherited, then wait for all other spawned processes to
     // complete before starting, and block new ones from spawning until this
     // process exits.
@@ -116,10 +118,10 @@ const spawnAsync = async (
     cwd,
     env,
     paths = [],
+    stdio = 'buffer',
     input,
-    output = 'buffer',
     log = defaultLog,
-    logCommand = output === 'echo' || output === 'inherit',
+    logCommand = stdio === 'echo' || stdio === 'inherit',
     allowNonZeroExitCode = false,
   } = options;
 
@@ -140,7 +142,7 @@ const spawnAsync = async (
 
     log.print({
       to: 'stderr',
-      prefix: output !== 'inherit',
+      prefix: stdio !== 'inherit',
     })`> ${quote(cmd, ...mappedArgs)}`;
   }
   else {
@@ -163,9 +165,9 @@ const spawnAsync = async (
         .join(nodePath.delimiter),
     },
     stdio: [
-      input === 'inherit' ? 'inherit' : input != null ? 'pipe' : 'ignore',
-      output === 'ignore' || output === 'inherit' ? output : 'pipe',
-      output === 'ignore' || output === 'inherit' ? output : 'pipe',
+      input != null ? 'pipe' : stdio === 'inherit' ? 'inherit' : 'ignore',
+      stdio === 'ignore' || stdio === 'inherit' ? stdio : 'pipe',
+      stdio === 'ignore' || stdio === 'inherit' ? stdio : 'pipe',
     ],
   });
 
@@ -179,11 +181,11 @@ const spawnAsync = async (
 
   const data: { stream: 'stdout' | 'stderr'; chunk: Buffer }[] = [];
 
-  if (output === 'buffer') {
+  if (stdio === 'buffer') {
     cp.stdout?.on('data', (chunk: Buffer) => data.push({ stream: 'stdout', chunk }));
     cp.stderr?.on('data', (chunk: Buffer) => data.push({ stream: 'stderr', chunk }));
   }
-  else if (output === 'echo') {
+  else if (stdio === 'echo') {
     cp.stdout?.pipe(log.stdout);
     cp.stderr?.pipe(log.stderr);
   }
@@ -207,16 +209,14 @@ const spawnAsync = async (
       exitCode ??= 1;
 
       if (exitCode !== 0 && !allowNonZeroExitCode) {
-        if (data.length) {
+        if (stdio === 'buffer') {
           if (!logCommand) {
+            // Print out the command if it wasn't logged before.
             log.print({ to: 'stderr' })`> ${quote(cmd, ...args)}`;
           }
 
-          log.print({
-            to: 'stderr',
-            message: Buffer.concat(data.map(({ chunk }) => chunk))
-              .toString('utf8'),
-          });
+          // Dump the buffered output to the log.
+          data.forEach(({ stream, chunk }) => log[stream].write(chunk));
         }
 
         reject(new SpawnExitCodeError(cmd, exitCode, signalCode));

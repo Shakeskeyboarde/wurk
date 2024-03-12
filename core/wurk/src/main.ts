@@ -179,7 +179,7 @@ let cli = Cli.create('wurk')
         throw new Error(`"${script}" is not a command or root package script`);
       }
 
-      await pm.spawnPackageScript(script, scriptArgs, { output: 'inherit' });
+      await pm.spawnPackageScript(script, scriptArgs, { stdio: 'inherit' });
     }
   });
 

@@ -34,8 +34,7 @@ export default createCommand('vitest', {
     await nodeFs.writeFile(tmpConfig, JSON.stringify(workspaceDirs, null, 2));
     await spawn('vitest', [`--workspace=${tmpConfig}`, ...options.args ?? []], {
       log: log,
-      input: 'inherit',
-      output: 'inherit',
+      stdio: 'inherit',
       logCommand: {
         mapArgs: (arg) => arg.startsWith('--workspace=')
           ? { literal: '--workspace=<temp-config>' }

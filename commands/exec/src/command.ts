@@ -10,7 +10,7 @@ export default createCommand('exec', {
 
   action: async ({ workspaces, options }) => {
     await workspaces.forEach(async ({ spawn }) => {
-      await spawn(options.executable, options.args, { output: 'echo' });
+      await spawn(options.executable, options.args, { stdio: 'echo' });
     });
   },
 });

@@ -91,7 +91,7 @@ export default createCommand('version', {
       'npm',
       ['update', ...Array.from(workspaces)
         .map(({ name }) => name)],
-      { output: 'ignore' },
+      { stdio: 'ignore' },
     );
 
     const specs = Array.from(workspaces)

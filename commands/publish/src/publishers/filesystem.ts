@@ -85,7 +85,7 @@ export const publishFromFilesystem = async (context: Context): Promise<void> => 
         Boolean(options.otp) && `--otp=${options.otp}`,
         options.dryRun && '--dry-run',
       ],
-      { output: 'echo' },
+      { stdio: 'echo' },
     );
   }
   finally {

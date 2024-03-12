@@ -59,7 +59,7 @@ const runWorkspaceScripts = async (
     await spawn(
       'npm',
       ['run', script, ...(args.length ? ['--', ...args] : [])],
-      { output: 'echo' },
+      { stdio: 'echo' },
     );
   }
 };

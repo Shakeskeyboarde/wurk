@@ -56,7 +56,7 @@ export const publishFromArchive = async (context: Context): Promise<void> => {
       options.dryRun && '--dry-run',
       tmpFilename,
     ],
-    { cwd: tmpDir, output: 'echo' },
+    { cwd: tmpDir, stdio: 'echo' },
   );
 };
 

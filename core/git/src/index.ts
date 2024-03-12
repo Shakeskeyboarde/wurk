@@ -176,7 +176,7 @@ export class Git {
   protected readonly _spawn = createSpawn(() => ({
     log: this.#log,
     cwd: this.#dir,
-    output: 'buffer',
+    stdio: 'buffer',
   }));
 
   /**
