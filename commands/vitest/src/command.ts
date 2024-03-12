@@ -11,7 +11,7 @@ export default createCommand('vitest', {
   },
 
   action: async (context) => {
-    const { log, options, workspaces } = context;
+    const { log, options, workspaces, spawn } = context;
     const workspaceDirs: string[] = [];
 
     for (const workspace of workspaces) {
@@ -32,7 +32,7 @@ export default createCommand('vitest', {
     const tmpConfig = nodePath.join(tmpDir, 'vitest.workspace.json');
 
     await nodeFs.writeFile(tmpConfig, JSON.stringify(workspaceDirs, null, 2));
-    await workspaces.root.spawn('vitest', [`--workspace=${tmpConfig}`, ...options.args ?? []], {
+    await spawn('vitest', [`--workspace=${tmpConfig}`, ...options.args ?? []], {
       log: log,
       input: 'inherit',
       output: 'inherit',

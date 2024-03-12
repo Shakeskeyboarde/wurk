@@ -13,7 +13,7 @@
     "lint": "eslint --max-warnings=0 .",
     "build-scripts": "npm -ws --if-present run build && npm update --silent --progress=false wurk",
     "build": "npm run build-scripts && wurk run build --stream",
-    "test": "npm run build && wurk exec depcheck --skip-missing && wurk exec eslint src --max-warnings=0 && wurk vitest run",
+    "test": "npm run build && wurk exec depcheck --quiet --skip-missing && wurk exec eslint src --max-warnings=0 && wurk vitest run",
     "modernize": "npx npm-check-updates@latest -i --workspaces --root --format group"
   },
   "workspaces": [

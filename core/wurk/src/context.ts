@@ -7,6 +7,7 @@ import {
 import { Git } from '@wurk/git';
 import { Log } from '@wurk/log';
 import { type PackageManager } from '@wurk/pm';
+import { createSpawn } from '@wurk/spawn';
 import { type WorkspaceCollection } from '@wurk/workspace';
 
 interface ContextOptions<TResult extends UnknownResult> {
@@ -74,11 +75,16 @@ implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>> {
     return await Git.create({ dir: this.workspaces.root.dir, log: this.log });
   };
 
-  getHelpText = (error?: unknown): string => {
+  readonly getHelpText = (error?: unknown): string => {
     return this.#result.getHelpText(error);
   };
 
-  printHelp = (error?: unknown): void => {
+  readonly printHelp = (error?: unknown): void => {
     return this.#result.printHelp(error);
   };
+
+  readonly spawn = createSpawn(() => ({
+    log: this.log,
+    cwd: this.workspaces.root.dir,
+  }));
 }

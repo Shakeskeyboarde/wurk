@@ -148,6 +148,7 @@ const spawnAsync = async (
   }
 
   const cp = crossSpawn(cmd, args, {
+    detached: false,
     cwd,
     env: {
       ...process.env,
@@ -214,8 +215,7 @@ const spawnAsync = async (
           log.print({
             to: 'stderr',
             message: Buffer.concat(data.map(({ chunk }) => chunk))
-              .toString('utf8')
-              .trim(),
+              .toString('utf8'),
           });
         }
 
@@ -232,7 +232,7 @@ const spawnAsync = async (
         },
         get stdoutText() {
           return result.stdout.toString('utf8')
-            .trim();
+            .replace(/\n$/u, '');
         },
         get stdoutJson() {
           return JsonAccessor.parse(result.stdoutText);
@@ -244,7 +244,7 @@ const spawnAsync = async (
         },
         get stderrText() {
           return result.stderr.toString('utf8')
-            .trim();
+            .replace(/\n$/u, '');
         },
         get stderrJson() {
           return JsonAccessor.parse(result.stderrText);
@@ -254,7 +254,7 @@ const spawnAsync = async (
         },
         get combinedText() {
           return result.combined.toString('utf8')
-            .trim();
+            .replace(/\n$/u, '');
         },
         exitCode,
         signalCode,

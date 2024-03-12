@@ -31,7 +31,7 @@ export default createCommand('version', {
   },
 
   action: async (context) => {
-    const { log, pm, workspaces, options, createGit }
+    const { log, pm, workspaces, options, createGit, spawn }
       = context;
     const git = await createGit()
       .catch(() => null);
@@ -87,7 +87,7 @@ export default createCommand('version', {
 
     if (!workspaces.iterableSize) return;
 
-    await workspaces.root.spawn(
+    await spawn(
       'npm',
       ['update', ...Array.from(workspaces)
         .map(({ name }) => name)],
