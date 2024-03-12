@@ -13,9 +13,7 @@ type ParserCli = PartialCli<
   | 'optionActions'
   | 'optionDefaults'
   | 'isUnknownNamedOptionAllowed'
-  | 'isShortOptionMergingAllowed'
   | 'isCommandOptional'
-  | 'isGreedy'
   | 'isDefault'
   | 'getHelpText'
   | 'printHelp'
@@ -89,9 +87,7 @@ const parseRecursive = async (
     optionActions,
     optionDefaults,
     commands,
-    isGreedy,
     isUnknownNamedOptionAllowed,
-    isShortOptionMergingAllowed,
     isCommandOptional,
     getHelpText,
     printHelp,
@@ -119,14 +115,9 @@ const parseRecursive = async (
   let isPositionalFound = false;
   let isCommandFound = false;
 
-  if (isGreedy) {
-    // Ignore the parent if the current CLI is greedy.
-    parent = noParent;
-  }
-
   /**
    * Check if the argument is a named option in the current CLI, or in a
-   * parent if the current CLI is not greedy.
+   * parent.
    */
   const isNamed = (arg: string): boolean => {
     if (isDoubleHyphenFound) return false;
@@ -285,7 +276,7 @@ const parseRecursive = async (
   };
 
   const tryMergedNamed = (): boolean => {
-    if (!isShortOptionMergingAllowed && !isDoubleHyphenFound) return false;
+    if (isDoubleHyphenFound) return false;
 
     const shortNames = parseMergedShortNamesArg(args[0]!);
 

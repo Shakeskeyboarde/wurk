@@ -41,6 +41,8 @@ applied to package.json scripts that are composed of other Wurk CLI commands.
 ```sh
 # Run the build script from the root workspace.json file.
 wurk build
+# Which is equivalent to the following npm command.
+npm run build
 ```
 
 (Optional) Delegate root workspace.json scripts to Wurk.

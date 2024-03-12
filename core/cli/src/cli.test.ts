@@ -198,8 +198,7 @@ describe('named', () => {
         .option('-a')
         .option('-b')
         .option('-c')
-        .option('-bc')
-        .setShortOptionMergingAllowed(),
+        .option('-bc'),
       '-ab -bc',
     )
       .result({
@@ -674,31 +673,6 @@ describe('command', () => {
         options: { foo: ['foo', 'a'] },
         parsed: ['foo'],
         command: {},
-      });
-  });
-
-  test('greedy options', async () => {
-    await check(
-      cli()
-        .option('-a')
-        .command(cli()
-          .name('b')
-          .setGreedy()
-          .option('-b')),
-      'b -b -a',
-    ).rejects.toThrow(CliUsageError);
-    await check(
-      cli()
-        .option('-a')
-        .command(cli()
-          .name('b')
-          .option('-b')),
-      'b -b -a',
-    )
-      .result({
-        options: { a: true },
-        parsed: ['a'],
-        command: { b: { options: { b: true }, parsed: ['b'] } },
       });
   });
 });

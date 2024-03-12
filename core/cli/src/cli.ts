@@ -75,9 +75,7 @@ interface CliConfig<TName extends string = string> {
   readonly optionDefaults?: Readonly<Record<string, () => unknown>>;
   readonly isExitOnErrorEnabled?: boolean;
   readonly isUnknownNamedOptionAllowed?: boolean;
-  readonly isShortOptionMergingAllowed?: boolean;
   readonly isCommandOptional?: boolean;
-  readonly isGreedy?: boolean;
   readonly isDefault?: boolean;
   readonly isHidden?: boolean;
   readonly helpFormatter?: HelpFormatter | null;
@@ -117,9 +115,7 @@ class InternalCli<TResult extends UnknownResult, TName extends string> implement
   readonly optionDefaults: Readonly<Record<string, () => unknown>>;
   readonly isExitOnErrorEnabled: boolean;
   readonly isUnknownNamedOptionAllowed: boolean;
-  readonly isShortOptionMergingAllowed: boolean;
   readonly isCommandOptional: boolean;
-  readonly isGreedy: boolean;
   readonly isDefault: boolean;
   readonly isHidden: boolean;
   readonly helpFormatter: HelpFormatter | null;
@@ -138,9 +134,7 @@ class InternalCli<TResult extends UnknownResult, TName extends string> implement
     this.optionDefaults = config.optionDefaults ?? {};
     this.isExitOnErrorEnabled = config.isExitOnErrorEnabled ?? false;
     this.isUnknownNamedOptionAllowed = config.isUnknownNamedOptionAllowed ?? false;
-    this.isShortOptionMergingAllowed = config.isShortOptionMergingAllowed ?? false;
     this.isCommandOptional = config.isCommandOptional ?? false;
-    this.isGreedy = config.isGreedy ?? false;
     this.isDefault = config.isDefault ?? false;
     this.isHidden = config.isHidden ?? false;
     this.helpFormatter = config.helpFormatter ?? null;
@@ -704,20 +698,6 @@ class Cli<
   }
 
   /**
-   * Allow multiple short options to be given as a one argument beginning
-   * with a single hyphen (eg. `-ab` is equivalent to `-a -b`).
-   *
-   * NOTE: Options which begin with a single hyphen will always be
-   * matched exactly if possible. However, if an exact match is not found
-   * and this option is set, then the argument will be split into
-   * multiple short option arguments which can then be matched
-   * individually.
-   */
-  setShortOptionMergingAllowed(value = true): Cli<TResult, TName> {
-    return new Cli({ ...this.#internal, isShortOptionMergingAllowed: value });
-  }
-
-  /**
    * Do not fail parsing if no command is matched.
    *
    * NOTE: This has no effect if no commands are defined or if there is a
@@ -725,15 +705,6 @@ class Cli<
    */
   setCommandOptional(value = true): Cli<TResult, TName> {
     return new Cli({ ...this.#internal, isCommandOptional: value });
-  }
-
-  /**
-   * All arguments which follow this command will be handle by this
-   * command only. Parent commands are not given the chance to handle
-   * options which are unknown to this command.
-   */
-  setGreedy(value = true): Cli<TResult, TName> {
-    return new Cli({ ...this.#internal, isGreedy: value });
   }
 
   /**
