@@ -32,7 +32,7 @@ export class Npm extends PackageManager {
             .as('string')
             ?? result
               .at('path')
-              .as('string')
+              .as('string')!
         );
       }) ?? []
     );

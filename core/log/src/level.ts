@@ -1,5 +1,3 @@
-import { env } from './env.js';
-
 export type LogLevelString = keyof typeof LogLevel;
 
 export enum LogLevel {
@@ -37,12 +35,12 @@ export const setLogLevel = (level:
     level = LogLevel[level] as keyof typeof LogLevel;
   }
 
-  env.WURK_LOG_LEVEL = level ?? undefined;
+  process.env.WURK_LOG_LEVEL = level ?? undefined;
 };
 
 export const getLogLevel = (): LogLevel => {
-  return isLogLevelString(env.WURK_LOG_LEVEL)
-    ? LogLevel[env.WURK_LOG_LEVEL]
+  return isLogLevelString(process.env.WURK_LOG_LEVEL)
+    ? LogLevel[process.env.WURK_LOG_LEVEL]
     : process.env.DEBUG
       ? LogLevel.silly
       : LogLevel.info;

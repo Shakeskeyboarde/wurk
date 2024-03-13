@@ -1,6 +1,6 @@
-/* eslint-disable max-lines */
 import nodeOs from 'node:os';
 import nodePath from 'node:path';
+import nodeProcess from 'node:process';
 
 import { type JsonAccessor } from '@wurk/json';
 import { Sema } from 'async-sema';
@@ -8,13 +8,8 @@ import { Sema } from 'async-sema';
 import { AbortError } from './error.js';
 import { filter } from './filter.js';
 import { GeneratorIterable, getDepthFirstGenerator } from './generator.js';
-import { getSpec } from './spec.js';
-import {
-  Workspace,
-  type WorkspaceLink,
-  type WorkspaceLinkOptions,
-  type WorkspacePublished,
-} from './workspace.js';
+import { getLinks } from './link.js';
+import { Workspace, type WorkspacePublished } from './workspace.js';
 
 /**
  * Workspace collection `forEach*` asynchronous callback.
@@ -35,12 +30,9 @@ export interface WorkspacesOptions {
   readonly rootDir: string;
 
   /**
-   * Array of workspace directories and configurations (package.json files).
+   * Array of workspaces as tuples of directory and configuration (package.json).
    */
-  readonly workspaces?: readonly (readonly [
-    dir: string,
-    config: JsonAccessor,
-  ])[];
+  readonly workspaceEntries?: readonly (readonly [dir: string, config: JsonAccessor])[];
 
   /**
    * Maximum workspaces which may be processed simultaneously using the
@@ -67,21 +59,16 @@ export interface WorkspacesOptions {
  * An collection of workspaces with methods for selecting and iterating.
  *
  * the `forEach*` methods and collection iterator only iterate over selected
- * workspaces by default. If the `includeDependencies` or `includeDependents`
- * options are set, then iteration will include dependency/dependent workspaces
- * that are not explicitly excluded.
+ * workspaces.
  *
- * The root workspace may not be included in iteration if the
- * `includeRootWorkspace` was not set when the collection was constructed. But,
- * the root workspace can always be accessed via the `root` property.
- *
- * The `all` property is an iterable which includes all workspaces (may not
- * included the root workspace), regardless of selection status.
+ * The `all` property is an iterable which includes all workspaces, regardless
+ * of selection status.
  */
 export class Workspaces {
-  readonly #workspaces: readonly Workspace[];
-  readonly #dependencyLinks: ReadonlyMap<Workspace, readonly WorkspaceLink[]>;
-  readonly #dependentLinks: ReadonlyMap<Workspace, readonly WorkspaceLink[]>;
+  /**
+   * Number of workspaces in the collection.
+   */
+  readonly size: number;
 
   /**
    * Maximum workspaces which may be processed in parallel using the
@@ -98,103 +85,45 @@ export class Workspaces {
    * Create a new workspace collection.
    */
   constructor(options: WorkspacesOptions) {
-    const workspaces: Workspace[] = (this.#workspaces = []);
-    const dependencyLinks = (this.#dependencyLinks = new Map<
-      Workspace,
-      WorkspaceLink[]
-    >());
-    const dependentLinks = (this.#dependentLinks = new Map<
-      Workspace,
-      WorkspaceLink[]
-    >());
+    const { workspaceEntries = [], rootDir, concurrency, defaultIterationMethod, getPublished } = options;
 
-    for (const [workspaceDir, config] of options.workspaces ?? []) {
-      const dir = nodePath.resolve(options.rootDir, workspaceDir);
-      const relativeDir = nodePath.relative(options.rootDir, dir);
-      const workspace: Workspace = new Workspace({
-        dir,
-        relativeDir,
-        config,
-        getDependencyLinks: (linkOptions) => {
-          return this.getDependencyLinks(workspace, linkOptions);
-        },
-        getDependentLinks: (linkOptions) => {
-          return this.getDependentLinks(workspace, linkOptions);
-        },
-        getPublished: async () => {
-          return workspace.version && options.getPublished
-            ? await options.getPublished(workspace.name, workspace.version)
-            : null;
-        },
-      });
+    const workspaces = workspaceEntries
+      .map(([workspaceDir, config]) => {
+        const dir = nodePath.resolve(rootDir, workspaceDir);
+        const relativeDir = nodePath.relative(rootDir, dir);
+        const workspace: Workspace = new Workspace({
+          dir,
+          relativeDir,
+          config,
+          getDependencyLinks: (linkOptions) => {
+            return links.getLinksFromDependentToDependencies(workspace, linkOptions);
+          },
+          getDependentLinks: (linkOptions) => {
+            return links.getLinksFromDependencyToDependents(workspace, linkOptions);
+          },
+          getPublished: async () => {
+            return workspace.version && getPublished
+              ? await getPublished(workspace.name, workspace.version)
+              : null;
+          },
+        });
 
-      workspaces.push(workspace);
-    }
-
-    Array.from(workspaces.values())
-      .flatMap((dependent) => {
-        return [
-          [dependent, 'devDependencies'],
-          [dependent, 'dependencies'],
-          [dependent, 'peerDependencies'],
-          [dependent, 'optionalDependencies'],
-        ] as const;
+        return workspace;
       })
-      .flatMap(([dependent, type]) => {
-        return dependent.config
-          .at(type)
-          .entries('object')
-          .map(([id, specString]) => ({ dependent, type, id, specString }))
-          .filter((entry): entry is typeof entry & { specString: string } => {
-            return typeof entry.specString === 'string';
-          });
-      })
-      .flatMap(({ dependent, type, id, specString }) => {
-        const spec = getSpec(id, specString);
-        const name = spec.type === 'npm' ? spec.name : id;
+      .sort((a, b) => a.name.localeCompare(b.name));
 
-        return workspaces
-          .filter((workspace) => workspace.name === name)
-          .map((dependency) => ({
-            dependent,
-            dependency,
-            type,
-            id,
-            spec: { ...spec },
-          }));
-      })
-      .forEach(({ dependent, dependency, type, id, spec }) => {
-        dependencyLinks.set(dependent, [
-          ...(dependencyLinks.get(dependent) ?? []),
-          { dependent, dependency, type, id, spec },
-        ]);
-        dependentLinks.set(dependency, [
-          ...(dependentLinks.get(dependency) ?? []),
-          { dependent, dependency, type, id, spec },
-        ]);
-      });
+    const links = getLinks(workspaces);
 
-    workspaces.sort((a, b) => a.name.localeCompare(b.name));
-    dependencyLinks.forEach((links) => {
-      return links.sort((a, b) => {
-        return a.dependency.name.localeCompare(b.dependency.name);
-      });
-    });
-    dependentLinks.forEach((links) => {
-      return links.sort((a, b) => {
-        return a.dependent.name.localeCompare(b.dependent.name);
-      });
-    });
-
-    this.concurrency = options.concurrency ?? nodeOs.cpus().length + 1;
-    this.all = new GeneratorIterable(() => getDepthFirstGenerator(this.#workspaces, (current) => {
-      return this.#dependencyLinks
-        .get(current)
-        ?.map((link) => link.dependency);
+    this.size = workspaces.length;
+    this.concurrency = concurrency ?? nodeOs.cpus().length + 1;
+    this.all = new GeneratorIterable(() => getDepthFirstGenerator(workspaces, (dependent) => {
+      return dependent
+        .getDependencyLinks()
+        .map((link) => link.dependency);
     }));
 
-    if (options.defaultIterationMethod) {
-      this.forEach = this[options.defaultIterationMethod];
+    if (defaultIterationMethod) {
+      this.forEach = this[defaultIterationMethod];
     }
   }
 
@@ -207,19 +136,10 @@ export class Workspaces {
   }
 
   /**
-   * Number of workspaces in the collection. This may not include the root
-   * workspace if the `includeRootWorkspace` option was not set. This is not
-   * affected by workspace selection.
-   */
-  get size(): number {
-    return this.#workspaces.length;
-  }
-
-  /**
    * Number of workspaces which will be included in iteration. This respects
    * workspace selection and the inclusion of dependencies and dependents.
    */
-  get iterableSize(): number {
+  get selectedSize(): number {
     return Array.from(this).length;
   }
 
@@ -280,11 +200,7 @@ export class Workspaces {
     callback: WorkspaceCallback,
     signal?: AbortSignal,
   ): Promise<void> {
-    await this._forEachAsync(callback, {
-      signal,
-      stream: false,
-      concurrency: -1,
-    });
+    await this._forEachAsync({ signal, stream: false, concurrency: -1, callback });
   }
 
   /**
@@ -295,11 +211,7 @@ export class Workspaces {
     callback: WorkspaceCallback,
     signal?: AbortSignal,
   ): Promise<void> {
-    await this._forEachAsync(callback, {
-      signal,
-      stream: true,
-      concurrency: this.concurrency,
-    });
+    await this._forEachAsync({ signal, stream: true, concurrency: this.concurrency, callback });
   }
 
   /**
@@ -309,11 +221,7 @@ export class Workspaces {
     callback: WorkspaceCallback,
     signal?: AbortSignal,
   ): Promise<void> {
-    await this._forEachAsync(callback, {
-      signal,
-      stream: false,
-      concurrency: 1,
-    });
+    await this._forEachAsync({ signal, stream: false, concurrency: 1, callback });
   }
 
   /**
@@ -325,68 +233,22 @@ export class Workspaces {
     }
   }
 
-  /**
-   * Get dependency links for a workspace. This includes links to workspaces
-   * which are not selected, even if they are explicitly excluded.
-   */
-  getDependencyLinks(
-    workspace: Workspace,
-    options?: WorkspaceLinkOptions,
-  ): readonly WorkspaceLink[] {
-    let links = this.#dependencyLinks.get(workspace) ?? [];
-
-    if (options?.recursive) {
-      links = Array.from(getDepthFirstGenerator(
-        links,
-        (current) => this.#dependencyLinks.get(current.dependency),
-        options?.filter,
-      ));
-    }
-
-    return links;
-  }
-
-  /**
-   * Get dependent links for a workspace. This includes links to workspaces
-   * which are not selected, even if they are explicitly excluded.
-   */
-  getDependentLinks(
-    workspace: Workspace,
-    options?: WorkspaceLinkOptions,
-  ): readonly WorkspaceLink[] {
-    let links = this.#dependentLinks.get(workspace) ?? [];
-
-    if (options?.recursive) {
-      links = Array.from(getDepthFirstGenerator(
-        links,
-        (current) => this.#dependentLinks.get(current.dependent),
-        options?.filter,
-      ));
-    }
-
-    return links;
-  }
-
-  protected async _forEachAsync(
-    callback: WorkspaceCallback,
-    options: {
-      readonly signal: AbortSignal | undefined;
-      readonly concurrency: number;
-      readonly stream: boolean;
-    },
-  ): Promise<void> {
-    const { signal: outerSignal, concurrency, stream } = options;
-
-    if (outerSignal?.aborted) return;
+  protected async _forEachAsync(options: {
+    signal: AbortSignal | undefined;
+    stream: boolean;
+    concurrency: number;
+    callback: WorkspaceCallback;
+  }): Promise<void> {
+    if (options.signal?.aborted) return;
 
     const abortController = new AbortController();
     const { signal } = abortController;
     const promises = new Map<Workspace, Promise<void>>();
-    const semaphore = concurrency < 0 || Number.isNaN(concurrency)
+    const semaphore = options.concurrency < 0 || Number.isNaN(options.concurrency)
       ? null
-      : new Sema(concurrency);
+      : new Sema(options.concurrency);
 
-    outerSignal?.addEventListener('abort', () => abortController.abort(), {
+    options.signal?.addEventListener('abort', () => abortController.abort(), {
       once: true,
     });
 
@@ -398,32 +260,23 @@ export class Workspaces {
         abortController.abort(reason);
       };
 
-      const promise = (async () => {
-        await semaphore?.acquire();
+      await semaphore?.acquire();
 
-        try {
-          if (stream) {
-            const links = this.getDependencyLinks(workspace, {
-              recursive: true,
-            });
-            const linkPromises = links.map((link) => {
-              return promises.get(link.dependency);
-            });
+      const promise = new Promise<void>((resolve) => nodeProcess.nextTick(resolve))
+        .then(async () => {
+          if (options.stream) {
+            const links = workspace.getDependencyLinks({ recursive: true });
+            const linkPromises = links.map((link) => promises.get(link.dependency));
 
             await Promise.all(linkPromises);
           }
 
           if (signal.aborted) return;
 
-          await callback(workspace, signal, abort);
-        }
-        catch (error) {
-          abort(error);
-        }
-        finally {
-          semaphore?.release();
-        }
-      })();
+          await options.callback(workspace, signal, abort);
+        })
+        .finally(() => semaphore?.release())
+        .catch(abort);
 
       promises.set(workspace, promise);
     }

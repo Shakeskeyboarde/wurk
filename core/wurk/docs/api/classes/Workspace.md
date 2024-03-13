@@ -114,6 +114,10 @@ True if this workspace will be included in `forEach*` method iterations.
 **Note:** This property is intentionally mutable to allow for dynamic
 selection of workspaces. Changes to this property will not hav
 
+#### Implementation of
+
+[WorkspaceOptions](../interfaces/WorkspaceOptions.md).[isSelected](../interfaces/WorkspaceOptions.md#isselected)
+
 ___
 
 ### name

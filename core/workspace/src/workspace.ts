@@ -3,7 +3,7 @@ import { Log } from '@wurk/log';
 import { createSpawn } from '@wurk/spawn';
 
 import { type Entrypoint, getEntrypoints } from './entrypoint.js';
-import { type DependencySpec } from './spec.js';
+import { type WorkspaceLink, type WorkspaceLinkOptions } from './link.js';
 
 /**
  * Workspace configuration.
@@ -30,6 +30,11 @@ export interface WorkspaceOptions {
   readonly config: JsonAccessor;
 
   /**
+   * Initial selection state of the workspace.
+   */
+  readonly isSelected?: boolean;
+
+  /**
    * Resolve links to local dependency workspaces.
    */
   readonly getDependencyLinks?: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
@@ -53,66 +58,10 @@ export interface WorkspaceOptions {
   readonly getPublished?: () => Promise<WorkspacePublished | null>;
 }
 
-/**
- * Options for filtering workspace links.
- */
-export interface WorkspaceLinkOptions {
-  /**
-   * If true, include transitive links.
-   */
-  readonly recursive?: boolean;
-
-  /**
-   * If provided, filter the links. If a link is filtered, it will also stop
-   * recursion from traversing the filtered link's transitive links.
-   */
-  readonly filter?: (link: WorkspaceLink) => boolean;
-}
-
-/**
- * Represents an edge in the workspace dependency graph.
- */
-export interface WorkspaceLink {
-  /**
-   * The dependent workspace.
-   */
-  readonly dependent: Workspace;
-
-  /**
-   * The dependency workspace.
-   */
-  readonly dependency: Workspace;
-
-  /**
-   * The type of the dependency in the dependent workspace's `package.json`
-   * file (eg. `devDependencies`).
-   */
-  readonly type: (typeof WORKSPACE_LINK_SCOPES)[number];
-
-  /**
-   * The key of the dependency in the dependent workspace's `package.json`
-   * file. This may not be the same as the dependency's package name if the
-   * entry is an alias.
-   */
-  readonly id: string;
-
-  /**
-   * The dependency spec.
-   */
-  readonly spec: DependencySpec;
-}
-
 export interface WorkspacePublished {
   readonly version: string;
   readonly gitHead: string | null;
 }
-
-const WORKSPACE_LINK_SCOPES = [
-  'devDependencies',
-  'peerDependencies',
-  'optionalDependencies',
-  'dependencies',
-] as const;
 
 /**
  * Workspace information and utilities.
@@ -145,7 +94,7 @@ export class Workspace implements WorkspaceOptions {
    * **Note:** This property is intentionally mutable to allow for dynamic
    * selection of workspaces. Changes to this property will not hav
    */
-  isSelected = false;
+  isSelected: boolean;
 
   /**
    * True if this workspace is a dependency of any selected workspace.
@@ -182,6 +131,7 @@ export class Workspace implements WorkspaceOptions {
     this.isPrivate = this.config
       .at('private')
       .as('boolean', false);
+    this.isSelected = options.isSelected ?? false;
     this.getDependencyLinks = options.getDependencyLinks ?? (() => []);
     this.getDependentLinks = options.getDependentLinks ?? (() => []);
     this.getPublished = options.getPublished ?? (async () => null);

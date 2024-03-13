@@ -1,7 +1,6 @@
 import nodeAssert from 'node:assert';
 import nodeFs from 'node:fs/promises';
 import nodePath from 'node:path';
-import nodeUrl from 'node:url';
 
 import { Cli, CliUsageError } from '@wurk/cli';
 import { JsonAccessor } from '@wurk/json';
@@ -9,37 +8,29 @@ import { getAnsiColorIterator, log, setLogLevel } from '@wurk/log';
 import { createPackageManager } from '@wurk/pm';
 import { AbortError, Workspace, Workspaces } from '@wurk/workspace';
 
-import { env } from './env.js';
+import { Config } from './config.js';
 import { loadCommandPlugins } from './plugin.js';
+import { exitIfRecursion } from './recursion.js';
+import { getSelf } from './self.js';
 
 interface Filter {
   readonly type: 'include' | 'exclude';
   readonly expression: string;
 }
 
-const __dirname = nodePath.dirname(nodeUrl.fileURLToPath(import.meta.url));
-const configFilename = nodePath.join(__dirname, '../package.json');
-const config = await nodeFs.readFile(configFilename, 'utf8')
-  .then(JsonAccessor.parse);
-const version = config
-  .at('version')
-  .as('string');
-const description = config
-  .at('description')
-  .as('string');
-
 const pm = await createPackageManager();
 
 process.chdir(pm.rootDir);
 
+const self = await getSelf();
 const rootConfigFilename = nodePath.join(pm.rootDir, 'package.json');
 const rootConfig = await nodeFs.readFile(rootConfigFilename, 'utf8')
   .then(JsonAccessor.parse);
 const commands = await loadCommandPlugins(rootConfig, pm.rootDir);
 
 let cli = Cli.create('wurk')
-  .description(description)
-  .version(version)
+  .description(self.description)
+  .version(self.version)
   .optionHelp()
   .optionVersion()
 
@@ -94,7 +85,7 @@ let cli = Cli.create('wurk')
     parse: setLogLevel,
   })
 
-  // Command Fallback:
+  // Script "Command" Fallback:
   .setCommandOptional()
   .setUnknownNamedOptionAllowed()
   .option('[script]', 'run a root package script')
@@ -105,34 +96,38 @@ let cli = Cli.create('wurk')
   .trailer('To get help for a specific command, run `wurk <command> --help`.')
 
   .action(async ({ options, commandResult }) => {
+    const config = new Config();
     const {
-      filters = JsonAccessor.parse(env.WURK_WORKSPACE_FILTERS)
-        .as('array', [] as unknown[])
-        .filter((value): value is Filter => {
-          if (typeof value !== 'object') return false;
-          if (value == null) return false;
-          if (!('type' in value)) return false;
-          if (value.type !== 'include' && value.type !== 'exclude') return false;
-          if (!('expression' in value)) return false;
-          if (typeof value.expression !== 'string') return false;
-          return true;
-        }),
-      parallel = JsonAccessor.parse(env.WURK_PARALLEL)
-        .as('boolean', false),
-      stream = JsonAccessor.parse(env.WURK_STREAM)
-        .as('boolean', false),
-      concurrency = JsonAccessor.parse(env.WURK_CONCURRENCY)
-        .as('number'),
+      filters = config.filters,
+      parallel = config.parallel,
+      stream = config.stream,
+      concurrency = config.concurrency,
       script,
       scriptArgs,
     } = options;
 
+    config.filters = filters;
+    config.parallel = parallel;
+    config.stream = stream;
+    config.concurrency = concurrency;
+
     const commandName = Object.keys(commandResult)
       .at(0);
 
-    preventRecursion(commandName ?? script);
+    exitIfRecursion(commandName ?? script);
+
+    const root: Workspace = new Workspace({
+      config: rootConfig,
+      dir: pm.rootDir,
+      getPublished: async () => {
+        return root.version
+          ? await pm.getMetadata(root.name, `<=${root.version}`)
+          : null;
+      },
+    });
 
     const workspaceDirs = await pm.getWorkspaces();
+
     const workspaceEntries = await Promise.all(workspaceDirs.map(async (workspaceDir) => {
       const workspaceConfigFilename = nodePath.join(workspaceDir, 'package.json');
       const workspaceConfig = await nodeFs.readFile(workspaceConfigFilename, 'utf8')
@@ -144,29 +139,24 @@ let cli = Cli.create('wurk')
 
       return [workspaceDir, workspaceConfig] as const;
     }));
-    const root: Workspace = new Workspace({
-      config: rootConfig,
-      dir: pm.rootDir,
-      getPublished: async () => root.version ? await pm.getMetadata(root.name, `<=${root.version}`) : null,
-    });
+
     const workspaces = new Workspaces({
       rootDir: pm.rootDir,
-      workspaces: workspaceEntries,
+      workspaceEntries,
       concurrency,
       defaultIterationMethod: parallel
         ? 'forEachParallel'
         : stream
           ? 'forEachStream'
           : 'forEachSequential',
-      getPublished: async (name, workspaceVersion) => await pm.getMetadata(name, `<=${workspaceVersion}`),
-    });
-    const allWorkspaces = new Set([...workspaces.all, root]);
-    const colors = getAnsiColorIterator({
-      loop: true,
-      count: allWorkspaces.size,
+      getPublished: async (name, workspaceVersion) => {
+        return await pm.getMetadata(name, `<=${workspaceVersion}`);
+      },
     });
 
-    allWorkspaces.forEach((workspace) => {
+    const colors = getAnsiColorIterator({ loop: true, count: workspaces.size + 1 });
+
+    [...workspaces.all, root].forEach((workspace) => {
       workspace.log.prefix = workspace.name;
       workspace.log.prefixStyle = colors.next().value;
     });
@@ -195,11 +185,6 @@ let cli = Cli.create('wurk')
       command.init({ root, workspaces });
     }
 
-    env.WURK_WORKSPACE_FILTERS = JSON.stringify(filters);
-    env.WURK_PARALLEL = JSON.stringify(parallel);
-    env.WURK_STREAM = JSON.stringify(stream);
-    env.WURK_CONCURRENCY = JSON.stringify(concurrency);
-
     if (script) {
       if (
         root.config
@@ -214,21 +199,10 @@ let cli = Cli.create('wurk')
     }
   });
 
+// Populate the CLI with the commands loaded from plugins.
 for (const command of commands) {
   cli = cli.command(command.cli);
 }
-
-const preventRecursion = (commandOrScript: string | undefined): void => {
-  const running = env.WURK_RUNNING_COMMANDS?.split(/\s*,\s*/u) ?? [];
-
-  if (commandOrScript && running.includes(commandOrScript)) {
-    // Block commands from recursively calling themselves, even indirectly.
-    // eslint-disable-next-line unicorn/no-process-exit
-    process.exit(0);
-  }
-
-  env.WURK_RUNNING_COMMANDS = [...running, commandOrScript].join(',');
-};
 
 await cli
   .parse()

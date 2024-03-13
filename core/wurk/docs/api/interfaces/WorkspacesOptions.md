@@ -12,7 +12,7 @@ Workspace collection options.
 - [defaultIterationMethod](WorkspacesOptions.md#defaultiterationmethod)
 - [getPublished](WorkspacesOptions.md#getpublished)
 - [rootDir](WorkspacesOptions.md#rootdir)
-- [workspaces](WorkspacesOptions.md#workspaces)
+- [workspaceEntries](WorkspacesOptions.md#workspaceentries)
 
 ## Properties
 
@@ -67,8 +67,8 @@ The directory of the root workspace.
 
 ___
 
-### workspaces
+### workspaceEntries
 
-• `Optional` `Readonly` **workspaces**: readonly readonly [`string`, `JsonAccessor`][]
+• `Optional` `Readonly` **workspaceEntries**: readonly readonly [`string`, `JsonAccessor`][]
 
-Array of workspace directories and configurations (package.json files).
+Array of workspaces as tuples of directory and configuration (package.json).

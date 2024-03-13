@@ -11,6 +11,8 @@ export type JsonType =
   | 'object'
   | 'null';
 
+type NoInfer<T> = [T][T extends any ? 0 : never];
+
 type JsonValue<T extends JsonType = JsonType> = T extends 'string'
   ? string
   : T extends 'number'
@@ -75,10 +77,14 @@ export class JsonAccessor {
 
   as<TJsonType extends JsonType, TValue = JsonValue<TJsonType>, TAltValue = undefined>(
     types: TJsonType | [TJsonType, ...TJsonType[]] | ((value: unknown) => value is TValue),
-    alt: TAltValue = undefined as TAltValue,
-  ): TValue | TAltValue {
+    alt: (() => TAltValue) | TAltValue = undefined as TAltValue,
+  ): TValue | NoInfer<TAltValue> {
+    const getAlt = typeof alt === 'function'
+      ? alt as (() => TAltValue)
+      : (): TAltValue => alt;
+
     if (typeof types === 'function') {
-      return types(this.#value) ? (this.#value as TValue) : alt;
+      return types(this.#value) ? (this.#value as TValue) : getAlt();
     }
 
     for (const type of Array.isArray(types) ? types : [types]) {
@@ -106,7 +112,7 @@ export class JsonAccessor {
       }
     }
 
-    return alt;
+    return getAlt();
   }
 
   is(types: JsonType | [JsonType, ...JsonType[]] | ((value: unknown) => boolean)): boolean {

@@ -1,4 +1,4 @@
-import nodeFs from 'node:fs';
+import nodeFs from 'node:fs/promises';
 
 import { createCommand } from 'wurk';
 
@@ -13,7 +13,7 @@ export default createCommand('clean', async ({ createGit, workspaces }) => {
 
     const promises = filenames.map(async (filename) => {
       log.debug`removing ignored file "${filename}"`;
-      await nodeFs.promises.rm(filename, { recursive: true, force: true });
+      await nodeFs.rm(filename, { recursive: true, force: true });
     });
 
     await Promise.all(promises);

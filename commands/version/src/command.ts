@@ -85,7 +85,7 @@ export default createCommand('version', {
       }
     });
 
-    if (!workspaces.iterableSize) return;
+    if (!workspaces.selectedSize) return;
 
     await spawn(
       'npm',

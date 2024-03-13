@@ -5,23 +5,16 @@
 An collection of workspaces with methods for selecting and iterating.
 
 the `forEach*` methods and collection iterator only iterate over selected
-workspaces by default. If the `includeDependencies` or `includeDependents`
-options are set, then iteration will include dependency/dependent workspaces
-that are not explicitly excluded.
+workspaces.
 
-The root workspace may not be included in iteration if the
-`includeRootWorkspace` was not set when the collection was constructed. But,
-the root workspace can always be accessed via the `root` property.
-
-The `all` property is an iterable which includes all workspaces (may not
-included the root workspace), regardless of selection status.
+The `all` property is an iterable which includes all workspaces, regardless
+of selection status.
 
 ## Table of contents
 
 ### Accessors
 
-- [iterableSize](Workspaces.md#iterablesize)
-- [size](Workspaces.md#size)
+- [selectedSize](Workspaces.md#selectedsize)
 
 ### Constructors
 
@@ -35,37 +28,22 @@ included the root workspace), regardless of selection status.
 - [forEachSequential](Workspaces.md#foreachsequential)
 - [forEachStream](Workspaces.md#foreachstream)
 - [forEachSync](Workspaces.md#foreachsync)
-- [getDependencyLinks](Workspaces.md#getdependencylinks)
-- [getDependentLinks](Workspaces.md#getdependentlinks)
 - [include](Workspaces.md#include)
 
 ### Properties
 
 - [all](Workspaces.md#all)
 - [concurrency](Workspaces.md#concurrency)
+- [size](Workspaces.md#size)
 
 ## Accessors
 
-### iterableSize
+### selectedSize
 
-• `get` **iterableSize**(): `number`
+• `get` **selectedSize**(): `number`
 
 Number of workspaces which will be included in iteration. This respects
 workspace selection and the inclusion of dependencies and dependents.
-
-#### Returns
-
-`number`
-
-___
-
-### size
-
-• `get` **size**(): `number`
-
-Number of workspaces in the collection. This may not include the root
-workspace if the `includeRootWorkspace` option was not set. This is not
-affected by workspace selection.
 
 #### Returns
 
@@ -208,46 +186,6 @@ Synchronously iterate over selected workspaces.
 
 ___
 
-### getDependencyLinks
-
-▸ **getDependencyLinks**(`workspace`, `options?`): readonly [`WorkspaceLink`](../interfaces/WorkspaceLink.md)[]
-
-Get dependency links for a workspace. This includes links to workspaces
-which are not selected, even if they are explicitly excluded.
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `workspace` | [`Workspace`](Workspace.md) |
-| `options?` | [`WorkspaceLinkOptions`](../interfaces/WorkspaceLinkOptions.md) |
-
-#### Returns
-
-readonly [`WorkspaceLink`](../interfaces/WorkspaceLink.md)[]
-
-___
-
-### getDependentLinks
-
-▸ **getDependentLinks**(`workspace`, `options?`): readonly [`WorkspaceLink`](../interfaces/WorkspaceLink.md)[]
-
-Get dependent links for a workspace. This includes links to workspaces
-which are not selected, even if they are explicitly excluded.
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `workspace` | [`Workspace`](Workspace.md) |
-| `options?` | [`WorkspaceLinkOptions`](../interfaces/WorkspaceLinkOptions.md) |
-
-#### Returns
-
-readonly [`WorkspaceLink`](../interfaces/WorkspaceLink.md)[]
-
-___
-
 ### include
 
 ▸ **include**(`expression`): `Promise`\<`void`\>
@@ -294,3 +232,11 @@ ___
 
 Maximum workspaces which may be processed in parallel using the
 asynchronous `forEach*` methods.
+
+___
+
+### size
+
+• `Readonly` **size**: `number`
+
+Number of workspaces in the collection.

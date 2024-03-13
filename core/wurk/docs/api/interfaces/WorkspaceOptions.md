@@ -17,6 +17,7 @@ Workspace configuration.
 - [getDependencyLinks](WorkspaceOptions.md#getdependencylinks)
 - [getDependentLinks](WorkspaceOptions.md#getdependentlinks)
 - [getPublished](WorkspaceOptions.md#getpublished)
+- [isSelected](WorkspaceOptions.md#isselected)
 - [log](WorkspaceOptions.md#log)
 - [relativeDir](WorkspaceOptions.md#relativedir)
 
@@ -117,6 +118,14 @@ the exact current version has been published.
 ##### Returns
 
 `Promise`\<``null`` \| `WorkspacePublished`\>
+
+___
+
+### isSelected
+
+• `Optional` `Readonly` **isSelected**: `boolean`
+
+Initial selection state of the workspace.
 
 ___
 
