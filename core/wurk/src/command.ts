@@ -1,7 +1,6 @@
 import { Cli, type CliName, type EmptyResult } from '@wurk/cli';
 import { type JsonAccessor } from '@wurk/json';
-import { type PackageManager } from '@wurk/pm';
-import { type WorkspaceCollection } from '@wurk/workspace';
+import { type Workspace, type Workspaces } from '@wurk/workspace';
 
 import { CommandContext } from './context.js';
 
@@ -43,11 +42,12 @@ export interface Command<
   TName extends string = string,
 > {
   readonly cli: Cli<TResult, TName>;
-  readonly init: (workspaces: WorkspaceCollection) => void;
+  readonly init: (config: InitConfig) => void;
 }
 
-export interface CommandLazyConfig {
-  readonly workspaces: WorkspaceCollection;
+interface InitConfig {
+  readonly root: Workspace;
+  readonly workspaces: Workspaces;
 }
 
 /**
@@ -80,8 +80,8 @@ export const createCommand = <
   name: CliName<TName>,
   hooks: CommandHooks<TResult, TName> | CommandActionCallback,
 ): unknown => {
-  return new CommandFactory((pm, config) => {
-    let workspaces: WorkspaceCollection | undefined;
+  return new CommandFactory((config) => {
+    let initConfig: InitConfig | undefined;
 
     const {
       config: configHook = (value: unknown) => value as Cli<TResult, TName>,
@@ -103,15 +103,16 @@ export const createCommand = <
       config,
     )
       .action(async (result) => {
-        if (!workspaces) throw new Error('command not initialized');
+        if (!initConfig) throw new Error('command not initialized');
 
-        const context = new CommandContext({ result, workspaces, pm });
+        const { root, workspaces } = initConfig;
+        const context = new CommandContext({ result, root, workspaces });
 
         await actionHook(context);
       });
 
-    const init = (newWorkspaces: WorkspaceCollection): void => {
-      workspaces = newWorkspaces;
+    const init = (newInitConfig: InitConfig): void => {
+      initConfig = newInitConfig;
     };
 
     return { cli, init };
@@ -122,8 +123,7 @@ export class CommandFactory<
   TResult extends EmptyResult = EmptyResult,
   TName extends string = string,
 > {
-  constructor(readonly load: (
-    pm: PackageManager,
-    config: JsonAccessor,
-  ) => Command<TResult, TName>) {}
+  constructor(
+    readonly load: (config: JsonAccessor) => Command<TResult, TName>,
+  ) {}
 }

@@ -29,7 +29,7 @@ export const writeConfig = async (workspace: Workspace): Promise<void> => {
 
   log.debug`writing config`;
 
-  await nodeFs.writeFile(configFilename, config.toString());
+  await nodeFs.writeFile(configFilename, config.toString(2));
 };
 
 export const writeChangelog = async (

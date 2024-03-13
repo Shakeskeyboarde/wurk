@@ -160,7 +160,7 @@ const formatCommands = (commands: readonly HelpCli[]): string => {
 };
 
 const formatError = (error: unknown): string => {
-  if (error == null) return '';
+  if (!error || error === true) return '';
 
   return wrap(String(error), process.stdout.columns);
 };
@@ -178,7 +178,7 @@ const format = (cli: HelpCli, error: unknown): string => {
     }, {}),
   );
 
-  return [
+  const helpText = [
     formatUsage(cli),
     ...cli.descriptions.map(formatDescription),
     ...groups.map(([groupName, groupOptions]) => {
@@ -186,10 +186,13 @@ const format = (cli: HelpCli, error: unknown): string => {
     }),
     formatCommands(cli.commands),
     ...cli.trailers.map(formatDescription),
-    formatError(error),
   ]
     .filter(Boolean)
     .join('\n\n');
+
+  const errorText = formatError(error);
+
+  return `${helpText}${errorText ? `\n\n${errorText}` : '\n'}`;
 };
 
 const defaultHelpFormatter: HelpFormatter = { format };

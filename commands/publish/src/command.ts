@@ -23,13 +23,7 @@ export default createCommand('publish', {
       .option('--dry-run', 'perform a dry-run for validation');
   },
 
-  action: async ({
-    log,
-    pm,
-    options,
-    workspaces,
-    createGit,
-  }) => {
+  action: async ({ log, options, workspaces, createGit }) => {
     if (options.fromArchive) {
       if (options.otp != null) {
         log.warn`option --otp is ignored when --from-archive is set`;
@@ -49,7 +43,7 @@ export default createCommand('publish', {
         .catch(() => null);
 
       await workspaces.forEach(async (workspace) => {
-        await publishFromFilesystem({ options, pm, git, workspace, published });
+        await publishFromFilesystem({ options, git, workspace, published });
       });
     }
   },

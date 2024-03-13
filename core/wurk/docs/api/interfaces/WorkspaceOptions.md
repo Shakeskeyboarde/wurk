@@ -4,6 +4,10 @@
 
 Workspace configuration.
 
+## Implemented by
+
+- [`Workspace`](../classes/Workspace.md)
+
 ## Table of contents
 
 ### Properties
@@ -12,6 +16,8 @@ Workspace configuration.
 - [dir](WorkspaceOptions.md#dir)
 - [getDependencyLinks](WorkspaceOptions.md#getdependencylinks)
 - [getDependentLinks](WorkspaceOptions.md#getdependentlinks)
+- [getPublished](WorkspaceOptions.md#getpublished)
+- [log](WorkspaceOptions.md#log)
 - [relativeDir](WorkspaceOptions.md#relativedir)
 
 ## Properties
@@ -80,9 +86,50 @@ readonly [`WorkspaceLink`](WorkspaceLink.md)[]
 
 ___
 
+### getPublished
+
+• `Optional` `Readonly` **getPublished**: () => `Promise`\<``null`` \| `WorkspacePublished`\>
+
+Get publication information for the workspace. This will check the
+NPM registry for the closest version which is less than or equal to (<=)
+the current version.
+
+Returns `null` if If the current version is less than all published
+versions (or there are no published versions). Returns a metadata object
+if the current version or a lesser version has been published. Compare
+the returned metadata version to the workspace version to determine if
+the exact current version has been published.
+
+#### Type declaration
+
+▸ (): `Promise`\<``null`` \| `WorkspacePublished`\>
+
+Get publication information for the workspace. This will check the
+NPM registry for the closest version which is less than or equal to (<=)
+the current version.
+
+Returns `null` if If the current version is less than all published
+versions (or there are no published versions). Returns a metadata object
+if the current version or a lesser version has been published. Compare
+the returned metadata version to the workspace version to determine if
+the exact current version has been published.
+
+##### Returns
+
+`Promise`\<``null`` \| `WorkspacePublished`\>
+
+___
+
+### log
+
+• `Optional` `Readonly` **log**: `Log`
+
+Logger which should be used for messages related to the workspace.
+
+___
+
 ### relativeDir
 
 • `Optional` `Readonly` **relativeDir**: `string`
 
-Path of the workspace directory relative to the root workspace. If this
-is omitted, blank, or `"."`, then the workspace is the root workspace.
+Workspace directory relative to the root workspace.

@@ -2,16 +2,15 @@ import nodeFs from 'node:fs/promises';
 import nodePath from 'node:path';
 
 import semver, { type ReleaseType } from 'semver';
-import { type Git, type GitLog, type PackageManager, type Workspace } from 'wurk';
+import { type Git, type GitLog, type Workspace } from 'wurk';
 
 import { type Change, ChangeType } from '../change.js';
 
 export const auto = async (
-  pm: PackageManager,
   git: Git,
   workspace: Workspace,
 ): Promise<readonly Change[]> => {
-  const { log, dir, config, name, version } = workspace;
+  const { log, dir, config, version, getPublished } = workspace;
 
   // Auto-versioning does not support workspaces without versions or with
   // prerelease versions.
@@ -20,7 +19,7 @@ export const auto = async (
     return [];
   }
 
-  const meta = await pm.getMetadata(name, `<=${version}`);
+  const meta = await getPublished();
 
   if (!meta) {
     log.info`using existing version for initial release (${version})`;

@@ -27,7 +27,7 @@ interface ParserParent {
 interface ParserResult
   extends Pick<UnknownResult, 'name' | 'getHelpText' | 'printHelp'> {
   readonly options: Record<string, any>;
-  readonly command: Record<string, ParserResult | undefined>;
+  readonly commandResult: Record<string, ParserResult | undefined>;
   readonly parsed: Set<string>;
 }
 
@@ -102,7 +102,7 @@ const parseRecursive = async (
 
   const result: ParserResult = {
     options: Object.create(null),
-    command: Object.create(null),
+    commandResult: Object.create(null),
     parsed: new Set(),
     name,
     getHelpText: getHelpText.bind(cli),
@@ -169,15 +169,15 @@ const parseRecursive = async (
     if (option.type === 'named') {
       if (option.mapped) {
         if (mappedKey == null) {
-          throw new CliUsageError(`option "${option.usage}" does not support dot notation`);
+          throw new CliUsageError(`option "${option.usage}" does not support dot notation`, { context: cli });
         }
       }
       else if (/* not mapped and */ mappedKey != null) {
-        throw new CliUsageError(`option "${option.usage}" requires dot notation`);
+        throw new CliUsageError(`option "${option.usage}" requires dot notation`, { context: cli });
       }
 
       if (option.value === 'required' && valueArgs.length === 0) {
-        throw new CliUsageError(`option "${option.usage}" requires a value`);
+        throw new CliUsageError(`option "${option.usage}" requires a value`, { context: cli });
       }
     }
 
@@ -305,7 +305,7 @@ const parseRecursive = async (
 
     const commandName = args.shift();
     isCommandFound = true;
-    result.command[command.name] = await parseRecursive(
+    result.commandResult[command.name] = await parseRecursive(
       args,
       command,
       { isNamed, tryNamed },
@@ -327,7 +327,7 @@ const parseRecursive = async (
     if (!command) return false;
 
     isCommandFound = true;
-    result.command[command.name] = await parseRecursive(args, command, {
+    result.commandResult[command.name] = await parseRecursive(args, command, {
       isNamed,
       tryNamed,
     });
@@ -380,12 +380,12 @@ const parseRecursive = async (
       && !isUnknownNamedOptionAllowed
       && !isDoubleHyphenFound
     ) {
-      throw new CliUsageError(`unknown option "${args[0]}"`);
+      throw new CliUsageError(`unknown option "${args[0]}"`, { context: cli });
     }
 
     if (await tryPositional()) continue;
 
-    throw new CliUsageError(`unexpected argument "${args[0]}"`);
+    throw new CliUsageError(`unexpected argument "${args[0]}"`, { context: cli });
   }
 
   if (!isCommandFound) {
@@ -402,7 +402,7 @@ const parseRecursive = async (
       && (!(key in result.options) || result.options[key] === undefined)
     ) {
       if (required) {
-        throw new CliUsageError(`missing required option "${usage}"`);
+        throw new CliUsageError(`missing required option "${usage}"`, { context: cli });
       }
 
       const getDefault = key in optionDefaults && optionDefaults[key];
@@ -414,7 +414,7 @@ const parseRecursive = async (
   }
 
   if (positional[0]?.required) {
-    throw new CliUsageError(`missing required option "${positional[0].usage}"`);
+    throw new CliUsageError(`missing required option "${positional[0].usage}"`, { context: cli });
   }
 
   for (const { key } of positional) {
@@ -428,7 +428,7 @@ const parseRecursive = async (
   }
 
   if (!isCommandFound && !isCommandOptional && commands.length) {
-    throw new CliUsageError('missing required command');
+    throw new CliUsageError('missing required command', { context: cli });
   }
 
   return result;

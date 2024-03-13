@@ -6,14 +6,13 @@ import {
 } from '@wurk/cli';
 import { Git } from '@wurk/git';
 import { Log } from '@wurk/log';
-import { type PackageManager } from '@wurk/pm';
 import { createSpawn } from '@wurk/spawn';
-import { type WorkspaceCollection } from '@wurk/workspace';
+import { type Workspace, type Workspaces } from '@wurk/workspace';
 
 interface ContextOptions<TResult extends UnknownResult> {
   readonly result: TResult;
-  readonly workspaces: WorkspaceCollection;
-  readonly pm: PackageManager;
+  readonly root: Workspace;
+  readonly workspaces: Workspaces;
 }
 
 /**
@@ -30,14 +29,14 @@ implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>> {
   readonly log: Log;
 
   /**
-   * Collection of all workspaces in the project.
+   * The root workspace of the project.
    */
-  readonly workspaces: WorkspaceCollection;
+  readonly root: Workspace;
 
   /**
-   * Package manager utilities.
+   * Collection of all workspaces in the project.
    */
-  readonly pm: PackageManager;
+  readonly workspaces: Workspaces;
 
   get name(): string {
     return this.#result.name;
@@ -47,8 +46,8 @@ implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>> {
     return this.#result.options as InferResultOptions<TResult>;
   }
 
-  get command(): InferResultCommand<TResult> {
-    return this.#result.command as InferResultCommand<TResult>;
+  get commandResult(): InferResultCommand<TResult> {
+    return this.#result.commandResult as InferResultCommand<TResult>;
   }
 
   get parsed(): ReadonlySet<string> {
@@ -56,12 +55,12 @@ implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>> {
   }
 
   constructor(options: ContextOptions<TResult>) {
-    const { result, workspaces, pm } = options;
+    const { result, root, workspaces } = options;
 
     this.#result = result;
     this.log = new Log();
+    this.root = root;
     this.workspaces = workspaces;
-    this.pm = pm;
   }
 
   /**
@@ -72,7 +71,7 @@ implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>> {
    * - If the directory is not a repo (ENOREPO)
    */
   readonly createGit = async (): Promise<Git> => {
-    return await Git.create({ dir: this.workspaces.root.dir, log: this.log });
+    return await Git.create({ dir: this.root.dir, log: this.log });
   };
 
   readonly getHelpText = (error?: unknown): string => {
@@ -85,6 +84,6 @@ implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>> {
 
   readonly spawn = createSpawn(() => ({
     log: this.log,
-    cwd: this.workspaces.root.dir,
+    cwd: this.root.dir,
   }));
 }

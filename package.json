@@ -10,10 +10,11 @@
   },
   "type": "module",
   "scripts": {
-    "lint": "eslint --max-warnings=0 .",
+    "lint": "wurk exec eslint src",
+    "depcheck": "wurk exec depcheck --quiet --skip-missing",
     "build-scripts": "npm -ws --if-present run build && npm update --silent --progress=false wurk",
     "build": "npm run build-scripts && wurk run build --stream",
-    "test": "npm run build && wurk exec depcheck --quiet --skip-missing && wurk exec eslint src --max-warnings=0 && wurk vitest run",
+    "test": "npm run build && npm run depcheck && npm run lint -- --max-warnings=0 && wurk vitest run",
     "modernize": "npx npm-check-updates@latest -i --workspaces --root --format group"
   },
   "workspaces": [
@@ -55,8 +56,8 @@
     "rollup": "^4.10.0",
     "typedoc": "^0.25.8",
     "typedoc-plugin-markdown": "^3.17.1",
-    "typescript": "^5.3.3",
-    "vite": "5.1.1",
+    "typescript": "5.3.x",
+    "vite": "^5.1.1",
     "vitest": "^1.2.2"
   }
 }

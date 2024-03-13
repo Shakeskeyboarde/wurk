@@ -3,17 +3,17 @@ import nodeOs from 'node:os';
 import nodePath from 'node:path';
 
 import { type JsonAccessor } from '@wurk/json';
-import { type Log, log as defaultLog } from '@wurk/log';
 import { Sema } from 'async-sema';
 
 import { AbortError } from './error.js';
+import { filter } from './filter.js';
 import { GeneratorIterable, getDepthFirstGenerator } from './generator.js';
-import { select, type SelectCondition } from './select.js';
 import { getSpec } from './spec.js';
 import {
   Workspace,
   type WorkspaceLink,
   type WorkspaceLinkOptions,
+  type WorkspacePublished,
 } from './workspace.js';
 
 /**
@@ -28,17 +28,7 @@ export type WorkspaceCallback = (
 /**
  * Workspace collection options.
  */
-export interface WorkspaceCollectionOptions {
-  /**
-   * Logger for workspace collection operations.
-   */
-  readonly log?: Log;
-
-  /**
-   * The root workspace configuration (package.json).
-   */
-  readonly root: JsonAccessor;
-
+export interface WorkspacesOptions {
   /**
    * The directory of the root workspace.
    */
@@ -51,11 +41,6 @@ export interface WorkspaceCollectionOptions {
     dir: string,
     config: JsonAccessor,
   ])[];
-
-  /**
-   * Whether or not to include the root workspace in iteration.
-   */
-  readonly includeRootWorkspace?: boolean;
 
   /**
    * Maximum workspaces which may be processed simultaneously using the
@@ -71,6 +56,11 @@ export interface WorkspaceCollectionOptions {
     | 'forEachParallel'
     | 'forEachStream'
     | 'forEachSequential';
+
+  /**
+   * Determine if a workspace version is published or not.
+   */
+  readonly getPublished?: (name: string, version: string) => Promise<WorkspacePublished | null>;
 }
 
 /**
@@ -88,19 +78,10 @@ export interface WorkspaceCollectionOptions {
  * The `all` property is an iterable which includes all workspaces (may not
  * included the root workspace), regardless of selection status.
  */
-export class WorkspaceCollection {
-  readonly #log: Log;
+export class Workspaces {
   readonly #workspaces: readonly Workspace[];
   readonly #dependencyLinks: ReadonlyMap<Workspace, readonly WorkspaceLink[]>;
   readonly #dependentLinks: ReadonlyMap<Workspace, readonly WorkspaceLink[]>;
-
-  #includeDependencies: boolean = false;
-  #includeDependents: boolean = false;
-
-  /**
-   * The root workspace.
-   */
-  readonly root: Workspace;
 
   /**
    * Maximum workspaces which may be processed in parallel using the
@@ -116,9 +97,7 @@ export class WorkspaceCollection {
   /**
    * Create a new workspace collection.
    */
-  constructor(options: WorkspaceCollectionOptions) {
-    this.#log = options.log ?? defaultLog;
-
+  constructor(options: WorkspacesOptions) {
     const workspaces: Workspace[] = (this.#workspaces = []);
     const dependencyLinks = (this.#dependencyLinks = new Map<
       Workspace,
@@ -128,31 +107,24 @@ export class WorkspaceCollection {
       Workspace,
       WorkspaceLink[]
     >());
-    const root: Workspace = new Workspace({
-      dir: options.rootDir,
-      config: options.root,
-      getDependencyLinks: (linkOptions) => {
-        return this.getDependencyLinks(root, linkOptions);
-      },
-      getDependentLinks: (linkOptions) => {
-        return this.getDependentLinks(root, linkOptions);
-      },
-    });
 
-    if (options.includeRootWorkspace) {
-      workspaces.push(root);
-    }
-
-    for (const [dir, config] of options.workspaces ?? []) {
+    for (const [workspaceDir, config] of options.workspaces ?? []) {
+      const dir = nodePath.resolve(options.rootDir, workspaceDir);
+      const relativeDir = nodePath.relative(options.rootDir, dir);
       const workspace: Workspace = new Workspace({
         dir,
-        relativeDir: nodePath.relative(root.dir, dir),
+        relativeDir,
         config,
         getDependencyLinks: (linkOptions) => {
           return this.getDependencyLinks(workspace, linkOptions);
         },
         getDependentLinks: (linkOptions) => {
           return this.getDependentLinks(workspace, linkOptions);
+        },
+        getPublished: async () => {
+          return workspace.version && options.getPublished
+            ? await options.getPublished(workspace.name, workspace.version)
+            : null;
         },
       });
 
@@ -214,24 +186,21 @@ export class WorkspaceCollection {
       });
     });
 
-    this.root = root;
-    this.forEach = this[options.defaultIterationMethod ?? 'forEachSequential'];
     this.concurrency = options.concurrency ?? nodeOs.cpus().length + 1;
     this.all = new GeneratorIterable(() => getDepthFirstGenerator(this.#workspaces, (current) => {
       return this.#dependencyLinks
         .get(current)
         ?.map((link) => link.dependency);
     }));
+
+    if (options.defaultIterationMethod) {
+      this.forEach = this[options.defaultIterationMethod];
+    }
   }
 
   *[Symbol.iterator](): Iterator<Workspace> {
     for (const workspace of this.all) {
-      if (
-        workspace.isSelected !== false
-        && (workspace.isSelected
-        || (this.#includeDependencies && workspace.isDependencyOfSelected)
-        || (this.#includeDependents && workspace.isDependentOfSelected))
-      ) {
+      if (workspace.isSelected) {
         yield workspace;
       }
     }
@@ -255,41 +224,41 @@ export class WorkspaceCollection {
   }
 
   /**
-   * Select workspaces by name, privacy, keyword, directory, or predicate
-   * function.
+   * Include workspaces by name, directory, keyword, or other characteristics.
    *
-   * - Use `private:true` or `private:false` to select private or public workspaces.
-   * - Use `keyword:<pattern>` to select workspaces by keyword (glob supported).
-   * - Use `dir:<pattern>` to select workspaces by directory (glob supported).
-   * - Use `name:<pattern>` or just `<pattern>` to select workspaces by name (glob supported).
-   * - Prefix any query with `not:` to exclude instead of include.
-   * - Use a leading ellipsis to (eg. `...<query>`) to also match dependencies.
-   * - Use a trailing ellipsis to (eg. `<query>...`) to also match dependents.
+   * Expressions:
+   * - `<name>`: Select workspaces by name (glob supported).
+   * - `/path`: Select workspaces by path relative to the root workspace (glob supported).
+   * - `#<keywords>`: Select workspaces which contain all keywords (csv).
+   * - `@private`: Select private workspaces.
+   * - `@public`: Select public (non-private) workspaces.
+   * - `@published`: Select workspaces which are published to an NPM registry.
+   * - `@unpublished`: Select workspaces which are not published to an NPM registry.
+   * - `@dependency`: Select workspaces which are depended on by currently selected workspaces.
+   * - `@dependent`: Select workspaces which depend on currently selected workspaces.
    *
    * Glob patterns are supported via the
    * [minimatch](https://www.npmjs.com/package/minimatch) package.
    */
-  select(condition: SelectCondition): void {
-    select(this.all, condition)
-      .forEach((isSelected, workspace) => {
-        workspace.isSelected = isSelected;
-      });
+  async include(expression: string): Promise<void> {
+    const unselected = Array.from(this.all)
+      .filter((workspace) => !workspace.isSelected);
+    const matched = await filter(unselected, expression);
+
+    matched.forEach((workspace) => workspace.isSelected = true);
   }
 
   /**
-   * Include workspaces in iteration that are dependencies of selected
-   * workspaces, as long as the dependency is not _explicitly_ excluded.
+   * Exclude workspaces by name, directory, keyword, or other characteristics.
+   *
+   * See the {@link include} method for expression syntax.
    */
-  includeDependencies(enabled = true): void {
-    this.#includeDependencies = enabled;
-  }
+  async exclude(expression: string): Promise<void> {
+    const selected = Array.from(this.all)
+      .filter((workspace) => workspace.isSelected);
+    const matched = await filter(selected, expression);
 
-  /**
-   * Include workspaces in iteration that are dependents of selected
-   * workspaces, as long as the dependency is not _explicitly_ excluded.
-   */
-  includeDependents(enabled = true): void {
-    this.#includeDependents = enabled;
+    matched.forEach((workspace) => workspace.isSelected = false);
   }
 
   /**

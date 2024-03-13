@@ -10,9 +10,9 @@ import { type DependencySpec } from './spec.js';
  */
 export interface WorkspaceOptions {
   /**
-   * Workspace configuration (package.json).
+   * Logger which should be used for messages related to the workspace.
    */
-  readonly config: JsonAccessor;
+  readonly log?: Log;
 
   /**
    * Absolute path of the workspace directory.
@@ -20,24 +20,37 @@ export interface WorkspaceOptions {
   readonly dir: string;
 
   /**
-   * Path of the workspace directory relative to the root workspace. If this
-   * is omitted, blank, or `"."`, then the workspace is the root workspace.
+   * Workspace directory relative to the root workspace.
    */
   readonly relativeDir?: string;
 
   /**
+   * Workspace configuration (package.json).
+   */
+  readonly config: JsonAccessor;
+
+  /**
    * Resolve links to local dependency workspaces.
    */
-  readonly getDependencyLinks?: (
-    options?: WorkspaceLinkOptions,
-  ) => readonly WorkspaceLink[];
+  readonly getDependencyLinks?: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
 
   /**
    * Resolve links to local dependent workspaces.
    */
-  readonly getDependentLinks?: (
-    options?: WorkspaceLinkOptions,
-  ) => readonly WorkspaceLink[];
+  readonly getDependentLinks?: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
+
+  /**
+   * Get publication information for the workspace. This will check the
+   * NPM registry for the closest version which is less than or equal to (<=)
+   * the current version.
+   *
+   * Returns `null` if If the current version is less than all published
+   * versions (or there are no published versions). Returns a metadata object
+   * if the current version or a lesser version has been published. Compare
+   * the returned metadata version to the workspace version to determine if
+   * the exact current version has been published.
+   */
+  readonly getPublished?: () => Promise<WorkspacePublished | null>;
 }
 
 /**
@@ -89,6 +102,11 @@ export interface WorkspaceLink {
   readonly spec: DependencySpec;
 }
 
+export interface WorkspacePublished {
+  readonly version: string;
+  readonly gitHead: string | null;
+}
+
 const WORKSPACE_LINK_SCOPES = [
   'devDependencies',
   'peerDependencies',
@@ -99,25 +117,10 @@ const WORKSPACE_LINK_SCOPES = [
 /**
  * Workspace information and utilities.
  */
-export class Workspace {
-  /**
-   * Logger which should be used for messages related to the workspace.
-   */
+export class Workspace implements WorkspaceOptions {
   readonly log: Log;
-
-  /**
-   * Absolute path of the workspace directory.
-   */
   readonly dir: string;
-
-  /**
-   * Workspace directory relative to the root workspace.
-   */
   readonly relativeDir: string;
-
-  /**
-   * JSON decoded workspace `package.json` file.
-   */
   readonly config: JsonAccessor;
 
   /**
@@ -137,26 +140,12 @@ export class Workspace {
   readonly isPrivate: boolean;
 
   /**
-   * True if this is the root workspace.
+   * True if this workspace will be included in `forEach*` method iterations.
+   *
+   * **Note:** This property is intentionally mutable to allow for dynamic
+   * selection of workspaces. Changes to this property will not hav
    */
-  readonly isRoot: boolean = false;
-
-  /**
-   * True if the workspace is explicitly included by command line options,
-   * false if it's explicitly _excluded_, and null if it is not explicitly
-   * included or excluded.
-   *
-   * Null values should generally be treated as "not selected". Some commands
-   * may choose to treat null as "selected-if-necessary". For example, the
-   * [build](https://npmjs.com/package/@wurk/build) command will build
-   * dependencies of selected (true) workspaces, as long as the dependency
-   * is not explicitly excluded (false).
-   *
-   *
-   * **Note:** This property is mutable so that command plugins can apply
-   * their own selection logic.
-   */
-  isSelected: boolean | null = null;
+  isSelected = false;
 
   /**
    * True if this workspace is a dependency of any selected workspace.
@@ -180,8 +169,9 @@ export class Workspace {
    * collections instead, which create their own workspace instances.
    */
   constructor(options: WorkspaceOptions) {
+    this.log = options.log ?? new Log();
     this.dir = options.dir;
-    this.relativeDir = options.relativeDir || '.';
+    this.relativeDir = options.relativeDir ?? '.';
     this.config = options.config.copy();
     this.name = this.config
       .at('name')
@@ -192,25 +182,16 @@ export class Workspace {
     this.isPrivate = this.config
       .at('private')
       .as('boolean', false);
-    this.isRoot = this.relativeDir === '.';
-    this.log = new Log();
     this.getDependencyLinks = options.getDependencyLinks ?? (() => []);
     this.getDependentLinks = options.getDependentLinks ?? (() => []);
+    this.getPublished = options.getPublished ?? (async () => null);
   }
 
-  /**
-   * Get all immediate local dependency workspaces.
-   */
-  readonly getDependencyLinks: (
-    options?: WorkspaceLinkOptions,
-  ) => readonly WorkspaceLink[];
+  readonly getDependencyLinks: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
 
-  /**
-   * Get all immediate local dependent workspaces.
-   */
-  readonly getDependentLinks: (
-    options?: WorkspaceLinkOptions,
-  ) => readonly WorkspaceLink[];
+  readonly getDependentLinks: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
+
+  readonly getPublished: () => Promise<WorkspacePublished | null>;
 
   /**
    * Return a list of all of the entry points in the workspace

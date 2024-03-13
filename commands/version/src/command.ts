@@ -31,7 +31,7 @@ export default createCommand('version', {
   },
 
   action: async (context) => {
-    const { log, pm, workspaces, options, createGit, spawn }
+    const { log, workspaces, options, createGit, spawn }
       = context;
     const git = await createGit()
       .catch(() => null);
@@ -39,7 +39,7 @@ export default createCommand('version', {
     const isPreStrategy
       = typeof strategy === 'string' && strategy.startsWith('pre');
     const changes = new Map<Workspace, readonly Change[]>();
-    const callback = getStrategyCallback(strategy, pm, git, preid);
+    const callback = getStrategyCallback(strategy, git, preid);
 
     if (preid && !isPreStrategy) {
       log.warn`option --preid only applies to "pre*" strategies`;

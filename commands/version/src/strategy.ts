@@ -1,5 +1,5 @@
 import semver from 'semver';
-import { type Git, type PackageManager, type Workspace } from 'wurk';
+import { type Git, type Workspace } from 'wurk';
 
 import { type Change } from './change.js';
 import { auto } from './strategies/auto.js';
@@ -36,7 +36,6 @@ export const parseStrategy = (value: string): Strategy => {
 
 export const getStrategyCallback = (
   strategy: Strategy,
-  pm: PackageManager,
   git: Git | null,
   preid?: string,
 ): StrategyCallback => {
@@ -44,7 +43,7 @@ export const getStrategyCallback = (
     switch (strategy) {
       case 'auto':
         if (!git) throw new Error('auto versioning requires a Git repository');
-        return auto.bind(null, pm, git);
+        return auto.bind(null, git);
       case 'promote':
         return promote;
       default:

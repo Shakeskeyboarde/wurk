@@ -4,7 +4,6 @@ import nodePath from 'node:path';
 import semver from 'semver';
 import {
   type Git,
-  type PackageManager,
   type Workspace,
   type WorkspaceLink,
 } from 'wurk';
@@ -17,17 +16,16 @@ interface Context {
     readonly removePackageFields?: readonly string[];
     readonly dryRun?: boolean;
   };
-  readonly pm: PackageManager;
   readonly git: Git | null;
   readonly workspace: Workspace;
   readonly published: Set<Workspace>;
 }
 
 export const publishFromFilesystem = async (context: Context): Promise<void> => {
-  const { options, pm, git, workspace, published } = context;
+  const { options, git, workspace, published } = context;
   const { log, dir, config, version, spawn, getDependencyLinks } = workspace;
 
-  if (!(await validate(pm, git, workspace, published))) {
+  if (!(await validate(git, workspace, published))) {
     log.info('not publishing');
     return;
   }
@@ -76,7 +74,7 @@ export const publishFromFilesystem = async (context: Context): Promise<void> => 
   const savedConfig = await nodeFs.readFile(configFilename, { encoding: 'utf8' });
 
   try {
-    await nodeFs.writeFile(configFilename, config.toString());
+    await nodeFs.writeFile(configFilename, config.toString(2));
     await spawn(
       'npm',
       [
@@ -96,7 +94,6 @@ export const publishFromFilesystem = async (context: Context): Promise<void> => 
 };
 
 const validate = async (
-  pm: PackageManager,
   git: Git | null,
   workspace: Workspace,
   published: Set<Workspace>,
@@ -104,12 +101,12 @@ const validate = async (
   const {
     log,
     dir,
-    name,
     version,
     isPrivate,
     spawn,
     getEntrypoints,
     getDependencyLinks,
+    getPublished,
   } = workspace;
 
   if (isPrivate) {
@@ -122,7 +119,7 @@ const validate = async (
     return false;
   }
 
-  const meta = await pm.getMetadata(name, version);
+  const meta = await getPublished();
 
   if (meta) {
     log.info`workspace is already published`;
@@ -147,7 +144,7 @@ const validate = async (
   const { stdoutJson } = await spawn('npm', ['pack', '--dry-run', '--json']);
   // If the NPM pack command returns an unexpected JSON structure, let if fail
   // naturally.
-  const [packed] = stdoutJson.value as [{ files: { path: string }[] }];
+  const [packed] = stdoutJson.unwrap() as [{ files: { path: string }[] }];
 
   const missingPackEntrypoints = getEntrypoints()
     .filter((entry) => {
@@ -173,7 +170,7 @@ const validate = async (
   let hasValidDependencies = true;
 
   for (const link of getDependencyLinks()) {
-    if (!await validateDependency(pm, git, workspace, link, published)) {
+    if (!await validateDependency(git, workspace, link, published)) {
       hasValidDependencies = false;
     }
   }
@@ -182,14 +179,13 @@ const validate = async (
 };
 
 const validateDependency = async (
-  pm: PackageManager,
   git: Git | null,
   workspace: Workspace,
   { type, spec, dependency }: WorkspaceLink,
   published: Set<Workspace>,
 ): Promise<boolean> => {
   const { log } = workspace;
-  const { dir, name, version, isPrivate } = dependency;
+  const { dir, name, version, isPrivate, getPublished } = dependency;
 
   if (type === 'devDependencies') {
     // Dev dependencies are not used after publishing, so they don't need
@@ -239,7 +235,7 @@ const validateDependency = async (
   }
 
   if (!published.has(dependency)) {
-    const meta = await pm.getMetadata(name, version);
+    const meta = await getPublished();
 
     if (!meta) {
       log.info(`dependency "${name}" version is not published`);

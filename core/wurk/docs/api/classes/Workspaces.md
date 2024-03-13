@@ -1,6 +1,6 @@
-[Wurk API](../README.md) / WorkspaceCollection
+[Wurk API](../README.md) / Workspaces
 
-# Class: WorkspaceCollection
+# Class: Workspaces
 
 An collection of workspaces with methods for selecting and iterating.
 
@@ -20,31 +20,29 @@ included the root workspace), regardless of selection status.
 
 ### Accessors
 
-- [iterableSize](WorkspaceCollection.md#iterablesize)
-- [size](WorkspaceCollection.md#size)
+- [iterableSize](Workspaces.md#iterablesize)
+- [size](Workspaces.md#size)
 
 ### Constructors
 
-- [constructor](WorkspaceCollection.md#constructor)
+- [constructor](Workspaces.md#constructor)
 
 ### Methods
 
-- [forEach](WorkspaceCollection.md#foreach)
-- [forEachParallel](WorkspaceCollection.md#foreachparallel)
-- [forEachSequential](WorkspaceCollection.md#foreachsequential)
-- [forEachStream](WorkspaceCollection.md#foreachstream)
-- [forEachSync](WorkspaceCollection.md#foreachsync)
-- [getDependencyLinks](WorkspaceCollection.md#getdependencylinks)
-- [getDependentLinks](WorkspaceCollection.md#getdependentlinks)
-- [includeDependencies](WorkspaceCollection.md#includedependencies)
-- [includeDependents](WorkspaceCollection.md#includedependents)
-- [select](WorkspaceCollection.md#select)
+- [exclude](Workspaces.md#exclude)
+- [forEach](Workspaces.md#foreach)
+- [forEachParallel](Workspaces.md#foreachparallel)
+- [forEachSequential](Workspaces.md#foreachsequential)
+- [forEachStream](Workspaces.md#foreachstream)
+- [forEachSync](Workspaces.md#foreachsync)
+- [getDependencyLinks](Workspaces.md#getdependencylinks)
+- [getDependentLinks](Workspaces.md#getdependentlinks)
+- [include](Workspaces.md#include)
 
 ### Properties
 
-- [all](WorkspaceCollection.md#all)
-- [concurrency](WorkspaceCollection.md#concurrency)
-- [root](WorkspaceCollection.md#root)
+- [all](Workspaces.md#all)
+- [concurrency](Workspaces.md#concurrency)
 
 ## Accessors
 
@@ -77,7 +75,7 @@ affected by workspace selection.
 
 ### constructor
 
-• **new WorkspaceCollection**(`options`): [`WorkspaceCollection`](WorkspaceCollection.md)
+• **new Workspaces**(`options`): [`Workspaces`](Workspaces.md)
 
 Create a new workspace collection.
 
@@ -85,13 +83,33 @@ Create a new workspace collection.
 
 | Name | Type |
 | :------ | :------ |
-| `options` | [`WorkspaceCollectionOptions`](../interfaces/WorkspaceCollectionOptions.md) |
+| `options` | [`WorkspacesOptions`](../interfaces/WorkspacesOptions.md) |
 
 #### Returns
 
-[`WorkspaceCollection`](WorkspaceCollection.md)
+[`Workspaces`](Workspaces.md)
 
 ## Methods
+
+### exclude
+
+▸ **exclude**(`expression`): `Promise`\<`void`\>
+
+Exclude workspaces by name, directory, keyword, or other characteristics.
+
+See the [include](Workspaces.md#include) method for expression syntax.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `expression` | `string` |
+
+#### Returns
+
+`Promise`\<`void`\>
+
+___
 
 ### forEach
 
@@ -230,58 +248,22 @@ readonly [`WorkspaceLink`](../interfaces/WorkspaceLink.md)[]
 
 ___
 
-### includeDependencies
+### include
 
-▸ **includeDependencies**(`enabled?`): `void`
+▸ **include**(`expression`): `Promise`\<`void`\>
 
-Include workspaces in iteration that are dependencies of selected
-workspaces, as long as the dependency is not _explicitly_ excluded.
+Include workspaces by name, directory, keyword, or other characteristics.
 
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `enabled?` | `boolean` |
-
-#### Returns
-
-`void`
-
-___
-
-### includeDependents
-
-▸ **includeDependents**(`enabled?`): `void`
-
-Include workspaces in iteration that are dependents of selected
-workspaces, as long as the dependency is not _explicitly_ excluded.
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `enabled?` | `boolean` |
-
-#### Returns
-
-`void`
-
-___
-
-### select
-
-▸ **select**(`condition`): `void`
-
-Select workspaces by name, privacy, keyword, directory, or predicate
-function.
-
-- Use `private:true` or `private:false` to select private or public workspaces.
-- Use `keyword:<pattern>` to select workspaces by keyword (glob supported).
-- Use `dir:<pattern>` to select workspaces by directory (glob supported).
-- Use `name:<pattern>` or just `<pattern>` to select workspaces by name (glob supported).
-- Prefix any query with `not:` to exclude instead of include.
-- Use a leading ellipsis to (eg. `...<query>`) to also match dependencies.
-- Use a trailing ellipsis to (eg. `<query>...`) to also match dependents.
+Expressions:
+- `<name>`: Select workspaces by name (glob supported).
+- `/path`: Select workspaces by path relative to the root workspace (glob supported).
+- `#<keywords>`: Select workspaces which contain all keywords (csv).
+- `@private`: Select private workspaces.
+- `@public`: Select public (non-private) workspaces.
+- `@published`: Select workspaces which are published to an NPM registry.
+- `@unpublished`: Select workspaces which are not published to an NPM registry.
+- `@dependency`: Select workspaces which are depended on by currently selected workspaces.
+- `@dependent`: Select workspaces which depend on currently selected workspaces.
 
 Glob patterns are supported via the
 [minimatch](https://www.npmjs.com/package/minimatch) package.
@@ -290,11 +272,11 @@ Glob patterns are supported via the
 
 | Name | Type |
 | :------ | :------ |
-| `condition` | `SelectCondition` |
+| `expression` | `string` |
 
 #### Returns
 
-`void`
+`Promise`\<`void`\>
 
 ## Properties
 
@@ -312,11 +294,3 @@ ___
 
 Maximum workspaces which may be processed in parallel using the
 asynchronous `forEach*` methods.
-
-___
-
-### root
-
-• `Readonly` **root**: [`Workspace`](Workspace.md)
-
-The root workspace.

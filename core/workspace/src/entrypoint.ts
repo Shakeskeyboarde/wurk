@@ -50,14 +50,30 @@ export const getEntrypoints = (workspace: Workspace): readonly Entrypoint[] => {
     addEntryPoints('license', 'LICENSE');
   }
 
-  addEntryPoints('types', config.at('types').value);
-  addEntryPoints('bin', config.at('bin').value);
-  addEntryPoints('main', config.at('main').value);
-  addEntryPoints('module', config.at('module').value);
-  addEntryPoints('exports', config.at('exports').value);
-  addEntryPoints('man', config.at('man').value);
-  addEntryPoints('files', config.at('files').value);
-  addEntryPoints('directories', config.at('directories').value);
+  addEntryPoints('types', config
+    .at('types')
+    .unwrap());
+  addEntryPoints('bin', config
+    .at('bin')
+    .unwrap());
+  addEntryPoints('main', config
+    .at('main')
+    .unwrap());
+  addEntryPoints('module', config
+    .at('module')
+    .unwrap());
+  addEntryPoints('exports', config
+    .at('exports')
+    .unwrap());
+  addEntryPoints('man', config
+    .at('man')
+    .unwrap());
+  addEntryPoints('files', config
+    .at('files')
+    .unwrap());
+  addEntryPoints('directories', config
+    .at('directories')
+    .unwrap());
 
   return entryPoints;
 };

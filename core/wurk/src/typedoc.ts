@@ -6,9 +6,9 @@ export type {
   createCommand,
   Workspace,
   WorkspaceCallback,
-  WorkspaceCollection,
-  WorkspaceCollectionOptions,
   WorkspaceLink,
   WorkspaceLinkOptions,
   WorkspaceOptions,
+  Workspaces,
+  WorkspacesOptions,
 } from './index.js';

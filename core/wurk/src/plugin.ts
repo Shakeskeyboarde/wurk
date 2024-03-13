@@ -4,15 +4,11 @@ import nodeUrl from 'node:url';
 
 import { JsonAccessor } from '@wurk/json';
 import { log } from '@wurk/log';
-import { type PackageManager } from '@wurk/pm';
 
 import { type Command, CommandFactory } from './command.js';
 import { resolve } from './resolve.js';
 
-export const loadCommandPlugins = async (
-  pm: PackageManager,
-  config: JsonAccessor,
-): Promise<Command[]> => {
+export const loadCommandPlugins = async (config: JsonAccessor, rootDir: string): Promise<Command[]> => {
   const ids = Array.from(new Set([
     ...[
       ...config
@@ -35,7 +31,7 @@ export const loadCommandPlugins = async (
   const commands: Command[] = [];
 
   for (const id of ids) {
-    const command = await loadCommandPlugin(pm, id);
+    const command = await loadCommandPlugin(id, rootDir);
 
     if (command) {
       commands.push(command);
@@ -45,12 +41,9 @@ export const loadCommandPlugins = async (
   return commands;
 };
 
-const loadCommandPlugin = async (
-  pm: PackageManager,
-  id: string,
-): Promise<Command | null> => {
+const loadCommandPlugin = async (id: string, rootDir: string): Promise<Command | null> => {
   try {
-    const entry = await resolve(id, pm.rootDir);
+    const entry = await resolve(id, rootDir);
     const exports: undefined | { default?: unknown } = await import(entry);
 
     if (!(exports?.default instanceof CommandFactory)) {
@@ -65,7 +58,7 @@ const loadCommandPlugin = async (
       return null;
     }
 
-    return exports.default.load(pm, config);
+    return exports.default.load(config);
   }
   catch (error) {
     log.debug`could not load command package "${id}"`;

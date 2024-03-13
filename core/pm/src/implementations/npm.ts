@@ -29,8 +29,10 @@ export class Npm extends PackageManager {
         return (
           result
             .at('realpath')
-            .as('string') ?? result.at('path')
-            .as('string')!
+            .as('string')
+            ?? result
+              .at('path')
+              .as('string')
         );
       }) ?? []
     );
@@ -55,7 +57,7 @@ export class Npm extends PackageManager {
 
     if (!ok) return null;
 
-    const { value } = stdoutJson;
+    const value = stdoutJson.unwrap();
     const array = Array.isArray(value) ? value : [value];
     const metaArray = array
       .filter((entry): entry is { version: string; gitHead?: unknown } => {

@@ -19,9 +19,9 @@ import {
 interface Expectation<TResult extends UnknownResult = UnknownResult> {
   readonly options?: InferResultOptions<TResult>;
   readonly parsed?: (keyof InferResultOptions<TResult>)[];
-  readonly command?: {
-    readonly [P in keyof TResult['command']]?: Expectation<
-      Exclude<TResult['command'][P], undefined>
+  readonly commandResult?: {
+    readonly [P in keyof TResult['commandResult']]?: Expectation<
+      Exclude<TResult['commandResult'][P], undefined>
     >;
   };
 }
@@ -40,9 +40,11 @@ const checkResult = <TResult extends UnknownResult>(
       .toEqual(result.parsed);
   }
 
-  if (expectation.command) {
-    for (const [name, subExpectation] of Object.entries(expectation.command ?? {})) {
-      checkResult(result.command[name]!, subExpectation);
+  if (expectation.commandResult) {
+    for (const [name, subExpectation] of Object.entries(expectation.commandResult ?? {})) {
+      expect(result.commandResult)
+        .toHaveProperty(name);
+      checkResult(result.commandResult[name]!, subExpectation);
     }
   }
 };
@@ -76,7 +78,7 @@ beforeEach(() => {
 
 test('smoke', async () => {
   await check(cli(), '')
-    .result({ options: {}, parsed: [], command: {} });
+    .result({ options: {}, parsed: [], commandResult: {} });
 });
 
 describe('named', () => {
@@ -533,7 +535,7 @@ describe('command', () => {
       .result({
         options: { a: true },
         parsed: ['a'],
-        command: { b: { options: { b: true }, parsed: ['b'], command: {} } },
+        commandResult: { b: { options: { b: true }, parsed: ['b'], commandResult: {} } },
       });
 
     expect(a)
@@ -558,7 +560,7 @@ describe('command', () => {
       .result({
         options: { a: true },
         parsed: ['a'],
-        command: {},
+        commandResult: {},
       });
 
     expect(a)
@@ -586,7 +588,7 @@ describe('command', () => {
       .result({
         options: { a: true },
         parsed: ['a'],
-        command: { b: { options: { b: true }, parsed: ['b'], command: {} } },
+        commandResult: { b: { options: { b: true }, parsed: ['b'], commandResult: {} } },
       });
 
     expect(a)
@@ -624,7 +626,7 @@ describe('command', () => {
       '',
     )
       .result({
-        command: { a: { options: {} } },
+        commandResult: { a: { options: {} } },
       });
 
     expect(root)
@@ -649,7 +651,7 @@ describe('command', () => {
       'b',
     )
       .result({
-        command: { b: { options: {} } },
+        commandResult: { b: { options: {} } },
       });
 
     expect(root)
@@ -672,7 +674,7 @@ describe('command', () => {
       .result({
         options: { foo: ['foo', 'a'] },
         parsed: ['foo'],
-        command: {},
+        commandResult: {},
       });
   });
 });
@@ -826,11 +828,11 @@ describe('double hyphen', () => {
         // The '-a' arg is used as a positional and not handled as a named parent option, because the first '--' passed
         // to the parent prevents the parent from parsing named options, even when the child is still parsing named
         // options.
-        command: {
+        commandResult: {
           a: {
             options: { rest: ['-a', '-b', '--'] },
             parsed: ['rest'],
-            command: {},
+            commandResult: {},
           },
         },
       });
@@ -936,7 +938,8 @@ test('help', () => {
 
     oof
 
-    rab"
+    rab
+    "
   `);
 
   expect(errorSpy.mock.calls.at(0)

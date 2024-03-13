@@ -4,7 +4,6 @@ import {
   type PartialResult,
   type UnknownResult,
 } from './result.js';
-import { type KeyOf } from './types.js';
 
 type Action<TResult extends UnknownResult = UnknownResult> = (
   result: TResult,
@@ -15,9 +14,7 @@ type Action<TResult extends UnknownResult = UnknownResult> = (
 
 type OptionAction<
   TResult extends UnknownResult = UnknownResult,
-  TKey extends KeyOf<InferResultOptions<TResult>> = KeyOf<
-    InferResultOptions<TResult>
-  >,
+  TKey extends keyof InferResultOptions<TResult> = keyof InferResultOptions<TResult>,
 > = (context: {
   readonly value: Exclude<InferResultOptions<TResult>[TKey], undefined>;
   readonly result: PartialResult<

@@ -45,7 +45,6 @@ import {
 } from './result.js';
 import { run } from './run.js';
 import {
-  type KeyOf,
   type PickByType,
   type PickOptional,
   type PickRequired,
@@ -57,9 +56,7 @@ type UniqueArray<
   T extends readonly any[],
   TT extends readonly any[] = T,
 > = T extends readonly [infer V, ...infer TRest]
-  ? V extends TRest[number]
-    ? never
-    : UniqueArray<TRest, TT>
+  ? V extends TRest[number] ? never : UniqueArray<TRest, TT>
   : TT;
 
 interface CliConfig<TName extends string = string> {
@@ -92,10 +89,8 @@ type PartialCli<TKeys extends keyof UnknownCli> = Pick<
   TKeys
 >;
 
-type InferCliResult<TCli extends Cli<any, any>> =
-  TCli extends Cli<infer TResult, any> ? TResult : never;
-type InferCliName<TCli extends Cli<any, any>> =
-  TCli extends Cli<any, infer TName> ? TName : never;
+type InferCliResult<TCli extends Cli<any, any>> = TCli extends Cli<infer TResult, any> ? TResult : never;
+type InferCliName<TCli extends Cli<any, any>> = TCli extends Cli<any, infer TName> ? TName : never;
 
 type CliName<TName extends string> = Exclude<
   TName,
@@ -166,8 +161,8 @@ class InternalCli<TResult extends UnknownResult, TName extends string> implement
     catch (error) {
       if (!this.isExitOnErrorEnabled) throw error;
 
-      if (error instanceof CliUsageError) {
-        this.printHelp(error);
+      if (error instanceof CliUsageError && error.context) {
+        error.context.printHelp(error);
       }
       else {
         console.error(String(error));
@@ -197,9 +192,19 @@ class Cli<
   /**
    * Change the CLI/command name.
    */
-  name<TNewName extends string>(name: TNewName): Cli<TResult, TNewName> {
-    assertValidName(name);
-    return new Cli({ ...this.#internal, name });
+  name<TNewName extends string>(name: TNewName): Cli<TResult, TNewName>;
+  /**
+   * Get the CLI/command name.
+   */
+  name(): TName;
+  name(name?: string): Cli<TResult, string> | string {
+    if (name === undefined) {
+      return this.#internal.name;
+    }
+    else {
+      assertValidName(name);
+      return new Cli({ ...this.#internal, name });
+    }
   }
 
   /**
@@ -282,24 +287,17 @@ class Cli<
     TKey extends string | null = InferNamedKey<TUsage>,
     TRequired extends boolean = false,
     TMapped extends boolean = false,
-    TValue = TMapped extends true
-      ? Record<string, InferNamedType<TUsage>>
-      : InferNamedType<TUsage>,
+    TValue = TMapped extends true ? Record<string, InferNamedType<TUsage>> : InferNamedType<TUsage>,
     TParsedValue = TValue,
   >(
     usage: TUsage,
-    config?:
-      | string
-      | NamedConfig<TKey, TValue, TParsedValue, TRequired, TMapped, TResult>,
+    config?: string | NamedConfig<TKey, TValue, TParsedValue, TRequired, TMapped, TResult>,
   ): Cli<
     TKey extends string
       ? Result<
         UnionProps<
           InferResultOptions<TResult>,
-          Record<
-            TKey,
-              TParsedValue | (TRequired extends true ? never : undefined)
-          >
+          Record<TKey, TParsedValue | (TRequired extends true ? never : undefined)>
         >,
         InferResultCommand<TResult>
       >
@@ -320,10 +318,7 @@ class Cli<
       ? Result<
         UnionProps<
           InferResultOptions<TResult>,
-          Record<
-            TKey,
-              TParsedValue | (TRequired extends true ? never : undefined)
-          >
+          Record<TKey, TParsedValue | (TRequired extends true ? never : undefined)>
         >,
         InferResultCommand<TResult>
       >
@@ -381,12 +376,7 @@ class Cli<
    */
   optionHelp(
     usage?: NamedUsageString | null,
-    config:
-      | string
-      | Omit<
-        AnyNamedConfig,
-          'key' | 'required' | 'mapped' | 'parse' | 'meta'
-      > = {},
+    config: string | Omit<AnyNamedConfig, 'key' | 'required' | 'mapped' | 'parse' | 'meta'> = {},
   ): Cli<TResult, TName> {
     const options = this.#internal.options.filter(({ meta }) => {
       return meta !== optionHelpTag;
@@ -436,12 +426,7 @@ class Cli<
    */
   optionVersion(
     usage?: NamedUsageString | null,
-    config:
-      | string
-      | Omit<
-        AnyNamedConfig,
-          'key' | 'required' | 'mapped' | 'parse' | 'meta'
-      > = {},
+    config: string | Omit<AnyNamedConfig, 'key' | 'required' | 'mapped' | 'parse' | 'meta'> = {},
   ): Cli<TResult, TName> {
     const options = this.#internal.options.filter(({ meta }) => meta !== optionVersionTag);
 
@@ -491,15 +476,9 @@ class Cli<
    * NOTE: All options must be boolean typed.
    */
   optionNegation<
-    TKey0 extends KeyOf<PickByType<InferResultOptions<TResult>, boolean>>,
-    TKey1 extends Exclude<
-      KeyOf<PickByType<InferResultOptions<TResult>, boolean>>,
-      TKey0
-    >,
-    TKeyN extends Exclude<
-      KeyOf<PickByType<InferResultOptions<TResult>, boolean>>,
-      TKey0 | TKey1
-    >[],
+    TKey0 extends keyof PickByType<InferResultOptions<TResult>, boolean>,
+    TKey1 extends Exclude<keyof PickByType<InferResultOptions<TResult>, boolean>, TKey0>,
+    TKeyN extends Exclude<keyof PickByType<InferResultOptions<TResult>, boolean>, TKey0 | TKey1>[],
   >(...keys: [key0: TKey0, key1: TKey1, ...keyN: UniqueArray<TKeyN>]): Cli<
     Result<
       UnionProps<
@@ -517,10 +496,10 @@ class Cli<
     TName
   > {
     return keys.reduce<Cli<any, TName>>((current, key) => {
-      return current.optionAction(key, ({ result }) => {
+      return current.optionAction(key as string, ({ result }) => {
         keys.forEach((otherKey) => {
           if (otherKey !== key) {
-            result.options[otherKey] = false as any;
+            result.options[otherKey as string] = false;
           }
         });
       });
@@ -535,15 +514,9 @@ class Cli<
    * positional.
    */
   optionConflict<
-    TKey0 extends KeyOf<PickOptional<InferResultOptions<TResult>>>,
-    TKey1 extends Exclude<
-      KeyOf<PickOptional<InferResultOptions<TResult>>>,
-      TKey0
-    >,
-    TKeyN extends Exclude<
-      KeyOf<PickOptional<InferResultOptions<TResult>>>,
-      TKey0 | TKey1
-    >[],
+    TKey0 extends keyof PickOptional<InferResultOptions<TResult>>,
+    TKey1 extends Exclude<keyof PickOptional<InferResultOptions<TResult>>, TKey0>,
+    TKeyN extends Exclude<keyof PickOptional<InferResultOptions<TResult>>, TKey0 | TKey1>[],
   >(...keys: [key0: TKey0, key1: TKey1, ...keyN: TKeyN]): Cli<TResult, TName> {
     const options = keys.map((key) => {
       return this.#internal.options.find((option) => option.key === key)!;
@@ -556,7 +529,7 @@ class Cli<
 
       return current.optionAction(key, ({ result }) => {
         options.forEach((otherOption) => {
-          if (key !== otherOption.key && result.parsed.has(otherOption.key as any)) {
+          if (key !== otherOption.key && otherOption.key != null && result.parsed.has(otherOption.key)) {
             throw new Error(`option "${option.usage}" conflicts with "${otherOption.usage}"`);
           }
         });
@@ -568,7 +541,7 @@ class Cli<
    * Define an action to run each time a specific option is parsed.
    * Multiple actions will be run in the order they are defined.
    */
-  optionAction<TKey extends KeyOf<InferResultOptions<TResult>>>(
+  optionAction<TKey extends keyof InferResultOptions<TResult>>(
     key: TKey,
     callback: OptionAction<TResult, TKey>,
   ): Cli<TResult, TName> {
@@ -587,21 +560,17 @@ class Cli<
   /**
    * Provide a default value for a non-required option.
    */
-  optionDefault<TKey extends KeyOf<PickOptional<InferResultOptions<TResult>>>>(
+  optionDefault<TKey extends keyof PickOptional<InferResultOptions<TResult>>>(
     key: TKey,
     factory:
-      | Extract<
-        InferResultOptions<TResult>[TKey],
-        null | boolean | number | bigint | string
-      >
+      | Extract<InferResultOptions<TResult>[TKey], null | boolean | number | bigint | string>
       | (() =>
       | Exclude<InferResultOptions<TResult>[TKey], undefined>
       | Promise<Exclude<InferResultOptions<TResult>[TKey], undefined>>),
   ): Cli<
       Result<
         UnionProps<
-          Omit<InferResultOptions<TResult>, TKey>,
-          Record<TKey, Exclude<InferResultOptions<TResult>[TKey], undefined>>
+          Omit<InferResultOptions<TResult>, TKey>, Record<TKey, Exclude<InferResultOptions<TResult>[TKey], undefined>>
         >,
         InferResultCommand<TResult>
       >,
@@ -629,10 +598,7 @@ class Cli<
   ): Cli<
       Result<
         InferResultOptions<TResult>,
-        UnionProps<
-          InferResultCommand<TResult>,
-          Record<TCommandName, TCommandResult | undefined>
-        >
+        UnionProps<InferResultCommand<TResult>, Record<TCommandName, TCommandResult | undefined>>
       >,
       TName
     > {
@@ -670,7 +636,7 @@ class Cli<
   action(callback: Action<TResult>): Cli<TResult, TName> {
     return new Cli({
       ...this.#internal,
-      actions: [...this.#internal.actions, callback as any],
+      actions: [...this.#internal.actions, callback as Action],
     });
   }
 

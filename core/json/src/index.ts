@@ -31,16 +31,12 @@ export class JsonAccessor {
   #value: JsonValue | undefined;
   #isModified = false;
 
-  get value(): unknown {
-    return this.#value;
-  }
-
   get isModified(): boolean {
     return this.#isModified;
   }
 
   constructor(value?: unknown, parent?: JsonAccessorParent) {
-    this.#value = value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+    this.#value = safeParse(JSON.stringify(value));
     this.parent = parent;
   }
 
@@ -77,32 +73,8 @@ export class JsonAccessor {
     return new JsonAccessor(value, { accessor: this, key });
   }
 
-  as<TJsonType extends JsonType, TValue = JsonValue<TJsonType>>(
-    types:
-      | TJsonType
-      | [TJsonType, ...TJsonType[]]
-      | ((value: unknown) => value is TValue),
-  ): TValue | undefined;
-  as<
-    TJsonType extends JsonType,
-    TValue = JsonValue<TJsonType>,
-    TAltValue = undefined,
-  >(
-    types:
-      | TJsonType
-      | [TJsonType, ...TJsonType[]]
-      | ((value: unknown) => value is TValue),
-    alt: TAltValue,
-  ): TValue | TAltValue;
-  as<
-    TJsonType extends JsonType,
-    TValue = JsonValue<TJsonType>,
-    TAltValue = undefined,
-  >(
-    types:
-      | TJsonType
-      | [TJsonType, ...TJsonType[]]
-      | ((value: unknown) => value is TValue),
+  as<TJsonType extends JsonType, TValue = JsonValue<TJsonType>, TAltValue = undefined>(
+    types: TJsonType | [TJsonType, ...TJsonType[]] | ((value: unknown) => value is TValue),
     alt: TAltValue = undefined as TAltValue,
   ): TValue | TAltValue {
     if (typeof types === 'function') {
@@ -151,19 +123,19 @@ export class JsonAccessor {
   }
 
   keys(): number[] | string[];
-  keys(mode: 'array'): number[];
-  keys(mode: 'object'): string[];
-  keys(mode?: 'array' | 'object'): number[] | string[];
-  keys(mode?: 'array' | 'object'): number[] | string[] {
+  keys(type: 'array'): number[];
+  keys(type: 'object'): string[];
+  keys(type?: 'array' | 'object'): number[] | string[];
+  keys(type?: 'array' | 'object'): number[] | string[] {
     if (Array.isArray(this.#value)) {
-      if (mode === 'array' || mode == null) {
+      if (type === 'array' || type == null) {
         return this.#value.map((_, i) => i);
       }
       else {
         return [];
       }
     }
-    else if (mode === 'object' || mode == null) {
+    else if (type === 'object' || type == null) {
       if (typeof this.#value === 'object' && this.#value != null) {
         return Object.keys(this.#value);
       }
@@ -189,19 +161,19 @@ export class JsonAccessor {
   }
 
   entries(): [number | string, unknown][];
-  entries(mode: 'array'): [number, unknown][];
-  entries(mode: 'object'): [string, unknown][];
-  entries(mode?: 'array' | 'object'): [number | string, unknown][];
-  entries(mode?: 'array' | 'object'): [number | string, unknown][] {
+  entries(type: 'array'): [number, unknown][];
+  entries(type: 'object'): [string, unknown][];
+  entries(type?: 'array' | 'object'): [number | string, unknown][];
+  entries(type?: 'array' | 'object'): [number | string, unknown][] {
     if (Array.isArray(this.#value)) {
-      if (mode === 'array' || mode == null) {
+      if (type === 'array' || type == null) {
         return this.#value.map((value, i) => [i, value]);
       }
       else {
         return [];
       }
     }
-    else if (mode === 'object' || mode == null) {
+    else if (type === 'object' || type == null) {
       if (typeof this.#value === 'object' && this.#value != null) {
         return Object.entries(this.#value);
       }
@@ -214,7 +186,7 @@ export class JsonAccessor {
     }
   }
 
-  map<TValue>(callback: (valueAccessor: JsonAccessor, index: number) => TValue): TValue[] | undefined {
+  map<TValue>(callback: (value: JsonAccessor, index: number) => TValue): TValue[] | undefined {
     return this.as('array')
       ?.map((value, index) => callback(new JsonAccessor(value), index));
   }
@@ -229,7 +201,7 @@ export class JsonAccessor {
     const value = typeof factoryOrValue === 'function'
       ? factoryOrValue(this)
       : factoryOrValue;
-    const newValue = value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+    const newValue = safeParse(JSON.stringify(value));
 
     this.#isModified = newValue !== this.#value;
     this.#value = newValue;
@@ -253,34 +225,42 @@ export class JsonAccessor {
     return copy;
   }
 
-  valueOf(): Object {
-    return new Object(this.value);
+  unwrap(): unknown {
+    return safeParse(JSON.stringify(this.#value));
   }
 
   /**
-   * Returns the `value` property of this object.
+   * Alias for the `unwrap` method.
    */
   toJSON(): unknown {
-    return this.value;
+    return this.unwrap();
+  }
+
+  valueOf(): Object {
+    return Object.prototype.valueOf.call(this.unwrap());
   }
 
   /**
    * Return a JSON string of the `value` property of this object.
    *
-   * Equivalent to `JSON.stringify(accessor, null, 2) ?? ''`.
+   * Equivalent to `JSON.stringify(this, null, <space>) ?? ''`.
    */
-  toString(): string {
-    return JSON.stringify(this, null, 2) ?? '';
+  toString(space?: string | number): string {
+    return JSON.stringify(this, null, space) ?? '';
   }
 
-  static parse(jsonData: unknown): JsonAccessor {
-    if (typeof jsonData !== 'string') return new JsonAccessor();
-
-    try {
-      return new JsonAccessor(JSON.parse(jsonData));
-    }
-    catch {
-      return new JsonAccessor();
-    }
+  static parse(jsonData: string | undefined | null): JsonAccessor {
+    return new JsonAccessor(safeParse(jsonData));
   }
 }
+
+const safeParse = (value: string | null | undefined): JsonValue | undefined => {
+  if (typeof value !== 'string') return undefined;
+
+  try {
+    return JSON.parse(value);
+  }
+  catch {
+    return undefined;
+  }
+};

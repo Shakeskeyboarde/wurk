@@ -1,5 +1,3 @@
-import { type KeyOf } from './types.js';
-
 interface Result<
   TOptions extends Record<string, unknown>,
   TCommand extends Record<string, UnknownResult | undefined>,
@@ -16,8 +14,8 @@ interface Result<
    * defined, because only zero or one commands can be matched per parent
    * command.
    */
-  readonly command: {
-    readonly [P in KeyOf<TCommand>]: TCommand[P] | undefined;
+  readonly commandResult: {
+    readonly [P in keyof TCommand]: TCommand[P] | undefined;
   };
 
   /**
@@ -50,15 +48,15 @@ interface Result<
 interface PartialResult<
   TOptions extends Record<string, unknown>,
   TCommand extends Record<string, UnknownResult | undefined>,
-  TKey extends KeyOf<TOptions> = never,
+  TKey extends keyof TOptions = never,
 > extends Pick<
     Result<TOptions, TCommand>,
     'parsed' | 'getHelpText' | 'printHelp'
   > {
   readonly options: {
-    [P in KeyOf<TOptions>]: TOptions[P] | (P extends TKey ? never : undefined);
+    [P in keyof TOptions]: TOptions[P] | (P extends TKey ? never : undefined);
   };
-  readonly command: {
+  readonly commandResult: {
     readonly [P in keyof TCommand]:
       | PartialResult<
         InferResultOptions<TCommand[P]>,

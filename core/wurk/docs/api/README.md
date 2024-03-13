@@ -12,15 +12,15 @@ Wurk API
 
 - [CommandContext](classes/CommandContext.md)
 - [Workspace](classes/Workspace.md)
-- [WorkspaceCollection](classes/WorkspaceCollection.md)
+- [Workspaces](classes/Workspaces.md)
 
 ### Interfaces
 
 - [CommandHooks](interfaces/CommandHooks.md)
-- [WorkspaceCollectionOptions](interfaces/WorkspaceCollectionOptions.md)
 - [WorkspaceLink](interfaces/WorkspaceLink.md)
 - [WorkspaceLinkOptions](interfaces/WorkspaceLinkOptions.md)
 - [WorkspaceOptions](interfaces/WorkspaceOptions.md)
+- [WorkspacesOptions](interfaces/WorkspacesOptions.md)
 
 ### Type Aliases
 

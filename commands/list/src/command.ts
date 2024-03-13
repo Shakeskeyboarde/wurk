@@ -15,7 +15,6 @@ export default createCommand('list', {
           version,
           config,
           isPrivate,
-          isRoot,
           getDependencyLinks,
           getDependentLinks,
         } = workspace;
@@ -41,7 +40,6 @@ export default createCommand('list', {
               spec: link.spec,
             })),
           isPrivate,
-          isRoot,
         };
       }));
 

@@ -23,7 +23,7 @@ Context passed to Wurk command action hook.
 ### Properties
 
 - [log](CommandContext.md#log)
-- [pm](CommandContext.md#pm)
+- [root](CommandContext.md#root)
 - [workspaces](CommandContext.md#workspaces)
 
 ## Methods
@@ -53,16 +53,16 @@ set by the command.
 
 ___
 
-### pm
+### root
 
-• `Readonly` **pm**: `PackageManager`
+• `Readonly` **root**: [`Workspace`](Workspace.md)
 
-Package manager utilities.
+The root workspace of the project.
 
 ___
 
 ### workspaces
 
-• `Readonly` **workspaces**: [`WorkspaceCollection`](WorkspaceCollection.md)
+• `Readonly` **workspaces**: [`Workspaces`](Workspaces.md)
 
 Collection of all workspaces in the project.

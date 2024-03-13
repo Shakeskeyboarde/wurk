@@ -4,6 +4,5 @@ export * from '@wurk/cli';
 export * from '@wurk/git';
 export * from '@wurk/json';
 export * from '@wurk/log';
-export * from '@wurk/pm';
 export * from '@wurk/spawn';
 export * from '@wurk/workspace';

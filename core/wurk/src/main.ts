@@ -7,10 +7,15 @@ import { Cli, CliUsageError } from '@wurk/cli';
 import { JsonAccessor } from '@wurk/json';
 import { getAnsiColorIterator, log, setLogLevel } from '@wurk/log';
 import { createPackageManager } from '@wurk/pm';
-import { AbortError, WorkspaceCollection } from '@wurk/workspace';
+import { AbortError, Workspace, Workspaces } from '@wurk/workspace';
 
 import { env } from './env.js';
 import { loadCommandPlugins } from './plugin.js';
+
+interface Filter {
+  readonly type: 'include' | 'exclude';
+  readonly expression: string;
+}
 
 const __dirname = nodePath.dirname(nodeUrl.fileURLToPath(import.meta.url));
 const configFilename = nodePath.join(__dirname, '../package.json');
@@ -24,51 +29,49 @@ const description = config
   .as('string');
 
 const pm = await createPackageManager();
+
+process.chdir(pm.rootDir);
+
 const rootConfigFilename = nodePath.join(pm.rootDir, 'package.json');
 const rootConfig = await nodeFs.readFile(rootConfigFilename, 'utf8')
   .then(JsonAccessor.parse);
-
-process.chdir(pm.rootDir);
-process.chdir = () => {
-  throw new Error('command plugin tried to change the working directory (unsupported)');
-};
-
-const commandPlugins = await loadCommandPlugins(pm, rootConfig);
+const commands = await loadCommandPlugins(rootConfig, pm.rootDir);
 
 let cli = Cli.create('wurk')
   .description(description)
-  .trailer('To get help for a specific command, run `wurk <command> --help`.')
   .version(version)
   .optionHelp()
   .optionVersion()
 
-// Workspace Options:
-  .option('-w, --workspace <expression>', {
-    description:
-        'select workspaces by name, keyword, directory, or private value',
-    key: 'expressions',
-    group: 'Workspace Options',
-    parse: (
-      value,
-      previous: [string, ...string[]] | undefined,
-    ): [string, ...string[]] => [...(previous ?? []), value],
+  // Workspace Options:
+  .option('-i, --include <expression>', {
+    description: 'include workspaces by name, directory, keyword, etc.',
+    key: 'filters',
+    group: 'Filter Options',
+    parse: (expression, previous: [Filter, ...Filter[]] | undefined): [Filter, ...Filter[]] => {
+      return [...(previous ?? []), { type: 'include', expression }];
+    },
   })
-  .option('--include-root-workspace', {
-    description: 'include the root workspace',
-    group: 'Workspace Options',
+  .option('-e, --exclude <expression>', {
+    description: 'exclude workspaces by name, directory, keyword, etc.',
+    key: null,
+    group: 'Filter Options',
+    parse: (expression, _previous: void, result): void => {
+      result.options.filters = [...(result.options.filters ?? []), { type: 'exclude', expression }];
+    },
   })
 
-// Parallelization Options:
-  .option('--parallel', {
+  // Parallelization Options:
+  .option('-p, --parallel', {
     description:
         'process all workspaces simultaneously without topological awaiting',
     group: 'Parallelization Options',
   })
-  .option('--stream', {
+  .option('-s, --stream', {
     description: 'process workspaces concurrently with topological awaiting',
     group: 'Parallelization Options',
   })
-  .option('--concurrency <count>', {
+  .option('-c, --concurrency <count>', {
     description: 'maximum number of simultaneous streaming workspaces',
     group: 'Parallelization Options',
     parse: (value) => {
@@ -82,7 +85,7 @@ let cli = Cli.create('wurk')
     result.options.stream = true;
   })
 
-// Logging Options:
+  // Logging Options:
   .option('--loglevel <level>', {
     description:
         'set the log level. (silent, error, warn, notice, info, verbose, silly)',
@@ -91,19 +94,29 @@ let cli = Cli.create('wurk')
     parse: setLogLevel,
   })
 
-// Command Fallback:
+  // Command Fallback:
   .setCommandOptional()
   .setUnknownNamedOptionAllowed()
   .option('[script]', 'run a root package script')
   .option('[script-args...]', 'arguments for the script')
 
-  .action(async ({ options, command }) => {
+  // Trailers:
+  .trailer('See the docs for more information about workspace filtering options: https://www.npmjs.com/package/wurk#filter-options')
+  .trailer('To get help for a specific command, run `wurk <command> --help`.')
+
+  .action(async ({ options, commandResult }) => {
     const {
-      expressions = JsonAccessor.parse(env.WURK_WORKSPACE_EXPRESSIONS)
+      filters = JsonAccessor.parse(env.WURK_WORKSPACE_FILTERS)
         .as('array', [] as unknown[])
-        .filter((value): value is string => typeof value === 'string'),
-      includeRootWorkspace = JsonAccessor.parse(env.WURK_INCLUDE_ROOT_WORKSPACE)
-        .as('boolean', false),
+        .filter((value): value is Filter => {
+          if (typeof value !== 'object') return false;
+          if (value == null) return false;
+          if (!('type' in value)) return false;
+          if (value.type !== 'include' && value.type !== 'exclude') return false;
+          if (!('expression' in value)) return false;
+          if (typeof value.expression !== 'string') return false;
+          return true;
+        }),
       parallel = JsonAccessor.parse(env.WURK_PARALLEL)
         .as('boolean', false),
       stream = JsonAccessor.parse(env.WURK_STREAM)
@@ -113,17 +126,11 @@ let cli = Cli.create('wurk')
       script,
       scriptArgs,
     } = options;
-    const running = env.WURK_RUNNING_COMMANDS?.split(/\s*,\s*/u) ?? [];
-    const commandName = Object.keys(command)
-      .at(0)!;
 
-    if (running.includes(commandName)) {
-      // Block commands from recursively calling themselves, even indirectly.
-      // eslint-disable-next-line unicorn/no-process-exit
-      process.exit(0);
-    }
+    const commandName = Object.keys(commandResult)
+      .at(0);
 
-    env.WURK_RUNNING_COMMANDS = [...running, commandName].join(',');
+    preventRecursion(commandName ?? script);
 
     const workspaceDirs = await pm.getWorkspaces();
     const workspaceEntries = await Promise.all(workspaceDirs.map(async (workspaceDir) => {
@@ -137,19 +144,23 @@ let cli = Cli.create('wurk')
 
       return [workspaceDir, workspaceConfig] as const;
     }));
-    const workspaces = new WorkspaceCollection({
-      root: rootConfig,
+    const root: Workspace = new Workspace({
+      config: rootConfig,
+      dir: pm.rootDir,
+      getPublished: async () => root.version ? await pm.getMetadata(root.name, `<=${root.version}`) : null,
+    });
+    const workspaces = new Workspaces({
       rootDir: pm.rootDir,
       workspaces: workspaceEntries,
-      includeRootWorkspace,
       concurrency,
       defaultIterationMethod: parallel
         ? 'forEachParallel'
         : stream
           ? 'forEachStream'
           : 'forEachSequential',
+      getPublished: async (name, workspaceVersion) => await pm.getMetadata(name, `<=${workspaceVersion}`),
     });
-    const allWorkspaces = new Set([...workspaces.all, workspaces.root]);
+    const allWorkspaces = new Set([...workspaces.all, root]);
     const colors = getAnsiColorIterator({
       loop: true,
       count: allWorkspaces.size,
@@ -160,32 +171,64 @@ let cli = Cli.create('wurk')
       workspace.log.prefixStyle = colors.next().value;
     });
 
-    workspaces.select(expressions.length ? expressions : '**');
-    commandPlugins.forEach((commandPlugin) => commandPlugin.init(workspaces));
+    if (filters.length === 0 || filters.every(({ type }) => type === 'exclude')) {
+      // If no filters are provided, or if all filters are exclusions, then
+      // start by including all workspaces.
+      await workspaces.include('**');
+    }
 
-    env.WURK_WORKSPACE_EXPRESSIONS = JSON.stringify(expressions);
-    env.WURK_INCLUDE_ROOT_WORKSPACE = JSON.stringify(includeRootWorkspace);
+    // Apply all filters.
+    for (const filter of filters) {
+      await workspaces[filter.type](filter.expression);
+    }
+
+    if (commandName) {
+      const command = commands.find((plugin) => {
+        return plugin.cli.name() === commandName;
+      })!;
+
+      // Pass the workspaces to the current command.
+      //
+      // XXX: Command plugins are loaded before the workspaces are generated,
+      // so this late initialization stage is necessary to avoid using global
+      // state.
+      command.init({ root, workspaces });
+    }
+
+    env.WURK_WORKSPACE_FILTERS = JSON.stringify(filters);
     env.WURK_PARALLEL = JSON.stringify(parallel);
     env.WURK_STREAM = JSON.stringify(stream);
     env.WURK_CONCURRENCY = JSON.stringify(concurrency);
 
     if (script) {
       if (
-        workspaces.root.config
+        root.config
           .at('scripts')
           .at(script)
           .as('string') == null
       ) {
-        throw new Error(`"${script}" is not a command or root package script`);
+        throw new CliUsageError(`"${script}" is not a command or root package script`);
       }
 
       await pm.spawnPackageScript(script, scriptArgs, { stdio: 'inherit' });
     }
   });
 
-for (const commandPlugin of commandPlugins) {
-  cli = cli.command(commandPlugin.cli);
+for (const command of commands) {
+  cli = cli.command(command.cli);
 }
+
+const preventRecursion = (commandOrScript: string | undefined): void => {
+  const running = env.WURK_RUNNING_COMMANDS?.split(/\s*,\s*/u) ?? [];
+
+  if (commandOrScript && running.includes(commandOrScript)) {
+    // Block commands from recursively calling themselves, even indirectly.
+    // eslint-disable-next-line unicorn/no-process-exit
+    process.exit(0);
+  }
+
+  env.WURK_RUNNING_COMMANDS = [...running, commandOrScript].join(',');
+};
 
 await cli
   .parse()
@@ -193,13 +236,14 @@ await cli
     process.exitCode ||= 1;
 
     if (error instanceof CliUsageError) {
-      cli.printHelp(error);
+      error.context?.printHelp(true);
     }
-    else if (!(error instanceof AbortError)) {
+
+    if (!(error instanceof AbortError)) {
       // Abort errors are thrown by collection `forEach*` methods when
       // iteration throws an error or is otherwise aborted. Any associated
       // error is handled by the collection, so we don't need to log it
       // here.
-      log.error({ message: error });
+      log.print({ message: error, to: 'stderr', color: 'red' });
     }
   });

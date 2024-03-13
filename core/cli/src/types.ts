@@ -53,8 +53,6 @@ type UnionProps<T0 extends object, T1 extends object> = any extends any
   }>
   : never;
 
-type KeyOf<T> = Extract<keyof T, string>;
-
 type LastValue<TValue extends any[]> = TValue extends readonly [
   ...any[],
   infer TLast,
@@ -66,7 +64,6 @@ type LastValue<TValue extends any[]> = TValue extends readonly [
 
 export type {
   CamelCase,
-  KeyOf,
   LastValue,
   PickByType,
   PickOptional,
