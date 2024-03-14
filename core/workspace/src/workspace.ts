@@ -187,6 +187,7 @@ export class Workspace implements WorkspaceOptions {
 
     const tempDir = await nodeFs.mkdtemp(prefix);
 
+    process.setMaxListeners(process.getMaxListeners() + 1);
     process.on('exit', () => {
       nodeFsLegacy.rmSync(tempDir, { force: true, recursive: true });
     });

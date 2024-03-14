@@ -29,7 +29,7 @@ interface Context {
 export const publishFromFilesystem = async (context: Context, workspace: Workspace): Promise<void> => {
   const { options, git, published, pm } = context;
   const { toArchive = false, tag, otp, removePackageFields, dryRun = false } = options;
-  const { log, dir, version, config } = workspace;
+  const { log, dir, version } = workspace;
 
   if (!(await validate(git, workspace, published))) {
     log.info('not publishing');
@@ -37,6 +37,7 @@ export const publishFromFilesystem = async (context: Context, workspace: Workspa
   }
 
   const head = await git?.getHead(dir);
+  const savedConfig = await nodeFs.readFile(nodePath.resolve(dir, 'package.json'));
   const patchedConfig = patchConfig(workspace, removePackageFields, head);
   const configFilename = nodePath.resolve(dir, 'package.json');
 
@@ -47,8 +48,7 @@ export const publishFromFilesystem = async (context: Context, workspace: Workspa
     tempArchiveFilename = await pack({ pm, workspace, quiet: true });
   }
   finally {
-    // Restore the original package.json file from the workspace.
-    await nodeFs.writeFile(configFilename, config.toString(2));
+    await nodeFs.writeFile(configFilename, savedConfig);
   }
 
   await validateArchive(workspace, tempArchiveFilename);
@@ -227,11 +227,14 @@ const validateArchive = async (workspace: Workspace, archiveFilename: string): P
       // The entrypoint is missing if every pack filename mismatches the
       // filename.
       return packedFilenames.every((packedFilename) => {
-        // True if the pack filename does not "match" the entry filename. The
-        // relative path starts with ".." if the pack filename is not equal to
-        // and not a subpath of the entry filename.
+        const packageFilename = nodePath.relative('package', packedFilename);
+        const virtualFilename = nodePath.resolve(dir, packageFilename);
+
+        // True if the entry filename does not "match" the virtual filename.
+        // The relative path will start with ".." if the entry filename is not
+        // equal to (or a parent path of) the virtual filename.
         return nodePath
-          .relative(entry.filename, nodePath.resolve(dir, packedFilename))
+          .relative(entry.filename, virtualFilename)
           .startsWith('..');
       });
     });
