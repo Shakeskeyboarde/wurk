@@ -11,11 +11,18 @@ export class Yarn extends PackageManager {
     super(config, 'yarn');
   }
 
-  getWorkspaces(): Promise<readonly string[]> {
+  async getWorkspaces(): Promise<readonly string[]> {
+    // const { ok, stdoutJson } = await spawn('yarn', [
+    //   '--json',
+    //   'workspaces',
+    //   'info',
+    // ], { cwd: this.rootDir, allowNonZeroExitCode: true });
+
+    // if (!ok) return [];
     throw new Error('not implemented');
   }
 
-  getPublished(id: string, version: string): Promise<PackageMetadata | null> {
+  async getPublished(id: string, version: string): Promise<PackageMetadata | null> {
     throw new Error('not implemented');
   }
 

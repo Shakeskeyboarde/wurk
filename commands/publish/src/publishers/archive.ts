@@ -1,7 +1,7 @@
 import nodeFs from 'node:fs/promises';
 import nodePath from 'node:path';
 
-import { type PackageManagerInfo, type Workspace } from 'wurk';
+import { type Workspace } from 'wurk';
 
 import { getPackBasename } from '../pack.js';
 import { publish } from '../publish.js';
@@ -12,7 +12,7 @@ interface Context {
     readonly otp?: string;
     readonly dryRun?: boolean;
   };
-  readonly pm: PackageManagerInfo;
+  readonly pm: string;
 }
 
 export const publishFromArchive = async ({ options, pm }: Context, workspace: Workspace): Promise<void> => {
@@ -24,7 +24,7 @@ export const publishFromArchive = async ({ options, pm }: Context, workspace: Wo
     return;
   }
 
-  const archiveFilename = nodePath.resolve(dir, getPackBasename(name, version));
+  const archiveFilename = nodePath.resolve(dir, getPackBasename(pm, name, version));
   const exists = await nodeFs.access(archiveFilename)
     .then(() => true, () => false);
 

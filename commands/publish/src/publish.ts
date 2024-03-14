@@ -1,13 +1,13 @@
 import nodeFs from 'node:fs/promises';
 import nodePath from 'node:path';
 
-import { type PackageManagerInfo, type Workspace } from 'wurk';
+import { type Workspace } from 'wurk';
 
 import { readTar } from './tar.js';
 
 export const publish = async (
   options: {
-    readonly pm: PackageManagerInfo;
+    readonly pm: string;
     readonly workspace: Workspace;
     readonly archiveFilename: string;
     readonly tag: string | undefined;
@@ -39,14 +39,13 @@ export const publish = async (
     dryRun && '--dry-run',
   ];
 
-  switch (pm.id) {
+  switch (pm) {
     case 'npm':
     case 'pnpm':
-    case 'yarn-classic':
-      return void await spawn(pm.command, commonArgs, { cwd: tmpDir, stdio: 'echo' });
+      return void await spawn(pm, commonArgs, { cwd: tmpDir, stdio: 'echo' });
     case 'yarn':
-      return void await spawn(pm.command, ['npm', commonArgs], { cwd: tmpDir, stdio: 'echo' });
+      return void await spawn(pm, ['npm', commonArgs], { cwd: tmpDir, stdio: 'echo' });
     default:
-      throw new Error(`unsupported package manager "${pm.id}"`);
+      throw new Error(`unsupported package manager "${pm}"`);
   }
 };

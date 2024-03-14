@@ -6,7 +6,6 @@ import { JsonAccessor } from '@wurk/json';
 import { Npm } from './implementations/npm.js';
 import { Pnpm } from './implementations/pnpm.js';
 import { Yarn } from './implementations/yarn.js';
-import { YarnClassic } from './implementations/yarn-classic.js';
 import { type PackageManager } from './pm.js';
 
 export const createPackageManager = async (): Promise<PackageManager> => {
@@ -31,26 +30,24 @@ const tryCreatePackageManager = async (dir: string): Promise<PackageManager | nu
   // There's a "packageManager" field in the "package.json" file, so this is
   // a root.
   if (packageManager != null) {
-    const match = /^([^@]+)(?:@(.+)$)?/u.exec(packageManager);
+    const match = /^[^@]+/u.exec(packageManager);
 
     // The field value doesn't even loosely match the expected format.
     if (!match) {
       throw new Error(`invalid package manager "${packageManager}" in "${configFilename}"`);
     }
 
-    const [id = '', version = '*'] = match.slice(1);
+    const [name] = match;
 
-    switch (id) {
+    switch (name) {
       case 'npm':
         return new Npm({ rootDir: dir });
       case 'pnpm':
         return new Pnpm({ rootDir: dir });
       case 'yarn':
-        return version.startsWith('1.')
-          ? new YarnClassic({ rootDir: dir })
-          : new Yarn({ rootDir: dir });
+        return new Yarn({ rootDir: dir });
       default:
-        throw new Error(`unsupported package manager "${id}" in "${configFilename}`);
+        throw new Error(`unsupported package manager "${name}" in "${configFilename}`);
     }
   }
 
@@ -60,18 +57,12 @@ const tryCreatePackageManager = async (dir: string): Promise<PackageManager | nu
     .at('workspaces')
     .exists()) {
     const yarnLockFilename = nodePath.resolve(dir, 'yarn.lock');
-    const yarnLock = await nodeFs.readFile(yarnLockFilename, 'utf8')
-      .catch((error: any) => {
-        if (error?.code === 'ENOENT') return null;
-        throw error;
-      });
+    const yarnLockExists = await nodeFs.access(yarnLockFilename)
+      .then(() => true, () => false);
 
     // There's a yarn.lock file so this is a Yarn root.
-    if (yarnLock != null) {
-      // If the lock file contains a `__metadata:` key, then it's v2+.
-      return /^__metadata:$/mu.test(yarnLock)
-        ? new Yarn({ rootDir: dir })
-        : new YarnClassic({ rootDir: dir });
+    if (yarnLockExists != null) {
+      return new Yarn({ rootDir: dir });
     }
 
     // No yarn.lock, so assume NPM (no need to check for package-lock.json)

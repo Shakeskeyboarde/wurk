@@ -13,12 +13,7 @@ interface ContextOptions<TResult extends UnknownResult> {
   readonly result: TResult;
   readonly root: Workspace;
   readonly workspaces: Workspaces;
-  readonly pm: PackageManagerInfo;
-}
-
-export interface PackageManagerInfo {
-  readonly id: string;
-  readonly command: string;
+  readonly pm: string;
 }
 
 /**
@@ -45,11 +40,10 @@ implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>> {
   readonly workspaces: Workspaces;
 
   /**
-   * The package manager in use. This should be one of: `npm`, `pnpm`, `yarn`,
-   * or `yarn-classic`. Additional package managers may be supported in the
-   * future.
+   * The package manager in use. This should be one of: `npm`, `pnpm`, or
+   * `yarn`. Additional package managers may be supported in the future.
    */
-  readonly pm: PackageManagerInfo;
+  readonly pm: string;
 
   get name(): string {
     return this.#result.name;

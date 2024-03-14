@@ -56,11 +56,10 @@ ___
 
 ### pm
 
-• `Readonly` **pm**: `PackageManagerInfo`
+• `Readonly` **pm**: `string`
 
-The package manager in use. This should be one of: `npm`, `pnpm`, `yarn`,
-or `yarn-classic`. Additional package managers may be supported in the
-future.
+The package manager in use. This should be one of: `npm`, `pnpm`, or
+`yarn`. Additional package managers may be supported in the future.
 
 ___
 

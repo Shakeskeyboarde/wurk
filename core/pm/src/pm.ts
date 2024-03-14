@@ -9,22 +9,15 @@ export interface PackageManagerConfig {
   readonly rootDir: string;
 }
 
-export type PackageManagerId = 'npm' | 'pnpm' | 'yarn' | 'yarn-classic';
+export type PackageManagerCommand = 'npm' | 'pnpm' | 'yarn';
 
 export abstract class PackageManager {
   readonly #resolveCache = new Map<string, Promise<string>>();
 
   /**
    * The identifier of the package manager in use. Currently it can be `npm`,
-   * `pnpm`, `yarn` (v2+), or `yarn-classic` (v1). Other package managers may
-   * be possible in the future.
-   */
-  readonly id: PackageManagerId;
-
-  /**
-   * The command name that corresponds to the package manager. This is usually
-   * the same as the `id`. In the case of Yarn v1 (classic) and Yarn v2+, the
-   * command name is `yarn` for both, but the `id` is different.
+   * `pnpm`, or `yarn` (v2+). Other package managers may be possible in the
+   * future.
    */
   readonly command: string;
 
@@ -35,10 +28,8 @@ export abstract class PackageManager {
 
   constructor(
     config: PackageManagerConfig,
-    id: PackageManagerId,
-    command = id,
+    command: PackageManagerCommand,
   ) {
-    this.id = id;
     this.command = command;
     this.rootDir = config.rootDir;
 
