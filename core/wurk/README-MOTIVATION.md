@@ -56,7 +56,11 @@ It's more efficient than NPM with regards to disk space. But, I haven't run out 
 
 The package structure it creates prevents you from using dependencies that you haven't declared. This is a great feature. But, I already have that with ESLint. It's the feature that I would really consider using PNPM for. But, since it's already solved by a tool that I definitely already need for other reasons, I don't need to add PNPM to solve it.
 
-What it _doesn't_ solve is workspace orchestration. Yes, it has workspace support, but no more than NPM or Yarn v1 have. It doesn't help with things like building in topological order or with parallelism.
+The only problems I have with PNPM are the following:
+
+- It's not extensible.
+- It has no versioning support built in.
+- The exec command does not prefix output with the workspace name.
 
 ## And Others
 
