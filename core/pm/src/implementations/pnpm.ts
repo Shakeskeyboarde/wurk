@@ -6,7 +6,7 @@ import {
 
 export class Pnpm extends PackageManager {
   constructor(config: PackageManagerConfig) {
-    super('pnpm', config);
+    super(config, 'pnpm');
   }
 
   getWorkspaces(): Promise<readonly string[]> {

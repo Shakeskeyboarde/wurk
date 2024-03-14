@@ -1,9 +1,8 @@
 import { Cli, type CliName, type EmptyResult } from '@wurk/cli';
 import { type JsonAccessor } from '@wurk/json';
-import { type PackageManagerId } from '@wurk/pm';
 import { type Workspace, type Workspaces } from '@wurk/workspace';
 
-import { CommandContext } from './context.js';
+import { CommandContext, type PackageManagerInfo } from './context.js';
 
 /**
  * Configuration callback for a Wurk command plugin.
@@ -125,6 +124,6 @@ export class CommandFactory<
   TName extends string = string,
 > {
   constructor(
-    readonly load: (config: JsonAccessor, pm: PackageManagerId) => Command<TResult, TName>,
+    readonly load: (config: JsonAccessor, pm: PackageManagerInfo) => Command<TResult, TName>,
   ) {}
 }

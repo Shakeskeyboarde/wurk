@@ -12,18 +12,6 @@ export default createCommand('run', {
   action: async ({ workspaces, options, pm }) => {
     const { script, args } = options;
 
-    switch (pm) {
-      case 'npm':
-      case 'pnpm':
-      case 'yarn':
-        break;
-      case 'yarn-classic':
-        pm = 'yarn';
-        break;
-      default:
-        throw new Error(`unsupported package manager "${pm}"`);
-    }
-
     await workspaces.forEach(async (workspace) => {
       const { log, config, spawn } = workspace;
       const exists = config.at('scripts')
@@ -35,7 +23,7 @@ export default createCommand('run', {
         return;
       }
 
-      await spawn(pm, ['run', '--', script, args], { stdio: 'echo' });
+      await spawn(pm.command, ['run', '--', script, args], { stdio: 'echo' });
     });
   },
 });

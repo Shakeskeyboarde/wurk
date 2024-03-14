@@ -1,7 +1,7 @@
 import nodeFs from 'node:fs/promises';
 import nodePath from 'node:path';
 
-import { type Workspace } from 'wurk';
+import { type PackageManagerInfo, type Workspace } from 'wurk';
 
 import { getPackBasename } from '../pack.js';
 import { publish } from '../publish.js';
@@ -12,7 +12,7 @@ interface Context {
     readonly otp?: string;
     readonly dryRun?: boolean;
   };
-  readonly pm: string;
+  readonly pm: PackageManagerInfo;
 }
 
 export const publishFromArchive = async ({ options, pm }: Context, workspace: Workspace): Promise<void> => {

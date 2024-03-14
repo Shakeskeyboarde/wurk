@@ -20,15 +20,19 @@ interface Filter {
 }
 
 export const main = async (): Promise<void> => {
-  const pm = await createPackageManager();
+  const [self, pm] = await Promise.all([
+    getSelf(),
+    createPackageManager(),
+  ]);
 
   process.chdir(pm.rootDir);
 
-  const self = await getSelf();
-  const rootConfigFilename = nodePath.join(pm.rootDir, 'package.json');
-  const rootConfig = await nodeFs.readFile(rootConfigFilename, 'utf8')
-    .then(JsonAccessor.parse);
-  const commands = await loadCommandPlugins(pm, rootConfig);
+  const [[rootConfig, commands], workspaceDirs] = await Promise.all([
+    nodeFs.readFile(nodePath.join(pm.rootDir, 'package.json'), 'utf8')
+      .then(JsonAccessor.parse)
+      .then(async (config) => [config, await loadCommandPlugins(pm, config)] as const),
+    pm.getWorkspaces(),
+  ]);
 
   let cli = Cli.create('wurk')
     .description(self.description)
@@ -128,8 +132,6 @@ export const main = async (): Promise<void> => {
         },
       });
 
-      const workspaceDirs = await pm.getWorkspaces();
-
       const workspaceEntries = await Promise.all(workspaceDirs.map(async (workspaceDir) => {
         const workspaceConfigFilename = nodePath.join(workspaceDir, 'package.json');
         const workspaceConfig = await nodeFs.readFile(workspaceConfigFilename, 'utf8')
@@ -188,29 +190,16 @@ export const main = async (): Promise<void> => {
       }
 
       if (script) {
-        if (
-          root.config
-            .at('scripts')
-            .at(script)
-            .as('string') == null
-        ) {
+        const exists = root.config
+          .at('scripts')
+          .at(script)
+          .is('string');
+
+        if (!exists) {
           throw new CliUsageError(`"${script}" is not a command or root package script`);
         }
 
-        let pmCommand: string;
-
-        switch (pm.id) {
-          case 'npm':
-          case 'pnpm':
-          case 'yarn':
-            pmCommand = pm.id;
-            break;
-          case 'yarn-classic':
-            pmCommand = 'yarn';
-            break;
-        }
-
-        await spawn(pmCommand, ['run', '--', script, scriptArgs], { cwd: pm.rootDir, stdio: 'inherit' });
+        await spawn(pm.command, ['run', '--', script, scriptArgs], { cwd: pm.rootDir, stdio: 'inherit' });
       }
     });
 

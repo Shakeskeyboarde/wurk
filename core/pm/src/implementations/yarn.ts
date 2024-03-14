@@ -8,7 +8,7 @@ import {
 
 export class Yarn extends PackageManager {
   constructor(config: PackageManagerConfig) {
-    super('yarn', config);
+    super(config, 'yarn');
   }
 
   getWorkspaces(): Promise<readonly string[]> {

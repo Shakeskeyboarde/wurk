@@ -5,11 +5,11 @@ import { PackageManager, type PackageManagerConfig, type PackageMetadata } from 
 
 export class Npm extends PackageManager {
   constructor(config: PackageManagerConfig) {
-    super('npm', config);
+    super(config, 'npm');
   }
 
   async getWorkspaces(): Promise<readonly string[]> {
-    const { stdoutJson: results } = await spawn('npm', [
+    const { stdoutJson } = await spawn('npm', [
       'query',
       '--quiet',
       '--json',
@@ -17,7 +17,7 @@ export class Npm extends PackageManager {
     ], { cwd: this.rootDir });
 
     return (
-      results.map((result): string => {
+      stdoutJson.map((result): string => {
         return (
           result
             .at('realpath')

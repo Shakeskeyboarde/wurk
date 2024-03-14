@@ -6,7 +6,7 @@ import {
 
 export class YarnClassic extends PackageManager {
   constructor(config: PackageManagerConfig) {
-    super('yarn-classic', config);
+    super(config, 'yarn-classic', 'yarn');
   }
 
   getWorkspaces(): Promise<readonly string[]> {

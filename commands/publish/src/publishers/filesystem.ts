@@ -5,6 +5,7 @@ import semver from 'semver';
 import {
   type Git,
   type JsonAccessor,
+  type PackageManagerInfo,
   type Workspace,
   type WorkspaceLink,
 } from 'wurk';
@@ -21,7 +22,7 @@ interface Context {
     readonly toArchive?: boolean;
     readonly removePackageFields?: readonly string[];
   };
-  readonly pm: string;
+  readonly pm: PackageManagerInfo;
   readonly git: Git | null;
   readonly published: Set<Workspace>;
 }

@@ -61,7 +61,7 @@ const loadCommandPlugin = async (pm: PackageManager, id: string): Promise<Comman
       return null;
     }
 
-    return exports.default.load(config, pm.id);
+    return exports.default.load(config, { id: pm.id, command: pm.command });
   }
   catch (error) {
     log.debug`could not load command package "${id}"`;

@@ -22,15 +22,24 @@ export abstract class PackageManager {
   readonly id: PackageManagerId;
 
   /**
+   * The command name that corresponds to the package manager. This is usually
+   * the same as the `id`. In the case of Yarn v1 (classic) and Yarn v2+, the
+   * command name is `yarn` for both, but the `id` is different.
+   */
+  readonly command: string;
+
+  /**
    * The root directory of the project where the package manager was detected.
    */
   readonly rootDir: string;
 
   constructor(
-    id: PackageManagerId,
     config: PackageManagerConfig,
+    id: PackageManagerId,
+    command = id,
   ) {
     this.id = id;
+    this.command = command;
     this.rootDir = config.rootDir;
 
     /**
