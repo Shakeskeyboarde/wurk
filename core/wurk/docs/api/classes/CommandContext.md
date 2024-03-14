@@ -23,6 +23,7 @@ Context passed to Wurk command action hook.
 ### Properties
 
 - [log](CommandContext.md#log)
+- [pm](CommandContext.md#pm)
 - [root](CommandContext.md#root)
 - [workspaces](CommandContext.md#workspaces)
 
@@ -50,6 +51,16 @@ Throws:
 
 Global logger for the command. This logger has no prefix unless one is
 set by the command.
+
+___
+
+### pm
+
+• `Readonly` **pm**: `string`
+
+The package manager in use. This should be one of: `npm`, `pnpm`, `yarn`,
+or `yarn-classic`. Additional package managers may be supported in the
+future.
 
 ___
 

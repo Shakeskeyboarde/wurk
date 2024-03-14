@@ -266,25 +266,32 @@ const spawnAsync = async (
   });
 };
 
+export const mergeSpawnOptions = (...options: (SpawnOptions | undefined)[]): SpawnOptions => {
+  let current: SpawnOptions = {};
+
+  for (const next of options) {
+    if (!next) continue;
+
+    current = {
+      ...current,
+      ...next,
+      cwd: nodePath.resolve(...[current.cwd, next.cwd].filter((value): value is string => Boolean(value))),
+      env: { ...current.env, ...next.env },
+      paths: [...(current.paths ?? []), ...(next.paths ?? [])],
+    };
+  }
+
+  return current;
+};
+
 /**
  * Create a spawn function with default options.
  */
 export const createSpawn = (getDefaultOptions: () => SpawnOptions): Spawn => {
   return async (cmd, args, options): Promise<SpawnResult> => {
     const defaultOptions = getDefaultOptions();
+    const mergedOptions = mergeSpawnOptions(defaultOptions, options);
 
-    return await spawn(cmd, args, {
-      ...defaultOptions,
-      ...options,
-      cwd: nodePath.resolve(
-        ...[defaultOptions.cwd, options?.cwd]
-          .filter((value): value is string => Boolean(value)),
-      ),
-      env: {
-        ...defaultOptions.env,
-        ...options?.env,
-      },
-      paths: [...(defaultOptions.paths ?? []), ...(options?.paths ?? [])],
-    });
+    return await spawn(cmd, args, mergedOptions);
   };
 };

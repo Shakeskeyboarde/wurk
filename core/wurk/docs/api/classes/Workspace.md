@@ -26,6 +26,7 @@ Workspace information and utilities.
 - [isSelected](Workspace.md#isselected)
 - [name](Workspace.md#name)
 - [spawn](Workspace.md#spawn)
+- [temp](Workspace.md#temp)
 - [version](Workspace.md#version)
 
 ## Accessors
@@ -151,6 +152,34 @@ Spawn a child process.
 ##### Returns
 
 `Promise`\<`SpawnResult`\>
+
+___
+
+### temp
+
+• `Readonly` **temp**: (`prefix?`: `string`, `options?`: \{ `local?`: `boolean`  }) => `Promise`\<`string`\>
+
+Create a temporary directory which will be cleaned up when the process
+exits.
+
+#### Type declaration
+
+▸ (`prefix?`, `options?`): `Promise`\<`string`\>
+
+Create a temporary directory which will be cleaned up when the process
+exits.
+
+##### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `prefix?` | `string` |
+| `options?` | `Object` |
+| `options.local?` | `boolean` |
+
+##### Returns
+
+`Promise`\<`string`\>
 
 ___
 

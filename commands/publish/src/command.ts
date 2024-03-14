@@ -23,7 +23,7 @@ export default createCommand('publish', {
       .option('--dry-run', 'perform a dry-run for validation');
   },
 
-  action: async ({ log, options, workspaces, createGit }) => {
+  action: async ({ log, options, workspaces, pm, createGit }) => {
     if (options.fromArchive) {
       if (options.otp != null) {
         log.warn`option --otp is ignored when --from-archive is set`;
@@ -33,18 +33,14 @@ export default createCommand('publish', {
         log.warn`option --remove-package-fields is ignored when --from-archive is set`;
       }
 
-      await workspaces.forEach(async (workspace) => {
-        await publishFromArchive({ options, workspace });
-      });
+      await workspaces.forEach(publishFromArchive.bind(null, { options, pm }));
     }
     else {
       const published = new Set<Workspace>();
       const git = await createGit()
         .catch(() => null);
 
-      await workspaces.forEach(async (workspace) => {
-        await publishFromFilesystem({ options, git, workspace, published });
-      });
+      await workspaces.forEach(publishFromFilesystem.bind(null, { options, pm, git, published }));
     }
   },
 });

@@ -1,5 +1,6 @@
 import { Cli, type CliName, type EmptyResult } from '@wurk/cli';
 import { type JsonAccessor } from '@wurk/json';
+import { type PackageManagerId } from '@wurk/pm';
 import { type Workspace, type Workspaces } from '@wurk/workspace';
 
 import { CommandContext } from './context.js';
@@ -80,7 +81,7 @@ export const createCommand = <
   name: CliName<TName>,
   hooks: CommandHooks<TResult, TName> | CommandActionCallback,
 ): unknown => {
-  return new CommandFactory((config) => {
+  return new CommandFactory((config, pm) => {
     let initConfig: InitConfig | undefined;
 
     const {
@@ -106,7 +107,7 @@ export const createCommand = <
         if (!initConfig) throw new Error('command not initialized');
 
         const { root, workspaces } = initConfig;
-        const context = new CommandContext({ result, root, workspaces });
+        const context = new CommandContext({ result, root, workspaces, pm });
 
         await actionHook(context);
       });
@@ -124,6 +125,6 @@ export class CommandFactory<
   TName extends string = string,
 > {
   constructor(
-    readonly load: (config: JsonAccessor) => Command<TResult, TName>,
+    readonly load: (config: JsonAccessor, pm: PackageManagerId) => Command<TResult, TName>,
   ) {}
 }

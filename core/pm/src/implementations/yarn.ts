@@ -1,4 +1,4 @@
-import { type SpawnOptions, type SpawnResult } from '@wurk/spawn';
+import { mergeSpawnOptions, spawn, type SpawnOptions, type SpawnResult } from '@wurk/spawn';
 
 import {
   PackageManager,
@@ -15,29 +15,11 @@ export class Yarn extends PackageManager {
     throw new Error('not implemented');
   }
 
-  getMetadata(
-    id: string,
-    versionRange?: string | undefined,
-  ): Promise<PackageMetadata | null> {
+  getPublished(id: string, version: string): Promise<PackageMetadata | null> {
     throw new Error('not implemented');
   }
 
-  spawnPackageScript(
-    script: string,
-    args?: readonly string[],
-    options?: SpawnOptions | undefined,
-  ): Promise<SpawnResult> {
-    throw new Error('not implemented');
-  }
-
-  spawnNode(
-    args: readonly string[],
-    options?: SpawnOptions | undefined,
-  ): Promise<SpawnResult> {
-    throw new Error('not implemented');
-  }
-
-  restore(): Promise<void> {
-    throw new Error('not implemented');
+  override async _spawnNode(args: readonly string[], options?: SpawnOptions): Promise<SpawnResult> {
+    return await spawn('yarn', ['node', args], mergeSpawnOptions({ cwd: this.rootDir }, options));
   }
 }

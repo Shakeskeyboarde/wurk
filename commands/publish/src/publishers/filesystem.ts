@@ -4,90 +4,68 @@ import nodePath from 'node:path';
 import semver from 'semver';
 import {
   type Git,
+  type JsonAccessor,
   type Workspace,
   type WorkspaceLink,
 } from 'wurk';
 
+import { pack } from '../pack.js';
+import { publish } from '../publish.js';
+import { readTarFilenames } from '../tar.js';
+
 interface Context {
   readonly options: {
-    readonly toArchive?: boolean;
     readonly tag?: string;
     readonly otp?: string;
-    readonly removePackageFields?: readonly string[];
     readonly dryRun?: boolean;
+    readonly toArchive?: boolean;
+    readonly removePackageFields?: readonly string[];
   };
+  readonly pm: string;
   readonly git: Git | null;
-  readonly workspace: Workspace;
   readonly published: Set<Workspace>;
 }
 
-export const publishFromFilesystem = async (context: Context): Promise<void> => {
-  const { options, git, workspace, published } = context;
-  const { log, dir, config, version, spawn, getDependencyLinks } = workspace;
+export const publishFromFilesystem = async (context: Context, workspace: Workspace): Promise<void> => {
+  const { options, git, published, pm } = context;
+  const { toArchive = false, tag, otp, removePackageFields, dryRun = false } = options;
+  const { log, dir, version, config } = workspace;
 
   if (!(await validate(git, workspace, published))) {
     log.info('not publishing');
     return;
   }
 
-  log.info`publishing version ${version} from filesystem to ${options.toArchive ? 'archive' : 'registry'}`;
-
-  // Update dependency version ranges.
-  getDependencyLinks()
-    .forEach(({ type, id, spec, dependency }) => {
-      if (type === 'devDependencies') return;
-      if (!dependency.version) return;
-      if (spec.type !== 'npm') return;
-      if (spec.range !== '*' && spec.range !== 'x') return;
-
-      const newRange = `^${dependency.version}`;
-      const newSpec = spec.name === id ? newRange : `npm:${spec.name}@${newRange}`;
-
-      config.at(type)
-        .at(id)
-        .set(newSpec);
-    });
-
-  // Remove fields from the package.json file.
-  options.removePackageFields?.forEach((field) => {
-    field
-      .split('.')
-      .reduce((current, part) => current.at(part), config)
-      .set(undefined);
-  });
-
   const head = await git?.getHead(dir);
-
-  if (head) {
-    // Set "gitHead" in the package.json file. NPM publish should do this
-    // automatically. But, it doesn't do it for packing. It's also not
-    // documented well even though it is definitely added intentionally in v7.
-    config
-      .at('gitHead')
-      .set(head);
-  }
-
-  /**
-   * All package changes are temporary and will be reverted after publishing.
-   */
+  const patchedConfig = patchConfig(workspace, removePackageFields, head);
   const configFilename = nodePath.resolve(dir, 'package.json');
-  const savedConfig = await nodeFs.readFile(configFilename, { encoding: 'utf8' });
+
+  let tempArchiveFilename: string;
 
   try {
-    await nodeFs.writeFile(configFilename, config.toString(2));
-    await spawn(
-      'npm',
-      [
-        options.toArchive ? 'pack' : 'publish',
-        Boolean(options.tag) && `--tag=${options.tag}`,
-        Boolean(options.otp) && `--otp=${options.otp}`,
-        options.dryRun && '--dry-run',
-      ],
-      { stdio: 'echo' },
-    );
+    await nodeFs.writeFile(configFilename, patchedConfig.toString(2));
+    tempArchiveFilename = await pack({ pm, workspace, quiet: true });
   }
   finally {
-    await nodeFs.writeFile(configFilename, savedConfig);
+    // Restore the original package.json file from the workspace.
+    await nodeFs.writeFile(configFilename, config.toString(2));
+  }
+
+  await validateArchive(workspace, tempArchiveFilename);
+
+  if (toArchive) {
+    // Just move the archive from the temp to the workspace directory.
+    if (!dryRun) {
+      await nodeFs.rename(tempArchiveFilename, nodePath.resolve(dir, nodePath.basename(tempArchiveFilename)));
+    }
+
+    log.info`packed version ${version}`;
+  }
+  else {
+    // Publish the archive from the temp directory.
+    await publish({ pm, workspace, archiveFilename: tempArchiveFilename, tag, otp, dryRun });
+
+    log.info`published version ${version}`;
   }
 
   published.add(workspace);
@@ -103,8 +81,6 @@ const validate = async (
     dir,
     version,
     isPrivate,
-    spawn,
-    getEntrypoints,
     getDependencyLinks,
     getPublished,
   } = workspace;
@@ -139,32 +115,6 @@ const validate = async (
     && !changelog.includes(`# ${version}\n`)
   ) {
     log.warn`changelog may be outdated`;
-  }
-
-  const { stdoutJson } = await spawn('npm', ['pack', '--dry-run', '--json']);
-  // If the NPM pack command returns an unexpected JSON structure, let if fail
-  // naturally.
-  const [packed] = stdoutJson.unwrap() as [{ files: { path: string }[] }];
-
-  const missingPackEntrypoints = getEntrypoints()
-    .filter((entry) => {
-    // The entrypoint is missing if every pack filename mismatches the
-    // filename.
-      return packed.files.every((packEntry) => {
-      // True if the pack filename does not "match" the entry filename. The
-      // relative path starts with ".." if the pack filename is not equal to
-      // and not a subpath of the entry filename.
-        return nodePath
-          .relative(entry.filename, nodePath.resolve(dir, packEntry.path))
-          .startsWith('..');
-      });
-    });
-
-  if (missingPackEntrypoints.length) {
-    missingPackEntrypoints.forEach(({ type, filename }) => {
-      log.error`missing ${type} "${nodePath.relative(dir, filename)}"`;
-    });
-    throw new Error('missing packed entry points');
   }
 
   let hasValidDependencies = true;
@@ -267,4 +217,74 @@ const validateDependency = async (
   }
 
   return true;
+};
+
+const validateArchive = async (workspace: Workspace, archiveFilename: string): Promise<void> => {
+  const { log, dir, getEntrypoints } = workspace;
+  const packedFilenames = await readTarFilenames(archiveFilename);
+  const missingPackEntrypoints = getEntrypoints()
+    .filter((entry) => {
+      // The entrypoint is missing if every pack filename mismatches the
+      // filename.
+      return packedFilenames.every((packedFilename) => {
+        // True if the pack filename does not "match" the entry filename. The
+        // relative path starts with ".." if the pack filename is not equal to
+        // and not a subpath of the entry filename.
+        return nodePath
+          .relative(entry.filename, nodePath.resolve(dir, packedFilename))
+          .startsWith('..');
+      });
+    });
+
+  if (missingPackEntrypoints.length) {
+    missingPackEntrypoints.forEach(({ type, filename }) => {
+      log.error`missing ${type} "${nodePath.relative(dir, filename)}"`;
+    });
+
+    throw new Error('archive is missing entry points');
+  }
+};
+
+const patchConfig = (
+  workspace: Workspace,
+  removePackageFields: readonly string[] | undefined,
+  head: string | undefined | null,
+): JsonAccessor => {
+  const { config, getDependencyLinks } = workspace;
+  const patchedConfig = config.copy();
+
+  // Update dependency version ranges.
+  getDependencyLinks()
+    .forEach(({ type, id, spec, dependency }) => {
+      if (type === 'devDependencies') return;
+      if (!dependency.version) return;
+      if (spec.type !== 'npm') return;
+      if (spec.range !== '*' && spec.range !== 'x') return;
+
+      const newRange = `^${dependency.version}`;
+      const newSpec = spec.name === id ? newRange : `npm:${spec.name}@${newRange}`;
+
+      patchedConfig.at(type)
+        .at(id)
+        .set(newSpec);
+    });
+
+  // Remove fields from the package.json file.
+  removePackageFields?.forEach((field) => {
+    field
+      .split('.')
+      .reduce((current, part) => current.at(part), patchedConfig)
+      .set(undefined);
+  });
+
+  if (head) {
+    // Set "gitHead" in the package.json file. NPM publish should do this
+    // automatically. But, it doesn't do it for packing. It's also not
+    // documented well even though it is definitely added intentionally in v7.
+    patchedConfig
+      .at('gitHead')
+      .set(head);
+  }
+
+  return patchedConfig;
 };

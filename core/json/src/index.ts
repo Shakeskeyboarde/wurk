@@ -29,6 +29,7 @@ type JsonValue<T extends JsonType = JsonType> = T extends 'string'
 
 export class JsonAccessor {
   readonly parent: JsonAccessorParent | undefined;
+  readonly immutable: boolean;
 
   #value: JsonValue | undefined;
   #isModified = false;
@@ -37,9 +38,10 @@ export class JsonAccessor {
     return this.#isModified;
   }
 
-  constructor(value?: unknown, parent?: JsonAccessorParent) {
+  constructor(value?: unknown, options?: { readonly parent?: JsonAccessorParent; readonly immutable?: boolean }) {
     this.#value = safeParse(JSON.stringify(value));
-    this.parent = parent;
+    this.parent = options?.parent;
+    this.immutable = options?.immutable ?? false;
   }
 
   /**
@@ -72,41 +74,42 @@ export class JsonAccessor {
       }
     })();
 
-    return new JsonAccessor(value, { accessor: this, key });
+    return new JsonAccessor(value, { parent: { accessor: this, key }, immutable: this.immutable });
   }
 
   as<TJsonType extends JsonType, TValue = JsonValue<TJsonType>, TAltValue = undefined>(
     types: TJsonType | [TJsonType, ...TJsonType[]] | ((value: unknown) => value is TValue),
     alt: (() => TAltValue) | TAltValue = undefined as TAltValue,
   ): TValue | NoInfer<TAltValue> {
+    const value = safeParse(JSON.stringify(this.#value));
     const getAlt = typeof alt === 'function'
       ? alt as (() => TAltValue)
       : (): TAltValue => alt;
 
     if (typeof types === 'function') {
-      return types(this.#value) ? (this.#value as TValue) : getAlt();
+      return types(value) ? (value as TValue) : getAlt();
     }
 
     for (const type of Array.isArray(types) ? types : [types]) {
       switch (type) {
         case 'null':
-          if (this.#value === null) {
-            return this.#value as TValue;
+          if (value === null) {
+            return value as TValue;
           }
           break;
         case 'array':
-          if (Array.isArray(this.#value)) {
-            return this.#value as TValue;
+          if (Array.isArray(value)) {
+            return value as TValue;
           }
           break;
         case 'object':
-          if (typeof this.#value === 'object' && this.#value != null) {
-            return this.#value as TValue;
+          if (typeof value === 'object' && value != null) {
+            return value as TValue;
           }
           break;
         default:
-          if (typeof this.#value === type) {
-            return this.#value as TValue;
+          if (typeof value === type) {
+            return value as TValue;
           }
           break;
       }
@@ -204,6 +207,10 @@ export class JsonAccessor {
   set(factory: (self: JsonAccessor) => unknown): void;
   set(value: unknown): void;
   set(factoryOrValue: unknown): void {
+    if (this.immutable) {
+      throw new Error('JSON accessor is immutable');
+    }
+
     const value = typeof factoryOrValue === 'function'
       ? factoryOrValue(this)
       : factoryOrValue;
@@ -225,10 +232,19 @@ export class JsonAccessor {
     }
   }
 
-  copy(initializer?: (copy: JsonAccessor) => void): JsonAccessor {
-    const copy = new JsonAccessor(this.#value);
-    initializer?.(copy);
-    return copy;
+  copy(options: {
+    readonly initializer?: (copy: JsonAccessor) => void;
+    readonly immutable?: boolean;
+  } = {}): JsonAccessor {
+    const { initializer, immutable } = options;
+    let accessor: JsonAccessor = this;
+
+    if (initializer) {
+      accessor = new JsonAccessor(accessor);
+      initializer(accessor);
+    }
+
+    return new JsonAccessor(accessor, { immutable });
   }
 
   unwrap(): unknown {
@@ -252,11 +268,11 @@ export class JsonAccessor {
    * Equivalent to `JSON.stringify(this, null, <space>) ?? ''`.
    */
   toString(space?: string | number): string {
-    return JSON.stringify(this, null, space) ?? '';
+    return JSON.stringify(this.#value, null, space) ?? '';
   }
 
-  static parse(jsonData: string | undefined | null): JsonAccessor {
-    return new JsonAccessor(safeParse(jsonData));
+  static parse(jsonData: string | undefined | null, options?: { readonly immutable?: boolean }): JsonAccessor {
+    return new JsonAccessor(safeParse(jsonData), options);
   }
 }
 

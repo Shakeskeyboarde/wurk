@@ -1,3 +1,8 @@
+import nodeFsLegacy from 'node:fs';
+import nodeFs from 'node:fs/promises';
+import nodeOs from 'node:os';
+import nodePath from 'node:path';
+
 import { type JsonAccessor } from '@wurk/json';
 import { Log } from '@wurk/log';
 import { createSpawn } from '@wurk/spawn';
@@ -121,7 +126,7 @@ export class Workspace implements WorkspaceOptions {
     this.log = options.log ?? new Log();
     this.dir = options.dir;
     this.relativeDir = options.relativeDir ?? '.';
-    this.config = options.config.copy();
+    this.config = options.config.copy({ immutable: true });
     this.name = this.config
       .at('name')
       .as('string', '');
@@ -159,4 +164,33 @@ export class Workspace implements WorkspaceOptions {
     log: this.log,
     cwd: this.dir,
   }));
+
+  /**
+   * Create a temporary directory which will be cleaned up when the process
+   * exits.
+   */
+  readonly temp = async (prefix = 'wurk-', options?: { readonly local?: boolean }): Promise<string> => {
+    if (options?.local) {
+      prefix = nodePath.normalize(prefix);
+
+      // If the prefix doesn't start with a dot and isn't an absolute path,
+      // then add a leading dot to indicate it's hidden (POSIX).
+      if (!prefix.startsWith('.') && !nodePath.isAbsolute(prefix)) {
+        prefix = `.${prefix}`;
+      }
+
+      prefix = nodePath.resolve(this.dir, prefix);
+    }
+    else {
+      prefix = nodePath.resolve(nodeOs.tmpdir(), prefix);
+    }
+
+    const tempDir = await nodeFs.mkdtemp(prefix);
+
+    process.on('exit', () => {
+      nodeFsLegacy.rmSync(tempDir, { force: true, recursive: true });
+    });
+
+    return tempDir;
+  };
 }

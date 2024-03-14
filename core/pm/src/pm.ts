@@ -1,4 +1,4 @@
-import { createSpawn, type SpawnOptions, type SpawnResult } from '@wurk/spawn';
+import { mergeSpawnOptions, spawn, type SpawnOptions, type SpawnResult } from '@wurk/spawn';
 
 export interface PackageMetadata {
   readonly version: string;
@@ -9,13 +9,17 @@ export interface PackageManagerConfig {
   readonly rootDir: string;
 }
 
+export type PackageManagerId = 'npm' | 'pnpm' | 'yarn' | 'yarn-classic';
+
 export abstract class PackageManager {
+  readonly #resolveCache = new Map<string, Promise<string>>();
+
   /**
    * The identifier of the package manager in use. Currently it can be `npm`,
    * `pnpm`, `yarn` (v2+), or `yarn-classic` (v1). Other package managers may
    * be possible in the future.
    */
-  readonly id: string;
+  readonly id: PackageManagerId;
 
   /**
    * The root directory of the project where the package manager was detected.
@@ -23,11 +27,26 @@ export abstract class PackageManager {
   readonly rootDir: string;
 
   constructor(
-    id: 'npm' | 'pnpm' | 'yarn' | 'yarn-classic',
+    id: PackageManagerId,
     config: PackageManagerConfig,
   ) {
     this.id = id;
     this.rootDir = config.rootDir;
+
+    /**
+     * Memoize the result of `resolve` calls to avoid running any more extra
+     * NodeJS processes than necessary.
+     */
+    this.resolve = ((resolve) => (spec: string): Promise<string> => {
+      let promise = this.#resolveCache.get(spec);
+
+      if (!promise) {
+        promise = resolve(spec);
+        this.#resolveCache.set(spec, promise);
+      }
+
+      return promise;
+    })(this.resolve.bind(this));
   }
 
   /**
@@ -36,44 +55,41 @@ export abstract class PackageManager {
   abstract getWorkspaces(): Promise<readonly string[]>;
 
   /**
-   * Limited equivalent of `npm view` command which only returns info about a
-   * single version of a package. It should be the highest version that
-   * matches the version range, or the latest version if no version range is
-   * provided.
+   * Get publication information for the workspace. This will check the
+   * NPM registry for the closest version which is less than or equal to (<=)
+   * the given version.
+   *
+   * Returns `null` if If the given version is less than all published
+   * versions (or there are no published versions). Returns a metadata object
+   * if the given version or a lesser version has been published. Compare
+   * the returned metadata version to the workspace version to determine if
+   * the exact given version has been published.
    */
-  abstract getMetadata(
-    id: string,
-    versionRange?: string,
-  ): Promise<PackageMetadata | null>;
+  abstract getPublished(id: string, version: string): Promise<PackageMetadata | null>;
 
   /**
-   * Limited equivalent of the `npm run` command which is a no-op if the
-   * script does not exist. All arguments should be passed to the script,
-   * not to the package manager (eg. `npm run -- <script> <args...>`).
+   * Resolve a package specifier from the root workspace directory.
    */
-  abstract spawnPackageScript(
-    script: string,
-    args?: readonly string[],
-    options?: SpawnOptions,
-  ): Promise<SpawnResult>;
+  async resolve(spec: string): Promise<string> {
+    const { stdoutText: filename } = await this._spawnNode([
+      '--input-type=module',
+      `--eval=try{console.log(import.meta.resolve(process.argv[1]));}catch{}`,
+      '--',
+      spec,
+    ]);
+
+    if (!filename) {
+      throw new Error(`could not resolve "${spec}"`);
+    }
+
+    return filename;
+  }
 
   /**
    * Spawn a new NodeJS process, making a best attempt to use the same NodeJS
    * binary that is running the current process.
    */
-  abstract spawnNode(
-    args: readonly string[],
-    options?: SpawnOptions,
-  ): Promise<SpawnResult>;
-
-  /**
-   * Limited equivalent of `npm install` (no arguments) which restores
-   * dependencies, sets up workspace symlinks (or equivalent), and updates the
-   * lock file.
-   */
-  abstract restore(): Promise<void>;
-
-  protected readonly _spawn = createSpawn(() => ({
-    cwd: this.rootDir,
-  }));
+  protected _spawnNode(args: readonly string[], options?: SpawnOptions): Promise<SpawnResult> {
+    return spawn('node', args, mergeSpawnOptions({ cwd: this.rootDir }, options));
+  };
 }

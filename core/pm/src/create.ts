@@ -9,34 +9,19 @@ import { Yarn } from './implementations/yarn.js';
 import { YarnClassic } from './implementations/yarn-classic.js';
 import { type PackageManager } from './pm.js';
 
-export const createPackageManager = async (dir = '.'): Promise<PackageManager> => {
-  const cacheKey = nodePath.resolve(dir);
+export const createPackageManager = async (): Promise<PackageManager> => {
+  let dir = process.cwd();
 
-  let promise = cache.get(cacheKey);
+  do {
+    const pm = await tryCreatePackageManager(dir);
+    if (pm) return pm;
+  } while (dir !== (dir = nodePath.dirname(dir)));
 
-  if (!promise) {
-    promise = getPromise(dir)
-      .then((pm) => {
-        if (pm) return pm;
-
-        const parentDir = nodePath.dirname(dir);
-        return parentDir === dir ? null : getPromise(parentDir);
-      });
-
-    cache.set(dir, promise);
-  }
-
-  const pm = await promise;
-
-  if (!pm) {
-    throw new Error(`could not determine package manager at "${dir}"`);
-  }
-
-  return pm;
+  throw new Error(`could not determine package manager at "${dir}"`);
 };
 
-const getPromise = async (rootDir: string): Promise<PackageManager | null> => {
-  const configFilename = nodePath.resolve(rootDir, 'package.json');
+const tryCreatePackageManager = async (dir: string): Promise<PackageManager | null> => {
+  const configFilename = nodePath.resolve(dir, 'package.json');
   const config = await nodeFs.readFile(configFilename, 'utf8')
     .then(JsonAccessor.parse);
   const packageManager = config
@@ -57,13 +42,13 @@ const getPromise = async (rootDir: string): Promise<PackageManager | null> => {
 
     switch (id) {
       case 'npm':
-        return new Npm({ rootDir });
+        return new Npm({ rootDir: dir });
       case 'pnpm':
-        return new Pnpm({ rootDir });
+        return new Pnpm({ rootDir: dir });
       case 'yarn':
         return version.startsWith('1.')
-          ? new YarnClassic({ rootDir })
-          : new Yarn({ rootDir });
+          ? new YarnClassic({ rootDir: dir })
+          : new Yarn({ rootDir: dir });
       default:
         throw new Error(`unsupported package manager "${id}" in "${configFilename}`);
     }
@@ -74,7 +59,7 @@ const getPromise = async (rootDir: string): Promise<PackageManager | null> => {
   if (config
     .at('workspaces')
     .exists()) {
-    const yarnLockFilename = nodePath.resolve(rootDir, 'yarn.lock');
+    const yarnLockFilename = nodePath.resolve(dir, 'yarn.lock');
     const yarnLock = await nodeFs.readFile(yarnLockFilename, 'utf8')
       .catch((error: any) => {
         if (error?.code === 'ENOENT') return null;
@@ -85,24 +70,22 @@ const getPromise = async (rootDir: string): Promise<PackageManager | null> => {
     if (yarnLock != null) {
       // If the lock file contains a `__metadata:` key, then it's v2+.
       return /^__metadata:$/mu.test(yarnLock)
-        ? new Yarn({ rootDir })
-        : new YarnClassic({ rootDir });
+        ? new Yarn({ rootDir: dir })
+        : new YarnClassic({ rootDir: dir });
     }
 
     // No yarn.lock, so assume NPM (no need to check for package-lock.json)
-    return new Npm({ rootDir });
+    return new Npm({ rootDir: dir });
   }
   else {
-    const pnpmLockFilename = nodePath.resolve(rootDir, 'pnpm-lock.yaml');
+    const pnpmLockFilename = nodePath.resolve(dir, 'pnpm-lock.yaml');
     const pnpmLockExists = await nodeFs.access(pnpmLockFilename)
       .then(() => true, () => false);
 
     if (pnpmLockExists) {
-      return new Pnpm({ rootDir });
+      return new Pnpm({ rootDir: dir });
     }
   }
 
   return null;
 };
-
-const cache = new Map<string, Promise<PackageManager | null>>();

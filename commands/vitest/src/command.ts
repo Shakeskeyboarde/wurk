@@ -1,5 +1,4 @@
 import nodeFs from 'node:fs/promises';
-import nodeOs from 'node:os';
 import nodePath from 'node:path';
 
 import { createCommand } from 'wurk';
@@ -11,7 +10,7 @@ export default createCommand('vitest', {
   },
 
   action: async (context) => {
-    const { log, options, workspaces, spawn } = context;
+    const { log, options, root, workspaces, spawn } = context;
     const workspaceDirs: string[] = [];
 
     for (const workspace of workspaces) {
@@ -28,7 +27,7 @@ export default createCommand('vitest', {
       return;
     }
 
-    const tmpDir = await nodeFs.mkdtemp(nodePath.resolve(nodeOs.tmpdir(), 'wurk-vitest-'));
+    const tmpDir = await root.temp();
     const tmpConfig = nodePath.join(tmpDir, 'vitest.workspace.json');
 
     await nodeFs.writeFile(tmpConfig, JSON.stringify(workspaceDirs, null, 2));

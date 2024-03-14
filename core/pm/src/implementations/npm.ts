@@ -1,15 +1,7 @@
-import {
-  type SpawnOptions,
-  type SpawnResult,
-  type SpawnSparseArgs,
-} from '@wurk/spawn';
+import { spawn } from '@wurk/spawn';
 import semver from 'semver';
 
-import {
-  PackageManager,
-  type PackageManagerConfig,
-  type PackageMetadata,
-} from '../pm.js';
+import { PackageManager, type PackageManagerConfig, type PackageMetadata } from '../pm.js';
 
 export class Npm extends PackageManager {
   constructor(config: PackageManagerConfig) {
@@ -17,12 +9,12 @@ export class Npm extends PackageManager {
   }
 
   async getWorkspaces(): Promise<readonly string[]> {
-    const { stdoutJson: results } = await this._spawn('npm', [
+    const { stdoutJson: results } = await spawn('npm', [
       'query',
       '--quiet',
       '--json',
       '.workspace',
-    ]);
+    ], { cwd: this.rootDir });
 
     return (
       results.map((result): string => {
@@ -38,21 +30,18 @@ export class Npm extends PackageManager {
     );
   }
 
-  async getMetadata(
-    id: string,
-    versionRange = 'latest',
-  ): Promise<PackageMetadata | null> {
-    const { stdoutJson, ok } = await this._spawn(
+  async getPublished(id: string, version: string): Promise<PackageMetadata | null> {
+    const { stdoutJson, ok } = await spawn(
       'npm',
       [
         'show',
         '--quiet',
         '--json',
-        `${id}@${versionRange}`,
+        `${id}@<=${version}`,
         'version',
         'gitHead',
       ],
-      { allowNonZeroExitCode: true },
+      { cwd: this.rootDir, allowNonZeroExitCode: true },
     );
 
     if (!ok) return null;
@@ -74,27 +63,9 @@ export class Npm extends PackageManager {
 
     if (!first) return null;
 
-    const { version, gitHead } = first;
-
-    return { version, gitHead: typeof gitHead === 'string' ? gitHead : null };
-  }
-
-  spawnPackageScript(
-    script: string,
-    args: SpawnSparseArgs = [],
-    options?: SpawnOptions | undefined,
-  ): Promise<SpawnResult> {
-    return this._spawn('npm', ['run', '--', script, ...args], options);
-  }
-
-  spawnNode(
-    args: readonly string[],
-    options?: SpawnOptions | undefined,
-  ): Promise<SpawnResult> {
-    return this._spawn('node', args, options);
-  }
-
-  async restore(): Promise<void> {
-    await this._spawn('npm', ['install']);
+    return {
+      version: first.version,
+      gitHead: typeof first.gitHead === 'string' ? first.gitHead : null,
+    };
   }
 }

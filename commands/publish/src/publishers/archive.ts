@@ -1,10 +1,10 @@
-import nodeAssert from 'node:assert';
 import nodeFs from 'node:fs/promises';
 import nodePath from 'node:path';
-import nodeZlib from 'node:zlib';
 
-import { extract } from 'tar-stream';
 import { type Workspace } from 'wurk';
+
+import { getPackBasename } from '../pack.js';
+import { publish } from '../publish.js';
 
 interface Context {
   readonly options: {
@@ -12,23 +12,20 @@ interface Context {
     readonly otp?: string;
     readonly dryRun?: boolean;
   };
-  readonly workspace: Workspace;
+  readonly pm: string;
 }
 
-export const publishFromArchive = async (context: Context): Promise<void> => {
-  const { options, workspace } = context;
-  const { log, dir, name, version, spawn } = workspace;
+export const publishFromArchive = async ({ options, pm }: Context, workspace: Workspace): Promise<void> => {
+  const { tag, otp, dryRun } = options;
+  const { log, dir, name, version } = workspace;
 
   if (!version) {
     log.info`workspace is unversioned`;
     return;
   }
 
-  const basename = name
-    .replace(/^@/u, '')
-    .replace(/\//gu, '-');
-  const filename = nodePath.resolve(dir, `${basename}-${version}.tgz`);
-  const exists = await nodeFs.access(filename)
+  const archiveFilename = nodePath.resolve(dir, getPackBasename(name, version));
+  const exists = await nodeFs.access(archiveFilename)
     .then(() => true, () => false);
 
   if (!exists) {
@@ -36,56 +33,7 @@ export const publishFromArchive = async (context: Context): Promise<void> => {
     return;
   }
 
-  log.info`publishing version ${version} from archive to registry`;
+  await publish({ pm, workspace, archiveFilename, tag, otp, dryRun });
 
-  /**
-   * This is a subdirectory of the workspace directory so that .npmrc files
-   * in parent directories are still in effect.
-   */
-  const tmpDir = await nodeFs.mkdtemp(nodePath.resolve(dir, '.wurk-publish-archive-'));
-  const tmpFilename = nodePath.resolve(tmpDir, nodePath.basename(filename));
-
-  await nodeFs.copyFile(filename, tmpFilename);
-  await extractPackageJson(tmpFilename, tmpDir);
-  await spawn(
-    'npm',
-    [
-      'publish',
-      Boolean(options.tag) && `--tag=${options.tag}`,
-      Boolean(options.otp) && `--otp=${options.otp}`,
-      options.dryRun && '--dry-run',
-      tmpFilename,
-    ],
-    { cwd: tmpDir, stdio: 'echo' },
-  );
-};
-
-const extractPackageJson = async (
-  tgz: string,
-  tmpDir: string,
-): Promise<void> => {
-  const handle = await nodeFs.open(tgz, 'r');
-  const readable = handle.createReadStream();
-
-  nodeAssert(readable, 'failed to read workspace archive');
-
-  try {
-    const extractor = readable
-      .pipe(nodeZlib.createGunzip())
-      .pipe(extract());
-
-    for await (const entry of extractor) {
-      if (entry.header.name === 'package/package.json') {
-        await nodeFs.writeFile(nodePath.resolve(tmpDir, 'package.json'), entry);
-      }
-      else {
-        // Skip the entry to allow the next entry to be read.
-        entry.resume();
-      }
-    }
-  }
-  finally {
-    readable.destroy();
-    await handle.close();
-  }
+  log.info`published version ${version} from archive`;
 };

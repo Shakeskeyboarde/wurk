@@ -13,6 +13,7 @@ interface ContextOptions<TResult extends UnknownResult> {
   readonly result: TResult;
   readonly root: Workspace;
   readonly workspaces: Workspaces;
+  readonly pm: string;
 }
 
 /**
@@ -38,6 +39,13 @@ implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>> {
    */
   readonly workspaces: Workspaces;
 
+  /**
+   * The package manager in use. This should be one of: `npm`, `pnpm`, `yarn`,
+   * or `yarn-classic`. Additional package managers may be supported in the
+   * future.
+   */
+  readonly pm: string;
+
   get name(): string {
     return this.#result.name;
   }
@@ -55,12 +63,13 @@ implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>> {
   }
 
   constructor(options: ContextOptions<TResult>) {
-    const { result, root, workspaces } = options;
+    const { result, root, workspaces, pm } = options;
 
     this.#result = result;
     this.log = new Log();
     this.root = root;
     this.workspaces = workspaces;
+    this.pm = pm;
   }
 
   /**
