@@ -2,6 +2,8 @@ import { type ReleaseType } from 'semver';
 import semver from 'semver';
 import { type Workspace } from 'wurk';
 
+import { type StrategyResult } from '../strategy.js';
+
 interface Options {
   readonly releaseType: ReleaseType;
   readonly preid: string | undefined;
@@ -10,14 +12,14 @@ interface Options {
 export const increment = async (
   options: Options,
   workspace: Workspace,
-): Promise<void> => {
-  const { log, version, config } = workspace;
+): Promise<StrategyResult | null> => {
+  const { log, version } = workspace;
   const { releaseType, preid } = options;
 
   // Auto-versioning does not support workspaces without versions.
   if (!version) {
     log.info`workspace is unversioned`;
-    return;
+    return null;
   }
 
   const newVersion = new semver.SemVer(version)
@@ -25,7 +27,6 @@ export const increment = async (
     .format();
 
   log.info`bumping ${releaseType} version (${version} -> ${newVersion})`;
-  config
-    .at('version')
-    .set(newVersion);
+
+  return { version: newVersion };
 };

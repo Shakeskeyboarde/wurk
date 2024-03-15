@@ -1,12 +1,14 @@
 import semver from 'semver';
 import { type Workspace } from 'wurk';
 
-export const promote = async (workspace: Workspace): Promise<void> => {
-  const { log, version, config } = workspace;
+import { type StrategyResult } from '../strategy.js';
+
+export const promote = async (workspace: Workspace): Promise<StrategyResult | null> => {
+  const { log, version } = workspace;
 
   if (!version || !semver.prerelease(version)?.length) {
     log.info`workspace is unversioned or non-prerelease versioned`;
-    return;
+    return null;
   }
 
   const newVersion = new semver.SemVer(version)
@@ -14,7 +16,6 @@ export const promote = async (workspace: Workspace): Promise<void> => {
     .format();
 
   log.info`promoting prerelease version (${version} -> ${newVersion})`;
-  config
-    .at('version')
-    .set(newVersion);
+
+  return { version: newVersion };
 };

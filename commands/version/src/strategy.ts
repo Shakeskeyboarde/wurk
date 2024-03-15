@@ -7,10 +7,14 @@ import { increment } from './strategies/increment.js';
 import { literal } from './strategies/literal.js';
 import { promote } from './strategies/promote.js';
 
-type Strategy = semver.ReleaseType | 'auto' | 'promote' | semver.SemVer;
-type StrategyCallback = (
-  workspace: Workspace,
-) => Promise<readonly Change[] | void>;
+export type Strategy = semver.ReleaseType | 'auto' | 'promote' | semver.SemVer;
+
+export type StrategyCallback = (workspace: Workspace) => Promise<StrategyResult | null>;
+
+export interface StrategyResult {
+  readonly version: string;
+  readonly changes?: readonly Change[];
+}
 
 export const parseStrategy = (value: string): Strategy => {
   switch (value) {

@@ -1,7 +1,6 @@
 import { createCommand, type Workspace } from 'wurk';
 
-import { type Change } from './change.js';
-import { getStrategyCallback, parseStrategy } from './strategy.js';
+import { getStrategyCallback, parseStrategy, type StrategyResult } from './strategy.js';
 import { writeChangelog, writeConfig } from './write.js';
 
 export default createCommand('version', {
@@ -31,14 +30,12 @@ export default createCommand('version', {
   },
 
   action: async (context) => {
-    const { log, workspaces, options, createGit, spawn }
-      = context;
+    const { log, workspaces, options, createGit, spawn } = context;
     const git = await createGit()
       .catch(() => null);
     const { strategy, preid, changelog = strategy === 'auto' } = options;
-    const isPreStrategy
-      = typeof strategy === 'string' && strategy.startsWith('pre');
-    const changes = new Map<Workspace, readonly Change[]>();
+    const isPreStrategy = typeof strategy === 'string' && strategy.startsWith('pre');
+    const results = new Map<Workspace, StrategyResult>();
     const callback = getStrategyCallback(strategy, git, preid);
 
     if (preid && !isPreStrategy) {
@@ -46,7 +43,7 @@ export default createCommand('version', {
     }
 
     await workspaces.forEach(async (workspace) => {
-      const { dir, config, version, isPrivate } = workspace;
+      const { dir, version, isPrivate } = workspace;
 
       if (await git?.getIsDirty(dir)) {
         throw new Error('versioning requires a clean git repository');
@@ -58,19 +55,14 @@ export default createCommand('version', {
         return;
       }
 
-      const workspaceChanges = await callback(workspace);
-      const workspaceNewVersion = config
-        .at('version')
-        .as('string');
+      const result = await callback(workspace);
 
-      if (!workspaceNewVersion || workspaceNewVersion === version) {
+      if (result && result.version !== version) {
+        results.set(workspace, result);
+      }
+      else {
         // Unselect workspaces where the version strategy is a no-op.
         workspace.isSelected = false;
-        return;
-      }
-
-      if (workspaceChanges) {
-        changes.set(workspace, workspaceChanges);
       }
     });
 
@@ -78,10 +70,12 @@ export default createCommand('version', {
     // fails (eg. dirty Git working tree), dependent workspace writes should
     // be skipped so that they don't end up referencing non-existent versions.
     await workspaces.forEach(async (workspace) => {
-      await writeConfig(workspace);
+      const { version, changes } = results.get(workspace)!;
+
+      await writeConfig(workspace, version);
 
       if (changelog) {
-        await writeChangelog(workspace, changes.get(workspace));
+        await writeChangelog(workspace, changes);
       }
     });
 

@@ -23,13 +23,22 @@ enum ChangelogSection {
   note,
 }
 
-export const writeConfig = async (workspace: Workspace): Promise<void> => {
+export const writeConfig = async (workspace: Workspace, version: string): Promise<void> => {
   const { log, dir, config } = workspace;
   const configFilename = nodePath.resolve(dir, 'package.json');
 
   log.debug`writing config`;
 
-  await nodeFs.writeFile(configFilename, config.toString(2));
+  await nodeFs.writeFile(
+    configFilename,
+    config
+      .copy({
+        initializer: (copy) => copy
+          .at('version')
+          .set(version),
+      })
+      .toString(2),
+  );
 };
 
 export const writeChangelog = async (

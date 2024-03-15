@@ -1,6 +1,8 @@
 import { type SemVer } from 'semver';
 import { type Workspace } from 'wurk';
 
+import { type StrategyResult } from '../strategy.js';
+
 interface Options {
   readonly version: SemVer;
 }
@@ -8,13 +10,12 @@ interface Options {
 export const literal = async (
   options: Options,
   workspace: Workspace,
-): Promise<void> => {
-  const { log, config } = workspace;
+): Promise<StrategyResult> => {
+  const { log } = workspace;
   const { version } = options;
   const newVersion = version.format();
 
   log.info`setting version to ${newVersion}`;
-  config
-    .at('version')
-    .set(newVersion);
+
+  return { version: newVersion };
 };

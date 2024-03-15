@@ -5,30 +5,31 @@ import semver, { type ReleaseType } from 'semver';
 import { type Git, type GitLog, type Workspace } from 'wurk';
 
 import { type Change, ChangeType } from '../change.js';
+import { type StrategyResult } from '../strategy.js';
 
 export const auto = async (
   git: Git,
   workspace: Workspace,
-): Promise<readonly Change[]> => {
-  const { log, dir, config, version, getPublished } = workspace;
+): Promise<StrategyResult | null> => {
+  const { log, dir, version, getPublished } = workspace;
 
   // Auto-versioning does not support workspaces without versions or with
   // prerelease versions.
   if (!version || semver.prerelease(version)?.length) {
     log.info`workspace is unversioned or prerelease versioned`;
-    return [];
+    return null;
   }
 
   const meta = await getPublished();
 
   if (!meta) {
     log.info`using existing version for initial release (${version})`;
-    return [];
+    return null;
   }
 
   if (!meta.gitHead) {
     log.warn`auto versioning requires a "gitHead" published to the NPM registry`;
-    return [];
+    return null;
   }
 
   const changelogFilename = nodePath.resolve(dir, 'CHANGELOG.md');
@@ -46,7 +47,7 @@ export const auto = async (
 
   if (!releaseType) {
     log.info`no changes detected`;
-    return [];
+    return null;
   }
 
   const newVersion = new semver.SemVer(version)
@@ -54,11 +55,8 @@ export const auto = async (
     .format();
 
   log.info`detected ${releaseType} changes (${version} -> ${newVersion})`;
-  config
-    .at('version')
-    .set(newVersion);
 
-  return changes;
+  return { version: newVersion, changes };
 };
 
 export const getChanges = async (
