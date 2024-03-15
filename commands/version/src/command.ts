@@ -30,7 +30,7 @@ export default createCommand('version', {
   },
 
   action: async (context) => {
-    const { log, workspaces, options, createGit, spawn } = context;
+    const { log, workspaces, options, pm, createGit, spawn } = context;
     const git = await createGit()
       .catch(() => null);
     const { strategy, preid, changelog = strategy === 'auto' } = options;
@@ -81,12 +81,20 @@ export default createCommand('version', {
 
     if (!workspaces.selectedSize) return;
 
-    await spawn(
-      'npm',
-      ['update', ...Array.from(workspaces)
-        .map(({ name }) => name)],
-      { stdio: 'ignore' },
-    );
+    // XXX: NPM records workspace versions in the lockfile. So, the lockfile
+    // update has to be triggered by running the update command with a list
+    // of the local workspace names to be "updated". Otherwise, the next
+    // time the project is restored (ie. `npm install` or `npm ci`), the
+    // lockfile will either be updated or the command will fail. Neither
+    // option is good in your CI pipeline.
+    if (pm === 'npm') {
+      await spawn(
+        'npm',
+        ['update', ...Array.from(workspaces)
+          .map(({ name }) => name)],
+        { stdio: 'ignore' },
+      );
+    }
 
     if (strategy === 'auto') {
       const specs = Array.from(workspaces)
