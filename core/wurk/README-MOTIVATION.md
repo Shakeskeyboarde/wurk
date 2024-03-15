@@ -4,6 +4,21 @@ I'm going to tell a story about how I ended up writing Wurk.
 
 First, a disclaimer. The views here are my own, and you do not need to share them. I'm not trying to convince you of anything. I'm just telling my story.
 
+## TL;DR
+
+- I like NPM and PNPM... as package (not monorepo) managers.
+- I do not like Yarn for anything (too many wtf/m).
+- NPM and Yarn don't have sufficient monorepo management features.
+- PNPM is 79% good enough, but still not quite there for monorepos (for me).
+- Lerna was good, but is now Nx-centric (Nrwl), which is not.
+- Tried other monorepo management tools: Rush, Bit, Turborepo, and Nx.
+  - Over-engineered (for me, and probably many others).
+  - Too much lock-in.
+  - Not extensible.
+- Lerna-Lite would once have been good enough, but now I want extensibility.
+
+Wurk is a lightweight, extensible, monorepo management tool.
+
 ## NPM
 
 When I first started using Node.js in about 2011 (v0.4.x), NPM had just been released, and it seemed like one of the nicest package managers I'd ever seen. The `node_modules` solution to incompatible transitive dependency versions was genius! It was an easy algorithm to understand and very transparent. I can go find the source to anything I'm depending on, right there in my project directory. I can even selectively use _parts_ of packages.
@@ -44,23 +59,15 @@ So, since Yarn v1 was essentially deprecated, I made the switch back to NPM. It 
 
 ### But what about PNPM?
 
-A side note and honorable mention for [PNPM](https://pnpm.io/).
+While I was looking for an alternative to Yarn v2, I found also [PNPM](https://pnpm.io/), which is an awesome project. I didn't immediately adopt it, because the linking strategy it used seemed risky. And, I think at the time I was correct in that assessment.
 
-While I was looking for an alternative to Yarn v2, I found PNPM. Actually, I'd heard about it before, but it seemed more fringe, and I didn't deeply investigate it. What I discovered is that PNPM is an awesome project. I could easily see using PNPM in the future, if any of the problems it solves become actual problems for me.
+Today (v8), the wrinkles in the dependency linking strategy have been resolved, and [Corepack](https://nodejs.org/api/corepack.html) makes adoption super simple.
 
-The key features (see their front page), are speed, efficiency, and strictness. These are great features, but I don't actually need to solve them at the cost of adding extra tooling.
+However... Its monorepo management is _still_ not quite there for me. Don't get me wrong, It's good. But, it's still missing extensibility. It actually doesn't have versioning (release) support built-in either. Instead it recommends using [Changesets](https://www.npmjs.com/package/@changesets/cli), which is another solid (but not quite right for me) choice. And finally, it's workspace command design and log output seem... unpolished at best, and confusing at worst.
 
-It is faster than NPM. But, of the things that take a lot of time in my development process, running package management commands really isn't high on the list. Testing is probably number one, then linting, then building, etc. Fully restoring all packages might take longer using NPM, but I don't do that often. Even when I do, it's fine if it takes a few minutes. I can go get a coffee or something. Even my GitHub actions can reuse the NPM cache.
+I don't think this is actually a lack in PNPM. Rather, I think it's actually too much to ask of a package manager. It's the one place where I think PNPM went wrong, in offering it at all. Like NPM and Yarn, it should have stuck to providing the low level API for other tools to build off of.
 
-It's more efficient than NPM with regards to disk space. But, I haven't run out of disk space in... a long time. SSDs are now large and fast. This probably isn't going to become more of an issue in the future.
-
-The package structure it creates prevents you from using dependencies that you haven't declared. This is a great feature. But, I already have that with ESLint. It's the feature that I would really consider using PNPM for. But, since it's already solved by a tool that I definitely already need for other reasons, I don't need to add PNPM to solve it.
-
-The only problems I have with PNPM are the following:
-
-- It's not extensible.
-- It has no versioning support built in.
-- The exec command does not prefix output with the workspace name.
+So, while I will be using PNPM for package management (this repo is), I will continue developing and using Wurk for monorepo management. 
 
 ## And Others
 
@@ -70,24 +77,26 @@ I won't claim to have used every monorepo management option out there. But I've 
 
 Build caching and incremental builds are common features of these tools. But, in my experience the time savings isn't worth the complexity and fragility.
 
-More efficient dependency management is also a feature in some of these tools, similar to PNPMs efficiency enhancements. But, I already mentioned why I don't need that. I also don't trust most of them to do it correctly, or in a way that doesn't create tool lock-in.
+More efficient dependency management is also a feature in some of these tools, similar to PNPMs efficiency enhancements. But, PNPM is already the better option there.
 
 ## Lerna-Lite Appears
 
 What's this? Someone else didn't really want to jump on the Lerna+Nx/Nrwl train? I'm not alone!? Honestly, it feels like every developer is an island sometimes. Can't we agree on _anything?_
 
-[Lerna-Lite](https://github.com/lerna-lite/lerna-lite) is for the people who were perfectly happy with Lerna before it was acquired. Not only is it exactly the Lerna we loved, but it's modular (sorta), in that you install only the commands you need.
+[Lerna-Lite](https://github.com/lerna-lite/lerna-lite) is for the people who were perfectly happy with Lerna before it was acquired. Not only is it exactly the Lerna we loved, but it's modular (kind of), in that you install only the commands you need.
 
 The problems with Lerna-Lite are honestly small and I could use it. However, I wouldn't use the `version` or `publish` commands.
 
-I wouldn't use the `version` command, because it uses the very common practice of tracking releases with Git tags. I don't like, and have never liked this strategy.
+I wouldn't use the `version` command, because it uses the very common practice of tracking releases with Git tags. I have never liked this strategy.
 
-I also don't think the `publish` command is safe enough. In all that time I was writing my own monorepo management scripts around vanilla NPM and Yarn v1, one of the things I kept writing was pre-publish validation. For instance, I don't want to publish if my `package.json` file references build artifacts that don't actually exist.
+I also don't think the `publish` command is safe enough. In all that time I was writing my own monorepo management scripts around vanilla NPM and Yarn v1, one of the things I kept writing was pre-publish validation. For instance, I don't want to publish if my `package.json` file references build artifacts that don't actually exist. The other monorepo management tools have tried solving this by also becoming CI services (not just tools). But, I think they've gone too far.
 
-Lerna-Lite is modular, so what if I could "fix" those commands, or replace them? But, even though it's modular, it's not actually extensible. The author broke the original code up into separate command packages, but there isn't a plugin architecture designed to allow for new/alternative commands that were not originally part of Lerna.
+Lerna-Lite being modular and allowing me to keep those commands from even being available to a project, is a really nice improvement over original Lerna. But, even though it's modular, it's not actually extensible. The author broke the original code up into separate command packages, but there isn't a plugin architecture designed to allow for new/alternative commands that were not originally part of Lerna. So, I if I want to add my own version and publish solutions, they have to be separate tools. Again, workable, but it would be better if I could have replaced the Lerna commands.
+
+Lerna-Lite was originally forked from Lerna (I believe). While that makes sense from a speed of development perspective, it does show some signs of left-overs from Lerna. And Lerna was grown in the days when not all package managers had the concept of workspaces. So, I think a fresh start is in order.
 
 ## Therefore, Wurk
 
-Basically, I want Lerna-lite, but extensible. That way, when I (or others) are not happy with the way a command works, an alternative is possible that does not require throwing the baby out with the bathwater.
+Basically, I want Lerna-lite, but built from the ground up to be extensible. That way, when I (or others) are not happy with the way a command works, a low overhead (maybe even custom) alternative is possible.
 
-Having a single management tool also is useful beyond providing a lot of functionality in one place (which is arguably not good at all). I could use Lerna-Lite's `run` command to simply run purpose-built tools in each workspace. However, a single _extensible_ CLI makes installed commands discoverable and declarative. Discoverable because I know that every command I need to run is a `wurk` command, and I can get help for it with `wurk [command] --help`. It's also declarative. And declarative because I can run `wurk version` in two different projects, and the implementations might be different, but correct for each project.
+Having a single _extensible_ management tool is also useful beyond providing a lot of functionality in one place. It makes commands discoverable and declarative. Discoverable because I know that every/most commands I need to run are a `wurk` commands, and I can get help for them with `wurk [command] --help`. Declarative because I can run something like `wurk publish` in two different projects, and the implementations might be different but correct for each project.
