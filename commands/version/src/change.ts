@@ -1,6 +1,6 @@
 export interface Change {
   readonly type: ChangeType;
-  readonly project?: string;
+  readonly scope: string | undefined;
   readonly message: string;
 }
 

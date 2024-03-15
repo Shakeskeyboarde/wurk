@@ -78,21 +78,24 @@ export const getChanges = async (
         return [];
       }
 
-      let [, typeString = '', project, summary = ''] = subjectMatch;
+      let [, typeString = '', scope, summary = ''] = subjectMatch;
 
       typeString = typeString.trim()
         .toLowerCase();
-      project = project?.trim();
+      scope = scope?.trim();
       summary = summary.trim();
 
-      const type = /none|internal|version(?:ed|ing)|releas(?:ed?|ing)/u.test(typeString)
+      // Release chore commits are not considered for version bumping and
+      // changelog generation, because they are part of the previous release,
+      // by definition.
+      const type = typeString === 'chore' && scope === 'release'
         ? ChangeType.none
         : CHANGE_TYPES[typeString] ?? ChangeType.fix;
       const message = `${summary} (${hash.slice(0, 7)})`;
       const bodyLines = body.split(/\r?\n/u);
 
       return [
-        { type, project, message },
+        { type, scope, message },
         ...bodyLines.flatMap((line) => {
           const lineMatch = line.match(/^\s*break(?:s|ing(?:[ -]?changes?)?)?\s*(?:!\s*)?:(.*)$/imu);
 
@@ -104,15 +107,16 @@ export const getChanges = async (
 
           return {
             type: ChangeType.breaking,
+            scope,
             message: `${breakingMessage} (${hash})`,
           };
         }),
       ];
     })
-    .map(({ type, project, message }) => {
+    .map(({ type, scope, message }) => {
       return {
         type,
-        project: project?.replace(MARKDOWN_ESCAPE, (char) => {
+        scope: scope?.replace(MARKDOWN_ESCAPE, (char) => {
           return `&#${char.charCodeAt(0)};`;
         }),
         message: message?.replace(MARKDOWN_ESCAPE, (char) => {

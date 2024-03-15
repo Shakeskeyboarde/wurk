@@ -88,18 +88,19 @@ export default createCommand('version', {
       { stdio: 'ignore' },
     );
 
-    const specs = Array.from(workspaces)
-      .flatMap(({ name, version, config }) => {
-        const newVersion = config
-          .at('version')
-          .as('string');
+    if (strategy === 'auto') {
+      const specs = Array.from(workspaces)
+        .flatMap((workspace) => {
+          const { name } = workspace;
+          const result = results.get(workspace);
 
-        return newVersion && newVersion !== version
-          ? `${name}@${newVersion}`
-          : [];
-      });
+          return result
+            ? `${name}@${result.version}`
+            : [];
+        });
 
-    log.notice`version commit message:`;
-    log.notice({ color: 'blue' })`  release: ${specs.join(', ')}`;
+      log.notice`version suggested commit message:`;
+      log.notice({ color: 'blue' })`  chore(release): ${specs.join(', ')}`;
+    }
   },
 });
