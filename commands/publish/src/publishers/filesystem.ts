@@ -32,7 +32,7 @@ export const publishFromFilesystem = async (context: Context, workspace: Workspa
   const { log, dir, version } = workspace;
 
   if (!(await validate(git, workspace, published))) {
-    log.info('not publishing');
+    log.info`not ${toArchive ? 'packing' : 'publishing'}`;
     return;
   }
 

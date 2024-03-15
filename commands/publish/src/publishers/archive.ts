@@ -21,6 +21,7 @@ export const publishFromArchive = async ({ options, pm }: Context, workspace: Wo
 
   if (!version) {
     log.info`workspace is unversioned`;
+    log.info`not publishing`;
     return;
   }
 
@@ -30,6 +31,7 @@ export const publishFromArchive = async ({ options, pm }: Context, workspace: Wo
 
   if (!exists) {
     log.info`workspace has no archive`;
+    log.info`not publishing`;
     return;
   }
 
