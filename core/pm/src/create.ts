@@ -16,12 +16,13 @@ export const createPackageManager = async (): Promise<PackageManager> => {
     if (pm) return pm;
   } while (dir !== (dir = nodePath.dirname(dir)));
 
-  throw new Error(`could not determine package manager at "${dir}"`);
+  return new Npm(process.cwd(), new JsonAccessor());
 };
 
 const tryCreatePackageManager = async (dir: string): Promise<PackageManager | null> => {
   const configFilename = nodePath.resolve(dir, 'package.json');
   const config = await nodeFs.readFile(configFilename, 'utf8')
+    .catch(() => undefined)
     .then(JsonAccessor.parse);
   const packageManager = config
     .at('packageManager')
@@ -41,11 +42,11 @@ const tryCreatePackageManager = async (dir: string): Promise<PackageManager | nu
 
     switch (name) {
       case 'npm':
-        return new Npm({ rootDir: dir });
+        return new Npm(dir, config);
       case 'pnpm':
-        return new Pnpm({ rootDir: dir });
+        return new Pnpm(dir, config);
       case 'yarn':
-        return new Yarn({ rootDir: dir });
+        return new Yarn(dir, config);
       default:
         throw new Error(`unsupported package manager "${name}" in "${configFilename}`);
     }
@@ -61,12 +62,12 @@ const tryCreatePackageManager = async (dir: string): Promise<PackageManager | nu
       .then(() => true, () => false);
 
     // There's a yarn.lock file so this is a Yarn root.
-    if (yarnLockExists != null) {
-      return new Yarn({ rootDir: dir });
+    if (yarnLockExists) {
+      return new Yarn(dir, config);
     }
 
     // No yarn.lock, so assume NPM (no need to check for package-lock.json)
-    return new Npm({ rootDir: dir });
+    return new Npm(dir, config);
   }
   else {
     const pnpmLockFilename = nodePath.resolve(dir, 'pnpm-lock.yaml');
@@ -74,7 +75,7 @@ const tryCreatePackageManager = async (dir: string): Promise<PackageManager | nu
       .then(() => true, () => false);
 
     if (pnpmLockExists) {
-      return new Pnpm({ rootDir: dir });
+      return new Pnpm(dir, config);
     }
   }
 

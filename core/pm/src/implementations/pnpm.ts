@@ -1,17 +1,17 @@
 import nodePath from 'node:path';
 
+import { type JsonAccessor } from '@wurk/json';
 import { spawn } from '@wurk/spawn';
 import semver from 'semver';
 
 import {
   PackageManager,
-  type PackageManagerConfig,
   type PackageMetadata,
 } from '../pm.js';
 
 export class Pnpm extends PackageManager {
-  constructor(config: PackageManagerConfig) {
-    super(config, 'pnpm');
+  constructor(rootDir: string, rootConfig: JsonAccessor) {
+    super(rootDir, rootConfig, 'pnpm');
   }
 
   async getWorkspaces(): Promise<readonly string[]> {
@@ -24,12 +24,10 @@ export class Pnpm extends PackageManager {
 
     if (!ok) return [];
 
-    return stdoutJson.map((result) => {
-      return result.at('path')
-        .as('string')!;
-    })
+    return stdoutJson.map((result) => result.at('path')
+      .as('string')!)
       ?.map((path) => nodePath.resolve(this.rootDir, path))
-      // Filters out the root package
+      // Filters out the root package.
       ?.filter((path) => Boolean(nodePath.relative(this.rootDir, path)))
       ?? [];
   }
@@ -38,7 +36,7 @@ export class Pnpm extends PackageManager {
     const { stdoutJson, ok } = await spawn(
       'pnpm',
       [
-        'show',
+        'info',
         '--quiet',
         '--json',
         `${id}@<=${version}`,
@@ -63,13 +61,13 @@ export class Pnpm extends PackageManager {
       })
       .sort((a, b) => semver.rcompare(a.version, b.version));
 
-    const [first] = metaArray;
+    const [info] = metaArray;
 
-    if (!first) return null;
+    if (!info) return null;
 
     return {
-      version: first.version,
-      gitHead: typeof first.gitHead === 'string' ? first.gitHead : null,
+      version: info.version,
+      gitHead: typeof info.gitHead === 'string' ? info.gitHead : null,
     };
   }
 }

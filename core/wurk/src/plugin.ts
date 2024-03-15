@@ -10,20 +10,19 @@ import { type Command, CommandFactory } from './command.js';
 
 export const loadCommandPlugins = async (
   pm: PackageManager,
-  config: JsonAccessor,
 ): Promise<Command[]> => {
   const ids = Array.from(new Set([
     ...[
-      ...config
+      ...pm.rootConfig
         .at('dependencies')
         .keys('object'),
-      ...config
+      ...pm.rootConfig
         .at('devDependencies')
         .keys('object'),
-      ...config
+      ...pm.rootConfig
         .at('peerDependencies')
         .keys('object'),
-      ...config
+      ...pm.rootConfig
         .at('optionalDependencies')
         .keys('object'),
     ]

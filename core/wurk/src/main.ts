@@ -11,7 +11,6 @@ import { AbortError, Workspace, Workspaces } from '@wurk/workspace';
 
 import { Config } from './config.js';
 import { loadCommandPlugins } from './plugin.js';
-import { exitIfRecursion } from './recursion.js';
 import { getSelf } from './self.js';
 
 interface Filter {
@@ -27,10 +26,8 @@ export const main = async (): Promise<void> => {
 
   process.chdir(pm.rootDir);
 
-  const [[rootConfig, commands], workspaceDirs] = await Promise.all([
-    nodeFs.readFile(nodePath.join(pm.rootDir, 'package.json'), 'utf8')
-      .then(JsonAccessor.parse)
-      .then(async (config) => [config, await loadCommandPlugins(pm, config)] as const),
+  const [commands, workspaceDirs] = await Promise.all([
+    loadCommandPlugins(pm),
     pm.getWorkspaces(),
   ]);
 
@@ -117,13 +114,8 @@ export const main = async (): Promise<void> => {
       config.stream = stream;
       config.concurrency = concurrency;
 
-      const commandName = Object.keys(commandResult)
-        .at(0);
-
-      exitIfRecursion(commandName ?? script);
-
       const root: Workspace = new Workspace({
-        config: rootConfig,
+        config: pm.rootConfig,
         dir: pm.rootDir,
         getPublished: async () => {
           return root.version
@@ -176,6 +168,9 @@ export const main = async (): Promise<void> => {
         await workspaces[filter.type](filter.expression);
       }
 
+      const commandName = Object.keys(commandResult)
+        .at(0);
+
       if (commandName) {
         const command = commands.find((plugin) => {
           return plugin.cli.name() === commandName;
@@ -188,8 +183,7 @@ export const main = async (): Promise<void> => {
         // state.
         command.init({ root, workspaces });
       }
-
-      if (script) {
+      else if (script) {
         const exists = root.config
           .at('scripts')
           .at(script)
@@ -199,7 +193,10 @@ export const main = async (): Promise<void> => {
           throw new CliUsageError(`"${script}" is not a command or root package script`);
         }
 
-        await spawn(pm.command, ['run', '--', script, scriptArgs], { cwd: pm.rootDir, stdio: 'inherit' });
+        await spawn(pm.command, ['run', pm.command !== 'yarn' && '--', script, scriptArgs], { cwd: pm.rootDir, stdio: 'inherit' });
+      }
+      else {
+        throw new CliUsageError('command or script required');
       }
     });
 

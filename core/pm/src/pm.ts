@@ -1,12 +1,9 @@
+import { type JsonAccessor } from '@wurk/json';
 import { mergeSpawnOptions, spawn, type SpawnOptions, type SpawnResult } from '@wurk/spawn';
 
 export interface PackageMetadata {
   readonly version: string;
   readonly gitHead: string | null;
-}
-
-export interface PackageManagerConfig {
-  readonly rootDir: string;
 }
 
 export type PackageManagerCommand = 'npm' | 'pnpm' | 'yarn';
@@ -15,23 +12,30 @@ export abstract class PackageManager {
   readonly #resolveCache = new Map<string, Promise<string>>();
 
   /**
+   * The root directory of the project where the package manager was detected.
+   */
+  readonly rootDir: string;
+
+  /**
+   * The root workspace configuration (package.json).
+   */
+  readonly rootConfig: JsonAccessor;
+
+  /**
    * The identifier of the package manager in use. Currently it can be `npm`,
    * `pnpm`, or `yarn` (v2+). Other package managers may be possible in the
    * future.
    */
   readonly command: string;
 
-  /**
-   * The root directory of the project where the package manager was detected.
-   */
-  readonly rootDir: string;
-
   constructor(
-    config: PackageManagerConfig,
+    rootDir: string,
+    rootConfig: JsonAccessor,
     command: PackageManagerCommand,
   ) {
+    this.rootDir = rootDir;
+    this.rootConfig = rootConfig;
     this.command = command;
-    this.rootDir = config.rootDir;
 
     /**
      * Memoize the result of `resolve` calls to avoid running any more extra

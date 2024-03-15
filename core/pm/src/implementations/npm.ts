@@ -1,40 +1,40 @@
+import nodePath from 'node:path';
+
+import { type JsonAccessor } from '@wurk/json';
 import { spawn } from '@wurk/spawn';
 import semver from 'semver';
 
-import { PackageManager, type PackageManagerConfig, type PackageMetadata } from '../pm.js';
+import { PackageManager, type PackageMetadata } from '../pm.js';
 
 export class Npm extends PackageManager {
-  constructor(config: PackageManagerConfig) {
-    super(config, 'npm');
+  constructor(rootDir: string, rootConfig: JsonAccessor) {
+    super(rootDir, rootConfig, 'npm');
   }
 
   async getWorkspaces(): Promise<readonly string[]> {
-    const { stdoutJson } = await spawn('npm', [
+    const { ok, stdoutJson } = await spawn('npm', [
       'query',
       '--quiet',
       '--json',
       '.workspace',
-    ], { cwd: this.rootDir });
+    ], { cwd: this.rootDir, allowNonZeroExitCode: true });
 
-    return (
-      stdoutJson.map((result): string => {
-        return (
-          result
-            .at('realpath')
-            .as('string')
-            ?? result
-              .at('path')
-              .as('string')!
-        );
-      }) ?? []
-    );
+    if (!ok) return [];
+
+    return stdoutJson.map((result) => result
+      .at('realpath')
+      .as('string', () => result
+        .at('path')
+        .as('string')!))
+      ?.map((path) => nodePath.resolve(this.rootDir, path))
+      ?? [];
   }
 
   async getPublished(id: string, version: string): Promise<PackageMetadata | null> {
     const { stdoutJson, ok } = await spawn(
       'npm',
       [
-        'show',
+        'info',
         '--quiet',
         '--json',
         `${id}@<=${version}`,
@@ -59,13 +59,13 @@ export class Npm extends PackageManager {
       })
       .sort((a, b) => semver.rcompare(a.version, b.version));
 
-    const [first] = metaArray;
+    const [info] = metaArray;
 
-    if (!first) return null;
+    if (!info) return null;
 
     return {
-      version: first.version,
-      gitHead: typeof first.gitHead === 'string' ? first.gitHead : null,
+      version: info.version,
+      gitHead: typeof info.gitHead === 'string' ? info.gitHead : null,
     };
   }
 }

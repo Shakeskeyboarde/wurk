@@ -6,11 +6,18 @@ interface MainExports {
   main: () => Promise<void>;
 }
 
-const pm = await createPackageManager();
-const { main }: MainExports = await pm.resolve('wurk/main')
-  .then(async (resolved): Promise<MainExports> => {
-    log.debug(`using local Wurk installation at "${resolved}"`);
-    return await import(resolved);
+const { main }: MainExports = await createPackageManager()
+  .catch((error: unknown) => {
+    log.error({ message: error });
+    process.exit(1);
+  })
+  .then((pm) => {
+    if (!pm.rootConfig.exists()) log.warn`no workspaces root found`;
+    return pm.resolve('wurk/main');
+  })
+  .then((resolved): Promise<MainExports> => {
+    log.debug`using local Wurk installation at "${resolved}"`;
+    return import(resolved);
   })
   .catch(() => {
     log.warn('using global Wurk installation');
