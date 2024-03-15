@@ -15,7 +15,7 @@
     "depcheck": "wurk exec depcheck --quiet --skip-missing",
     "build-scripts": "npm -ws --if-present run build && npm update --silent --progress=false wurk",
     "build": "npm run build-scripts && wurk run build --stream",
-    "test": "npm run build && npm run eslint -- --max-warnings=0 && npm run depcheck && wurk vitest run",
+    "test": "npm run build && wurk eslint -- --max-warnings=0 && wurk depcheck && wurk vitest run",
     "modernize": "npx npm-check-updates@latest -i --workspaces --root --format group"
   },
   "workspaces": [

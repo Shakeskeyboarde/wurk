@@ -15,12 +15,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Use Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'npm'
@@ -31,8 +31,10 @@ jobs:
       - name: Build
         run: |
           npm run build
-          npx wurk publish --no-build --to-archive
-          npx wurk test --no-build
+          npx wurk publish --to-archive
+          npx wurk eslint -- --max-warnings=0
+          npx wurk depcheck
+          npx wurk vitest run
 
       - name: Publish (Dry Run)
         run: npx wurk publish --from-archive --dry-run
