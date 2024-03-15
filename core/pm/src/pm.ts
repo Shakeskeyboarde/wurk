@@ -1,5 +1,6 @@
 import { type JsonAccessor } from '@wurk/json';
 import { mergeSpawnOptions, spawn, type SpawnOptions, type SpawnResult } from '@wurk/spawn';
+import semver from 'semver';
 
 export interface PackageMetadata {
   readonly version: string;
@@ -37,10 +38,17 @@ export abstract class PackageManager {
     this.rootConfig = rootConfig;
     this.command = command;
 
-    /**
-     * Memoize the result of `resolve` calls to avoid running any more extra
-     * NodeJS processes than necessary.
-     */
+    // Validate that the version is a valid semver version.
+    this.getPublished = ((getPublished) => async (id, version) => {
+      if (!semver.valid(version)) {
+        throw new Error(`invalid version "${version}"`);
+      }
+
+      return await getPublished(id, version);
+    })(this.getPublished.bind(this));
+
+    // Memoize the result of `resolve` calls to avoid running any more extra
+    // NodeJS processes than necessary.
     this.resolve = ((resolve) => (spec: string): Promise<string> => {
       let promise = this.#resolveCache.get(spec);
 

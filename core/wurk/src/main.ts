@@ -119,7 +119,7 @@ export const main = async (): Promise<void> => {
         dir: pm.rootDir,
         getPublished: async () => {
           return root.version
-            ? await pm.getPublished(root.name, `<=${root.version}`)
+            ? await pm.getPublished(root.name, root.version)
             : null;
         },
       });
@@ -146,7 +146,7 @@ export const main = async (): Promise<void> => {
             ? 'forEachStream'
             : 'forEachSequential',
         getPublished: async (name, workspaceVersion) => {
-          return await pm.getPublished(name, `<=${workspaceVersion}`);
+          return await pm.getPublished(name, workspaceVersion);
         },
       });
 

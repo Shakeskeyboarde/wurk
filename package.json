@@ -10,6 +10,7 @@
   },
   "type": "module",
   "scripts": {
+    "clean": "git clean -fdx -e '.*'",
     "eslint": "wurk exec eslint src",
     "depcheck": "wurk exec depcheck --quiet --skip-missing",
     "build-scripts": "npm -ws --if-present run build && npm update --silent --progress=false wurk",
