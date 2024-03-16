@@ -99,9 +99,9 @@ const validateWorkspace = async (
     return false;
   }
 
-  const meta = await getPublished();
+  const info = await getPublished();
 
-  if (meta) {
+  if (info?.version === version) {
     log.info`workspace is already published`;
     return false;
   }

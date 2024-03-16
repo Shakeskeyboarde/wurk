@@ -20,14 +20,14 @@ export const auto = async (
     return null;
   }
 
-  const meta = await getPublished();
+  const info = await getPublished();
 
-  if (!meta) {
+  if (!info) {
     log.info`using existing version for initial release (${version})`;
     return null;
   }
 
-  if (!meta.gitHead) {
+  if (!info.gitHead) {
     log.warn`auto versioning requires a "gitHead" published to the NPM registry`;
     return null;
   }
@@ -38,7 +38,7 @@ export const auto = async (
       if (error?.code === 'ENOENT') return '';
       throw error;
     });
-  const logs = await git.getLogs(dir, { start: meta.gitHead });
+  const logs = await git.getLogs(dir, { start: info.gitHead });
   const { isConventional, releaseType, changes } = await getChanges(logs, changelog);
 
   if (!isConventional) {
