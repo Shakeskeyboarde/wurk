@@ -1,6 +1,6 @@
 {
   "name": "wurk",
-  "description": "Open-minded build tooling, with opinionated plugins.",
+  "description": "Lightweight and extensible build system for monorepos.",
   "version": "0.1.5",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",

@@ -13,5 +13,5 @@ npm install --save-dev @wurk/command-exec
 Run the command.
 
 ```sh
-wurk exec <command> [options]
+wurk exec <command> -- [command-options...]
 ```

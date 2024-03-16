@@ -3,10 +3,13 @@ import nodePath from 'node:path';
 
 import semver from 'semver';
 import {
+  type DependencySpec,
   type Git,
   type JsonAccessor,
   type Workspace,
+  type WorkspaceDependency,
   type WorkspaceLink,
+  type WorkspacePublished,
 } from 'wurk';
 
 import { pack } from '../pack.js';
@@ -21,22 +24,22 @@ interface Context {
     readonly toArchive?: boolean;
     readonly removePackageFields?: readonly string[];
   };
-  readonly pm: string;
   readonly git: Git | null;
-  readonly published: Set<Workspace>;
+  readonly pm: string;
+  readonly published: Map<Workspace, WorkspacePublished>;
 }
 
 export const publishFromFilesystem = async (context: Context, workspace: Workspace): Promise<void> => {
-  const { options, git, published, pm } = context;
+  const { options, git, pm, published } = context;
   const { toArchive = false, tag, otp, removePackageFields, dryRun = false } = options;
   const { log, dir, version } = workspace;
 
-  if (!(await validate(git, workspace, published))) {
+  if (!(await validateWorkspace(git, published, workspace))) {
     log.info`not ${toArchive ? 'packing' : 'publishing'}`;
     return;
   }
 
-  const head = await git?.getHead(dir);
+  const head = await git?.getHead(dir) ?? null;
   const savedConfig = await nodeFs.readFile(nodePath.resolve(dir, 'package.json'));
   const patchedConfig = patchConfig(workspace, removePackageFields, head);
   const configFilename = nodePath.resolve(dir, 'package.json');
@@ -68,18 +71,19 @@ export const publishFromFilesystem = async (context: Context, workspace: Workspa
     log.info`published version ${version}`;
   }
 
-  published.add(workspace);
+  published.set(workspace, { version: version!, gitHead: head });
 };
 
-const validate = async (
+const validateWorkspace = async (
   git: Git | null,
+  published: Map<Workspace, WorkspacePublished>,
   workspace: Workspace,
-  published: Set<Workspace>,
 ): Promise<boolean> => {
   const {
     log,
     dir,
     version,
+    dependencies,
     isPrivate,
     getDependencyLinks,
     getPublished,
@@ -119,8 +123,14 @@ const validate = async (
 
   let hasValidDependencies = true;
 
+  for (const dependency of dependencies) {
+    if (!await validateDependency(dependency)) {
+      hasValidDependencies = false;
+    }
+  }
+
   for (const link of getDependencyLinks()) {
-    if (!await validateDependency(git, workspace, link, published)) {
+    if (!await validateDependencyLink(git, published, workspace, link)) {
       hasValidDependencies = false;
     }
   }
@@ -129,12 +139,34 @@ const validate = async (
 };
 
 const validateDependency = async (
+  dependency: WorkspaceDependency,
+): Promise<boolean> => {
+  const { type, id, spec } = dependency;
+
+  if (type === 'devDependencies') {
+    // Dev dependencies are not used after publishing, so they don't need
+    // validation.
+    return true;
+  }
+
+  if (spec.type === 'url' && spec.protocol === 'file') {
+    throw new Error(`dependency "${id}" refers to local path`);
+  }
+
+  // XXX: Not checking to see if the dependency is published. Your CI pipeline
+  // should restore dependencies, thereby ensuring that they are published.
+
+  return true;
+};
+
+const validateDependencyLink = async (
   git: Git | null,
+  published: Map<Workspace, WorkspacePublished>,
   workspace: Workspace,
-  { type, spec, dependency }: WorkspaceLink,
-  published: Set<Workspace>,
+  link: WorkspaceLink,
 ): Promise<boolean> => {
   const { log } = workspace;
+  const { type, spec, dependency } = link;
   const { dir, name, version, isPrivate, getPublished } = dependency;
 
   if (type === 'devDependencies') {
@@ -143,75 +175,101 @@ const validateDependency = async (
     return true;
   }
 
-  if (spec.type === 'tag') {
-    // Dependencies on tagged versions are not local dependencies.
-    return true;
-  }
-
   if (spec.type === 'url') {
-    if (spec.protocol !== 'file') {
-      // Dependencies on non-file URLs (eg. `git`, `https`) are not local
-      // dependencies.
-      return true;
-    }
-
-    throw new Error(`dependency "${name}" is local path`);
-  }
-
-  if (!version) {
-    throw new Error(`dependency "${name}" is unversioned`);
-  }
-
-  if (isPrivate) {
-    throw new Error(`dependency "${name}" is private`);
-  }
-
-  if (!semver.satisfies(version, spec.range)) {
-    // The dependency version range is not satisfied by the local workspace,
-    // so this is not a local dependency.
-    return true;
-  }
-
-  // If a non-wildcard dependency version range is used, then the min-version
-  // of the range should match the local workspace version.
-  if (
-    spec.range !== '*'
-    && spec.range !== 'x'
-    && semver
-      .minVersion(spec.range)
-      ?.format() !== version
-  ) {
-    throw new Error(`dependency "${name}" min-version does not match workspace version`);
-  }
-
-  if (!published.has(dependency)) {
-    const meta = await getPublished();
-
-    if (!meta) {
-      log.info(`dependency "${name}" version is not published`);
+    if (spec.protocol === 'file') {
+      // Dependency is a local path, which would break if published.
+      //
+      // XXX: Should already have been checked by `validateDependency`, so
+      // no error or warning, but publishing still needs to be blocked.
       return false;
     }
 
-    if (git) {
-      if (await git.getIsDirty(dir)) {
-        throw new Error(`dependency "${name}" has uncommitted changes`);
-      }
+    // Dependencies on external URLs (eg. `git`, `https`) are not local.
+    return true;
+  }
 
-      if (meta.gitHead) {
-        const head = await git.getHead(dir);
+  if (!version) {
+    throw new Error(`local dependency "${name}" is unversioned`);
+  }
 
-        if (head) {
-          if (head !== meta.gitHead) {
-            log.info(`dependency "${name}" Git head does not match published head`);
-            return false;
-          }
-        }
-        else {
-          log.warn`dependency "${name}" has no Git head`;
-        }
+  if (isPrivate) {
+    throw new Error(`local dependency "${name}" is private`);
+  }
+
+  if (spec.type === 'npm' && !semver.satisfies(version, spec.range)) {
+    // NPM Dependencies on version ranges which are not satisfied by the
+    // local workspace are not local.
+    //
+    // XXX: This also covers the case where the range is a tag. The tag will
+    // not be valid semver, and will therefore not satisfy the range, which
+    // will match this condition.
+    return true;
+  }
+
+  if (
+    spec.type === 'workspace'
+    && !semver.satisfies(version, spec.range)
+    && spec.range !== '^'
+    && spec.range !== '~'
+  ) {
+    // Workspace dependencies must have a range that is satisfied by the
+    // local workspace version. That's the whole point of a workspace protocol
+    // dependencies.
+    throw new Error(`local dependency "${name}" version does not satisfy workspace reference`);
+  }
+
+  /*
+    This is definitely a local dependency that is being satisfied by a local
+    workspace. The dependency spec is either a version range, an npm protocol
+    url a compatible version range, or a workspace protocol url.
+
+    The problem is, that if that local dependency does not represent what is
+    actually published, then this package could end up not working after its
+    published.
+
+    Even if the version range for the dependency in this workspace allows for
+    earlier versions which are published, this workspace is working locally
+    using the dependency's local workspace. If the dependency workspace isn't
+    published, then we don't really know if it contains any breaking changes,
+    because it's version may not have been updated to reflect those changes
+    yet.
+
+    So, this workspace can only be safely published if all of its local
+    dependencies are also published with their current versions. And not just
+    their current versions, but the local workspaces code (git head) must also
+    be the same as the published version.
+  */
+
+  /**
+   * Info about the version that is actually published, if any.
+   */
+  const info = published.get(dependency) ?? await getPublished();
+
+  if (info?.version !== version) {
+    log.info`local dependency "${name}" is unpublished`;
+    return false;
+  }
+
+  if (git) {
+    if (await git.getIsDirty(dir)) {
+      log.warn`local dependency "${name}" has uncommitted changes`;
+      return false;
+    }
+
+    if (!info.gitHead) {
+      log.warn`local dependency "${name}" is published without a Git head`;
+    }
+    else {
+      const head = await git.getHead(dir);
+
+      if (!head) {
+        // XXX: Not sure how this would happen. Maybe if the dependency
+        // workspace is ignored?
+        log.warn`local dependency "${name}" has no Git head`;
       }
-      else {
-        log.warn`dependency "${name}" has no published Git head`;
+      if (head !== info.gitHead) {
+        log.info`local dependency "${name}" is published with different Git head`;
+        return false;
       }
     }
   }
@@ -251,20 +309,23 @@ const validateArchive = async (workspace: Workspace, archiveFilename: string): P
 const patchConfig = (
   workspace: Workspace,
   removePackageFields: readonly string[] | undefined,
-  head: string | undefined | null,
+  head: string | null,
 ): JsonAccessor => {
   const { config, getDependencyLinks } = workspace;
   const patchedConfig = config.copy();
 
-  // Update dependency version ranges.
+  // Update wildcard and `workspace:` protocol dependency specs to publishable
+  // dependency specs.
   getDependencyLinks()
     .forEach(({ type, id, spec, dependency }) => {
       if (type === 'devDependencies') return;
       if (!dependency.version) return;
-      if (spec.type !== 'npm') return;
-      if (spec.range !== '*' && spec.range !== 'x') return;
+      if (spec.type !== 'npm' && spec.type !== 'workspace') return;
 
-      const newRange = `^${dependency.version}`;
+      const newRange = getUpdatedRange(spec, dependency.version);
+
+      if (!newRange) return null;
+
       const newSpec = spec.name === id ? newRange : `npm:${spec.name}@${newRange}`;
 
       patchedConfig.at(type)
@@ -290,4 +351,33 @@ const patchConfig = (
   }
 
   return patchedConfig;
+};
+
+const getUpdatedRange = (
+  spec: Extract<DependencySpec, { readonly type: 'npm' | 'workspace' }>,
+  currentVersion: string,
+): string | null => {
+  if (spec.type === 'npm') {
+    switch (spec.range) {
+      case '=*':
+        return currentVersion;
+      case '*':
+      case '^*':
+        return `^${currentVersion}`;
+      case '~*':
+        return `~${currentVersion}`;
+    }
+  }
+  else if (spec.type === 'workspace') {
+    switch (spec.range) {
+      case '*':
+        return currentVersion;
+      case '^':
+        return `^${currentVersion}`;
+      case '~':
+        return `~${currentVersion}`;
+    }
+  }
+
+  return null;
 };

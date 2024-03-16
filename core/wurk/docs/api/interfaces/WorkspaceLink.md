@@ -4,6 +4,12 @@
 
 Represents an edge in the workspace dependency graph.
 
+## Hierarchy
+
+- `WorkspaceDependency`
+
+  ↳ **`WorkspaceLink`**
+
 ## Table of contents
 
 ### Properties
@@ -40,6 +46,10 @@ The key of the dependency in the dependent workspace's `package.json`
 file. This may not be the same as the dependency's package name if the
 entry is an alias.
 
+#### Inherited from
+
+WorkspaceDependency.id
+
 ___
 
 ### spec
@@ -47,6 +57,10 @@ ___
 • `Readonly` **spec**: `DependencySpec`
 
 The dependency spec.
+
+#### Inherited from
+
+WorkspaceDependency.spec
 
 ___
 
@@ -56,3 +70,7 @@ ___
 
 The type of the dependency in the dependent workspace's `package.json`
 file (eg. `devDependencies`).
+
+#### Inherited from
+
+WorkspaceDependency.type

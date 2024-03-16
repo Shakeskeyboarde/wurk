@@ -1,5 +1,5 @@
+import { type WorkspaceDependency } from './dependency.js';
 import { getDepthFirstGenerator } from './generator.js';
-import { type DependencySpec, getSpec } from './spec.js';
 import { type Workspace } from './workspace.js';
 
 export interface WorkspaceLinks {
@@ -17,7 +17,7 @@ export interface WorkspaceLinks {
 /**
  * Represents an edge in the workspace dependency graph.
  */
-export interface WorkspaceLink {
+export interface WorkspaceLink extends WorkspaceDependency {
   /**
    * The dependent workspace.
    */
@@ -27,24 +27,6 @@ export interface WorkspaceLink {
    * The dependency workspace.
    */
   readonly dependency: Workspace;
-
-  /**
-   * The type of the dependency in the dependent workspace's `package.json`
-   * file (eg. `devDependencies`).
-   */
-  readonly type: (typeof WORKSPACE_LINK_SCOPES)[number];
-
-  /**
-   * The key of the dependency in the dependent workspace's `package.json`
-   * file. This may not be the same as the dependency's package name if the
-   * entry is an alias.
-   */
-  readonly id: string;
-
-  /**
-   * The dependency spec.
-   */
-  readonly spec: DependencySpec;
 }
 
 /**
@@ -69,35 +51,15 @@ export const getLinks = (workspaces: readonly Workspace[]): WorkspaceLinks => {
 
   workspaces
     .flatMap((dependent) => {
-      return [
-        [dependent, 'devDependencies'],
-        [dependent, 'dependencies'],
-        [dependent, 'peerDependencies'],
-        [dependent, 'optionalDependencies'],
-      ] as const;
+      return dependent.dependencies.map((dependency) => [dependent, dependency] as const);
     })
-    .flatMap(([dependent, type]) => {
-      return dependent.config
-        .at(type)
-        .entries('object')
-        .map(([id, specString]) => ({ dependent, type, id, specString }))
-        .filter((entry): entry is typeof entry & { specString: string } => {
-          return typeof entry.specString === 'string';
-        });
-    })
-    .flatMap(({ dependent, type, id, specString }) => {
-      const spec = getSpec(id, specString);
-      const name = spec.type === 'npm' ? spec.name : id;
+    .flatMap(([dependent, { id, spec, type }]) => {
+      // const spec = getDependencySpec(id, specString);
+      const name = 'name' in spec ? spec.name : id;
 
       return workspaces
         .filter((workspace) => workspace.name === name)
-        .map((dependency) => ({
-          dependent,
-          dependency,
-          type,
-          id,
-          spec: { ...spec },
-        }));
+        .map((dependency) => ({ dependent, dependency, type, id, spec }));
     })
     .forEach(({ dependent, dependency, type, id, spec }) => {
       linksFromDependentToDependencies.set(dependent, [
@@ -158,10 +120,3 @@ export const getLinks = (workspaces: readonly Workspace[]): WorkspaceLinks => {
 
   return { getLinksFromDependentToDependencies, getLinksFromDependencyToDependents };
 };
-
-const WORKSPACE_LINK_SCOPES = [
-  'devDependencies',
-  'peerDependencies',
-  'optionalDependencies',
-  'dependencies',
-] as const;

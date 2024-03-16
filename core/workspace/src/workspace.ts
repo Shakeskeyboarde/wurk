@@ -7,8 +7,10 @@ import { type JsonAccessor } from '@wurk/json';
 import { Log } from '@wurk/log';
 import { createSpawn } from '@wurk/spawn';
 
+import { DEPENDENCY_TYPES, type WorkspaceDependency } from './dependency.js';
 import { type Entrypoint, getEntrypoints } from './entrypoint.js';
 import { type WorkspaceLink, type WorkspaceLinkOptions } from './link.js';
+import { getDependencySpec } from './spec.js';
 
 /**
  * Workspace configuration.
@@ -88,6 +90,11 @@ export class Workspace implements WorkspaceOptions {
   readonly version: string | undefined;
 
   /**
+   * All workspace dependencies (not just local).
+   */
+  readonly dependencies: readonly WorkspaceDependency[];
+
+  /**
    * True if this workspace has the `private` field set to `true` in its
    * `package.json` file.
    */
@@ -133,6 +140,11 @@ export class Workspace implements WorkspaceOptions {
     this.version = this.config
       .at('version')
       .as('string');
+    this.dependencies = DEPENDENCY_TYPES
+      .map((type) => [type, this.config.at(type)] as const)
+      .flatMap(([type, dependencies]) => dependencies
+        .entries('object')
+        .flatMap(([id, spec]) => typeof spec === 'string' ? ({ type, id, spec: getDependencySpec(id, spec) }) : []));
     this.isPrivate = this.config
       .at('private')
       .as('boolean', false);

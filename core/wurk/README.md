@@ -1,18 +1,18 @@
 # Wurk
 
-Wurk is a lightweight, extensible build system for monorepos or single packages.
+Wurk is a lightweight and extensible build system for monorepos.
 
-- Be declarative and leverage the power of community with custom commands.
 - Orchestrate tasks across multiple interrelated workspaces.
 - Stay flexible and transparent without adding complexity.
+- Be declarative and leverage the power of community with custom commands.
 
-Read about the motivation for this project [here](./README-MOTIVATION.md).
+Read more about the motivation for this project [here](./README-MOTIVATION.md).
 
 ## Prerequisites
 
 - [Node.js®](https://nodejs.org/)
-- [NPM](https://www.npmjs.com/), [PNPM](https://pnpm.io/), or [Yarn](https://yarnpkg.com/)
-- [Git](https://git-scm.com/) (recommended)
+- [NPM](https://www.npmjs.com/), [PNPM](https://pnpm.io/), or [Yarn v2+](https://yarnpkg.com/)
+- [Git](https://git-scm.com/) (recommended but optional)
 
 ## Getting Started
 
@@ -51,11 +51,11 @@ npm run build
 {
   "scripts": {
     "build": "wurk run build",
-    "lint": "wurk run eslint .",
-    "test": "wurk build && wurk lint && wurk vitest",
+    "lint": "wurk run eslint src",
+    "depcheck": "wurk run depcheck",
+    "test": "wurk build && wurk lint && wurk depcheck && wurk vitest",
     "create-release": "wurk version auto",
-    "release": "wurk publish",
-    "clean": "wurk clean"
+    "release": "wurk publish"
   }
 }
 ```
@@ -64,13 +64,11 @@ npm run build
 
 The following "official" commands are available.
 
-- [build](https://www.npmjs.com/package/@wurk/command-build): Run Rollup, Vite, TypeScript, and TypeDoc.
-- [test](https://www.npmjs.com/package/@wurk/command-test): Run Depcheck, ESLint, and Vitest.
+- [run](https://www.npmjs.com/package/@wurk/command-run): Run package scripts in workspaces.
+- [exec](https://www.npmjs.com/package/@wurk/command-exec): Run executables in workspaces.
+- [vitest](https://www.npmjs.com/package/@wurk/command-vitest): Run Vitest on workspaces.
 - [version](https://www.npmjs.com/package/@wurk/command-version): Set, increment, promote, and conventionally auto generate versions.
-- [publish](https://www.npmjs.com/package/@wurk/command-publish): Publish or pack packages.
-- [run](https://www.npmjs.com/package/@wurk/command-run): Run package scripts.
-- [exec](https://www.npmjs.com/package/@wurk/command-exec): Run executables.
-- [clean](https://www.npmjs.com/package/@wurk/command-clean): Remove Git ignored files, but leave dependencies and dotfiles alone.
+- [publish](https://www.npmjs.com/package/@wurk/command-publish): Publish or pack workspace packages.
 - [list](https://www.npmjs.com/package/@wurk/command-list): List workspaces.
 
 Run `npm install --save-dev @wurk/command-<name>` in your root workspace to install any of these commands.
@@ -122,3 +120,13 @@ Options which reduce the number of workspaces that are processed.
   - Log level can also be set using the `WURK_LOG_LEVEL` environment variable. The command line option takes precedence over the environment variable.
 - `--clear`
   - Clear the screen on startup. This does the same thing as the linux `clear` command, but is more CI friendly. It does not error if it is not available or `TERM` is not set, and it respects TTY availability.
+
+## Package Managers
+
+Wurk supports NPM, PNPM, and Yarn v2+. The package manager is automatically detected based on the [Corepack](https://nodejs.org/api/corepack.html) defined `packageManager` field in your root `package.json` file.
+
+If you're not using Corepack, then Wurk will fallback to detecting files and configuration specific to each package manager.
+
+- PNPM: `pnpm-workspace.yaml` present.
+- Yarn: `workspaces` package field and `yarn.lock` present.
+- NPM: `workspaces` package field, and NO `yarn.lock` present.

@@ -1,4 +1,4 @@
-import { createCommand, type Workspace } from 'wurk';
+import { createCommand, type Workspace, type WorkspacePublished } from 'wurk';
 
 import { publishFromArchive } from './publishers/archive.js';
 import { publishFromFilesystem } from './publishers/filesystem.js';
@@ -36,7 +36,7 @@ export default createCommand('publish', {
       await workspaces.forEach(publishFromArchive.bind(null, { options, pm }));
     }
     else {
-      const published = new Set<Workspace>();
+      const published = new Map<Workspace, WorkspacePublished>();
       const git = await createGit()
         .catch(() => null);
 

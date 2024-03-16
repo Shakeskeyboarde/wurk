@@ -21,6 +21,7 @@ Workspace information and utilities.
 
 ### Properties
 
+- [dependencies](Workspace.md#dependencies)
 - [getEntrypoints](Workspace.md#getentrypoints)
 - [isPrivate](Workspace.md#isprivate)
 - [isSelected](Workspace.md#isselected)
@@ -74,6 +75,14 @@ collections instead, which create their own workspace instances.
 [`Workspace`](Workspace.md)
 
 ## Properties
+
+### dependencies
+
+• `Readonly` **dependencies**: readonly `WorkspaceDependency`[]
+
+All workspace dependencies (not just local).
+
+___
 
 ### getEntrypoints
 

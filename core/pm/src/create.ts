@@ -52,11 +52,19 @@ const tryCreatePackageManager = async (dir: string): Promise<PackageManager | nu
     }
   }
 
-  // There's a "workspaces" field in the `package.json` file, so this is is
-  // a non-PNPM root.
-  if (config
+  const pnpmWorkspaceFilename = nodePath.resolve(dir, 'pnpm-workspace.yaml');
+  const pnpmWorkspaceExists = await nodeFs.access(pnpmWorkspaceFilename)
+    .then(() => true, () => false);
+
+  if (pnpmWorkspaceExists) {
+    return new Pnpm(dir, config);
+  }
+
+  const workspacesFieldExists = config
     .at('workspaces')
-    .exists()) {
+    .exists();
+
+  if (workspacesFieldExists) {
     const yarnLockFilename = nodePath.resolve(dir, 'yarn.lock');
     const yarnLockExists = await nodeFs.access(yarnLockFilename)
       .then(() => true, () => false);
@@ -68,15 +76,6 @@ const tryCreatePackageManager = async (dir: string): Promise<PackageManager | nu
 
     // No yarn.lock, so assume NPM (no need to check for package-lock.json)
     return new Npm(dir, config);
-  }
-  else {
-    const pnpmLockFilename = nodePath.resolve(dir, 'pnpm-lock.yaml');
-    const pnpmLockExists = await nodeFs.access(pnpmLockFilename)
-      .then(() => true, () => false);
-
-    if (pnpmLockExists) {
-      return new Pnpm(dir, config);
-    }
   }
 
   return null;

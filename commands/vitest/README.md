@@ -13,10 +13,8 @@ npm install --save-dev @wurk/command-vitest
 Run the command.
 
 ```sh
-wurk vitest run
+wurk vitest run -- [vitest-options...]
 ```
-
-Extra arguments are passed through to Vitest. For example, to the `run` command runs tests and then exits, instead of starting in watch mode which is the Vitest default behavior.
 
 ## Workspaces Support
 
