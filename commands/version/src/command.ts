@@ -75,7 +75,7 @@ export default createCommand('version', {
       await writeConfig(workspace, version);
 
       if (changelog) {
-        await writeChangelog(workspace, changes);
+        await writeChangelog(workspace, version, changes);
       }
     });
 

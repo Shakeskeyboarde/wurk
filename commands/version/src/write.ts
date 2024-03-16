@@ -43,25 +43,12 @@ export const writeConfig = async (workspace: Workspace, version: string): Promis
 
 export const writeChangelog = async (
   workspace: Workspace,
+  version: string,
   changes: readonly Change[] = [],
 ): Promise<void> => {
-  const { log, dir, name, version, config } = workspace;
-  const newVersion = config
-    .at('version')
-    .as('string');
+  const { log, dir, name } = workspace;
 
-  if (!newVersion) {
-    // Can't write a changelog without a version for the heading.
-    log.debug`skipping changelog write (no version)`;
-    return;
-  }
-
-  if (newVersion === version) {
-    log.debug`skipping changelog write (no version change)`;
-    return;
-  }
-
-  if (semver.prerelease(newVersion)?.length) {
+  if (semver.prerelease(version)?.length) {
     log.debug`skipping changelog write (prerelease version)`;
     return;
   }
@@ -89,11 +76,11 @@ export const writeChangelog = async (
    * that is less than or equal (`semver.lte`) to the new version.
    */
   const previousVersionIndex = entries.findIndex((entry) => {
-    return semver.lte(entry.version, newVersion);
+    return semver.lte(entry.version, version);
   });
 
-  if (previousVersionIndex >= 0 && newVersion === entries[previousVersionIndex]?.version) {
-    log.warn`changelog already has an entry for ${newVersion}`;
+  if (previousVersionIndex >= 0 && version === entries[previousVersionIndex]?.version) {
+    log.warn`changelog already has an entry for ${version}`;
     return;
   }
 
@@ -104,7 +91,7 @@ export const writeChangelog = async (
     .filter((change) => change.section !== ChangelogSection.hidden)
     .sort((a, b) => a.section - b.section);
 
-  let text = `${getHeadingPrefix(newVersion)} ${newVersion} (${getDate()})\n`;
+  let text = `${getHeadingPrefix(version)} ${version} (${getDate()})\n`;
   let section: ChangelogSection | undefined;
 
   sortedChanges.forEach((change) => {
@@ -124,7 +111,7 @@ export const writeChangelog = async (
     text += `- ${scope ? `**${scope}:** ` : ''}${change.message}\n`;
   });
 
-  const newEntry = { version: newVersion, text };
+  const newEntry = { version: version, text };
 
   if (previousVersionIndex < 0) {
     // Append to the end of the changelog (new lowest version).
