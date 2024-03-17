@@ -18,7 +18,8 @@ export const publish = async (
   const { pm, workspace, archiveFilename, tag, otp, dryRun } = options;
   const { spawn, temp } = workspace;
   const tmpDir = await temp('wurk-publish-', { local: true });
-  const tmpArchiveFilename = nodePath.resolve(tmpDir, nodePath.basename(archiveFilename));
+  const tmpArchiveBasename = nodePath.basename(archiveFilename);
+  const tmpArchiveFilename = nodePath.resolve(tmpDir, tmpArchiveBasename);
 
   await nodeFs.rename(archiveFilename, tmpArchiveFilename);
   await readTar(tmpArchiveFilename, async (entry, abort) => {
@@ -33,7 +34,7 @@ export const publish = async (
 
   const commonArgs = [
     'publish',
-    'package.tgz',
+    tmpArchiveBasename,
     Boolean(tag) && `--tag=${tag}`,
     Boolean(otp) && `--otp=${otp}`,
     dryRun && '--dry-run',
@@ -41,6 +42,7 @@ export const publish = async (
 
   switch (pm) {
     case 'npm':
+      return void await spawn(pm, [commonArgs, '--workspaces=false'], { cwd: tmpDir, stdio: 'echo' });
     case 'pnpm':
       return void await spawn(pm, commonArgs, { cwd: tmpDir, stdio: 'echo' });
     case 'yarn':
