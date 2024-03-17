@@ -18,7 +18,7 @@ export const publish = async (
   const { pm, workspace, archiveFilename, tag, otp, dryRun } = options;
   const { spawn, temp } = workspace;
   const tmpDir = await temp('wurk-publish-', { local: true });
-  const tmpArchiveFilename = nodePath.resolve(tmpDir, 'package.tgz');
+  const tmpArchiveFilename = nodePath.resolve(tmpDir, nodePath.basename(archiveFilename));
 
   await nodeFs.rename(archiveFilename, tmpArchiveFilename);
   await readTar(tmpArchiveFilename, async (entry, abort) => {

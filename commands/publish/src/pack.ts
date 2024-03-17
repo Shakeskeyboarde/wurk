@@ -25,13 +25,13 @@ export const pack = async (
       await spawn(pm, [
         'pack',
         ['--pack-destination', tempDir],
-      ], { cwd: dir, stdio: quiet ? 'echo' : 'buffer' });
+      ], { cwd: dir, stdio: quiet ? 'buffer' : 'echo' });
       break;
     case 'yarn':
       await spawn(pm, [
         'pack',
         ['-o', nodePath.join(tempDir, '%s-%v.tgz')],
-      ], { cwd: dir, stdio: quiet ? 'echo' : 'buffer' });
+      ], { cwd: dir, stdio: quiet ? 'buffer' : 'echo' });
       break;
     default:
       throw new Error(`unsupported package manager "${pm}"`);
