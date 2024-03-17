@@ -1,7 +1,7 @@
 {
   "name": "@wurk/cli",
   "description": "CLI argument parsing.",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/core/cli/README.md",
