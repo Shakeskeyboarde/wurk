@@ -1,3 +1,4 @@
+/* eslint-disable no-control-regex */
 import nodeAssert from 'node:assert';
 import nodePath from 'node:path';
 
@@ -157,20 +158,24 @@ export class Git {
 
     const { stdoutText } = await this._spawn('git', [
       'log',
-      `--pretty=format:%x00%x00%x00 ${formatPlaceholders.join(' %x00%x00 ')} %x00%x00%x00`,
+      `--pretty=format:${formatPlaceholders.join('%x1F')}%x1E`,
       start ? `${start}..${end}` : end,
       '--',
       dir,
     ]);
 
-    return [...stdoutText.matchAll(/\0{3}(.*)\0{3}/gsu)].flatMap(([, content = '']) => {
+    const entries = Array.from(stdoutText.matchAll(/(.*?)\u001E/gsu));
+
+    const logs = entries.flatMap(([, content = '']) => {
       const values = content
-        .split(/ \0{2} /u)
+        .split(/\u001F/u)
         .map((value) => value.trim());
       const log = Object.fromEntries(formatNames.map((name, index) => [name, values[index]]));
 
       return log as unknown as GitLog;
     });
+
+    return logs;
   };
 
   protected readonly _spawn = createSpawn(() => ({
