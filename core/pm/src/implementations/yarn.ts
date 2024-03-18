@@ -18,7 +18,7 @@ export class Yarn extends PackageManager {
     const { ok, stdoutText } = await spawn('yarn', [
       '--json',
       'workspaces',
-      'info',
+      'list',
     ], { cwd: this.rootDir, allowNonZeroExitCode: true });
 
     if (!ok) return [];
