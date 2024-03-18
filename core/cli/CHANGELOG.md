@@ -5,6 +5,8 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## 0.1.3 (2024-03-16)
 
+Bumping because 0.1.2 was accidentally released using NPM which published the wrong gitHead metadata.
+
 ## 0.1.2 (2024-03-16)
 
 ### Bug Fixes
