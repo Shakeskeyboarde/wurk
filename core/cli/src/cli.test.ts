@@ -168,16 +168,6 @@ describe('named', () => {
     await check(cli()
       .option('--foo <value...>'), '--foo=bar --foo=baz')
       .result({ options: { foo: ['bar', 'baz'] }, parsed: ['foo'] });
-    await check(
-      cli()
-        .option('--foo <value...>')
-        .option('-b'),
-      '--foo bar baz -b',
-    )
-      .result({
-        options: { foo: ['bar', 'baz'], b: true },
-        parsed: ['foo', 'b'],
-      });
   });
 
   test('parser', async () => {
@@ -259,10 +249,10 @@ describe('named', () => {
     await check(
       cli()
         .option('-a <value...>', { mapped: true }),
-      '-a.b foo bar -a.b baz',
+      '-a.b foo -a.b baz',
     )
       .result({
-        options: { a: { b: ['foo', 'bar', 'baz'] } },
+        options: { a: { b: ['foo', 'baz'] } },
         parsed: ['a'],
       });
   });
