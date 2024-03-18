@@ -1,7 +1,8 @@
-# Changelog
+### 0.1.7 (2024-03-18)
 
-All notable changes to this project will be documented in this file.
-See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
+#### Improvements
+
+- handle yarn special case better, only spawning an extra node process if necessary, and handling errors more correctly (0f18257)
 
 ## 0.1.6 (2024-03-16)
 
