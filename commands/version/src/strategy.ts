@@ -1,7 +1,7 @@
 import semver from 'semver';
 import { type Git, type Workspace } from 'wurk';
 
-import { type Change } from './change.js';
+import { type ChangeSet } from './change.js';
 import { auto } from './strategies/auto.js';
 import { increment } from './strategies/increment.js';
 import { literal } from './strategies/literal.js';
@@ -9,13 +9,7 @@ import { promote } from './strategies/promote.js';
 
 export type Strategy = semver.ReleaseType | 'auto' | 'promote' | semver.SemVer;
 
-export type StrategyCallback = (workspace: Workspace) => Promise<StrategyResult | null>;
-
-export interface StrategyResult {
-  readonly version: string;
-  readonly changes?: readonly Change[];
-  readonly notes?: readonly string[];
-}
+export type StrategyCallback = (workspace: Workspace) => Promise<ChangeSet | null>;
 
 export const parseStrategy = (value: string): Strategy => {
   switch (value) {

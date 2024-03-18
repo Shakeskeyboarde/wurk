@@ -4,7 +4,7 @@ import nodePath from 'node:path';
 import semver from 'semver';
 import { type Workspace } from 'wurk';
 
-import { type Change, ChangeType } from './change.js';
+import { type ChangeSet, ChangeType } from './change.js';
 
 enum ChangelogSection {
   hidden,
@@ -42,10 +42,10 @@ export const writeConfig = async (workspace: Workspace, version: string): Promis
 
 export const writeChangelog = async (
   workspace: Workspace,
-  version: string,
-  changes: readonly Change[] = [],
+  changeSet: ChangeSet,
 ): Promise<void> => {
   const { log, dir, name } = workspace;
+  const { version, changes = [], notes = [] } = changeSet;
 
   if (semver.prerelease(version)?.length) {
     log.debug`skipping changelog write (prerelease version)`;
@@ -60,16 +60,26 @@ export const writeChangelog = async (
       throw error;
     });
 
-  const entries = [...content.matchAll(/^#+ (\d+\.\d+\.\d+(?:-\S+)?)(?:.(?!^#+ \d+\.\d+\.\d))*[\r\n]*/gmsu)]
+  let entries = [...content.matchAll(/^#+ (\d+\.\d+\.\d+(?:-\S+)?)(?:.(?!^#+ \d+\.\d+\.\d))*[\r\n]*/gmsu)]
     .map((entry) => ({
       version: entry[1]!,
       text: entry[0],
-    }))
-    .filter((entry) => entry.version !== version);
+    }));
 
+  const inheritedNotes = entries
+    .find((entry) => entry.version === version)
+    ?.text
+    .match(/^\s*#[^\n]+\n(.*?)(?=(?<=\n)#)/su)
+    ?.[1]
+    ?.trim()
+    .split(/(?:\r?\n){2}/u)
+    .filter((note) => !notes.includes(note))
+    ?? [];
+
+  entries = entries.filter((entry) => entry.version !== version);
   entries.push({
     version,
-    text: getEntryText(name, version, changes),
+    text: getEntryText(name, { version, changes, notes: [...notes, ...inheritedNotes] }),
   });
 
   const entriesText = entries
@@ -84,7 +94,8 @@ export const writeChangelog = async (
   await nodeFs.writeFile(filename, newContent);
 };
 
-const getEntryText = (name: string, version: string, changes: readonly Change[]): string => {
+const getEntryText = (name: string, changeSet: ChangeSet): string => {
+  const { version, changes = [], notes = [] } = changeSet;
   const sorted = changes
     .map((change) => ({ ...change, section: getChangelogSection(change.type) }))
     .filter((change) => change.section !== ChangelogSection.hidden)
@@ -92,6 +103,10 @@ const getEntryText = (name: string, version: string, changes: readonly Change[])
 
   let text = `## ${version} (${getDate()})\n`;
   let section: ChangelogSection | undefined;
+
+  notes.forEach((note) => {
+    text += `\n${note}\n`;
+  });
 
   sorted.forEach((change) => {
     // Omit parts of the scope that match all or part of the workspace name.

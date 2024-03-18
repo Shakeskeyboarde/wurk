@@ -2,7 +2,7 @@ import { type ReleaseType } from 'semver';
 import semver from 'semver';
 import { type Workspace } from 'wurk';
 
-import { type StrategyResult } from '../strategy.js';
+import { type ChangeSet } from '../change.js';
 
 interface Options {
   readonly releaseType: ReleaseType;
@@ -12,7 +12,7 @@ interface Options {
 export const increment = async (
   options: Options,
   workspace: Workspace,
-): Promise<StrategyResult | null> => {
+): Promise<ChangeSet | null> => {
   const { log, version } = workspace;
   const { releaseType, preid } = options;
 

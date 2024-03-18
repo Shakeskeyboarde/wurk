@@ -1,9 +1,9 @@
 import semver from 'semver';
 import { type Workspace } from 'wurk';
 
-import { type StrategyResult } from '../strategy.js';
+import { type ChangeSet } from '../change.js';
 
-export const promote = async (workspace: Workspace): Promise<StrategyResult | null> => {
+export const promote = async (workspace: Workspace): Promise<ChangeSet | null> => {
   const { log, version } = workspace;
 
   if (!version || !semver.prerelease(version)?.length) {

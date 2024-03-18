@@ -1,6 +1,7 @@
 import { createCommand, type Workspace } from 'wurk';
 
-import { getStrategyCallback, parseStrategy, type StrategyResult } from './strategy.js';
+import { type ChangeSet } from './change.js';
+import { getStrategyCallback, parseStrategy } from './strategy.js';
 import { writeChangelog, writeConfig } from './write.js';
 
 export default createCommand('version', {
@@ -35,7 +36,7 @@ export default createCommand('version', {
       .catch(() => null);
     const { strategy, preid, changelog = strategy === 'auto' } = options;
     const isPreStrategy = typeof strategy === 'string' && strategy.startsWith('pre');
-    const results = new Map<Workspace, StrategyResult>();
+    const changeSets = new Map<Workspace, ChangeSet>();
     const callback = getStrategyCallback(strategy, git, preid);
 
     if (preid && !isPreStrategy) {
@@ -58,7 +59,7 @@ export default createCommand('version', {
       const result = await callback(workspace);
 
       if (result) {
-        results.set(workspace, result);
+        changeSets.set(workspace, result);
       }
       else {
         // Unselect workspaces where the version strategy is a no-op.
@@ -70,12 +71,12 @@ export default createCommand('version', {
     // fails (eg. dirty Git working tree), dependent workspace writes should
     // be skipped so that they don't end up referencing non-existent versions.
     await workspaces.forEach(async (workspace) => {
-      const { version, changes } = results.get(workspace)!;
+      const changeSet = changeSets.get(workspace)!;
 
-      await writeConfig(workspace, version);
+      await writeConfig(workspace, changeSet.version);
 
       if (changelog) {
-        await writeChangelog(workspace, version, changes);
+        await writeChangelog(workspace, changeSet);
       }
     });
 
@@ -100,10 +101,10 @@ export default createCommand('version', {
       const specs = Array.from(workspaces)
         .flatMap((workspace) => {
           const { name } = workspace;
-          const result = results.get(workspace);
+          const changeSet = changeSets.get(workspace);
 
-          return result
-            ? `${name}@${result.version}`
+          return changeSet
+            ? `${name}@${changeSet.version}`
             : [];
         });
 

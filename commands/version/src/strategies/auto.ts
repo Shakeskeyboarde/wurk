@@ -1,13 +1,12 @@
 import semver, { type ReleaseType } from 'semver';
 import { type Git, type GitLog, type Workspace } from 'wurk';
 
-import { type Change, ChangeType } from '../change.js';
-import { type StrategyResult } from '../strategy.js';
+import { type Change, type ChangeSet, ChangeType } from '../change.js';
 
 export const auto = async (
   git: Git,
   workspace: Workspace,
-): Promise<StrategyResult | null> => {
+): Promise<ChangeSet | null> => {
   const { log, dir, version: currentVersion, getPublished } = workspace;
 
   // Auto-versioning does not support workspaces without versions or with

@@ -1,3 +1,9 @@
+export interface ChangeSet {
+  readonly version: string;
+  readonly changes?: readonly Change[];
+  readonly notes?: readonly string[];
+}
+
 export interface Change {
   readonly type: ChangeType;
   readonly scope: string | undefined;
