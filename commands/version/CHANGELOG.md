@@ -5,6 +5,11 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## 0.1.7 (2024-03-18)
 
+This is just a test note.
+
+This is another test note,
+with multiple lines.
+
 ### Improvements
 
 - always use h2 for changelog version headings, and h3 for change groups (a940a83)

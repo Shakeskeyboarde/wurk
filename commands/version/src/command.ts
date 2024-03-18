@@ -18,6 +18,10 @@ export default createCommand('version', {
           'major, minor, patch, premajor, preminor, prepatch, prerelease, auto, promote, or a version number',
         parse: parseStrategy,
       })
+      .option('--note <text...>', {
+        description: 'add notes to changelog entries',
+        key: 'notes',
+      })
       .option('--preid <id>', 'set the identifier for prerelease versions')
       .option(
         '--changelog',
@@ -34,7 +38,7 @@ export default createCommand('version', {
     const { log, workspaces, options, pm, createGit, spawn } = context;
     const git = await createGit()
       .catch(() => null);
-    const { strategy, preid, changelog = strategy === 'auto' } = options;
+    const { strategy, preid, changelog = strategy === 'auto', notes = [] } = options;
     const isPreStrategy = typeof strategy === 'string' && strategy.startsWith('pre');
     const changeSets = new Map<Workspace, ChangeSet>();
     const callback = getStrategyCallback(strategy, git, preid);
@@ -76,7 +80,10 @@ export default createCommand('version', {
       await writeConfig(workspace, changeSet.version);
 
       if (changelog) {
-        await writeChangelog(workspace, changeSet);
+        await writeChangelog(workspace, {
+          ...changeSet,
+          notes: [...changeSet.notes ?? [], ...notes],
+        });
       }
     });
 

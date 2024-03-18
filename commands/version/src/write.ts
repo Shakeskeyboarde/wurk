@@ -45,7 +45,10 @@ export const writeChangelog = async (
   changeSet: ChangeSet,
 ): Promise<void> => {
   const { log, dir, name } = workspace;
-  const { version, changes = [], notes = [] } = changeSet;
+  const { version, changes = [], notes: newNotes = [] } = changeSet;
+  const notes = newNotes
+    .flatMap((note) => note.split(/(?:\r?\n){2}/u))
+    .map((note) => note.trim());
 
   if (semver.prerelease(version)?.length) {
     log.debug`skipping changelog write (prerelease version)`;
