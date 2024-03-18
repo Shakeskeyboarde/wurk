@@ -22,6 +22,8 @@ Install Wurk and any [Wurk commands](#commands) you want as dev dependencies of 
 npm install --save-dev wurk @wurk/command-run
 ```
 
+> **Note:** PNPM and Yarn sometimes prefer using multiple versions of a package. This can lead to Wurk not detecting command plugins. Try running `pnpm dedupe wurk` or `yarn dedupe wurk` to resolve this issue.
+
 Run a Wurk command. For example the [run](https://npmjs.com/package/@wurk/command-run) command (installed above) runs package.json scripts in each workspace where they exist.
 
 ```sh
@@ -51,7 +53,7 @@ npm run build
 {
   "scripts": {
     "build": "wurk run build",
-    "lint": "wurk run eslint src",
+    "eslint": "wurk run eslint src",
     "depcheck": "wurk run depcheck",
     "test": "wurk build && wurk lint && wurk depcheck && wurk vitest",
     "create-release": "wurk version auto",
