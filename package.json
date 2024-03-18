@@ -34,8 +34,8 @@
     "tests/*"
   ],
   "engines": {
-    "node": ">=18",
-    "npm": ">=9",
+    "node": ">=20",
+    "npm": ">=10",
     "yarn": "please-use-npm",
     "pnpm": "please-use-npm"
   },
