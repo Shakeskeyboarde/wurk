@@ -69,7 +69,7 @@ export class Yarn extends PackageManager {
     };
   }
 
-  override async _spawnNode(args: readonly string[], options?: SpawnOptions): Promise<SpawnResult> {
+  override async spawnNode(args: readonly string[], options?: SpawnOptions): Promise<SpawnResult> {
     return await spawn('yarn', ['node', args], mergeSpawnOptions({ cwd: this.rootDir }, options));
   }
 }

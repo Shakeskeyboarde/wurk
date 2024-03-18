@@ -1,5 +1,5 @@
 import { type JsonAccessor } from '@wurk/json';
-import { mergeSpawnOptions, spawn, type SpawnOptions, type SpawnResult } from '@wurk/spawn';
+import { mergeSpawnOptions, spawn, type SpawnOptions, type SpawnResult, type SpawnSparseArgs } from '@wurk/spawn';
 import semver from 'semver';
 
 export interface PackageMetadata {
@@ -80,12 +80,28 @@ export abstract class PackageManager {
   abstract getPublished(id: string, version: string): Promise<PackageMetadata | null>;
 
   /**
+   * Spawn a new NodeJS process, making a best attempt to use the same NodeJS
+   * binary that is running the current process.
+   */
+  async spawnNode(args: SpawnSparseArgs, options?: SpawnOptions): Promise<SpawnResult> {
+    return await spawn('node', args, mergeSpawnOptions({ cwd: this.rootDir }, options));
+  };
+
+  /**
    * Resolve a package specifier from the root workspace directory.
    */
   async resolve(spec: string): Promise<string> {
-    const { stdoutText: filename } = await this._spawnNode([
+    const { stdoutText: filename } = await this.spawnNode([
       '--input-type=module',
-      `--eval=try{console.log(import.meta.resolve(process.argv[1]));}catch{}`,
+      `--eval=
+        try {
+          const spec = process.argv[1];
+          const resolved = import.meta.resolve(spec);
+          process.stdout.write(resolved);
+        } catch {
+          // noop
+        }
+      `,
       '--',
       spec,
     ]);
@@ -96,12 +112,4 @@ export abstract class PackageManager {
 
     return filename;
   }
-
-  /**
-   * Spawn a new NodeJS process, making a best attempt to use the same NodeJS
-   * binary that is running the current process.
-   */
-  protected _spawnNode(args: readonly string[], options?: SpawnOptions): Promise<SpawnResult> {
-    return spawn('node', args, mergeSpawnOptions({ cwd: this.rootDir }, options));
-  };
 }
