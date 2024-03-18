@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 0.1.9 (2024-03-18)
+
+### Chores
+
+- disallow plugin commands setting themselves as default (cb0a039)
+
 ## 0.1.8 (2024-03-18)
 
 ### Documentation
