@@ -38,10 +38,19 @@ export default createCommand('version', {
     const { log, workspaces, options, pm, createGit, spawn } = context;
     const git = await createGit()
       .catch(() => null);
-    const { strategy, preid, changelog = strategy === 'auto', notes = [] } = options;
+    const {
+      strategy,
+      notes = [],
+      preid,
+      changelog = strategy === 'auto' || notes.filter(Boolean).length > 0,
+    } = options;
     const isPreStrategy = typeof strategy === 'string' && strategy.startsWith('pre');
     const changeSets = new Map<Workspace, ChangeSet>();
     const callback = getStrategyCallback(strategy, git, preid);
+
+    if (notes.filter(Boolean).length > 0 && !changelog) {
+      log.warn`option --note has no effect when changelogs are disabled`;
+    }
 
     if (preid && !isPreStrategy) {
       log.warn`option --preid only applies to "pre*" strategies`;
