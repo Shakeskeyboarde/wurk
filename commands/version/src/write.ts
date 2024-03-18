@@ -53,48 +53,48 @@ export const writeChangelog = async (
     return;
   }
 
-  const changelogFilename = nodePath.resolve(dir, 'CHANGELOG.md');
-  const changelogContent = await nodeFs.readFile(changelogFilename, 'utf8')
+  const filename = nodePath.resolve(dir, 'CHANGELOG.md');
+
+  const content = await nodeFs.readFile(filename, 'utf8')
     .catch((error: any) => {
       if (error?.code === 'ENOENT') return '';
       throw error;
     });
 
-  /**
-   * Change log entries sorted by version in descending order.
-   */
-  const entries = [...changelogContent.matchAll(/^#+ (\d+\.\d+\.\d+(?:-[a-z\d.+-]*)?)(?:.(?!^#+ \d+\.\d+\.\d))*.?/gmsu)]
+  const entries = [...content.matchAll(/^#+ (\d+\.\d+\.\d+(?:-\S+)?)(?:.(?!^#+ \d+\.\d+\.\d))*[\r\n]*/gmsu)]
     .map((entry) => ({
-      version: entry[1] as string,
-      text: entry[0].trimEnd() + '\n',
+      version: entry[1]!,
+      text: entry[0],
     }))
-    .sort((a, b) => semver.rcompare(a.version, b.version));
+    .filter((entry) => entry.version !== version);
 
-  /**
-   * Index of the previous (or current) version. The entries list is in
-   * descending order (greatest first), so we want the first (highest) entry
-   * that is less than or equal (`semver.lte`) to the new version.
-   */
-  const previousVersionIndex = entries.findIndex((entry) => {
-    return semver.lte(entry.version, version);
+  entries.push({
+    version,
+    text: getEntryText(name, version, changes),
   });
 
-  if (previousVersionIndex >= 0 && version === entries[previousVersionIndex]?.version) {
-    log.warn`changelog already has an entry for ${version}`;
-    return;
-  }
+  const entriesText = entries
+    .sort((a, b) => semver.rcompare(a.version, b.version))
+    .map((entry) => entry.text)
+    .join('');
+
+  const newContent = `${CHANGELOG_HEADER}\n${entriesText}`;
 
   log.debug`writing changelog`;
 
-  const sortedChanges = changes
+  await nodeFs.writeFile(filename, newContent);
+};
+
+const getEntryText = (name: string, version: string, changes: readonly Change[]): string => {
+  const sorted = changes
     .map((change) => ({ ...change, section: getChangelogSection(change.type) }))
     .filter((change) => change.section !== ChangelogSection.hidden)
     .sort((a, b) => a.section - b.section);
 
-  let text = `${getHeadingPrefix(version)} ${version} (${getDate()})\n`;
+  let text = `## ${version} (${getDate()})\n`;
   let section: ChangelogSection | undefined;
 
-  sortedChanges.forEach((change) => {
+  sorted.forEach((change) => {
     // Omit parts of the scope that match all or part of the workspace name.
     const nameParts = name.split('/');
     const scope = change.scope
@@ -105,32 +105,13 @@ export const writeChangelog = async (
 
     if (section !== change.section) {
       section = change.section;
-      text += `\n#### ${getChangelogHeading(change.section)}\n\n`;
+      text += `\n### ${getChangelogHeading(change.section)}\n\n`;
     }
 
     text += `- ${scope ? `**${scope}:** ` : ''}${change.message}\n`;
   });
 
-  const newEntry = { version: version, text };
-
-  if (previousVersionIndex < 0) {
-    // Append to the end of the changelog (new lowest version).
-    entries.push(newEntry);
-  }
-  else {
-    // Insert before the previous (next lowest) version in the changelog.
-    entries.splice(previousVersionIndex, 0, newEntry);
-  }
-
-  const result = entries
-    .map((entry) => entry.text)
-    .join('\n');
-
-  await nodeFs.writeFile(changelogFilename, result);
-};
-
-const getHeadingPrefix = (version: string): '#' | '##' | '###' => {
-  return !semver.patch(version) ? (!semver.minor(version) ? '#' : '##') : '###';
+  return text + '\n';
 };
 
 const getDate = (): string => {
@@ -211,3 +192,10 @@ const getChangelogHeading = (section: ChangelogSection): string => {
       return 'Notes';
   }
 };
+
+const CHANGELOG_HEADER = `
+# Changelog
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
+`.trim() + '\n';
