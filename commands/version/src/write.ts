@@ -48,7 +48,8 @@ export const writeChangelog = async (
   const { version, changes = [], notes: newNotes = [] } = changeSet;
   const notes = newNotes
     .flatMap((note) => note.split(/(?:\r?\n){2}/u))
-    .map((note) => note.trim());
+    .map((note) => note.trim())
+    .filter(Boolean);
 
   if (semver.prerelease(version)?.length) {
     log.debug`skipping changelog write (prerelease version)`;
@@ -76,13 +77,17 @@ export const writeChangelog = async (
     ?.[1]
     ?.trim()
     .split(/(?:\r?\n){2}/u)
-    .filter((note) => !notes.includes(note))
+    .filter((note) => Boolean(note) && !notes.includes(note))
     ?? [];
 
   entries = entries.filter((entry) => entry.version !== version);
   entries.push({
     version,
-    text: getEntryText(name, { version, changes, notes: [...notes, ...inheritedNotes] }),
+    text: getEntryText(name, {
+      version,
+      changes,
+      notes: [...notes, ...inheritedNotes],
+    }),
   });
 
   const entriesText = entries
