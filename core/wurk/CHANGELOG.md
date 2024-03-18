@@ -1,6 +1,6 @@
-### 0.1.7 (2024-03-18)
+## 0.1.7 (2024-03-18)
 
-#### Improvements
+### Improvements
 
 - handle yarn special case better, only spawning an extra node process if necessary, and handling errors more correctly (0f18257)
 
