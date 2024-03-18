@@ -9,7 +9,6 @@ export interface Change {
  */
 export enum ChangeType {
   none,
-  note,
   docs,
   ci,
   perf,

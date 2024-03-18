@@ -20,7 +20,6 @@ enum ChangelogSection {
   ci,
   chore,
   revert,
-  note,
 }
 
 export const writeConfig = async (workspace: Workspace, version: string): Promise<void> => {
@@ -154,8 +153,6 @@ const getChangelogSection = (type: ChangeType): ChangelogSection => {
       return ChangelogSection.chore;
     case ChangeType.revert:
       return ChangelogSection.revert;
-    case ChangeType.note:
-      return ChangelogSection.note;
     case ChangeType.none:
       return ChangelogSection.hidden;
   }
@@ -187,9 +184,8 @@ const getChangelogHeading = (section: ChangelogSection): string => {
       return 'Chores';
     case ChangelogSection.revert:
       return 'Reverts';
-    case ChangelogSection.note:
     default:
-      return 'Notes';
+      return 'Other Changes';
   }
 };
 

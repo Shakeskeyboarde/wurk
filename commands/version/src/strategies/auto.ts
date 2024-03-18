@@ -197,8 +197,6 @@ const CHANGE_TYPES: Readonly<Record<string, ChangeType>> = {
   revert: ChangeType.revert,
   reverts: ChangeType.revert,
   reverting: ChangeType.revert,
-  note: ChangeType.note,
-  notes: ChangeType.note,
 };
 
 const MARKDOWN_ESCAPE = /[#`_*~[\]{}\\]/gu;
