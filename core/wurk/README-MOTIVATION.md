@@ -61,13 +61,13 @@ So, since Yarn v1 was essentially deprecated, I made the switch back to NPM. It 
 
 While I was looking for an alternative to Yarn v2, I found also [PNPM](https://pnpm.io/), which is an awesome project. I didn't immediately adopt it, because the linking strategy it used seemed risky. And, I think at the time I was correct in that assessment.
 
-Today (v8), the wrinkles in the dependency linking strategy have been resolved, and [Corepack](https://nodejs.org/api/corepack.html) makes adoption super simple.
+Today (v8), the wrinkles in the dependency linking strategy have (mostly) been resolved, and [Corepack](https://nodejs.org/api/corepack.html) makes adoption super simple.
 
 However... Its monorepo management is _still_ not quite there for me. Don't get me wrong, It's good. But, it's still missing extensibility. It actually doesn't have versioning (release) support built-in either. Instead it recommends using [Changesets](https://www.npmjs.com/package/@changesets/cli), which is another solid (but not quite right for me) choice. And finally, it's workspace command design and log output seem... unpolished at best, and confusing at worst.
 
 I don't think this is actually a lack in PNPM. Rather, I think it's actually too much to ask of a package manager. It's the one place where I think PNPM went wrong, in offering it at all. Like NPM and Yarn, it should have stuck to providing the low level API for other tools to build off of.
 
-So, while I will be using PNPM for package management (this repo is), I will continue developing and using Wurk for monorepo management. 
+There are also still some gotchas with package deduplication. They exist in Yarn too, FWIW. Both package managers will keep multiple versions of dependencies around to avoid changing transitive dependency resolutions. This is supposed to be "safer", but IMHO causes more problems than it solves.
 
 ## And Others
 
