@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 0.1.7 (2024-03-18)
+
+### Improvements
+
+- always use h2 for changelog version headings, and h3 for change groups (a940a83)
+
+### Chores
+
+- remove "note" change type (667f1df)
+
 ## 0.1.6 (2024-03-16)
 
 ### Bug Fixes

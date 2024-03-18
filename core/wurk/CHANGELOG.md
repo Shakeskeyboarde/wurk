@@ -1,3 +1,16 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
+
+## 0.1.8 (2024-03-18)
+
+### Documentation
+
+- fix changelog heading levels (7ad1e83)
+- Add note about PNPM and Yarn dedupe for command resolution (d3c9c3a)
+- update motivation readme (090ee5a)
+
 ## 0.1.7 (2024-03-18)
 
 ### Improvements

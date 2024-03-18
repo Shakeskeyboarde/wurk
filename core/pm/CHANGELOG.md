@@ -1,3 +1,14 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
+
+## 0.1.2 (2024-03-18)
+
+### Documentation
+
+- fix changelog heading levels (7ad1e83)
+
 ## 0.1.1 (2024-03-18)
 
 ### Bug Fixes
