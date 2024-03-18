@@ -44,7 +44,7 @@ export const writeChangelog = async (
   workspace: Workspace,
   changeSet: ChangeSet,
 ): Promise<void> => {
-  const { log, dir, name } = workspace;
+  const { log, dir, name, version: currentVersion, getPublished } = workspace;
   const { version, changes = [], notes: newNotes = [] } = changeSet;
   const notes = newNotes
     .flatMap((note) => note.split(/(?:\r?\n){2}/u))
@@ -56,8 +56,10 @@ export const writeChangelog = async (
     return;
   }
 
-  const filename = nodePath.resolve(dir, 'CHANGELOG.md');
+  const info = await getPublished();
+  const isCurrentVersionPublished = info?.version === currentVersion;
 
+  const filename = nodePath.resolve(dir, 'CHANGELOG.md');
   const content = await nodeFs.readFile(filename, 'utf8')
     .catch((error: any) => {
       if (error?.code === 'ENOENT') return '';
@@ -70,23 +72,24 @@ export const writeChangelog = async (
       text: entry[0],
     }));
 
-  const inheritedNotes = entries
-    .find((entry) => entry.version === version)
-    ?.text
-    .match(/^\s*#[^\n]+\n(.*?)(?=(?<=\n)#)/su)
-    ?.[1]
-    ?.trim()
-    .split(/(?:\r?\n){2}/u)
+  const isReplacedEntry = (entry: { version: string; text: string }): boolean => {
+    return entry.version === version || (!isCurrentVersionPublished && entry.version === currentVersion);
+  };
+
+  const previousNotes = entries
+    .filter((entry) => isReplacedEntry(entry))
+    .map((entry) => entry.text.match(/^\s*#[^\n]+\n(.*?)(?=(?<=\n)#)/su)?.[1]?.trim())
+    .flatMap((value) => value?.split(/(?:\r?\n){2}/u) ?? [])
     .filter((note) => Boolean(note) && !notes.includes(note))
     ?? [];
 
-  entries = entries.filter((entry) => entry.version !== version);
+  entries = entries.filter((entry) => !isReplacedEntry(entry));
   entries.push({
     version,
     text: getEntryText(name, {
       version,
       changes,
-      notes: [...notes, ...inheritedNotes],
+      notes: [...notes, ...previousNotes],
     }),
   });
 
