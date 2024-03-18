@@ -5,6 +5,10 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## 0.1.4 (2024-03-18)
 
+### Bug Fixes
+
+- broken tests (27088b5)
+
 ### Documentation
 
 - add changelog note for 0.1.3 (67e358c)
