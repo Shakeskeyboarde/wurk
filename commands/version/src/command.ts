@@ -57,7 +57,7 @@ export default createCommand('version', {
 
       const result = await callback(workspace);
 
-      if (result && result.version !== version) {
+      if (result) {
         results.set(workspace, result);
       }
       else {
@@ -107,8 +107,8 @@ export default createCommand('version', {
             : [];
         });
 
-      log.notice`version suggested commit message:`;
-      log.notice({ color: 'blue' })`  chore(release): ${specs.join(', ')}`;
+      log.info`suggested commit message:`;
+      log.info`  chore(release): ${specs.join(', ')}`;
     }
   },
 });

@@ -1,6 +1,3 @@
-import nodeFs from 'node:fs/promises';
-import nodePath from 'node:path';
-
 import semver, { type ReleaseType } from 'semver';
 import { type Git, type GitLog, type Workspace } from 'wurk';
 
@@ -11,11 +8,11 @@ export const auto = async (
   git: Git,
   workspace: Workspace,
 ): Promise<StrategyResult | null> => {
-  const { log, dir, version, getPublished } = workspace;
+  const { log, dir, version: currentVersion, getPublished } = workspace;
 
   // Auto-versioning does not support workspaces without versions or with
   // prerelease versions.
-  if (!version || semver.prerelease(version)?.length) {
+  if (!currentVersion || semver.prerelease(currentVersion)?.length) {
     log.info`workspace is unversioned or prerelease versioned`;
     return null;
   }
@@ -23,8 +20,8 @@ export const auto = async (
   const info = await getPublished();
 
   if (!info) {
-    log.info`using existing version for initial release (${version})`;
-    return null;
+    log.info`keeping current unpublished version for initial release (${currentVersion})`;
+    return { version: currentVersion, notes: ['Initial release.'] };
   }
 
   if (!info.gitHead) {
@@ -32,14 +29,8 @@ export const auto = async (
     return null;
   }
 
-  const changelogFilename = nodePath.resolve(dir, 'CHANGELOG.md');
-  const changelog = await nodeFs.readFile(changelogFilename, 'utf8')
-    .catch((error: any) => {
-      if (error?.code === 'ENOENT') return '';
-      throw error;
-    });
   const logs = await git.getLogs(dir, { start: info.gitHead });
-  const { isConventional, releaseType, changes } = await getChanges(logs, changelog);
+  const { isConventional, releaseType, changes } = await getChanges(logs);
 
   if (!isConventional) {
     log.warn`workspace has non-conventional commits`;
@@ -50,18 +41,24 @@ export const auto = async (
     return null;
   }
 
-  const newVersion = new semver.SemVer(version)
+  log.info`detected ${releaseType} changes`;
+
+  const suggestedVersion = new semver.SemVer(info.version)
     .inc(releaseType)
     .format();
 
-  log.info`detected ${releaseType} changes (${version} -> ${newVersion})`;
-
-  return { version: newVersion, changes };
+  if (semver.lte(suggestedVersion, currentVersion)) {
+    log.info`keeping current unpublished version (${currentVersion})`;
+    return { version: currentVersion, changes };
+  }
+  else {
+    log.info`updating version (${currentVersion} -> ${suggestedVersion})`;
+    return { version: suggestedVersion, changes };
+  }
 };
 
 export const getChanges = async (
   logs: GitLog[],
-  changelog: string,
 ): Promise<{
   isConventional: boolean;
   releaseType: null | Exclude<ReleaseType, `pre${string}`>;
@@ -123,9 +120,6 @@ export const getChanges = async (
           return `&#${char.charCodeAt(0)};`;
         }),
       };
-    })
-    .filter((change) => {
-      return !changelog.includes(` ${change.message}\n`);
     });
 
   const releaseType = getReleaseType(changes);

@@ -14,6 +14,7 @@ export type StrategyCallback = (workspace: Workspace) => Promise<StrategyResult 
 export interface StrategyResult {
   readonly version: string;
   readonly changes?: readonly Change[];
+  readonly notes?: readonly string[];
 }
 
 export const parseStrategy = (value: string): Strategy => {
