@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 0.1.4 (2024-03-18)
+
+### Documentation
+
+- add changelog note for 0.1.3 (67e358c)
+
+### Chores
+
+- named options should consume at most one trailing positional argument when variadic (d59bfad)
+
 ## 0.1.3 (2024-03-16)
 
 Bumping because 0.1.2 was accidentally released using NPM which published the wrong gitHead metadata.

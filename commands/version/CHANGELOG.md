@@ -3,15 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## 0.1.7 (2024-03-18)
+## 0.2.0 (2024-03-18)
 
 This is just a test note.
 
 This is another test note,
 with multiple lines.
 
+### Features
+
+- add --note CLI option (5f7b1f5)
+
+### Bug Fixes
+
+- changelog update should replace the current unpublished entry as well as any entry for the updated version (241e427)
+- ignore blank notes (6b3144b)
+
 ### Improvements
 
+- log warning if --note option is used when changelogs are disabled (bf0c77c)
+- handle changelog notes (7bc260a)
+- version should keep already incremented versions and rewrite changelog if necessary (41083fc)
 - always use h2 for changelog version headings, and h3 for change groups (a940a83)
 
 ### Chores
