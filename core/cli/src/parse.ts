@@ -150,8 +150,8 @@ const parseRecursive = async (
 
       valueArgs.push(args.shift()!);
 
-      // Consume only one argument if the option isn't variadic.
-      if (!option.variadic) break;
+      // Consume only one argument if the option isn't a positional variadic.
+      if (option.type !== 'positional' || !option.variadic) break;
     }
 
     return valueArgs;
