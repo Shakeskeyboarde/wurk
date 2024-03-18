@@ -202,7 +202,10 @@ export const main = async (): Promise<void> => {
 
   // Populate the CLI with the commands loaded from plugins.
   for (const command of commands) {
-    cli = cli.command(command.cli);
+    cli = cli
+      .command(command.cli)
+      // Don't allow plugin commands to set themselves as default.
+      .setDefault(false);
   }
 
   await cli
