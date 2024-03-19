@@ -15,20 +15,26 @@ export const filter = async (workspaces: Iterable<Workspace>, expression: string
 };
 
 const match = async (workspace: Workspace, expression: string): Promise<boolean> => {
-  if (expression.startsWith('/')) {
+  if (expression.startsWith('/') || expression.startsWith('./')) {
     // Normalize the workspace relative directory to be a POSIX path with a
     // leading slash so that it's compatible with the expression.
-    const dir = '/' + nodePath.normalize(workspace.relativeDir)
-      .split(nodePath.sep)
-      .join('/');
+    const dir = nodePath.posix.join(
+      '/',
+      nodePath
+        .normalize(workspace.relativeDir)
+        .split(nodePath.sep)
+        .join('/'),
+    );
 
     return minimatch(dir, expression);
   }
 
   if (expression.startsWith('#')) {
-    const keywords = expression.slice(1)
-      .split(/\s*,\s*/u);
-    const workspaceKeywords: unknown[] = workspace.config.at('keywords')
+    const keywords = expression
+      .split(/\s*,\s*/u)
+      .map((keyword) => keyword.replace(/^#/u, ''));
+    const workspaceKeywords: unknown[] = workspace.config
+      .at('keywords')
       .as('array', []);
 
     // Every keyword is included in the workspace keywords.
