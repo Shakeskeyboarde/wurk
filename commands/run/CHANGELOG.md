@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 0.2.0 (2024-03-18)
+
+### Features
+
+- add --delay-each-workspace option (ede55b3)
+
 ## 0.1.5 (2024-03-16)
 
 ### Bug Fixes
