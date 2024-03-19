@@ -42,8 +42,8 @@ export const main = async (): Promise<void> => {
       description: 'include workspaces by name, directory, keyword, etc.',
       key: 'filters',
       group: 'Filter Options',
-      parse: (expression, previous: [Filter, ...Filter[]] | undefined): [Filter, ...Filter[]] => {
-        return [...(previous ?? []), { type: 'include', expression }];
+      parse: (expression, previous: Filter[] = []): Filter[] => {
+        return [...previous, { type: 'include', expression }];
       },
     })
     .option('-e, --exclude <expression>', {
@@ -157,9 +157,9 @@ export const main = async (): Promise<void> => {
         workspace.log.prefixStyle = colors.next().value;
       });
 
-      if (filters.length === 0 || filters.every(({ type }) => type === 'exclude')) {
-        // If no filters are provided, or if all filters are exclusions, then
-        // start by including all workspaces.
+      if (filters[0]?.type !== 'include') {
+        // If the first filter is not an include, then start by including all
+        // workspaces.
         await workspaces.include('**');
       }
 
