@@ -218,7 +218,11 @@ export const main = async (): Promise<void> => {
           throw new CliUsageError(`"${script}" is not a command or root package script`);
         }
 
-        await spawn(pm.command, ['run', pm.command !== 'yarn' && '--', script, scriptArgs], { cwd: pm.rootDir, stdio: 'inherit' });
+        await spawn(pm.command, ['run', pm.command !== 'yarn' && '--', script, scriptArgs], {
+          cwd: pm.rootDir,
+          stdio: 'inherit',
+          logCommand: false,
+        });
       }
       else {
         throw new CliUsageError('command or script required');

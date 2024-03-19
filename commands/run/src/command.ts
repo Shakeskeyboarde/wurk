@@ -23,7 +23,10 @@ export default createCommand('run', {
         return;
       }
 
-      await spawn(pm, ['run', pm !== 'yarn' && '--', script, args], { stdio: 'echo' });
+      await spawn(pm, ['run', pm !== 'yarn' && '--', script, args], {
+        stdio: 'echo',
+        logCommand: false,
+      });
     });
   },
 });
