@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 0.1.10 (2024-03-19)
+
+### Improvements
+
+- cli usage error if filter expressions are invalid (e3a44ae)
+
+### Code Refactoring
+
+- small type simplifications made possible by @wurk/cli update (d5a4791)
+
+### Documentation
+
+- readme updates (411825b)
+
+### Chores
+
+- move the --delay-each-workspace option from the run command to (9c9b3e1)
+
 ## 0.1.9 (2024-03-18)
 
 ### Chores

@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 0.2.1 (2024-03-19)
+
+### Improvements
+
+- make "auto" argument optional (default) (7d4c3e2)
+
+### Documentation
+
+- readme updates (411825b)
+
 ## 0.2.0 (2024-03-18)
 
 This is just a test note.

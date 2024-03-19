@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 0.1.5 (2024-03-19)
+
+### Bug Fixes
+
+- **predicate:** no special handling for path expressions with backslashes (e9624e5)
+
+### Improvements
+
+- **filter:** small refactors to enable CLI usage errors for invalid filter expressions in Wurk (e86e479)
+- **filter:** better handling of non-posix path expressions (9efaa0f)
+- relaxed filter expressions (7ea4c56)
+
+### Documentation
+
+- readme updates (411825b)
+
+### Chores
+
+- move the --delay-each-workspace option from the run command to (9c9b3e1)
+
 ## 0.1.4 (2024-03-16)
 
 ### Bug Fixes

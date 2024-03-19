@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 0.1.6 (2024-03-19)
+
+### Bug Fixes
+
+- remove package fields option should accept a csv (e7505cf)
+
+### Documentation
+
+- readme updates (411825b)
+
 ## 0.1.5 (2024-03-16)
 
 ### Bug Fixes

@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 0.1.5 (2024-03-19)
+
+### Bug Fixes
+
+- **error:** CliUsageError should inherit error message from cause (be0f9b0)
+- named variadic parser input type should be a string, not a string array (10ffef3)
+
 ## 0.1.4 (2024-03-18)
 
 ### Bug Fixes
