@@ -1,3 +1,3 @@
 # Wurk Workspace
 
-Workspace management for Wurk.
+Workspace management used by Wurk.

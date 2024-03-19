@@ -36,9 +36,7 @@ npx wurk run build
 npm install --global wurk
 ```
 
-If you use a command that does not match an installed Wurk command package, then Wurk will run a matching root workspace.json script. This may be useful
-because Wurk options (eg. selecting workspaces using the `-w` option) are inherited by spawned Wurk subprocesses, allowing package filtering to be
-applied to package.json scripts that are composed of other Wurk CLI commands.
+If you use a command that is not provided by a Wurk command package, then Wurk will try to run a matching root `package.json` script. This allows root package scripts to serve as ad-hoc commands. Wurk global command line options will also be inherited by Wurk commands used in scripts.
 
 ```sh
 # Run the build script from the root workspace.json file.
@@ -53,8 +51,8 @@ npm run build
 {
   "scripts": {
     "build": "wurk run build",
-    "eslint": "wurk run eslint src",
-    "depcheck": "wurk run depcheck",
+    "eslint": "wurk exec eslint src",
+    "depcheck": "wurk exec depcheck",
     "test": "wurk build && wurk lint && wurk depcheck && wurk vitest",
     "create-release": "wurk version auto",
     "release": "wurk publish"
@@ -87,21 +85,36 @@ These options are "global" because they are defined by Wurk itself. Commands can
 wurk [global-options] <command> [command-options]
 ```
 
-### Selection Options
+### Filter Options
 
-Options which reduce the number of workspaces that are processed.
+Options which control which workspaces are affected by commands.
 
-- `-w, --workspace <query>`
-  - Select workspaces by name, privacy, keyword, or directory.
-  - Use `private:true` or `private:false` to select private or public workspaces.
-  - Use `keyword:<pattern>` to select workspaces by keyword (glob supported).
-  - Use `dir:<pattern>` to select workspaces by directory (glob supported).
-  - Use `name:<pattern>` or just `<pattern>` to select workspaces by name (glob supported).
-  - Prefix any query with `not:` to exclude instead of include.
-  - Use a leading ellipsis to (eg. `...<query>`) to also match dependencies.
-  - Use a trailing ellipsis to (eg. `<query>...`) to also match dependents.
-- `--include-root-workspace`
-  - Include the root workspace in the selection. _This is strongly discouraged due to the potential for unexpected behaviors like accidental recursion!_
+- `-i, --include <expression>` - Include workspaces by name, directory, keyword, etc.
+- `-e, --exclude <expression>` - Exclude workspaces by name, directory, keyword, etc.
+
+The `<expression>` can be any of the following:
+
+- Workspace Names (glob supported)
+  - Examples: `my-package` or `@my-scope/*`
+- Paths (glob supported)
+  - Examples: `/packages/my-package` or `./packages/*`
+- Keywords
+  - Examples: `#foo`
+- States
+  - `@public` - Public workspaces
+  - `@private` - Private workspaces
+  - `@published` - Published workspaces
+  - `@unpublished` - Unpublished workspaces
+  - `@dependency` - Dependencies of currently included workspaces
+  - `@dependent` - Dependents of currently included workspaces
+
+> Path expressions must only use forward slashes (`/`) as a directory separators, even on Windows. Any backslash (`\`) characters will be treated as glob escape characters. Paths are always relative to the root workspace directory.
+
+> Globs are processed using the [minimatch](https://www.npmjs.com/package/minimatch) library with default options.
+
+> Includes and excludes are processed in order. Includes can re-add workspaces that were previously excluded, and excludes can remove workspaces that were previously included.
+
+> If no filters are provided, then all workspaces are included.
 
 ### Parallelization Options
 
@@ -109,9 +122,11 @@ Options which reduce the number of workspaces that are processed.
   - Process all workspaces simultaneously without topological awaiting.
 - `--stream`
   - Process workspaces concurrently with topological awaiting.
-- `-c, --concurrency <count>`
+- `--concurrency <count>`
   - Set the number workspaces to process simultaneously when streaming. The default is one greater than the number of CPU cores (cores + 1).
   - This option implies the `--stream` option.
+- `--delay-each-workspace <seconds>`
+  - Delay before starting to process the next workspace. This can be useful for rate limiting, debugging, or working around tool limitations.
 
 > By default, workspaces are processed serially (one at a time). This is generally the slowest option, but also the safest.
 
@@ -120,8 +135,6 @@ Options which reduce the number of workspaces that are processed.
 - `--loglevel <level>`
   - Set the log level (`silent`, `error`, `warn`, `info`, `notice`, `verbose`, or `silly`). The default is `info`.
   - Log level can also be set using the `WURK_LOG_LEVEL` environment variable. The command line option takes precedence over the environment variable.
-- `--clear`
-  - Clear the screen on startup. This does the same thing as the linux `clear` command, but is more CI friendly. It does not error if it is not available or `TERM` is not set, and it respects TTY availability.
 
 ## Package Managers
 

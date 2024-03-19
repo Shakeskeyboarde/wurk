@@ -16,57 +16,14 @@ Run the command.
 wurk publish
 ```
 
-## Publishing Archives
+## Options
 
-To create package archives instead of publishing them to an NPM registry, set the `--to-archive` option.
-
-```sh
-wurk publish --to-archive
-```
-
-The resulting archives can be published later by setting the `--from-archive` option. This will skip most validation, only checking for the existence of archives with a name and version matching the adjacent `package.json` file.
-
-```sh
-wurk publish --from-archive
-```
-
-## Multi-Factor Authentication
-
-Use the `--otp` option to set a one-time password for publishing.
-
-```sh
-wurk publish --otp=123456
-```
-
-## Remove Package Fields
-
-Use the `--remove-package-fields` option to remove fields from the `package.json` file before publishing. This is useful for removing fields that are only used for local development, such as `devDependencies` and `scripts`.
-
-```sh
-wurk publish --remove-package-fields devDependencies scripts
-```
-
-The fields can be dot notated to remove nested fields.
-
-```sh
-wurk publish --remove-package-fields scripts.test
-```
-
-## Publish Tag
-
-Use the `--tag` option to set the tag for the published package. The default tag is `latest`.
-
-```sh
-wurk publish --tag=next
-```
-
-## Dry run
-
-Use the `--dry-run` option to validate without making any permanent changes on disk (temporary only) or pushing to the registry. The `--dry-run` option will be passed through to the `npm publish` or `npm pack` command.
-
-```sh
-wurk publish --dry-run
-```
+- `--to-archive` - Publish to local archive files.
+- `--from-archive` - Publish fro local archive files.
+- `--tag` - Tag for the published package (default: `latest`).
+- `--otp` - One-time password for publishing.
+- `--remove-package-field <field>` - Remove a field from the `package.json` file before publishing (supports dot notation).
+- `--dry-run` - No permanent changes on disk and no push to the registry.
 
 ## Validation
 

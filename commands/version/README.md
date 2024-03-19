@@ -10,23 +10,11 @@ Install the command in your root workspace.
 npm install --save-dev @wurk/command-version
 ```
 
-## Strategies
-
-There a are several strategies for updating workspace versions.
+Automatically version workspaces based on Git [conventional commits](https://www.conventionalcommits.org).
 
 ```sh
-wurk version <strategy> [options]
+wurk version auto
 ```
-
-### Setting
-
-Set workspace versions to a specific version.
-
-```sh
-wurk version 1.2.3
-```
-
-### Incrementing
 
 Increment workspace versions given a change/release type.
 
@@ -34,38 +22,24 @@ Increment workspace versions given a change/release type.
 wurk version patch
 ```
 
-The `--preid` option can be used with `pre*` strategies to set a prerelease identifier.
+Set workspace versions to a specific version.
 
 ```sh
-wurk version prepatch --preid alpha
+wurk version 1.2.3
 ```
 
-This command is using the [semver](https://www.npmjs.com/package/semver#functions) package `inc()` function. See the function documentation
-for more information about how version incrementing works.
-
-### Promoting
-
-Remove the prerelease identifier from workspace prerelease versions. Has no effect on non-prerelease versions.
+Promote prerelease versions.
 
 ```sh
 wurk version promote
 ```
 
-### Automatic Incrementing
+## Options
 
-Automatically increment each workspace based on Git [conventional commits](https://www.conventionalcommits.org).
-
-```sh
-wurk version auto
-```
-
-The previous commit ID used to select Git log messages is retrieved from the NPM registry for the current version (see the `gitHead` field returned by `git info <package>@<version> --json`).
-
-When creating the release commit, you should use the `chore(release):` conventional commit prefix. This helps indicate to future auto versioning that the commit is a release commit, which should not contribute to future version incrementing or changelog generation.
-
-> **Note:** The `auto` strategy does not support prerelease versions.
-
-> **Note:** The `auto` strategy requires a Git repository with a clean working tree that is not shallow cloned.
+- `--note <message>` - Add a note to the version commit message.
+- `--preid <identifier>` - Set the prerelease identifier.
+- `--changelog` - Write a changelog for versioned workspaces (default if auto versioning).
+- `--no-changelog` - Do not write a changelog for versioned workspaces (default if not auto versioning).
 
 ## Updating Dependency Version Ranges
 
