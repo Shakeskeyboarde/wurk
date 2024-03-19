@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 0.1.6 (2024-03-19)
+
+### Bug Fixes
+
+- workspace callback delay should not apply to the first callback (9900e40)
+
 ## 0.1.5 (2024-03-19)
 
 ### Bug Fixes

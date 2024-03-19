@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 0.3.0 (2024-03-19)
+
+### Features
+
+- add auto+ strategy (da26757)
+
 ## 0.2.2 (2024-03-19)
 
 ### Code Refactoring
