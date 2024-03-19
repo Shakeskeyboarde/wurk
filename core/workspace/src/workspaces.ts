@@ -297,11 +297,15 @@ export class Workspaces {
           if (signal.aborted) return;
 
           if (this.delaySeconds > 0) {
-            await (this.#delayPromise = this.#delayPromise.then(() => {
+            const delayPromise = this.#delayPromise;
+
+            this.#delayPromise = this.#delayPromise.then(() => {
               return new Promise((resolve) => {
                 setTimeout(resolve, this.delaySeconds * 1000);
               });
-            }));
+            });
+
+            await delayPromise;
           }
 
           await options.callback(workspace, signal, abort);
