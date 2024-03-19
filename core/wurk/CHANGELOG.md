@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 0.1.11 (2024-03-19)
+
+### Code Refactoring
+
+- rewrap some long string literals (a93413f)
+
 ## 0.1.10 (2024-03-19)
 
 ### Improvements

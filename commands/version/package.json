@@ -1,7 +1,7 @@
 {
   "name": "@wurk/command-version",
   "description": "Update versions.",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/commands/version/README.md",
