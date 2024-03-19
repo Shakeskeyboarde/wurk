@@ -7,7 +7,7 @@ import { JsonAccessor } from '@wurk/json';
 import { getAnsiColorIterator, log, setLogLevel } from '@wurk/log';
 import { createPackageManager } from '@wurk/pm';
 import { spawn } from '@wurk/spawn';
-import { AbortError, Workspace, Workspaces } from '@wurk/workspace';
+import { AbortError, createWorkspacePredicate, Workspace, type WorkspacePredicate, Workspaces } from '@wurk/workspace';
 
 import { Config } from './config.js';
 import { loadCommandPlugins } from './plugin.js';
@@ -56,16 +56,16 @@ export const main = async (): Promise<void> => {
     })
 
     // Parallelization Options:
-    .option('-p, --parallel', {
+    .option('--parallel', {
       description:
         'process all workspaces simultaneously without topological awaiting',
       group: 'Parallelization Options',
     })
-    .option('-s, --stream', {
+    .option('--stream', {
       description: 'process workspaces concurrently with topological awaiting',
       group: 'Parallelization Options',
     })
-    .option('-c, --concurrency <count>', {
+    .option('--concurrency <count>', {
       description: 'maximum number of simultaneous streaming workspaces',
       group: 'Parallelization Options',
       parse: (value) => {
@@ -165,7 +165,16 @@ export const main = async (): Promise<void> => {
 
       // Apply all filters.
       for (const filter of filters) {
-        await workspaces[filter.type](filter.expression);
+        let predicate: WorkspacePredicate;
+
+        try {
+          predicate = createWorkspacePredicate(filter.expression);
+        }
+        catch (error) {
+          throw CliUsageError.from(error);
+        }
+
+        await workspaces[filter.type](predicate);
       }
 
       const commandName = Object.keys(commandResult)
