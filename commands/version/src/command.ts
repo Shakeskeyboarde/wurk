@@ -1,7 +1,7 @@
 import { createCommand, type Workspace } from 'wurk';
 
 import { type ChangeSet } from './change.js';
-import { getStrategyCallback, parseStrategy } from './strategy.js';
+import { getStrategyCallback, parseStrategy, type Strategy } from './strategy.js';
 import { writeChangelog, writeConfig } from './write.js';
 
 export default createCommand('version', {
@@ -13,7 +13,7 @@ export default createCommand('version', {
       .trailer(`The "promote" strategy converts prerelease versions to their release
          equivalent by removing the prerelease identifier. The major, minor,
          and patch versions are not changed.`)
-      .option('<strategy>', {
+      .option('[strategy]', {
         description:
           'major, minor, patch, premajor, preminor, prepatch, prerelease, auto, promote, or a version number',
         parse: parseStrategy,
@@ -39,7 +39,7 @@ export default createCommand('version', {
     const git = await createGit()
       .catch(() => null);
     const {
-      strategy,
+      strategy = 'auto' satisfies Strategy,
       notes = [],
       preid,
       changelog = strategy === 'auto' || notes.filter(Boolean).length > 0,

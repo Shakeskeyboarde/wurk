@@ -14,24 +14,32 @@ Automatically version workspaces based on Git [conventional commits](https://www
 
 ```sh
 wurk version auto
+# This is the default mode, so the "auto" argument is optional.
+wurk version
 ```
 
 Increment workspace versions given a change/release type.
 
 ```sh
+wurk version major
+wurk version minor
 wurk version patch
-```
-
-Set workspace versions to a specific version.
-
-```sh
-wurk version 1.2.3
+wurk version premajor
+wurk version preminor
+wurk version prepatch
+wurk version prerelease
 ```
 
 Promote prerelease versions.
 
 ```sh
 wurk version promote
+```
+
+Set workspace versions to a specific version.
+
+```sh
+wurk version 1.2.3
 ```
 
 ## Options
