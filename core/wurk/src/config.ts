@@ -44,6 +44,15 @@ export class Config {
   set concurrency(value: number) {
     process.env.WURK_CONCURRENCY = JSON.stringify(value);
   }
+
+  get delaySeconds(): number {
+    return JsonAccessor.parse(process.env.WURK_DELAY_SECONDS)
+      .as('number', 0);
+  }
+
+  set delaySeconds(value: number) {
+    process.env.WURK_DELAY_SECONDS = JSON.stringify(value);
+  }
 }
 
 export const isFilter = (value: unknown): value is ConfigFilter => {

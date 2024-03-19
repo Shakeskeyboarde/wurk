@@ -6,6 +6,7 @@ declare namespace globalThis {
       WURK_PARALLEL?: string;
       WURK_STREAM?: string;
       WURK_CONCURRENCY?: string;
+      WURK_DELAY_SECONDS?: string;
       [key: string]: never;
     }
   }

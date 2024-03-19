@@ -34,6 +34,7 @@ of selection status.
 
 - [all](Workspaces.md#all)
 - [concurrency](Workspaces.md#concurrency)
+- [delaySeconds](Workspaces.md#delayseconds)
 - [size](Workspaces.md#size)
 
 ## Accessors
@@ -81,7 +82,7 @@ See the [include](Workspaces.md#include) method for expression syntax.
 
 | Name | Type |
 | :------ | :------ |
-| `expression` | `string` |
+| `expression` | `string` \| `WorkspacePredicate` |
 
 #### Returns
 
@@ -210,7 +211,7 @@ Glob patterns are supported via the
 
 | Name | Type |
 | :------ | :------ |
-| `expression` | `string` |
+| `expression` | `string` \| `WorkspacePredicate` |
 
 #### Returns
 
@@ -232,6 +233,15 @@ ___
 
 Maximum workspaces which may be processed in parallel using the
 asynchronous `forEach*` methods.
+
+___
+
+### delaySeconds
+
+• `Readonly` **delaySeconds**: `number`
+
+Delay a given number of seconds before invoking the next `forEach*`
+callback.
 
 ___
 

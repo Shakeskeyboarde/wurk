@@ -1,4 +1,3 @@
-import nodeOs from 'node:os';
 import nodePath from 'node:path';
 import nodeProcess from 'node:process';
 
@@ -43,6 +42,13 @@ export interface WorkspacesOptions {
   readonly concurrency?: number;
 
   /**
+   * Delay a given number of seconds before invoking the next `forEach*`
+   * callback. This delay applies across invocations of the `forEach*`
+   * methods, but only within a single `Workspaces` instance.
+   */
+  readonly delaySeconds?: number;
+
+  /**
    * Default iteration method.
    */
   readonly defaultIterationMethod?:
@@ -66,6 +72,8 @@ export interface WorkspacesOptions {
  * of selection status.
  */
 export class Workspaces {
+  #delayPromise = Promise.resolve();
+
   /**
    * Number of workspaces in the collection.
    */
@@ -78,6 +86,12 @@ export class Workspaces {
   readonly concurrency: number;
 
   /**
+   * Delay a given number of seconds before invoking the next `forEach*`
+   * callback.
+   */
+  readonly delaySeconds: number;
+
+  /**
    * All workspaces in the collection, regardless of selection status.
    */
   readonly all: Iterable<Workspace>;
@@ -86,7 +100,14 @@ export class Workspaces {
    * Create a new workspace collection.
    */
   constructor(options: WorkspacesOptions) {
-    const { workspaceEntries = [], rootDir, concurrency, defaultIterationMethod, getPublished } = options;
+    const {
+      workspaceEntries = [],
+      rootDir,
+      concurrency = 1,
+      delaySeconds = 0,
+      defaultIterationMethod,
+      getPublished,
+    } = options;
 
     const workspaces = workspaceEntries
       .map(([workspaceDir, config]) => {
@@ -116,7 +137,8 @@ export class Workspaces {
     const links = getLinks(workspaces);
 
     this.size = workspaces.length;
-    this.concurrency = concurrency ?? nodeOs.cpus().length + 1;
+    this.concurrency = concurrency >= 0 ? concurrency : 0;
+    this.delaySeconds = delaySeconds >= 0 ? delaySeconds : 0;
     this.all = new GeneratorIterable(() => getDepthFirstGenerator(workspaces, (dependent) => {
       return dependent
         .getDependencyLinks()
@@ -245,9 +267,9 @@ export class Workspaces {
     const abortController = new AbortController();
     const { signal } = abortController;
     const promises = new Map<Workspace, Promise<void>>();
-    const semaphore = options.concurrency < 0 || Number.isNaN(options.concurrency)
-      ? null
-      : new Sema(options.concurrency);
+    const semaphore = options.concurrency > 0
+      ? new Sema(Math.max(1, options.concurrency))
+      : null;
 
     options.signal?.addEventListener('abort', () => abortController.abort(), {
       once: true,
@@ -273,6 +295,14 @@ export class Workspaces {
           }
 
           if (signal.aborted) return;
+
+          if (this.delaySeconds > 0) {
+            await (this.#delayPromise = this.#delayPromise.then(() => {
+              return new Promise((resolve) => {
+                setTimeout(resolve, this.delaySeconds * 1000);
+              });
+            }));
+          }
 
           await options.callback(workspace, signal, abort);
         })

@@ -10,6 +10,7 @@ Workspace collection options.
 
 - [concurrency](WorkspacesOptions.md#concurrency)
 - [defaultIterationMethod](WorkspacesOptions.md#defaultiterationmethod)
+- [delaySeconds](WorkspacesOptions.md#delayseconds)
 - [getPublished](WorkspacesOptions.md#getpublished)
 - [rootDir](WorkspacesOptions.md#rootdir)
 - [workspaceEntries](WorkspacesOptions.md#workspaceentries)
@@ -31,6 +32,16 @@ ___
 • `Optional` `Readonly` **defaultIterationMethod**: ``"forEachParallel"`` \| ``"forEachStream"`` \| ``"forEachSequential"``
 
 Default iteration method.
+
+___
+
+### delaySeconds
+
+• `Optional` `Readonly` **delaySeconds**: `number`
+
+Delay a given number of seconds before invoking the next `forEach*`
+callback. This delay applies across invocations of the `forEach*`
+methods, but only within a single `Workspaces` instance.
 
 ___
 

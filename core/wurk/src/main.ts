@@ -75,6 +75,17 @@ export const main = async (): Promise<void> => {
         return count;
       },
     })
+    .option('--delay-each-workspace <seconds>', {
+      description: 'delay before starting to process the next workspace',
+      group: 'Parallelization Options',
+      key: 'delaySeconds',
+      parse: (value): number => {
+        const num = Number(value);
+        nodeAssert(num, 'delay must be an integer');
+        nodeAssert(num >= 0, 'delay must be a positive integer');
+        return num;
+      },
+    })
     .optionAction('concurrency', ({ result }) => {
       result.options.stream = true;
     })
@@ -105,6 +116,7 @@ export const main = async (): Promise<void> => {
         parallel = config.parallel,
         stream = config.stream,
         concurrency = config.concurrency,
+        delaySeconds = config.delaySeconds,
         script,
         scriptArgs,
       } = options;
@@ -140,6 +152,7 @@ export const main = async (): Promise<void> => {
         rootDir: pm.rootDir,
         workspaceEntries,
         concurrency,
+        delaySeconds,
         defaultIterationMethod: parallel
           ? 'forEachParallel'
           : stream
