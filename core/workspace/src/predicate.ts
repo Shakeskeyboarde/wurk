@@ -8,10 +8,7 @@ export type WorkspacePredicate = (workspace: Workspace) => boolean | Promise<boo
 
 export const createWorkspacePredicate = (expression: string): WorkspacePredicate => {
   if (expression.startsWith('/') || expression.startsWith('./')) {
-    return (workspace) => expression.includes('\\')
-      // Not a glob because it contains backslashes.
-      ? nodePath.normalize(workspace.relativeDir) === nodePath.join('.', expression)
-      : minimatch(workspace.relativeDir, nodePath.posix.join('.', expression));
+    return (workspace) => minimatch(workspace.relativeDir, nodePath.posix.join('.', expression));
   }
 
   if (expression.startsWith('#')) {
