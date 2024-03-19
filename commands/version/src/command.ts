@@ -7,12 +7,16 @@ import { writeChangelog, writeConfig } from './write.js';
 export default createCommand('version', {
   config: (cli) => {
     return cli
-      .trailer(`The "auto" strategy determines the next version for each workspace
-         based on conventional-like commit messages added after the closest
-         published previous version. Prerelease versions are not supported.`)
-      .trailer(`The "promote" strategy converts prerelease versions to their release
-         equivalent by removing the prerelease identifier. The major, minor,
-         and patch versions are not changed.`)
+      .trailer(`
+        The "auto" strategy determines the next version for each workspace
+        based on conventional-like commit messages added after the closest
+        published previous version. Prerelease versions are not supported.
+      `)
+      .trailer(`
+        The "promote" strategy converts prerelease versions to their release
+        equivalent by removing the prerelease identifier. The major, minor,
+        and patch versions are not changed.
+      `)
       .option('[strategy]', {
         description:
           'major, minor, patch, premajor, preminor, prepatch, prerelease, auto, promote, or a version number',

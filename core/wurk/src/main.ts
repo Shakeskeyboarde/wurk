@@ -106,7 +106,10 @@ export const main = async (): Promise<void> => {
     .option('[script-args...]', 'arguments for the script')
 
     // Trailers:
-    .trailer('See the docs for more information about workspace filtering options: https://www.npmjs.com/package/wurk#filter-options')
+    .trailer(`
+      See the docs for more information about workspace filtering options:
+      https://www.npmjs.com/package/wurk#filter-options
+    `)
     .trailer('To get help for a specific command, run `wurk <command> --help`.')
 
     .action(async ({ options, commandResult }) => {
