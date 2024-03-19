@@ -47,7 +47,7 @@ const wrap = (text: string, columns: number, newline = '\n'): string => {
     const { space = '', word = '' } = match.groups!;
 
     if (word) {
-      if (lineLength > 0 && word.length + spaceLength > columns) {
+      if (lineLength > 0 && lineLength + word.length + spaceLength > columns) {
         result += newline;
         lineLength = 0;
       }

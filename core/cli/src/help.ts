@@ -21,6 +21,8 @@ interface HelpFormatter {
   format(cli: HelpCli, error: unknown): string;
 }
 
+const COLUMNS = Math.min(process.stdout.columns, 120);
+
 const formatUsage = (cli: HelpCli): string => {
   let name = [cli.name, ...cli.aliases].join('|');
 
@@ -32,7 +34,7 @@ const formatUsage = (cli: HelpCli): string => {
   let result = '';
 
   const newline = '\n' + ' '.repeat(prefix.length);
-  const columns = process.stdout.columns - prefix.length;
+  const columns = COLUMNS - prefix.length;
 
   const named = cli.options.filter((option) => {
     return (
@@ -102,7 +104,7 @@ const formatUsage = (cli: HelpCli): string => {
 };
 
 const formatDescription = (description: string): string => {
-  return wrap(description, process.stdout.columns);
+  return wrap(description, COLUMNS);
 };
 
 const formatOptions = (
@@ -116,7 +118,7 @@ const formatOptions = (
   const usageLength = options.reduce((max, option) => {
     return Math.max(max, option.usage.length);
   }, 0);
-  const columns = process.stdout.columns - usageLength - 4;
+  const columns = COLUMNS - usageLength - 4;
   const newline = '\n' + ' '.repeat(usageLength + 4);
   const result = options.reduce((previous, { usage, description }) => {
     return (
@@ -142,7 +144,7 @@ const formatCommands = (commands: readonly HelpCli[]): string => {
     },
     [{}, 0],
   );
-  const columns = process.stdout.columns - nameLength - 4;
+  const columns = COLUMNS - nameLength - 4;
   const newline = '\n' + ' '.repeat(nameLength + 4);
   const result = Object.entries(commandMap)
     .reduce((previous, [name, { descriptions, isDefault }]) => {
@@ -162,7 +164,7 @@ const formatCommands = (commands: readonly HelpCli[]): string => {
 const formatError = (error: unknown): string => {
   if (!error || error === true) return '';
 
-  return wrap(String(error), process.stdout.columns);
+  return wrap(String(error), COLUMNS);
 };
 
 const format = (cli: HelpCli, error: unknown): string => {
