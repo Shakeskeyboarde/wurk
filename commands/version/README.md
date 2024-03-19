@@ -16,6 +16,8 @@ Automatically version workspaces based on Git [conventional commits](https://www
 wurk version auto
 # This is the default mode, so the "auto" argument is optional.
 wurk version
+# Auto version all selected, even if there are no new conventional commits.
+wurk version auto+
 ```
 
 Increment workspace versions given a change/release type.

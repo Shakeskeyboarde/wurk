@@ -7,7 +7,7 @@ import { increment } from './strategies/increment.js';
 import { literal } from './strategies/literal.js';
 import { promote } from './strategies/promote.js';
 
-export type Strategy = semver.ReleaseType | 'auto' | 'promote' | semver.SemVer;
+export type Strategy = semver.ReleaseType | 'auto' | 'auto+' | 'promote' | semver.SemVer;
 
 export type StrategyCallback = (workspace: Workspace) => Promise<ChangeSet | null>;
 
@@ -21,6 +21,7 @@ export const parseStrategy = (value: string): Strategy => {
     case 'prepatch':
     case 'prerelease':
     case 'auto':
+    case 'auto+':
     case 'promote':
       return value;
   }
@@ -41,8 +42,9 @@ export const getStrategyCallback = (
   if (typeof strategy === 'string') {
     switch (strategy) {
       case 'auto':
+      case 'auto+':
         if (!git) throw new Error('auto versioning requires a Git repository');
-        return auto.bind(null, git);
+        return auto.bind(null, git, strategy === 'auto+');
       case 'promote':
         return promote;
       default:

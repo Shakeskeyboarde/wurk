@@ -18,8 +18,10 @@ export default createCommand('version', {
         and patch versions are not changed.
       `)
       .option('[strategy]', {
-        description:
-          'major, minor, patch, premajor, preminor, prepatch, prerelease, auto, promote, or a version number',
+        description: `
+          major, minor, patch, premajor, preminor, prepatch, prerelease,
+          auto, auto+, promote, or a version number
+        `,
         parse: parseStrategy,
       })
       .option('--note <text...>', {
@@ -29,11 +31,11 @@ export default createCommand('version', {
       .option('--preid <id>', 'set the identifier for prerelease versions')
       .option(
         '--changelog',
-        'add changelog entries (default for the "auto" strategy)',
+        'add changelog entries (default for the auto strategies)',
       )
       .option(
         '--no-changelog',
-        'do not add changelog entries (default for non-"auto" strategies)',
+        'do not add changelog entries (default for non-auto strategies)',
       )
       .optionNegation('changelog', 'noChangelog');
   },
@@ -46,7 +48,7 @@ export default createCommand('version', {
       strategy = 'auto' satisfies Strategy,
       notes = [],
       preid,
-      changelog = strategy === 'auto' || notes.filter(Boolean).length > 0,
+      changelog = strategy === 'auto' || strategy === 'auto+' || notes.filter(Boolean).length > 0,
     } = options;
     const isPreStrategy = typeof strategy === 'string' && strategy.startsWith('pre');
     const changeSets = new Map<Workspace, ChangeSet>();

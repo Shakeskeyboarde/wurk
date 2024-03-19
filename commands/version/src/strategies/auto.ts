@@ -5,6 +5,7 @@ import { type Change, type ChangeSet, ChangeType } from '../change.js';
 
 export const auto = async (
   git: Git,
+  force: boolean,
   workspace: Workspace,
 ): Promise<ChangeSet | null> => {
   const { log, dir, version: currentVersion, getPublished } = workspace;
@@ -29,7 +30,8 @@ export const auto = async (
   }
 
   const logs = await git.getLogs(dir, { start: info.gitHead });
-  const { isConventional, releaseType, changes } = await getChanges(logs);
+  const { isConventional, suggestedReleaseType, changes } = await getChanges(logs);
+  const releaseType = suggestedReleaseType ?? (force ? 'patch' : null);
 
   if (!isConventional) {
     log.warn`workspace has non-conventional commits`;
@@ -60,7 +62,7 @@ export const getChanges = async (
   logs: GitLog[],
 ): Promise<{
   isConventional: boolean;
-  releaseType: null | Exclude<ReleaseType, `pre${string}`>;
+  suggestedReleaseType: null | Exclude<ReleaseType, `pre${string}`>;
   changes: readonly Change[];
 }> => {
   let isConventional = true;
@@ -121,9 +123,9 @@ export const getChanges = async (
       };
     });
 
-  const releaseType = getReleaseType(changes);
+  const suggestedReleaseType = getReleaseType(changes);
 
-  return { isConventional, releaseType, changes };
+  return { isConventional, suggestedReleaseType, changes };
 };
 
 const getReleaseType = (changes: readonly Change[]): Exclude<ReleaseType, `pre${string}`> | null => {
