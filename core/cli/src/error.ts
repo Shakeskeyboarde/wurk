@@ -10,8 +10,14 @@ interface CliUsageErrorOptions {
 class CliUsageError extends Error {
   context?: CliUsageErrorContext;
 
-  constructor(message: unknown, options?: CliUsageErrorOptions) {
-    super(typeof message === 'string' ? message : 'cli parsing failed', {
+  constructor(cause: unknown, options?: CliUsageErrorOptions) {
+    const message = typeof cause === 'string'
+      ? cause
+      : cause instanceof Error
+        ? cause.message
+        : 'cli parsing failed';
+
+    super(message, {
       cause: typeof message !== 'string' ? message : undefined,
     });
 
