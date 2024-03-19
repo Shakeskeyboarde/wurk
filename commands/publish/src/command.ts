@@ -15,10 +15,17 @@ export default createCommand('publish', {
         '--otp <password>',
         'one-time password for two-factor authentication',
       )
-      .option(
-        '--remove-package-fields <fields...>',
-        'remove fields from the package.json file',
-      )
+      .option('--remove-package-field <fields...>', {
+        description: 'remove fields from the package.json file',
+        key: 'removePackageFields',
+        parse: (value, previous = []) => {
+          const values = value
+            .split(/\s*,\s*/u)
+            .filter(Boolean);
+
+          return [...values, ...previous];
+        },
+      })
       .optionConflict('removePackageFields', 'fromArchive')
       .option('--dry-run', 'perform a dry-run for validation');
   },
