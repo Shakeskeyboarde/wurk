@@ -16,17 +16,10 @@ export const filter = async (workspaces: Iterable<Workspace>, expression: string
 
 const match = async (workspace: Workspace, expression: string): Promise<boolean> => {
   if (expression.startsWith('/') || expression.startsWith('./')) {
-    // Normalize the workspace relative directory to be a POSIX path with a
-    // leading slash so that it's compatible with the expression.
-    const dir = nodePath.posix.join(
-      '/',
-      nodePath
-        .normalize(workspace.relativeDir)
-        .split(nodePath.sep)
-        .join('/'),
-    );
-
-    return minimatch(dir, expression);
+    return expression.includes('\\')
+      // Not a glob because it contains backslashes.
+      ? nodePath.normalize(workspace.relativeDir) === nodePath.join('.', expression)
+      : minimatch(workspace.relativeDir, nodePath.posix.join('.', expression));
   }
 
   if (expression.startsWith('#')) {
