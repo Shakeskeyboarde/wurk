@@ -48,14 +48,22 @@ type InferNamedKey<TUsage extends NamedUsageString> =
     ? CamelCase<Exclude<TPrefix, `${string}${' ' | '='}${string}`>>
     : never;
 
-type InferNamedType<TUsage extends NamedUsageString> = TUsage extends any
+type InferNamedArgType<TUsage extends NamedUsageString> = TUsage extends any
+  ? TUsage extends `${'' | `${string}${' ' | '='}`}<${string}>`
+    ? string
+    : TUsage extends `${'' | `${string}${' ' | '='}`}[${string}]`
+      ? boolean | string
+      : boolean
+  : never;
+
+type InferNamedResultType<TUsage extends NamedUsageString> = TUsage extends any
   ? TUsage extends `${'' | `${string}${' ' | '='}`}<${infer TLabel}>`
     ? TLabel extends `${string}...`
-      ? [string, ...string[]]
+      ? string[]
       : string
     : TUsage extends `${'' | `${string}${' ' | '='}`}[${infer TContent}]`
       ? TContent extends `${string}...`
-        ? [boolean | string, ...(boolean | string)[]]
+        ? (boolean | string)[]
         : boolean | string
       : boolean
   : never;
@@ -148,8 +156,9 @@ const parseUsage = (usage: string): NamedUsage => {
 export {
   type AnyNamedConfig,
   createNamed,
+  type InferNamedArgType,
   type InferNamedKey,
-  type InferNamedType,
+  type InferNamedResultType,
   type Named,
   type NamedConfig,
   type NamedUsageString,

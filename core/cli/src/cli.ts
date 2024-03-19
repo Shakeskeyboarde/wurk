@@ -20,8 +20,9 @@ import { defaultHelpFormatter, type HelpFormatter } from './help.js';
 import {
   type AnyNamedConfig,
   createNamed,
+  type InferNamedArgType,
   type InferNamedKey,
-  type InferNamedType,
+  type InferNamedResultType,
   type Named,
   type NamedConfig,
   type NamedUsageString,
@@ -287,8 +288,8 @@ class Cli<
     TKey extends string | null = InferNamedKey<TUsage>,
     TRequired extends boolean = false,
     TMapped extends boolean = false,
-    TValue = TMapped extends true ? Record<string, InferNamedType<TUsage>> : InferNamedType<TUsage>,
-    TParsedValue = TValue,
+    TValue = TMapped extends true ? Record<string, InferNamedArgType<TUsage>> : InferNamedArgType<TUsage>,
+    TParsedValue = TMapped extends true ? Record<string, InferNamedResultType<TUsage>> : InferNamedResultType<TUsage>,
   >(
     usage: TUsage,
     config?: string | NamedConfig<TKey, TValue, TParsedValue, TRequired, TMapped, TResult>,
@@ -309,7 +310,7 @@ class Cli<
     TKey extends string | null = InferPositionalKey<TUsage>,
     TRequired extends boolean = InferPositionalRequired<TUsage>,
     TValue = InferPositionalType<TUsage>,
-    TParsedValue = TValue,
+    TParsedValue = InferPositionalType<TUsage>,
   >(
     usage: TUsage,
     config?: string | PositionalConfig<TKey, TValue, TParsedValue, TResult>,

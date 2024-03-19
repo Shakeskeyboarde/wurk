@@ -49,7 +49,7 @@ type InferPositionalType<TUsage extends PositionalUsageString> = TUsage extends
   | `<${infer TLabel}>`
   | `[${infer TLabel}]`
   ? TLabel extends `${string}...`
-    ? [string, ...string[]]
+    ? string[]
     : string
   : never;
 
