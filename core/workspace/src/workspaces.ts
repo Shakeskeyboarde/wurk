@@ -6,9 +6,10 @@ import { type JsonAccessor } from '@wurk/json';
 import { Sema } from 'async-sema';
 
 import { AbortError } from './error.js';
-import { filter } from './filter.js';
+import { filterWorkspaces } from './filter.js';
 import { GeneratorIterable, getDepthFirstGenerator } from './generator.js';
 import { getLinks } from './link.js';
+import { type WorkspacePredicate } from './predicate.js';
 import { Workspace, type WorkspacePublished } from './workspace.js';
 
 /**
@@ -160,10 +161,10 @@ export class Workspaces {
    * Glob patterns are supported via the
    * [minimatch](https://www.npmjs.com/package/minimatch) package.
    */
-  async include(expression: string): Promise<void> {
+  async include(expression: string | WorkspacePredicate): Promise<void> {
     const unselected = Array.from(this.all)
       .filter((workspace) => !workspace.isSelected);
-    const matched = await filter(unselected, expression);
+    const matched = await filterWorkspaces(unselected, expression);
 
     matched.forEach((workspace) => workspace.isSelected = true);
   }
@@ -173,10 +174,10 @@ export class Workspaces {
    *
    * See the {@link include} method for expression syntax.
    */
-  async exclude(expression: string): Promise<void> {
+  async exclude(expression: string | WorkspacePredicate): Promise<void> {
     const selected = Array.from(this.all)
       .filter((workspace) => workspace.isSelected);
-    const matched = await filter(selected, expression);
+    const matched = await filterWorkspaces(selected, expression);
 
     matched.forEach((workspace) => workspace.isSelected = false);
   }
