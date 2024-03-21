@@ -1,7 +1,7 @@
 import nodePath from 'node:path';
 
 import { JsonAccessor } from '@wurk/json';
-import { mergeSpawnOptions, spawn, type SpawnOptions, type SpawnResult } from '@wurk/spawn';
+import { spawn, type SpawnOptions, type SpawnResult } from '@wurk/spawn';
 import semver from 'semver';
 
 import {
@@ -9,11 +9,20 @@ import {
   type PackageMetadata,
 } from '../pm.js';
 
+/**
+ * Package manager implementation for Yarn.
+ */
 export class Yarn extends PackageManager {
+  /**
+   * Create a new Yarn package manager instance.
+   */
   constructor(rootDir: string, rootConfig: JsonAccessor) {
     super(rootDir, rootConfig, 'yarn');
   }
 
+  /**
+   * Get the workspaces in the current project.
+   */
   async getWorkspaces(): Promise<readonly string[]> {
     const { ok, stdoutText } = await spawn('yarn', [
       '--json',
@@ -33,6 +42,9 @@ export class Yarn extends PackageManager {
       .filter((location) => Boolean(nodePath.relative(this.rootDir, location)));
   }
 
+  /**
+   * Get publication information for the package.
+   */
   async getPublished(id: string, version: string): Promise<PackageMetadata | null> {
     const { stdoutJson, ok } = await spawn(
       'yarn',
@@ -69,7 +81,10 @@ export class Yarn extends PackageManager {
     };
   }
 
-  override async spawnNode(args: readonly string[], options?: SpawnOptions): Promise<SpawnResult> {
-    return await spawn('yarn', ['node', args], mergeSpawnOptions({ cwd: this.rootDir }, options));
+  /**
+   * Spawn a Node.js process using Yarn so that PnP works.
+   */
+  override async spawnNode(args: readonly string[], ...options: SpawnOptions[]): Promise<SpawnResult> {
+    return await spawn('yarn', ['node', args], { cwd: this.rootDir }, ...options);
   }
 }

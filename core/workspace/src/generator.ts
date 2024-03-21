@@ -1,3 +1,6 @@
+/**
+ * Get a generator that iterates over a graph in a depth-first manner.
+ */
 export const getDepthFirstGenerator = function *<T>(
   root: Iterable<T>,
   getRelated: (current: T) => Iterable<T> | undefined,
@@ -22,13 +25,22 @@ export const getDepthFirstGenerator = function *<T>(
   yield* next(root);
 };
 
+/**
+ * An iterable wrapper for a generator function.
+ */
 export class GeneratorIterable<T> implements Iterable<T> {
   readonly #getGenerator: () => Generator<T>;
 
+  /**
+   * Create a new generator iterable.
+   */
   constructor(getGenerator: () => Generator<T>) {
     this.#getGenerator = getGenerator;
   }
 
+  /**
+   * Return an iterator for the generator.
+   */
   [Symbol.iterator](): Generator<T> {
     return this.#getGenerator();
   }

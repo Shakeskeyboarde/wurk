@@ -42,9 +42,9 @@
   "engineStrict": true,
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.6",
-    "@types/eslint": "^8.56.2",
-    "@types/node": "^20.11.17",
-    "@vitest/coverage-v8": "^1.2.2",
+    "@types/eslint": "^8.56.6",
+    "@types/node": "^20.11.30",
+    "@vitest/coverage-v8": "^1.4.0",
     "@wurk/command-clean": "*",
     "@wurk/command-exec": "*",
     "@wurk/command-list": "*",
@@ -53,13 +53,13 @@
     "@wurk/command-version": "*",
     "@wurk/command-vitest": "*",
     "depcheck": "^1.4.7",
-    "eslint": "^8.56.0",
-    "eslint-config-rational": "^4.0.5",
-    "rollup": "^4.10.0",
-    "typedoc": "^0.25.8",
+    "eslint": "^8.57.0",
+    "eslint-config-rational": "^5.0.6",
+    "rollup": "^4.13.0",
+    "typedoc": "^0.25.12",
     "typedoc-plugin-markdown": "^3.17.1",
-    "typescript": "5.3.x",
-    "vite": "^5.1.1",
-    "vitest": "^1.2.2"
+    "typescript": "5.4.x",
+    "vite": "^5.2.2",
+    "vitest": "^1.4.0"
   }
 }

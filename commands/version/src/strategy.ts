@@ -7,10 +7,19 @@ import { increment } from './strategies/increment.js';
 import { literal } from './strategies/literal.js';
 import { promote } from './strategies/promote.js';
 
+/**
+ * Versioning strategy type.
+ */
 export type Strategy = semver.ReleaseType | 'auto' | 'auto+' | 'promote' | semver.SemVer;
 
+/**
+ * Versioning strategy callback (implementation) type.
+ */
 export type StrategyCallback = (workspace: Workspace) => Promise<ChangeSet | null>;
 
+/**
+ * Parse the {@link Strategy} type from a string.
+ */
 export const parseStrategy = (value: string): Strategy => {
   switch (value) {
     case 'major':
@@ -34,6 +43,9 @@ export const parseStrategy = (value: string): Strategy => {
   }
 };
 
+/**
+ * Resolve the versioning strategy implementation for the strategy type.
+ */
 export const getStrategyCallback = (
   strategy: Strategy,
   git: Git | null,

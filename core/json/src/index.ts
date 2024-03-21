@@ -1,8 +1,21 @@
+/**
+ * Reference to a parent accessor and the key the parent value that this
+ * accessor is associated with.
+ */
 export interface JsonAccessorParent {
+  /**
+   * The parent accessor.
+   */
   readonly accessor: JsonAccessor;
+  /**
+   * The key of the parent value that this accessor is associated with.
+   */
   readonly key: string | number;
 }
 
+/**
+ * Basic JSON type names.
+ */
 export type JsonType =
   | 'string'
   | 'number'
@@ -27,17 +40,34 @@ type JsonValue<T extends JsonType = JsonType> = T extends 'string'
             ? null
             : unknown;
 
+/**
+ * A fluent accessor for safely reading and modifying JSON data.
+ */
 export class JsonAccessor {
+  /**
+   * The accessor's parent accessor reference, if any.
+   */
   readonly parent: JsonAccessorParent | undefined;
+
+  /**
+   * True if the accessor is immutable. The `set` method will throw an error
+   * when used if this is true.
+   */
   readonly immutable: boolean;
 
   #value: JsonValue | undefined;
   #isModified = false;
 
+  /**
+   * True if the set method has been used to change the underlying value.
+   */
   get isModified(): boolean {
     return this.#isModified;
   }
 
+  /**
+   * Construct a new JSON accessor for the given value.
+   */
   constructor(value?: unknown, options?: { readonly parent?: JsonAccessorParent; readonly immutable?: boolean }) {
     this.#value = safeParse(JSON.stringify(value));
     this.parent = options?.parent;
@@ -45,11 +75,8 @@ export class JsonAccessor {
   }
 
   /**
-   * Return a new accessor for the value at the given key of the current
+   * Returns a new sub-accessor for the value at the given key of the current
    * accessor.
-   *
-   * NOTE: This always returns a _new_ accessor, so the `isModified` state
-   * will _not_ be shared with any previous accessors at the same key.
    */
   at(key: string | number): JsonAccessor {
     const value = (() => {
@@ -77,6 +104,10 @@ export class JsonAccessor {
     return new JsonAccessor(value, { parent: { accessor: this, key }, immutable: this.immutable });
   }
 
+  /**
+   * Returns the underlying value if it matches one of the types. Otherwise
+   * return undefined or the alternative value.
+   */
   as<TJsonType extends JsonType, TValue = JsonValue<TJsonType>, TAltValue = undefined>(
     types: TJsonType | [TJsonType, ...TJsonType[]] | ((value: unknown) => value is TValue),
     alt: (() => TAltValue) | TAltValue = undefined as TAltValue,
@@ -118,6 +149,9 @@ export class JsonAccessor {
     return getAlt();
   }
 
+  /**
+   * Returns true if the underlying value matches one of the types.
+   */
   is(types: JsonType | [JsonType, ...JsonType[]] | ((value: unknown) => boolean)): boolean {
     return (
       this.as(types as
@@ -127,13 +161,27 @@ export class JsonAccessor {
     );
   }
 
+  /**
+   * Returns true if the underlying value is not undefined.
+   */
   exists(): boolean {
     return this.#value !== undefined;
   }
 
-  keys(): number[] | string[];
-  keys(type: 'array'): number[];
+  /**
+   * Returns the keys of the underlying value if it is an object. Otherwise, it
+   * returns an empty array.
+   */
   keys(type: 'object'): string[];
+  /**
+   * Returns the keys of the underlying value if it is an array. Otherwise, it
+   * returns an empty array.
+   */
+  keys(type: 'array'): number[];
+  /**
+   * Returns the keys of the underlying value if it is an array or object.
+   * Returns an empty array if the value is not an array or object.
+   */
   keys(type?: 'array' | 'object'): number[] | string[];
   keys(type?: 'array' | 'object'): number[] | string[] {
     if (Array.isArray(this.#value)) {
@@ -157,6 +205,10 @@ export class JsonAccessor {
     }
   }
 
+  /**
+   * Returns the values of the underlying value if it is an array or object.
+   * Returns an empty array if the value is not an array or object.
+   */
   values(): unknown[] {
     if (Array.isArray(this.#value)) {
       return this.#value;
@@ -169,9 +221,20 @@ export class JsonAccessor {
     }
   }
 
-  entries(): [number | string, unknown][];
+  /**
+   * Returns the entry tuples of the underlying value if it is an array.
+   * Otherwise, it returns an empty array.
+   */
   entries(type: 'array'): [number, unknown][];
+  /**
+   * Returns the entry tuples of the underlying value if it is an object.
+   * Otherwise, it returns an empty array.
+   */
   entries(type: 'object'): [string, unknown][];
+  /**
+   * Returns the entry tuples of the underlying value if it is an array or
+   * object. Returns an empty array if the value is not an array or object.
+   */
   entries(type?: 'array' | 'object'): [number | string, unknown][];
   entries(type?: 'array' | 'object'): [number | string, unknown][] {
     if (Array.isArray(this.#value)) {
@@ -195,16 +258,56 @@ export class JsonAccessor {
     }
   }
 
+  /**
+   * Apply a mapping callback to all values of the underlying value if it is
+   * an array, and return the mapped results. Returns undefined if the value
+   * is not an array.
+   */
   map<TValue>(callback: (value: JsonAccessor, index: number) => TValue): TValue[] | undefined {
     return this.as('array')
       ?.map((value, index) => callback(new JsonAccessor(value), index));
   }
 
+  /**
+   * Convenience method which creates a closure that receives the current
+   * accessor, and can return a value derived from it. This is useful for
+   * to avoid accessing the same nested value multiple times.
+   *
+   * ```ts
+   * const value = accessor.at('values').at('data').compose((data) => {
+   *   return {
+   *     foo: data.at('foo').unwrap(),
+   *     bar: data.at('bar').unwrap(),
+   *   };
+   * });
+   *
+   * // Instead of accessing values.data multiple times.
+   *
+   * const value = {
+   *   foo: accessor.at('values').at('data').at('foo').unwrap(),
+   *   bar: accessor.at('values').at('data').at('bar').unwrap(),
+   * }
+   * ```
+   */
   compose<TValue>(callback: (self: JsonAccessor) => TValue): TValue {
     return callback(this);
   }
 
+  /**
+   * Derive and set the underlying value of the current accessor using a
+   * factory function. If the accessor is immutable, an error will be thrown.
+   *
+   * NOTE: You should only set JSON serializable values, or `undefined` to
+   * remove the current value from the parent accessor.
+   */
   set(factory: (self: JsonAccessor) => unknown): void;
+  /**
+   * Set the underlying value of the current accessor. If the accessor is
+   * immutable, an error will be thrown.
+   *
+   * NOTE: You should only set JSON serializable values, or `undefined` to
+   * remove the current value from the parent accessor.
+   */
   set(value: unknown): void;
   set(factoryOrValue: unknown): void {
     if (this.immutable) {
@@ -232,6 +335,11 @@ export class JsonAccessor {
     }
   }
 
+  /**
+   * Create a copy of the current accessor. The underlying value will be
+   * deep copied, and the copy will be mutable by default. You can provide
+   * an initializer function to modify the copy before it is returned.
+   */
   copy(options: {
     readonly initializer?: (copy: JsonAccessor) => void;
     readonly immutable?: boolean;
@@ -247,6 +355,9 @@ export class JsonAccessor {
     return new JsonAccessor(accessor, { immutable });
   }
 
+  /**
+   * Return the underlying value of the accessor.
+   */
   unwrap(): unknown {
     return safeParse(JSON.stringify(this.#value));
   }
@@ -258,6 +369,9 @@ export class JsonAccessor {
     return this.unwrap();
   }
 
+  /**
+   * Delegates the `valueOf` method to the underlying value.
+   */
   valueOf(): Object {
     return Object.prototype.valueOf.call(this.unwrap());
   }
@@ -271,6 +385,13 @@ export class JsonAccessor {
     return JSON.stringify(this.#value, null, space) ?? '';
   }
 
+  /**
+   * Parse the given JSON string and return a new JSON accessor for the
+   * parsed value. This will never throw an error, and will always return
+   * a new accessor instance. If the JSON string was invalid, the accessor's
+   * underlying value will be `undefined`, and the `.exists()` method will
+   * return false.
+   */
   static parse(jsonData: string | undefined | null, options?: { readonly immutable?: boolean }): JsonAccessor {
     return new JsonAccessor(safeParse(jsonData), options);
   }

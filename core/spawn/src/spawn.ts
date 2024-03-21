@@ -12,6 +12,9 @@ import { type SpawnResult } from './result.js';
 
 type SpawnStdio = 'ignore' | 'inherit' | 'echo' | 'buffer';
 
+/**
+ * Options for spawning a child process.
+ */
 export interface SpawnOptions {
   /**
    * Current working directory of the child process.
@@ -59,6 +62,9 @@ export interface SpawnOptions {
   readonly allowNonZeroExitCode?: boolean;
 }
 
+/**
+ * Spawn function type.
+ */
 export type Spawn = typeof spawn;
 
 const promises: {
@@ -69,19 +75,24 @@ const promises: {
   blocking: undefined,
 };
 
+/**
+ * Spawn a child process.
+ */
 export const spawn = (
   cmd: string,
   sparseArgs: SpawnSparseArgs = [],
-  options: SpawnOptions = {},
+  ...options: SpawnOptions[]
 ): Promise<SpawnResult> => {
   let promise: Promise<SpawnResult>;
 
-  if (options.stdio === 'inherit') {
+  const mergedOptions = mergeSpawnOptions(...options);
+
+  if (mergedOptions.stdio === 'inherit') {
     // If a stream is inherited, then wait for all other spawned processes to
     // complete before starting, and block new ones from spawning until this
     // process exits.
     promise = Promise.allSettled(promises.all)
-      .then(async () => await spawnAsync(cmd, sparseArgs, options));
+      .then(async () => await spawnAsync(cmd, sparseArgs, mergedOptions));
 
     promises.blocking = promise;
 
@@ -96,7 +107,7 @@ export const spawn = (
     // If no streams are inherited, then only wait if a previous process had
     // inherited streams.
     promise = Promise.allSettled([promises.blocking])
-      .then(async () => await spawnAsync(cmd, sparseArgs, options));
+      .then(async () => await spawnAsync(cmd, sparseArgs, mergedOptions));
   }
 
   promises.all.add(promise);
@@ -266,32 +277,35 @@ const spawnAsync = async (
   });
 };
 
-export const mergeSpawnOptions = (...options: (SpawnOptions | undefined)[]): SpawnOptions => {
-  let current: SpawnOptions = {};
-
-  for (const next of options) {
-    if (!next) continue;
-
-    current = {
-      ...current,
-      ...next,
-      cwd: nodePath.resolve(...[current.cwd, next.cwd].filter((value): value is string => Boolean(value))),
-      env: { ...current.env, ...next.env },
-      paths: [...(current.paths ?? []), ...(next.paths ?? [])],
-    };
-  }
-
-  return current;
-};
-
 /**
- * Create a spawn function with default options.
+ * Deep merge spawn options.
+ *
+ * - `cwd` is resolved relative to previous `cwd` values.
+ * - `env` is merged with previous `env` values.
+ * - `paths` are appended to previous `paths` values.
  */
-export const createSpawn = (getDefaultOptions: () => SpawnOptions): Spawn => {
-  return async (cmd, args, options): Promise<SpawnResult> => {
-    const defaultOptions = getDefaultOptions();
-    const mergedOptions = mergeSpawnOptions(defaultOptions, options);
-
-    return await spawn(cmd, args, mergedOptions);
-  };
+const mergeSpawnOptions = (...options: (SpawnOptions | undefined)[]): SpawnOptions => {
+  return options.reduce<SpawnOptions>((current, next) => {
+    return !next
+      ? current
+      : {
+        ...current,
+        ...next,
+        cwd: nodePath.resolve(...[current.cwd, next.cwd].filter((value): value is string => Boolean(value))),
+        env: { ...current.env, ...next.env },
+        paths: [...(current.paths ?? []), ...(next.paths ?? [])],
+      };
+  }, {});
 };
+
+// /**
+//  * Create a spawn function with default options.
+//  */
+// export const createSpawn = (getDefaultOptions: () => SpawnOptions): Spawn => {
+//   return async (cmd, args, options): Promise<SpawnResult> => {
+//     const defaultOptions = getDefaultOptions();
+//     const mergedOptions = mergeSpawnOptions(defaultOptions, options);
+
+//     return await spawn(cmd, args, mergedOptions);
+//   };
+// };

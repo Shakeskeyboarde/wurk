@@ -24,32 +24,60 @@ type LogFunction = {
   ): (template: TemplateStringsArray, ...values: unknown[]) => void;
 };
 
+/**
+ * A simple logger with global level, prefixing, and streams.
+ */
 export class Log {
   #prefix = '';
   #prefixStyle = '';
   #prefixStyled = '';
 
+  /**
+   * The standard output stream which cleans and prefixes streamed lines.
+   */
   readonly stdout: LogStream = new LogStream();
+
+  /**
+   * The standard error stream which cleans and prefixes streamed lines.
+   */
   readonly stderr: LogStream = new LogStream();
 
+  /**
+   * Get the unstyled prefix string.
+   */
   get prefix(): string {
     return this.#prefix;
   }
 
+  /**
+   * Set the unstyled prefix string. This will also update the styled prefix.
+   */
   set prefix(value: string) {
     this.#prefix = Ansi.strip(value);
     this.#updatePrefix();
   }
 
+  /**
+   * Get the prefix style string. This is a prefix for the prefix which is
+   * allowed to contain ANSI color and style codes.
+   */
   get prefixStyle(): string {
     return this.#prefixStyle;
   }
 
+  /**
+   * Set the prefix style string. This will also update the styled prefix.
+   * This is a prefix for the prefix which is allowed to contain ANSI color
+   * and style codes.
+   */
   set prefixStyle(value: string) {
     this.#prefixStyle = value;
     this.#updatePrefix();
   }
 
+  /**
+   * Create a new log instance with the given options.
+   */
   constructor(options: LogOptions = {}) {
     const { prefix = '', prefixStyle = '' } = options;
 
@@ -283,4 +311,7 @@ const isFirstOccurrence = (message: string): boolean => {
 
 const occurrences = new Set<string>();
 
+/**
+ * The default log instance.
+ */
 export const log = new Log();

@@ -8,6 +8,9 @@ import { type PackageManager } from '@wurk/pm';
 
 import { type Command, CommandFactory } from './command.js';
 
+/**
+ * Detect and load command plugin's from the root workspace dependencies.
+ */
 export const loadCommandPlugins = async (
   pm: PackageManager,
 ): Promise<Command[]> => {

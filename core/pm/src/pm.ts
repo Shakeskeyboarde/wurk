@@ -1,14 +1,29 @@
 import { type JsonAccessor } from '@wurk/json';
-import { mergeSpawnOptions, spawn, type SpawnOptions, type SpawnResult, type SpawnSparseArgs } from '@wurk/spawn';
+import { spawn, type SpawnOptions, type SpawnResult, type SpawnSparseArgs } from '@wurk/spawn';
 import semver from 'semver';
 
+/**
+ * Publication metadata for a package.
+ */
 export interface PackageMetadata {
+  /**
+   * The closest (lower) version of the package that has been published.
+   */
   readonly version: string;
+  /**
+   * The Git commit hash of the published version.
+   */
   readonly gitHead: string | null;
 }
 
+/**
+ * Supported package manager command string.
+ */
 export type PackageManagerCommand = 'npm' | 'pnpm' | 'yarn';
 
+/**
+ * A package manager abstraction.
+ */
 export abstract class PackageManager {
   readonly #resolveCache = new Map<string, Promise<string>>();
 
@@ -29,6 +44,9 @@ export abstract class PackageManager {
    */
   readonly command: string;
 
+  /**
+   * Create a new package manager instance.
+   */
   constructor(
     rootDir: string,
     rootConfig: JsonAccessor,
@@ -83,8 +101,8 @@ export abstract class PackageManager {
    * Spawn a new NodeJS process, making a best attempt to use the same NodeJS
    * binary that is running the current process.
    */
-  async spawnNode(args: SpawnSparseArgs, options?: SpawnOptions): Promise<SpawnResult> {
-    return await spawn('node', args, mergeSpawnOptions({ cwd: this.rootDir }, options));
+  async spawnNode(args: SpawnSparseArgs, ...options: SpawnOptions[]): Promise<SpawnResult> {
+    return await spawn('node', args, { cwd: this.rootDir }, ...options);
   };
 
   /**

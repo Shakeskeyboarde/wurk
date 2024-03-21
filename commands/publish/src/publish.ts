@@ -5,6 +5,11 @@ import { type Workspace } from 'wurk';
 
 import { readTar } from './tar.js';
 
+/**
+ * Publish an archive to the NPM registry. An archive is always used as an
+ * intermediate step to ensure that the required files are included in the
+ * published package.
+ */
 export const publish = async (
   options: {
     readonly pm: string;

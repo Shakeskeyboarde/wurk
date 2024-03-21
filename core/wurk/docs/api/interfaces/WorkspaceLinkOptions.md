@@ -24,9 +24,6 @@ recursion from traversing the filtered link's transitive links.
 
 ▸ (`link`): `boolean`
 
-If provided, filter the links. If a link is filtered, it will also stop
-recursion from traversing the filtered link's transitive links.
-
 ##### Parameters
 
 | Name | Type |

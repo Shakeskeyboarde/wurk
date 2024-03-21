@@ -3,6 +3,9 @@ import { type Git, type GitLog, type Workspace } from 'wurk';
 
 import { type Change, type ChangeSet, ChangeType } from '../change.js';
 
+/**
+ * Auto-version the workspace based on conventional commits in the Git history.
+ */
 export const auto = async (
   git: Git,
   force: boolean,
@@ -58,6 +61,9 @@ export const auto = async (
   }
 };
 
+/**
+ * Get the conventional changes for a set of Git logs.
+ */
 export const getChanges = async (
   logs: GitLog[],
 ): Promise<{

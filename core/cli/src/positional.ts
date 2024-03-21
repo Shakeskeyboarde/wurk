@@ -2,10 +2,6 @@ import { type UnknownResult } from './result.js';
 import { type CamelCase } from './types.js';
 import { camelCase } from './utils.js';
 
-interface Positional extends PositionalUsage, Required<AnyPositionalConfig> {
-  readonly type: 'positional';
-}
-
 interface PositionalUsage {
   readonly key: string;
   readonly usage: string;
@@ -13,17 +9,48 @@ interface PositionalUsage {
   readonly required: boolean;
 }
 
-interface PositionalConfig<
+/**
+ * Positional option (argument).
+ */
+export interface Positional extends PositionalUsage, Required<AnyPositionalConfig> {
+  /**
+   * Type of the option.
+   */
+  readonly type: 'positional';
+}
+
+/**
+ * Configuration for a positional option.
+ */
+export interface PositionalConfig<
   TKey extends string | null,
   TValue,
   TParsedValue,
   TResult extends UnknownResult,
 > {
+  /**
+   * Explicit key for the option if the default key is overridden.
+   */
   readonly key?: TKey;
+  /**
+   * Description of the option.
+   */
   readonly description?: string;
+  /**
+   * Help group name for the option.
+   */
   readonly group?: string;
+  /**
+   * Whether the option is hidden from help text.
+   */
   readonly hidden?: boolean;
+  /**
+   * Additional metadata for the option.
+   */
   readonly meta?: unknown;
+  /**
+   * Custom parser for the option value.
+   */
   readonly parse?: (
     value: TValue,
     result: TResult,
@@ -31,9 +58,18 @@ interface PositionalConfig<
   ) => TKey extends string ? Exclude<TParsedValue, undefined | void> : void;
 }
 
-type PositionalUsageString = `<${string}>` | `[${string}]`;
+/**
+ * Template type for positional option usage strings, which must always be
+ * enclosed in angle brackets or square brackets.
+ */
+export type PositionalUsageString = `<${string}>` | `[${string}]`;
 
-type InferPositionalKey<TUsage extends PositionalUsageString> =
+/**
+ * Infer the implicit key of a positional option from its usage string. This
+ * will be  the camel-cased version of the usage string without the enclosing
+ * brackets.
+ */
+export type InferPositionalKey<TUsage extends PositionalUsageString> =
   TUsage extends `${
   | `<${infer TLabel}${'' | '...'}>`
   | `[${infer TLabel}${'' | '...'}]`}`
@@ -42,10 +78,16 @@ type InferPositionalKey<TUsage extends PositionalUsageString> =
     >
     : never;
 
-type InferPositionalRequired<TUsage extends PositionalUsageString> =
+/**
+ * Infer whether a positional option is required from its usage string.
+ */
+export type InferPositionalRequired<TUsage extends PositionalUsageString> =
   TUsage extends `<${string}>` ? true : false;
 
-type InferPositionalType<TUsage extends PositionalUsageString> = TUsage extends
+/**
+ * Infer the raw type of the positional option value from its usage string.
+ */
+export type InferPositionalType<TUsage extends PositionalUsageString> = TUsage extends
   | `<${infer TLabel}>`
   | `[${infer TLabel}]`
   ? TLabel extends `${string}...`
@@ -53,9 +95,15 @@ type InferPositionalType<TUsage extends PositionalUsageString> = TUsage extends
     : string
   : never;
 
-type AnyPositionalConfig = PositionalConfig<string, any, any, UnknownResult>;
+/**
+ * Placeholder for any positional option configuration.
+ */
+export type AnyPositionalConfig = PositionalConfig<string, any, any, UnknownResult>;
 
-const createPositional = (
+/**
+ * Create a positional option.
+ */
+export const createPositional = (
   usage: string,
   configOrDescription: AnyPositionalConfig | string = {},
 ): Positional => {
@@ -90,15 +138,4 @@ const parseUsage = (usage: string): PositionalUsage => {
   const variadic = Boolean(match[2] || match[4]);
 
   return { key, usage, variadic, required };
-};
-
-export {
-  type AnyPositionalConfig,
-  createPositional,
-  type InferPositionalKey,
-  type InferPositionalRequired,
-  type InferPositionalType,
-  type Positional,
-  type PositionalConfig,
-  type PositionalUsageString,
 };

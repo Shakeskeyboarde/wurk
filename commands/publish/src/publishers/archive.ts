@@ -15,6 +15,10 @@ interface Context {
   readonly pm: string;
 }
 
+/**
+ * Publish the workspace from an archive with the expected basename in the
+ * workspace directory.
+ */
 export const publishFromArchive = async ({ options, pm }: Context, workspace: Workspace): Promise<void> => {
   const { tag, otp, dryRun } = options;
   const { log, dir, name, version } = workspace;

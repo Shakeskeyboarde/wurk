@@ -5,7 +5,7 @@ import nodePath from 'node:path';
 
 import { type JsonAccessor } from '@wurk/json';
 import { Log } from '@wurk/log';
-import { createSpawn } from '@wurk/spawn';
+import { type Spawn, spawn } from '@wurk/spawn';
 
 import { DEPENDENCY_TYPES, type WorkspaceDependency } from './dependency.js';
 import { type Entrypoint, getEntrypoints } from './entrypoint.js';
@@ -65,8 +65,17 @@ export interface WorkspaceOptions {
   readonly getPublished?: () => Promise<WorkspacePublished | null>;
 }
 
+/**
+ * Published workspace information.
+ */
 export interface WorkspacePublished {
+  /**
+   * The closest (lower) version of the workspace which has been published.
+   */
   readonly version: string;
+  /**
+   * The git commit hash of the published version.
+   */
   readonly gitHead: string | null;
 }
 
@@ -74,9 +83,24 @@ export interface WorkspacePublished {
  * Workspace information and utilities.
  */
 export class Workspace implements WorkspaceOptions {
+  /**
+   * Logger which should be used for messages related to workspace processing.
+   */
   readonly log: Log;
+
+  /**
+   * Absolute path of the workspace directory.
+   */
   readonly dir: string;
+
+  /**
+   * Workspace directory relative to the root workspace.
+   */
   readonly relativeDir: string;
+
+  /**
+   * Workspace configuration (package.json).
+   */
   readonly config: JsonAccessor;
 
   /**
@@ -154,10 +178,19 @@ export class Workspace implements WorkspaceOptions {
     this.getPublished = options.getPublished ?? (async () => null);
   }
 
+  /**
+   * Get links to local dependency workspaces.
+   */
   readonly getDependencyLinks: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
 
+  /**
+   * Get links to local dependent workspaces.
+   */
   readonly getDependentLinks: (options?: WorkspaceLinkOptions) => readonly WorkspaceLink[];
 
+  /**
+   * Get publication information for the workspace.
+   */
   readonly getPublished: () => Promise<WorkspacePublished | null>;
 
   /**
@@ -172,10 +205,10 @@ export class Workspace implements WorkspaceOptions {
   /**
    * Spawn a child process.
    */
-  readonly spawn = createSpawn(() => ({
+  readonly spawn: Spawn = (command, sparseArgs?, ...options) => spawn(command, sparseArgs, {
     log: this.log,
     cwd: this.dir,
-  }));
+  }, ...options);
 
   /**
    * Create a temporary directory which will be cleaned up when the process

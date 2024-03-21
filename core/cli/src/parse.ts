@@ -1,23 +1,9 @@
 /* eslint-disable max-lines */
-import { type PartialCli } from './cli.js';
+import { type UnknownCli } from './cli.js';
 import { CliUsageError } from './error.js';
 import { type Named } from './named.js';
 import { type Positional } from './positional.js';
 import { type UnknownResult } from './result.js';
-
-type ParserCli = PartialCli<
-  | 'name'
-  | 'aliases'
-  | 'options'
-  | 'commands'
-  | 'optionActions'
-  | 'optionDefaults'
-  | 'isUnknownNamedOptionAllowed'
-  | 'isCommandOptional'
-  | 'isDefault'
-  | 'getHelpText'
-  | 'printHelp'
->;
 
 interface ParserParent {
   isNamed(arg: string): boolean;
@@ -49,27 +35,19 @@ const noParent: ParserParent = {
   tryNamed: () => Promise.resolve(false),
 };
 
-const parseNamedArg = (arg: string): ParserNamedArg | undefined => {
-  const match = arg.match(/^(-[^=.]+)(?:\.([^=]*))?(?:=(.*))?$/u);
-
-  if (!match) return;
-
-  const [, optionName = '', mappedKey, integralValue] = match;
-
-  return { optionName, mappedKey, integralValue };
-};
-
-const parseMergedShortNamesArg = (arg: string): string[] | undefined => {
-  const match = arg.match(/^-([^-=.]{2,})([=.].*)?$/u);
-
-  if (!match) return;
-
-  const [, name, suffix = ''] = match as [string, string, string | undefined];
-  const characters = name.split('');
-
-  return characters.map((character, i) => {
-    return `-${character}${i === characters.length - 1 ? suffix : ''}`;
-  });
+/**
+ * Use the CLI to parse the arguments.
+ */
+export const parse = async (
+  cli: UnknownCli,
+  args: readonly string[],
+): Promise<UnknownResult> => {
+  try {
+    return await parseRecursive([...args], cli);
+  }
+  catch (error) {
+    throw CliUsageError.from(error);
+  }
 };
 
 /**
@@ -78,7 +56,7 @@ const parseMergedShortNamesArg = (arg: string): string[] | undefined => {
  */
 const parseRecursive = async (
   args: string[],
-  cli: ParserCli,
+  cli: UnknownCli,
   parent: ParserParent = noParent,
   name = cli.name,
 ): Promise<ParserResult> => {
@@ -434,19 +412,25 @@ const parseRecursive = async (
   return result;
 };
 
-/**
- * Use the CLI to parse the arguments.
- */
-const parse = async (
-  cli: ParserCli,
-  args: readonly string[],
-): Promise<UnknownResult> => {
-  try {
-    return await parseRecursive([...args], cli);
-  }
-  catch (error) {
-    throw CliUsageError.from(error);
-  }
+const parseNamedArg = (arg: string): ParserNamedArg | undefined => {
+  const match = arg.match(/^(-[^=.]+)(?:\.([^=]*))?(?:=(.*))?$/u);
+
+  if (!match) return;
+
+  const [, optionName = '', mappedKey, integralValue] = match;
+
+  return { optionName, mappedKey, integralValue };
 };
 
-export { parse };
+const parseMergedShortNamesArg = (arg: string): string[] | undefined => {
+  const match = arg.match(/^-([^-=.]{2,})([=.].*)?$/u);
+
+  if (!match) return;
+
+  const [, name, suffix = ''] = match as [string, string, string | undefined];
+  const characters = name.split('');
+
+  return characters.map((character, i) => {
+    return `-${character}${i === characters.length - 1 ? suffix : ''}`;
+  });
+};

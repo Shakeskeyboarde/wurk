@@ -150,6 +150,9 @@ export class Workspaces {
     }
   }
 
+  /**
+   * Get an iterator for selected workspaces.
+   */
   *[Symbol.iterator](): Iterator<Workspace> {
     for (const workspace of this.all) {
       if (workspace.isSelected) {
@@ -256,6 +259,9 @@ export class Workspaces {
     }
   }
 
+  /**
+   * Asynchronously iterate over selected workspaces.
+   */
   protected async _forEachAsync(options: {
     signal: AbortSignal | undefined;
     stream: boolean;

@@ -25,7 +25,7 @@ Workspace configuration.
 
 ### config
 
-• `Readonly` **config**: `JsonAccessor`
+• `Readonly` **config**: [`JsonAccessor`](../classes/JsonAccessor.md)
 
 Workspace configuration (package.json).
 
@@ -49,8 +49,6 @@ Resolve links to local dependency workspaces.
 
 ▸ (`options?`): readonly [`WorkspaceLink`](WorkspaceLink.md)[]
 
-Resolve links to local dependency workspaces.
-
 ##### Parameters
 
 | Name | Type |
@@ -72,8 +70,6 @@ Resolve links to local dependent workspaces.
 #### Type declaration
 
 ▸ (`options?`): readonly [`WorkspaceLink`](WorkspaceLink.md)[]
-
-Resolve links to local dependent workspaces.
 
 ##### Parameters
 
@@ -104,16 +100,6 @@ the exact current version has been published.
 #### Type declaration
 
 ▸ (): `Promise`\<``null`` \| `WorkspacePublished`\>
-
-Get publication information for the workspace. This will check the
-NPM registry for the closest version which is less than or equal to (<=)
-the current version.
-
-Returns `null` if If the current version is less than all published
-versions (or there are no published versions). Returns a metadata object
-if the current version or a lesser version has been published. Compare
-the returned metadata version to the workspace version to determine if
-the exact current version has been published.
 
 ##### Returns
 

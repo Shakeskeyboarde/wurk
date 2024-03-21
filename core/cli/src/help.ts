@@ -1,23 +1,61 @@
-import { type PartialCli } from './cli.js';
 import { optionHelpTag, optionVersionTag } from './constants.js';
 import { type Named } from './named.js';
 import { type Positional } from './positional.js';
 import { wrap } from './utils.js';
 
-type HelpCli = PartialCli<
-  | 'name'
-  | 'aliases'
-  | 'descriptions'
-  | 'trailers'
-  | 'options'
-  | 'commands'
-  | 'parent'
-  | 'isCommandOptional'
-  | 'isDefault'
-  | 'isHidden'
->;
+/**
+ * The `Cli` definition to be formatted.
+ */
+export interface HelpCli {
+  /**
+   * The name of the command.
+   */
+  readonly name: string;
+  /**
+   * Aliases for the command.
+   */
+  readonly aliases: readonly string[];
+  /**
+   * Descriptions for the command.
+   */
+  readonly descriptions: readonly string[];
+  /**
+   * Trailers for the command.
+   */
+  readonly trailers: readonly string[];
+  /**
+   * Options supported by the command.
+   */
+  readonly options: readonly (Named | Positional)[];
+  /**
+   * Subcommands supported by the command.
+   */
+  readonly commands: readonly HelpCli[];
+  /**
+   * Parent command, if any.
+   */
+  readonly parent: HelpCli | null;
+  /**
+   * Whether a subcommand is optional.
+   */
+  readonly isCommandOptional: boolean;
+  /**
+   * Whether the command is the default subcommand of its parent.
+   */
+  readonly isDefault: boolean;
+  /**
+   * Whether the command is hidden from parent help text.
+   */
+  readonly isHidden: boolean;
+}
 
-interface HelpFormatter {
+/**
+ * Formatter for Cli help text.
+ */
+export interface HelpFormatter {
+  /**
+   * Return the formatted help text for the given Cli.
+   */
   format(cli: HelpCli, error: unknown): string;
 }
 
@@ -197,6 +235,7 @@ const format = (cli: HelpCli, error: unknown): string => {
   return `${helpText}${errorText ? `\n\n${errorText}` : '\n'}`;
 };
 
-const defaultHelpFormatter: HelpFormatter = { format };
-
-export { defaultHelpFormatter, type HelpCli, type HelpFormatter };
+/**
+ * Default help formatter used if no custom formatter is provided.
+ */
+export const defaultHelpFormatter: HelpFormatter = { format };

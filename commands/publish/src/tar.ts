@@ -3,6 +3,9 @@ import nodeZlib from 'node:zlib';
 
 import { type Entry, extract } from 'tar-stream';
 
+/**
+ * Stream a TAR archive and call a callback for each entry.
+ */
 export const readTar = async <T>(filename: string,
   callback: (entry: Entry, abort: () => void) => Promise<T>,
 ): Promise<T[]> => {
@@ -38,6 +41,9 @@ export const readTar = async <T>(filename: string,
   return results;
 };
 
+/**
+ * Read a TAR archive and return all filenames contained within it.
+ */
 export const readTarFilenames = async (filename: string): Promise<string[]> => {
   return await readTar(filename, async (entry) => {
     return entry.header.name;

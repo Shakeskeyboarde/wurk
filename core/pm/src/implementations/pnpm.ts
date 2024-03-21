@@ -9,11 +9,20 @@ import {
   type PackageMetadata,
 } from '../pm.js';
 
+/**
+ * Package manager implementation for PNPM.
+ */
 export class Pnpm extends PackageManager {
+  /**
+   * Create a new PNPM package manager instance.
+   */
   constructor(rootDir: string, rootConfig: JsonAccessor) {
     super(rootDir, rootConfig, 'pnpm');
   }
 
+  /**
+   * Get the workspaces in the current project.
+   */
   async getWorkspaces(): Promise<readonly string[]> {
     const { ok, stdoutJson } = await spawn('pnpm', [
       'recursive',
@@ -32,6 +41,9 @@ export class Pnpm extends PackageManager {
       ?? [];
   }
 
+  /**
+   * Get publication information for the package.
+   */
   async getPublished(id: string, version: string): Promise<PackageMetadata | null> {
     const { stdoutJson, ok } = await spawn(
       'pnpm',

@@ -22,6 +22,8 @@ of selection status.
 
 ### Methods
 
+- [[iterator]](Workspaces.md#[iterator])
+- [\_forEachAsync](Workspaces.md#_foreachasync)
 - [exclude](Workspaces.md#exclude)
 - [forEach](Workspaces.md#foreach)
 - [forEachParallel](Workspaces.md#foreachparallel)
@@ -69,6 +71,40 @@ Create a new workspace collection.
 [`Workspaces`](Workspaces.md)
 
 ## Methods
+
+### [iterator]
+
+▸ **[iterator]**(): `Iterator`\<[`Workspace`](Workspace.md), `any`, `undefined`\>
+
+Get an iterator for selected workspaces.
+
+#### Returns
+
+`Iterator`\<[`Workspace`](Workspace.md), `any`, `undefined`\>
+
+___
+
+### \_forEachAsync
+
+▸ **_forEachAsync**(`options`): `Promise`\<`void`\>
+
+Asynchronously iterate over selected workspaces.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `options` | `Object` |
+| `options.callback` | [`WorkspaceCallback`](../README.md#workspacecallback) |
+| `options.concurrency` | `number` |
+| `options.signal` | `undefined` \| `AbortSignal` |
+| `options.stream` | `boolean` |
+
+#### Returns
+
+`Promise`\<`void`\>
+
+___
 
 ### exclude
 

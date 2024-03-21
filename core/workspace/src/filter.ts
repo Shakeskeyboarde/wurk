@@ -1,6 +1,9 @@
 import { createWorkspacePredicate, type WorkspacePredicate } from './predicate.js';
 import { type Workspace } from './workspace.js';
 
+/**
+ * Get a subset of the workspaces filtered by an expression or predicate.
+ */
 export const filterWorkspaces = async (
   workspaces: Iterable<Workspace>,
   expression: string | WorkspacePredicate,

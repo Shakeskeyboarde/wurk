@@ -6,7 +6,7 @@
   "scripts": {},
   "type": "module",
   "devDependencies": {
-    "vitest": "^1.2.2"
+    "vitest": "^1.4.0"
   },
   "dependencies": {}
 }

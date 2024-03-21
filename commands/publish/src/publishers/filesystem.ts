@@ -29,6 +29,12 @@ interface Context {
   readonly published: Map<Workspace, WorkspacePublished>;
 }
 
+/**
+ * Publish the workspace from the filesystem. This will always pack the
+ * workspace into an archive first, so that the package can be validated
+ * before publishing. The archive will then either be published to an NPM
+ * registry, or moved to the workspace directory.
+ */
 export const publishFromFilesystem = async (context: Context, workspace: Workspace): Promise<void> => {
   const { options, git, pm, published } = context;
   const { toArchive = false, tag, otp, removePackageFields, dryRun = false } = options;

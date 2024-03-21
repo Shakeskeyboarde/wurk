@@ -4,6 +4,9 @@ import nodePath from 'node:path';
 
 import { type Workspace } from 'wurk';
 
+/**
+ * Pack the workspace into an archive file.
+ */
 export const pack = async (
   options: {
     readonly pm: string;
@@ -46,6 +49,13 @@ export const pack = async (
   return tempFilename;
 };
 
+/**
+ * Get the preferred basename of the package archive file.
+ *
+ * NOTE: Yarn actually just uses `package.tgz` by default, but it can be
+ * configured to use the package name and version in the archive basename
+ * with the `%s` and `%v` placeholders.
+ */
 export const getPackBasename = (pm: string, name: string, version: string): string => {
   name = name.replace(/\//u, '-');
 

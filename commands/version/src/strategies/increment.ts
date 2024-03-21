@@ -9,6 +9,9 @@ interface Options {
   readonly preid: string | undefined;
 }
 
+/**
+ * Increment the workspace version for a semantic release.
+ */
 export const increment = async (
   options: Options,
   workspace: Workspace,

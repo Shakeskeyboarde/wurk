@@ -1,5 +1,8 @@
 import semver from 'semver';
 
+/**
+ * A dependency specification parsed from a `package.json` file.
+ */
 export type DependencySpec =
   | {
     /**
@@ -39,6 +42,10 @@ export type DependencySpec =
     readonly suffix: string;
   };
 
+/**
+ * Get the dependency spec for a dependency key/value pair from a
+ * `package.json` file dependency map.
+ */
 export const getDependencySpec = (id: string, raw: string): DependencySpec => {
   const [, protocol = '', suffix = ''] = raw.match(/^(?:([^:]*):)?(.*)$/u)!;
 

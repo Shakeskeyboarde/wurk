@@ -1,4 +1,7 @@
-interface Result<
+/**
+ * Result of CLI argument parsing and actions.
+ */
+export interface Result<
   TOptions extends Record<string, unknown>,
   TCommand extends Record<string, UnknownResult | undefined>,
 > {
@@ -8,7 +11,7 @@ interface Result<
   readonly options: TOptions;
 
   /**
-   * Results of CLI argument parsing and actions.
+   * Results of (sub-)command argument parsing and actions.
    *
    * NOTE: This is a "dictionary" object which will have zero or one keys
    * defined, because only zero or one commands can be matched per parent
@@ -45,43 +48,49 @@ interface Result<
   printHelp(error?: unknown): void;
 }
 
-interface PartialResult<
-  TOptions extends Record<string, unknown>,
-  TCommand extends Record<string, UnknownResult | undefined>,
-  TKey extends keyof TOptions = never,
-> extends Pick<
-    Result<TOptions, TCommand>,
-    'parsed' | 'getHelpText' | 'printHelp'
-  > {
+/**
+ * Partial result of CLI argument parsing and actions.
+ */
+export interface PartialResult<TResult extends UnknownResult> extends Pick<
+  Result<InferResultOptions<TResult>, InferResultCommand<TResult>>, 'parsed' | 'getHelpText' | 'printHelp'
+> {
+  /**
+   * Partial options.
+   */
   readonly options: {
-    [P in keyof TOptions]: TOptions[P] | (P extends TKey ? never : undefined);
+    [P in keyof InferResultOptions<TResult>]?: InferResultOptions<TResult>[P];
   };
+  /**
+   * Partial command results.
+   */
   readonly commandResult: {
-    readonly [P in keyof TCommand]:
-      | PartialResult<
-        InferResultOptions<TCommand[P]>,
-        InferResultCommand<TCommand[P]>
-      >
+    readonly [P in keyof InferResultCommand<TResult>]:
+      | PartialResult<Exclude<InferResultCommand<TResult>[P], undefined>>
       | undefined;
   };
 }
 
-type InferResultOptions<T extends UnknownResult | undefined> =
+/**
+ * Infer the {@link Result.options} type from a {@link Result}.
+ */
+export type InferResultOptions<T extends UnknownResult | undefined> =
   T extends Result<infer TOptions, any> ? TOptions : never;
-type InferResultCommand<T extends UnknownResult | undefined> =
-  T extends Result<any, infer TCli> ? TCli : never;
 
-type UnknownResult = Result<
+/**
+ * Infer the {@link Result.commandResult} type from a {@link Result}.
+ */
+export type InferResultCommand<T extends UnknownResult | undefined> =
+  T extends Result<any, infer TCommand> ? TCommand : never;
+
+/**
+ * Result of CLI argument parsing and actions with unknown options and commands.
+ */
+export type UnknownResult = Result<
   Record<string, unknown>,
   Record<string, UnknownResult | undefined>
 >;
-type EmptyResult = Result<{}, {}>;
 
-export type {
-  EmptyResult,
-  InferResultCommand,
-  InferResultOptions,
-  PartialResult,
-  Result,
-  UnknownResult,
-};
+/**
+ * Result of CLI argument parsing and actions with no options or commands.
+ */
+export type EmptyResult = Result<{}, {}>;

@@ -6,11 +6,20 @@ import semver from 'semver';
 
 import { PackageManager, type PackageMetadata } from '../pm.js';
 
+/**
+ * Package manager implementation for NPM.
+ */
 export class Npm extends PackageManager {
+  /**
+   * Create a new NPM package manager instance.
+   */
   constructor(rootDir: string, rootConfig: JsonAccessor) {
     super(rootDir, rootConfig, 'npm');
   }
 
+  /**
+   * Get the workspaces in the current project.
+   */
   async getWorkspaces(): Promise<readonly string[]> {
     const { ok, stdoutJson } = await spawn('npm', [
       'query',
@@ -30,6 +39,9 @@ export class Npm extends PackageManager {
       ?? [];
   }
 
+  /**
+   * Get publication information for the package.
+   */
   async getPublished(id: string, version: string): Promise<PackageMetadata | null> {
     const { stdoutJson, ok } = await spawn(
       'npm',

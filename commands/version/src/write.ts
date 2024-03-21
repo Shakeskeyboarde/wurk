@@ -22,6 +22,9 @@ enum ChangelogSection {
   revert,
 }
 
+/**
+ * Write the updated version to the workspace configuration (`package.json`).
+ */
 export const writeConfig = async (workspace: Workspace, version: string): Promise<void> => {
   const { log, dir, config } = workspace;
   const configFilename = nodePath.resolve(dir, 'package.json');
@@ -40,6 +43,10 @@ export const writeConfig = async (workspace: Workspace, version: string): Promis
   );
 };
 
+/**
+ * Write the change set to the workspace changelog. This will attempt to
+ * intelligently merge the change set with the existing changelog.
+ */
 export const writeChangelog = async (
   workspace: Workspace,
   changeSet: ChangeSet,

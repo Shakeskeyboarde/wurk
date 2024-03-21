@@ -18,6 +18,9 @@ interface Filter {
   readonly expression: string;
 }
 
+/**
+ * Main entry point for the Wurk CLI.
+ */
 export const main = async (): Promise<void> => {
   const [self, pm] = await Promise.all([
     getSelf(),

@@ -7,6 +7,9 @@ interface Options {
   readonly version: SemVer;
 }
 
+/**
+ * Set the workspace version to a literal value.
+ */
 export const literal = async (
   options: Options,
   workspace: Workspace,

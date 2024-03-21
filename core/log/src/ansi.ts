@@ -2,6 +2,9 @@ import nodeTty from 'node:tty';
 
 import ansiRegex from 'ansi-regex';
 
+/**
+ * Simple ANSI color names (8 colors).
+ */
 export type AnsiColor = (typeof ANSI_COLORS)[number];
 
 const ANSI_REGEXP = new RegExp(ansiRegex().source, 'gu');
@@ -18,6 +21,9 @@ const IS_COLOR = process.env.NO_COLOR
 
 const IS_256_COLOR = IS_COLOR && Boolean(process.env.TERM === 'xterm-256color');
 
+/**
+ * Simple ANSI color names (8 colors).
+ */
 export const ANSI_COLORS = [
   'black',
   'red',
@@ -29,6 +35,9 @@ export const ANSI_COLORS = [
   'white',
 ] as const;
 
+/**
+ * ANSI color and style control code utilities.
+ */
 export const Ansi = {
   reset: IS_COLOR ? '\u001B[0m' : '',
   bold: IS_COLOR ? '\u001B[1m' : '',

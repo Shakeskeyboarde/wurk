@@ -2,10 +2,6 @@ import { type UnknownResult } from './result.js';
 import { type CamelCase, type LastValue, type Split } from './types.js';
 import { camelCase } from './utils.js';
 
-interface Named extends NamedUsage, Required<AnyNamedConfig> {
-  readonly type: 'named';
-}
-
 interface NamedUsage {
   readonly key: string | null;
   readonly usage: string;
@@ -14,7 +10,20 @@ interface NamedUsage {
   readonly value: false | 'optional' | 'required';
 }
 
-interface NamedConfig<
+/**
+ * Named option.
+ */
+export interface Named extends NamedUsage, Required<AnyNamedConfig> {
+  /**
+   * Type of the option.
+   */
+  readonly type: 'named';
+}
+
+/**
+ * Configuration for a named option.
+ */
+export interface NamedConfig<
   TKey extends string | null,
   TValue,
   TParsedValue,
@@ -22,33 +31,66 @@ interface NamedConfig<
   TMapped extends boolean,
   TResult extends UnknownResult,
 > {
+  /**
+   * Explicit key for the option if the default key is overridden.
+   */
   readonly key?: TKey;
+  /**
+   * Description of the option.
+   */
   readonly description?: string;
+  /**
+   * Help group name for the option.
+   */
   readonly group?: string;
+  /**
+   * Whether the option is hidden from help text.
+   */
   readonly hidden?: boolean;
+  /**
+   * Whether the option is required.
+   */
   readonly required?: TRequired;
+  /**
+   * Whether the option is mapped to a key-value object.
+   */
   readonly mapped?: TMapped;
+  /**
+   * Additional metadata for the option. Used internally to tag implicitly
+   * added help and version options so that they can be overridden by
+   * explicitly added options.
+   */
   readonly meta?: unknown;
-  readonly parse?: (
-    value: TValue,
-    prev: TParsedValue | undefined,
-    result: TResult,
-    key: TKey,
+  /**
+   * Custom parser for the option value.
+   */
+  readonly parse?: (value: TValue, prev: TParsedValue | undefined, result: TResult, key: TKey,
   ) => TKey extends string
     ? Exclude<TParsedValue, undefined | void>
     : TParsedValue;
 }
 
-type NamedUsageString = `-${string}`;
+/**
+ * Template type for named option usage strings, which must always start with
+ * a hyphen.
+ */
+export type NamedUsageString = `-${string}`;
 
-type InferNamedKey<TUsage extends NamedUsageString> =
+/**
+ * Infer the implicit key of a named option from its usage string. This will
+ * be the camel-cased version of the last flag in the usage string.
+ */
+export type InferNamedKey<TUsage extends NamedUsageString> =
   LastValue<
     Split<TUsage, ',' | '|'>
   > extends `-${infer TPrefix}${'' | `${'=' | ' '}${string}`}`
     ? CamelCase<Exclude<TPrefix, `${string}${' ' | '='}${string}`>>
     : never;
 
-type InferNamedArgType<TUsage extends NamedUsageString> = TUsage extends any
+/**
+ * Infer the raw argument type that will be passed to the option parser.
+ */
+export type InferNamedArgType<TUsage extends NamedUsageString> = TUsage extends any
   ? TUsage extends `${'' | `${string}${' ' | '='}`}<${string}>`
     ? string
     : TUsage extends `${'' | `${string}${' ' | '='}`}[${string}]`
@@ -56,7 +98,10 @@ type InferNamedArgType<TUsage extends NamedUsageString> = TUsage extends any
       : boolean
   : never;
 
-type InferNamedResultType<TUsage extends NamedUsageString> = TUsage extends any
+/**
+ * Infer the default result type if no custom parser is provided.
+ */
+export type InferNamedResultType<TUsage extends NamedUsageString> = TUsage extends any
   ? TUsage extends `${'' | `${string}${' ' | '='}`}<${infer TLabel}>`
     ? TLabel extends `${string}...`
       ? string[]
@@ -68,7 +113,10 @@ type InferNamedResultType<TUsage extends NamedUsageString> = TUsage extends any
       : boolean
   : never;
 
-type AnyNamedConfig = NamedConfig<
+/**
+ * Placeholder for any named option configuration.
+ */
+export type AnyNamedConfig = NamedConfig<
   string | null,
   any,
   any,
@@ -77,9 +125,12 @@ type AnyNamedConfig = NamedConfig<
   UnknownResult
 >;
 
-const createNamed = (
+/**
+ * Create a named option.
+ */
+export const createNamed = (
   usage: string,
-  configOrDescription: AnyNamedConfig | string = {},
+  configOrDescription: NamedConfig<string | null, any, any, boolean, boolean, UnknownResult> | string = {},
 ): Named => {
   const config = typeof configOrDescription === 'string'
     ? { description: configOrDescription }
@@ -151,15 +202,4 @@ const parseUsage = (usage: string): NamedUsage => {
     names,
     value: value && (required ? 'required' : 'optional'),
   };
-};
-
-export {
-  type AnyNamedConfig,
-  createNamed,
-  type InferNamedArgType,
-  type InferNamedKey,
-  type InferNamedResultType,
-  type Named,
-  type NamedConfig,
-  type NamedUsageString,
 };

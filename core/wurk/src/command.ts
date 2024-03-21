@@ -1,4 +1,4 @@
-import { Cli, type CliName, type EmptyResult } from '@wurk/cli';
+import { Cli, type EmptyResult } from '@wurk/cli';
 import { type JsonAccessor } from '@wurk/json';
 import { type Workspace, type Workspaces } from '@wurk/workspace';
 
@@ -37,11 +37,21 @@ export interface CommandHooks<
   readonly action: CommandActionCallback<TResult>;
 }
 
+/**
+ * Wurk command plugin.
+ */
 export interface Command<
   TResult extends EmptyResult = EmptyResult,
   TName extends string = string,
 > {
+  /**
+   * The {@link Cli} definition for the plugin.
+   */
   readonly cli: Cli<TResult, TName>;
+  /**
+   * Initialization method for the plugin. This is called once before the
+   * command is executed to pass workspace information to the plugin.
+   */
   readonly init: (config: InitConfig) => void;
 }
 
@@ -77,7 +87,7 @@ export const createCommand = <
   TName extends string,
   TResult extends EmptyResult,
 >(
-  name: CliName<TName>,
+  name: TName,
   hooks: CommandHooks<TResult, TName> | CommandActionCallback,
 ): unknown => {
   return new CommandFactory((config, pm) => {
@@ -119,11 +129,26 @@ export const createCommand = <
   });
 };
 
+/**
+ * Factory which loads a Wurk command. This is what is actually returned
+ * from the {@link createCommand} function, even though the function returns
+ * `unknown`.
+ */
 export class CommandFactory<
   TResult extends EmptyResult = EmptyResult,
   TName extends string = string,
 > {
-  constructor(
-    readonly load: (config: JsonAccessor, pm: string) => Command<TResult, TName>,
-  ) {}
+  /**
+   * Get the {@link Command} instance for the plugin. This is passed the
+   * command's own configuration (ie. `package.json` data), and the package
+   * manager command name (ie. `npm`, `yarn`, `pnpm`).
+   */
+  readonly load: (config: JsonAccessor, pm: string) => Command<TResult, TName>;
+
+  /**
+   * Create a new command factory.
+   */
+  constructor(load: (config: JsonAccessor, pm: string) => Command<TResult, TName>) {
+    this.load = load;
+  }
 }

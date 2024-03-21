@@ -55,8 +55,6 @@ Determine if a workspace version is published or not.
 
 ▸ (`name`, `version`): `Promise`\<``null`` \| `WorkspacePublished`\>
 
-Determine if a workspace version is published or not.
-
 ##### Parameters
 
 | Name | Type |
@@ -80,6 +78,6 @@ ___
 
 ### workspaceEntries
 
-• `Optional` `Readonly` **workspaceEntries**: readonly readonly [`string`, `JsonAccessor`][]
+• `Optional` `Readonly` **workspaceEntries**: readonly readonly [`string`, [`JsonAccessor`](../classes/JsonAccessor.md)][]
 
 Array of workspaces as tuples of directory and configuration (package.json).

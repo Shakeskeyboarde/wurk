@@ -80,107 +80,26 @@ interface CliConfig<TName extends string = string> {
   readonly parent?: UnknownCli | null;
 }
 
-type UnknownCli = InternalCli<UnknownResult, string>;
+/**
+ * An {@link InternalCli} instance with an unknown result type and name.
+ * @internal
+ */
+export type UnknownCli = InternalCli<UnknownResult, string>;
 
-type PartialCli<TKeys extends keyof UnknownCli> = Pick<
-  Omit<UnknownCli, 'commands' | 'parent'> & {
-    readonly commands: readonly PartialCli<TKeys>[];
-    readonly parent: PartialCli<TKeys> | null;
-  },
-  TKeys
->;
+/**
+ * Infer the name of a {@link Cli} instance.
+ */
+export type InferCliName<TCli extends Cli<any, any>> = TCli extends Cli<any, infer TName> ? TName : never;
 
-type InferCliResult<TCli extends Cli<any, any>> = TCli extends Cli<infer TResult, any> ? TResult : never;
-type InferCliName<TCli extends Cli<any, any>> = TCli extends Cli<any, infer TName> ? TName : never;
-
-type CliName<TName extends string> = Exclude<
-  TName,
-  '' | `-${string}` | `${string}${'|' | ' ' | '\r' | '\n' | '\t'}${string}`
->;
-
-class InternalCli<TResult extends UnknownResult, TName extends string> implements Required<CliConfig<TName>> {
-  readonly name: TName;
-  readonly aliases: readonly string[];
-  readonly descriptions: readonly string[];
-  readonly trailers: readonly string[];
-  readonly version: string;
-  readonly options: readonly (Named | Positional)[];
-  readonly commands: readonly UnknownCli[];
-  readonly actions: readonly Action[];
-  readonly optionActions: Readonly<Record<string, OptionAction[]>>;
-  readonly optionDefaults: Readonly<Record<string, () => unknown>>;
-  readonly isExitOnErrorEnabled: boolean;
-  readonly isUnknownNamedOptionAllowed: boolean;
-  readonly isCommandOptional: boolean;
-  readonly isDefault: boolean;
-  readonly isHidden: boolean;
-  readonly helpFormatter: HelpFormatter | null;
-  readonly parent: UnknownCli | null;
-
-  constructor(config: CliConfig<TName>) {
-    this.name = config.name;
-    this.aliases = config.aliases ?? [];
-    this.descriptions = config.descriptions ?? [];
-    this.trailers = config.trailers ?? [];
-    this.version = config.version ?? '0.0.0';
-    this.options = config.options ?? [];
-    this.commands = config.commands ?? [];
-    this.actions = config.actions ?? [];
-    this.optionActions = config.optionActions ?? {};
-    this.optionDefaults = config.optionDefaults ?? {};
-    this.isExitOnErrorEnabled = config.isExitOnErrorEnabled ?? false;
-    this.isUnknownNamedOptionAllowed = config.isUnknownNamedOptionAllowed ?? false;
-    this.isCommandOptional = config.isCommandOptional ?? false;
-    this.isDefault = config.isDefault ?? false;
-    this.isHidden = config.isHidden ?? false;
-    this.helpFormatter = config.helpFormatter ?? null;
-    this.parent = config.parent ?? null;
-  }
-
-  getHelpText(error: unknown = null): string {
-    const formatter = resolve(
-      this,
-      (current: UnknownCli) => current.parent,
-      (current: UnknownCli) => current.helpFormatter,
-      defaultHelpFormatter,
-    );
-
-    return formatter.format(this, error);
-  }
-
-  printHelp(error?: unknown): void {
-    console[error ? 'error' : 'log'](this.getHelpText(error));
-  }
-
-  async parse(args: readonly string[] = process.argv.slice(2)): Promise<TResult> {
-    let result: TResult;
-
-    try {
-      result = (await parse(this, args)) as TResult;
-      await run(this, result);
-    }
-    catch (error) {
-      if (!this.isExitOnErrorEnabled) throw error;
-
-      if (error instanceof CliUsageError && error.context) {
-        error.context.printHelp(error);
-      }
-      else {
-        console.error(String(error));
-      }
-
-      process.exitCode ||= 1;
-      process.exit();
-    }
-
-    return result;
-  }
-}
+/**
+ * Infer the result type of a {@link Cli} instance.
+ */
+export type InferCliResult<TCli extends Cli<any, any>> = TCli extends Cli<infer TResult, any> ? TResult : never;
 
 /**
  * CLI definition.
  */
-class Cli<
+export class Cli<
   TResult extends UnknownResult = UnknownResult,
   TName extends string = string,
 > {
@@ -211,7 +130,7 @@ class Cli<
   /**
    * Add one or more aliases to the command.
    */
-  alias<TAlias extends string>(...aliases: readonly [CliName<TAlias>, ...CliName<TAlias>[]]): Cli<TResult, TName> {
+  alias<TAlias extends string>(...aliases: TAlias[]): Cli<TResult, TName> {
     aliases.forEach(assertValidName);
 
     return new Cli({
@@ -266,22 +185,14 @@ class Cli<
   }
 
   /**
-   * Define a named or positional option.
+   * Define a named option.
    *
-   * Named Options:
    * - Must begin with a hyphen followed by a name (eg. `-a` or `--abc`).
    *   - Names cannot contain whitespace or the following reserved characters: `=,|.<>[]`
    * - Aliases can be separating a comma or pipe (eg. `-a, --abc` or `-a | --abc`).
    * - The last alias may be followed by a "positional" value placeholder
    *   (eg. `--option <value>` or `--option=<value>`).
    * - The option key defaults to the last alias converted to camel case (eg. `-f, --foo-bar` becomes `fooBar`).
-   *
-   * Positional Options:
-   * - Must be wrapped in angle brackets (`<value>`) for required or square brackets (`[value]`) for non-required.
-   * - Names cannot contain whitespace or the following reserved characters: `=,|.<>[]`
-   * - Names may be followed by a trailing ellipsis to indicate a variadic option (eg. `<value...>` or `[value...]`).
-   * - The option key defaults to the name (with ellipses removed) converted to camel case
-   *   (eg. `<foo-bar...>` becomes `fooBar`).
    */
   option<
     TUsage extends NamedUsageString,
@@ -305,6 +216,15 @@ class Cli<
       : TResult,
     TName
   >;
+  /**
+   * Define a positional option.
+   *
+   * - Must be wrapped in angle brackets (`<value>`) for required or square brackets (`[value]`) for non-required.
+   * - Names cannot contain whitespace or the following reserved characters: `=,|.<>[]`
+   * - Names may be followed by a trailing ellipsis to indicate a variadic option (eg. `<value...>` or `[value...]`).
+   * - The option key defaults to the name (with ellipses removed) converted to camel case
+   *   (eg. `<foo-bar...>` becomes `fooBar`).
+   */
   option<
     TUsage extends PositionalUsageString,
     TKey extends string | null = InferPositionalKey<TUsage>,
@@ -729,17 +649,87 @@ class Cli<
   /**
    * Define a new command line interface.
    */
-  static create<TName extends string>(name: CliName<TName>): Cli<Result<{}, {}>, TName> {
+  static create<TName extends string>(name: TName): Cli<Result<{}, {}>, TName> {
     assertValidName(name);
     return new Cli({ name });
   }
 }
 
-export {
-  Cli,
-  type CliName,
-  type InferCliName,
-  type InferCliResult,
-  type PartialCli,
-  type UnknownCli,
-};
+class InternalCli<TResult extends UnknownResult, TName extends string> implements Required<CliConfig<TName>> {
+  readonly name: TName;
+  readonly aliases: readonly string[];
+  readonly descriptions: readonly string[];
+  readonly trailers: readonly string[];
+  readonly version: string;
+  readonly options: readonly (Named | Positional)[];
+  readonly commands: readonly UnknownCli[];
+  readonly actions: readonly Action[];
+  readonly optionActions: Readonly<Record<string, OptionAction[]>>;
+  readonly optionDefaults: Readonly<Record<string, () => unknown>>;
+  readonly isExitOnErrorEnabled: boolean;
+  readonly isUnknownNamedOptionAllowed: boolean;
+  readonly isCommandOptional: boolean;
+  readonly isDefault: boolean;
+  readonly isHidden: boolean;
+  readonly helpFormatter: HelpFormatter | null;
+  readonly parent: UnknownCli | null;
+
+  constructor(config: CliConfig<TName>) {
+    this.name = config.name;
+    this.aliases = config.aliases ?? [];
+    this.descriptions = config.descriptions ?? [];
+    this.trailers = config.trailers ?? [];
+    this.version = config.version ?? '0.0.0';
+    this.options = config.options ?? [];
+    this.commands = config.commands ?? [];
+    this.actions = config.actions ?? [];
+    this.optionActions = config.optionActions ?? {};
+    this.optionDefaults = config.optionDefaults ?? {};
+    this.isExitOnErrorEnabled = config.isExitOnErrorEnabled ?? false;
+    this.isUnknownNamedOptionAllowed = config.isUnknownNamedOptionAllowed ?? false;
+    this.isCommandOptional = config.isCommandOptional ?? false;
+    this.isDefault = config.isDefault ?? false;
+    this.isHidden = config.isHidden ?? false;
+    this.helpFormatter = config.helpFormatter ?? null;
+    this.parent = config.parent ?? null;
+  }
+
+  getHelpText(error: unknown = null): string {
+    const formatter = resolve(
+      this,
+      (current: UnknownCli) => current.parent,
+      (current: UnknownCli) => current.helpFormatter,
+      defaultHelpFormatter,
+    );
+
+    return formatter.format(this, error);
+  }
+
+  printHelp(error?: unknown): void {
+    console[error ? 'error' : 'log'](this.getHelpText(error));
+  }
+
+  async parse(args: readonly string[] = process.argv.slice(2)): Promise<TResult> {
+    let result: TResult;
+
+    try {
+      result = (await parse(this, args)) as TResult;
+      await run(this, result);
+    }
+    catch (error) {
+      if (!this.isExitOnErrorEnabled) throw error;
+
+      if (error instanceof CliUsageError && error.context) {
+        error.context.printHelp(error);
+      }
+      else {
+        console.error(String(error));
+      }
+
+      process.exitCode ||= 1;
+      process.exit();
+    }
+
+    return result;
+  }
+}

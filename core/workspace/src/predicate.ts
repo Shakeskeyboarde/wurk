@@ -4,8 +4,14 @@ import { minimatch } from 'minimatch';
 
 import { type Workspace } from './workspace.js';
 
+/**
+ * A predicate function which filters workspaces.
+ */
 export type WorkspacePredicate = (workspace: Workspace) => boolean | Promise<boolean>;
 
+/**
+ * Create a workspace predicate from an expression string.
+ */
 export const createWorkspacePredicate = (expression: string): WorkspacePredicate => {
   if (expression.startsWith('/') || expression.startsWith('./')) {
     return (workspace) => minimatch(workspace.relativeDir, nodePath.posix.join('.', expression));

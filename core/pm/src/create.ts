@@ -8,6 +8,9 @@ import { Pnpm } from './implementations/pnpm.js';
 import { Yarn } from './implementations/yarn.js';
 import { type PackageManager } from './pm.js';
 
+/**
+ * Create a package manager instance for the current working directory.
+ */
 export const createPackageManager = async (): Promise<PackageManager> => {
   let dir = process.cwd();
 

@@ -512,6 +512,14 @@ describe('command', () => {
       .fn()
       .mockImplementation(() => void expect(b).not.toHaveBeenCalled());
 
+    const unit = cli()
+      .option('-a')
+      .action(a)
+      .setCommandOptional()
+      .command(Cli.create('b')
+        .option('-b')
+        .action(b));
+
     await check(
       cli()
         .option('-a')

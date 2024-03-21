@@ -3,6 +3,9 @@ import { type Workspace } from 'wurk';
 
 import { type ChangeSet } from '../change.js';
 
+/**
+ * Promote a prerelease workspace to a release version.
+ */
 export const promote = async (workspace: Workspace): Promise<ChangeSet | null> => {
   const { log, version } = workspace;
 

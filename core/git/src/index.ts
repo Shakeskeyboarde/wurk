@@ -3,31 +3,87 @@ import nodeAssert from 'node:assert';
 import nodePath from 'node:path';
 
 import { type Log, log as defaultLog } from '@wurk/log';
-import { createSpawn } from '@wurk/spawn';
+import { type Spawn, spawn } from '@wurk/spawn';
 
+/**
+ * Options for creating a new {@link Git} instance.
+ */
 export interface GitOptions {
+  /**
+   * A directory in the Git repository, used as the working directory for
+   * all Git processes spawned by the instance.
+   */
   readonly dir: string;
+  /**
+   * Optional logger.
+   */
   readonly log?: Log;
 }
 
+/**
+ * Options for getting the HEAD commit hash.
+ */
 export interface GitHeadOptions {
+  /**
+   * If true, do not throw an error if the repository is a shallow clone.
+   */
   readonly allowShallow?: boolean;
 }
 
+/**
+ * Options for getting Git log entries.
+ */
 export interface GitLogOptions extends GitHeadOptions {
+  /**
+   * The commit-ish to start from.
+   */
   readonly start?: string | null;
+  /**
+   * The commit-ish to end at.
+   */
   readonly end?: string;
 }
 
+/**
+ * A single Git log entry.
+ */
 export interface GitLog {
+  /**
+   * The commit hash.
+   */
   readonly hash: string;
+  /**
+   * The author's name.
+   */
   readonly author: string;
+  /**
+   * The author's email.
+   */
   readonly authorEmail: string;
+  /**
+   * The date the commit was authored. This is when the commit was created.
+   */
   readonly authorDate: string;
+  /**
+   * The committer's name.
+   */
   readonly committer: string;
+  /**
+   * The committer's email.
+   */
   readonly committerEmail: string;
+  /**
+   * The date the commit was last modified. For example, if the commit is
+   * rebased, this date will change.
+   */
   readonly committerDate: Date;
+  /**
+   * The commit message subject (ie. the first line of the commit message).
+   */
   readonly subject: string;
+  /**
+   * The commit message body. Everything after the subject.
+   */
   readonly body: string;
 }
 
@@ -50,6 +106,9 @@ export class Git {
   readonly #log: Log;
   readonly #dir: string;
 
+  /**
+   * Create a new Git instance.
+   */
   protected constructor(options: Pick<GitOptions, 'dir' | 'log'>) {
     this.#log = options.log ?? defaultLog;
     this.#dir = options.dir;
@@ -59,7 +118,7 @@ export class Git {
    * Return true if the instance directory is a shallow Git clone.
    */
   readonly getIsShallow = async (): Promise<boolean> => {
-    const { stdoutText } = await this._spawn('git', [
+    const { stdoutText } = await this.#spawn('git', [
       'rev-parse',
       '--is-shallow-repository',
     ]);
@@ -71,7 +130,7 @@ export class Git {
    * Return the root directory of the Git repository.
    */
   readonly getRoot = async (): Promise<string> => {
-    const { stdoutText } = await this._spawn('git', [
+    const { stdoutText } = await this.#spawn('git', [
       'rev-parse',
       '--show-toplevel',
     ]);
@@ -92,7 +151,7 @@ export class Git {
       );
     }
 
-    const { stdoutText } = await this._spawn('git', [
+    const { stdoutText } = await this.#spawn('git', [
       'log',
       ['-n', '1'],
       '--pretty=format:%H',
@@ -109,7 +168,7 @@ export class Git {
   readonly getIgnored = async (dir: string): Promise<string[]> => {
     const [gitRoot, gitIgnored] = await Promise.all([
       await this.getRoot(),
-      await this._spawn('git', [
+      await this.#spawn('git', [
         'status',
         '--ignored',
         '--porcelain',
@@ -130,7 +189,7 @@ export class Git {
    * Return true if the Git working tree is dirty.
    */
   readonly getIsDirty = async (dir: string): Promise<boolean> => {
-    const { stdoutText } = await this._spawn('git', ['status', '--porcelain', dir ?? '.']);
+    const { stdoutText } = await this.#spawn('git', ['status', '--porcelain', dir ?? '.']);
 
     return Boolean(stdoutText);
   };
@@ -156,7 +215,7 @@ export class Git {
 
     const formatPlaceholders = formatEntries.map(([, placeholder]) => placeholder);
 
-    const { stdoutText } = await this._spawn('git', [
+    const { stdoutText } = await this.#spawn('git', [
       'log',
       `--pretty=format:${formatPlaceholders.join('%x1F')}%x1E`,
       start ? `${start}..${end}` : end,
@@ -178,11 +237,11 @@ export class Git {
     return logs;
   };
 
-  protected readonly _spawn = createSpawn(() => ({
+  readonly #spawn: Spawn = (cmd, sparseArgs?, ...options) => spawn(cmd, sparseArgs, {
     log: this.#log,
     cwd: this.#dir,
     stdio: 'buffer',
-  }));
+  }, ...options);
 
   /**
    * Get a Git API instance.
@@ -194,7 +253,7 @@ export class Git {
   static async create(options: GitOptions): Promise<Git> {
     const git = new Git({ dir: options.dir, log: options.log });
 
-    const { exitCode } = await git._spawn('git', ['status'], {
+    const { exitCode } = await git.#spawn('git', ['status'], {
       allowNonZeroExitCode: true,
     });
 

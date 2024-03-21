@@ -5,8 +5,15 @@ import { glob } from 'glob';
 
 import { type Workspace } from './workspace.js';
 
+/**
+ * String keys for fields in a `package.json` file which are considered to be
+ * entrypoints.
+ */
 export type EntrypointType = (typeof WORKSPACE_ENTRYPOINT_TYPES)[number];
 
+/**
+ * Array of entrypoint keys.
+ */
 const WORKSPACE_ENTRYPOINT_TYPES = [
   'license',
   'types',
@@ -19,6 +26,9 @@ const WORKSPACE_ENTRYPOINT_TYPES = [
   'directories',
 ] as const;
 
+/**
+ * Get the entrypoints of a workspace.
+ */
 export const getEntrypoints = (workspace: Workspace): readonly Entrypoint[] => {
   const { dir, config } = workspace;
   const entryPoints: Entrypoint[] = [];
@@ -78,15 +88,31 @@ export const getEntrypoints = (workspace: Workspace): readonly Entrypoint[] => {
   return entryPoints;
 };
 
+/**
+ * An entrypoint in a workspace.
+ */
 export class Entrypoint {
+  /**
+   * The type of the entrypoint (ie. the top-level `package.json` key).
+   */
   readonly type: EntrypointType;
+
+  /**
+   * The filename of the entrypoint. This may be a glob.
+   */
   readonly filename: string;
 
+  /**
+   * Create a new entrypoint.
+   */
   constructor(type: EntrypointType, filename: string) {
     this.type = type;
     this.filename = filename;
   }
 
+  /**
+   * Check if the entrypoint exists in the workspace.
+   */
   async exists(): Promise<boolean> {
     if (this.type === 'files' && !nodePath.win32.isAbsolute(this.filename)) {
       const stream = glob.stream([this.filename, `${this.filename}/**`], { nodir: true });

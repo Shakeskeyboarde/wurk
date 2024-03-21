@@ -1,14 +1,13 @@
-import { type PartialCli } from './cli.js';
+import { type UnknownCli } from './cli.js';
 import { CliUsageError } from './error.js';
 import { type UnknownResult } from './result.js';
 
-type RunCli = PartialCli<
-  'name' | 'actions' | 'commands' | 'getHelpText' | 'printHelp'
->;
-
 type CleanupAction = (result: UnknownResult) => void | Promise<void>;
 
-const run = async (cli: RunCli, result: UnknownResult): Promise<void> => {
+/**
+ * Run the actions and command actions (recursively).
+ */
+export const run = async (cli: UnknownCli, result: UnknownResult): Promise<void> => {
   const cleanupActions: CleanupAction[] = [];
 
   try {
@@ -42,5 +41,3 @@ const run = async (cli: RunCli, result: UnknownResult): Promise<void> => {
     throw error;
   }
 };
-
-export { run };

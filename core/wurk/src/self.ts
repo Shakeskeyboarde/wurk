@@ -4,6 +4,9 @@ import nodeUrl from 'node:url';
 
 import { JsonAccessor } from '@wurk/json';
 
+/**
+ * Wurk package information.
+ */
 export const getSelf = async (): Promise<{ readonly version: string; readonly description: string }> => {
   const __dirname = nodePath.dirname(nodeUrl.fileURLToPath(import.meta.url));
   const configFilename = nodePath.join(__dirname, '../package.json');

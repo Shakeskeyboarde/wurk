@@ -2,12 +2,22 @@ import { type WorkspaceDependency } from './dependency.js';
 import { getDepthFirstGenerator } from './generator.js';
 import { type Workspace } from './workspace.js';
 
+/**
+ * A collection of workspace links representing the dependency graph of a
+ * collection of workspaces.
+ */
 export interface WorkspaceLinks {
+  /**
+   * Get the links from a dependent workspace to its dependencies.
+   */
   readonly getLinksFromDependentToDependencies: (
     dependent: Workspace,
     options?: WorkspaceLinkOptions
   ) => readonly WorkspaceLink[];
 
+  /**
+   * Get the links from a dependency workspace to its dependents.
+   */
   readonly getLinksFromDependencyToDependents: (
     dependency: Workspace,
     options?: WorkspaceLinkOptions
@@ -45,6 +55,10 @@ export interface WorkspaceLinkOptions {
   readonly filter?: (link: WorkspaceLink) => boolean;
 }
 
+/**
+ * Create the workspace links (ie. the dependency graph) for a collection of
+ * workspaces.
+ */
 export const getLinks = (workspaces: readonly Workspace[]): WorkspaceLinks => {
   const linksFromDependentToDependencies = new Map<Workspace, WorkspaceLink[]>();
   const linksFromDependencyToDependents = (new Map<Workspace, WorkspaceLink[]>());

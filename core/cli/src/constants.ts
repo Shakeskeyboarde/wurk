@@ -1,4 +1,11 @@
-const optionHelpTag = Symbol('optionHelp');
-const optionVersionTag = Symbol('optionVersion');
+/**
+ * Symbol used to identify the help option.
+ * @internal
+ */
+export const optionHelpTag = Symbol('optionHelp');
 
-export { optionHelpTag, optionVersionTag };
+/**
+ * Symbol used to identify the version option.
+ * @internal
+ */
+export const optionVersionTag = Symbol('optionVersion');

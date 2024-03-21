@@ -3,12 +3,18 @@ import { StringDecoder } from 'node:string_decoder';
 
 import { Ansi } from './ansi.js';
 
+/**
+ * A transform stream that cleans and splits log lines.
+ */
 export class LogStream extends Transform {
   readonly #decoder = new StringDecoder('utf8');
 
   #buffer = '';
   #timeout?: NodeJS.Timeout;
 
+  /**
+   * Create a new log stream.
+   */
   constructor() {
     super({
       decodeStrings: true,
@@ -20,11 +26,19 @@ export class LogStream extends Transform {
     process.on('exit', this.#onExit);
   }
 
+  /**
+   * Flush the buffer and send any remaining lines.
+   */
   flush(): this {
     this.#send(true);
     return this;
   }
 
+  /**
+   * Write and flush immediately. This does not actually close the stream
+   * because log streams may be re-piped, and therefore should never really
+   * end.
+   */
   override end(...args: [unknown?, (BufferEncoding | (() => void))?, (() => void)?]): this {
     if (args.length > 0) {
       this.write.call(this, ...(args as Parameters<this['write']>));
@@ -38,6 +52,9 @@ export class LogStream extends Transform {
     return this.flush();
   }
 
+  /**
+   * Override default implementation to strip ANSI codes and buffer.
+   */
   override _transform(
     chunk: Buffer,
     _encoding: BufferEncoding,
@@ -60,11 +77,17 @@ export class LogStream extends Transform {
     callback();
   }
 
+  /**
+   * Override default implementation to call the {@link flush} method.
+   */
   override _flush(callback: TransformCallback): void {
     this.flush();
     callback();
   }
 
+  /**
+   * Override default implementation to flush and clean up event listeners.
+   */
   override _destroy(...[error, callback]: Parameters<Transform['_destroy']>): void {
     this.flush();
     process.removeListener('exit', this.#onExit);

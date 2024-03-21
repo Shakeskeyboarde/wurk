@@ -1,11 +1,18 @@
-const camelCase = (value: string): string => {
+/**
+ * Convert a string to camel case.
+ */
+export const camelCase = (value: string): string => {
   return value
     .toLowerCase()
     .replace(/^[\s._-]+|[\s._-]+$/gu, '')
     .replace(/[\s._-]+([^[\s._-])/gu, (_, letter) => letter.toUpperCase());
 };
 
-const resolve = <TSource, TValue, TDefault = undefined>(
+/**
+ * Walk a linked list of values and return the first non-nullish value, or the
+ * default value.
+ */
+export const resolve = <TSource, TValue, TDefault = undefined>(
   source: TSource | undefined | null,
   next: (source: TSource) => TSource | undefined | null,
   get: (source: TSource) => TValue | undefined | null,
@@ -34,7 +41,7 @@ const resolve = <TSource, TValue, TDefault = undefined>(
  * Leading and trailing whitespace is ignored, and all other whitespace is
  * collapsed to a single space character.
  */
-const wrap = (text: string, columns: number, newline = '\n'): string => {
+export const wrap = (text: string, columns: number, newline = '\n'): string => {
   const iterator = text
     .trim()
     .matchAll(/(?<space>\s+)|(?<word>\S+?)(?=\s|(?<=[a-z]-)[a-z]|$)/guy);
@@ -67,5 +74,3 @@ const wrap = (text: string, columns: number, newline = '\n'): string => {
 
   return result;
 };
-
-export { camelCase, resolve, wrap };
