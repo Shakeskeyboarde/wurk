@@ -29,10 +29,8 @@
     "wurk": "lib/bin.js"
   },
   "engines": {
-    "node": ">=18",
-    "npm": ">=9"
+    "node": ">=20"
   },
-  "engineStrict": true,
   "files": [
     "lib",
     "CHANGELOG.md"
