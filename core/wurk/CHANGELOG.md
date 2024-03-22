@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 0.4.2 (2024-03-21)
+
+### Chores
+
+- update node requirement to 20 (04dffb0)
+
 ## 0.4.1 (2024-03-21)
 
 ### Documentation
