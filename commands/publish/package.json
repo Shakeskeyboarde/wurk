@@ -1,7 +1,7 @@
 {
   "name": "@wurk/command-publish",
   "description": "Publish packages.",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/commands/publish/README.md",
