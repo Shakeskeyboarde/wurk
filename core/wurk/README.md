@@ -36,15 +36,6 @@ npx wurk run build
 npm install --global wurk
 ```
 
-If you use a command that is not provided by a Wurk command package, then Wurk will try to run a matching root `package.json` script. This allows root package scripts to serve as ad-hoc commands. Wurk global command line options will also be inherited by Wurk commands used in scripts.
-
-```sh
-# Run the build script from the root workspace package.json file.
-wurk build
-# Which is equivalent to the following npm command.
-npm run build
-```
-
 (Optional) Delegate root workspace package.json scripts to Wurk.
 
 ```json
@@ -53,11 +44,22 @@ npm run build
     "build": "wurk run build",
     "eslint": "wurk exec eslint src",
     "depcheck": "wurk exec depcheck",
-    "test": "wurk build && wurk lint && wurk depcheck && wurk vitest",
-    "create-release": "wurk version auto",
-    "release": "wurk publish"
+    "test": "wurk build && wurk eslint && wurk depcheck && wurk vitest run"
   }
 }
+```
+
+Root workspace package.json scripts can be used as if they were Wurk commands. All Wurk global command line options will be inherited by the Wurk calls used in the scripts.
+
+```sh
+# Run the test script from the root workspace package.json file.
+wurk test -i my-package
+
+# Which is equivalent to running all of the following Wurk commands.
+wurk build -i my-package
+wurk eslint -i my-package
+wurk depcheck -i my-package
+wurk vitest run -i my-package
 ```
 
 ## Commands
