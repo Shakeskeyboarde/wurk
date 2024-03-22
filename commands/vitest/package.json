@@ -1,7 +1,7 @@
 {
   "name": "@wurk/command-vitest",
   "description": "Run Vitest.",
-  "version": "0.1.0",
+  "version": "0.4.0",
   "author": "Chris Ackerman <chris@topher.land>",
   "license": "ISC",
   "homepage": "https://github.com/Shakeskeyboarde/wurk/blob/main/commands/vitest/README.md",
