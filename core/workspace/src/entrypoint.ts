@@ -9,12 +9,12 @@ import { type Workspace } from './workspace.js';
  * String keys for fields in a `package.json` file which are considered to be
  * entrypoints.
  */
-export type EntrypointType = (typeof WORKSPACE_ENTRYPOINT_TYPES)[number];
+export type WorkspaceEntrypointType = (typeof WORKSPACE_ENTRYPOINT_TYPES)[number];
 
 /**
  * Array of entrypoint keys.
  */
-const WORKSPACE_ENTRYPOINT_TYPES = [
+export const WORKSPACE_ENTRYPOINT_TYPES = [
   'license',
   'types',
   'bin',
@@ -29,10 +29,10 @@ const WORKSPACE_ENTRYPOINT_TYPES = [
 /**
  * Get the entrypoints of a workspace.
  */
-export const getEntrypoints = (workspace: Workspace): readonly Entrypoint[] => {
+export const getWorkspaceEntrypoints = (workspace: Workspace): readonly WorkspaceEntrypoint[] => {
   const { dir, config } = workspace;
-  const entryPoints: Entrypoint[] = [];
-  const addEntryPoints = (type: Entrypoint['type'], value: unknown): void => {
+  const entryPoints: WorkspaceEntrypoint[] = [];
+  const addEntryPoints = (type: WorkspaceEntrypoint['type'], value: unknown): void => {
     if (typeof value === 'string') {
       const entryPath = value.includes('\\') || nodePath.win32.isAbsolute(value)
         // Looks like a windows path, so just resolve it. Hopefully, the
@@ -42,7 +42,7 @@ export const getEntrypoints = (workspace: Workspace): readonly Entrypoint[] => {
         // it works with globbing.
         : nodePath.posix.resolve(dir, value);
 
-      entryPoints.push(new Entrypoint(type, entryPath));
+      entryPoints.push(new WorkspaceEntrypoint(type, entryPath));
     }
     else if (Array.isArray(value)) {
       value.forEach((subValue) => addEntryPoints(type, subValue));
@@ -91,11 +91,11 @@ export const getEntrypoints = (workspace: Workspace): readonly Entrypoint[] => {
 /**
  * An entrypoint in a workspace.
  */
-export class Entrypoint {
+export class WorkspaceEntrypoint {
   /**
    * The type of the entrypoint (ie. the top-level `package.json` key).
    */
-  readonly type: EntrypointType;
+  readonly type: WorkspaceEntrypointType;
 
   /**
    * The filename of the entrypoint. This may be a glob.
@@ -105,7 +105,7 @@ export class Entrypoint {
   /**
    * Create a new entrypoint.
    */
-  constructor(type: EntrypointType, filename: string) {
+  constructor(type: WorkspaceEntrypointType, filename: string) {
     this.type = type;
     this.filename = filename;
   }

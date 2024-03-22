@@ -8,7 +8,7 @@ Configuration for a Wurk command plugin.
 
 | Name | Type |
 | :------ | :------ |
-| `TResult` | extends `EmptyResult` |
+| `TResult` | extends `EmptyCliResult` |
 | `TName` | extends `string` |
 
 ## Table of contents

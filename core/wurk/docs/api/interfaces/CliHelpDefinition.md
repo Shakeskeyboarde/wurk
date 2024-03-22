@@ -1,6 +1,6 @@
-[Wurk API](../README.md) / HelpCli
+[Wurk API](../README.md) / CliHelpDefinition
 
-# Interface: HelpCli
+# Interface: CliHelpDefinition
 
 The `Cli` definition to be formatted.
 
@@ -8,16 +8,16 @@ The `Cli` definition to be formatted.
 
 ### Properties
 
-- [aliases](HelpCli.md#aliases)
-- [commands](HelpCli.md#commands)
-- [descriptions](HelpCli.md#descriptions)
-- [isCommandOptional](HelpCli.md#iscommandoptional)
-- [isDefault](HelpCli.md#isdefault)
-- [isHidden](HelpCli.md#ishidden)
-- [name](HelpCli.md#name)
-- [options](HelpCli.md#options)
-- [parent](HelpCli.md#parent)
-- [trailers](HelpCli.md#trailers)
+- [aliases](CliHelpDefinition.md#aliases)
+- [commands](CliHelpDefinition.md#commands)
+- [descriptions](CliHelpDefinition.md#descriptions)
+- [isCommandOptional](CliHelpDefinition.md#iscommandoptional)
+- [isDefault](CliHelpDefinition.md#isdefault)
+- [isHidden](CliHelpDefinition.md#ishidden)
+- [name](CliHelpDefinition.md#name)
+- [options](CliHelpDefinition.md#options)
+- [parent](CliHelpDefinition.md#parent)
+- [trailers](CliHelpDefinition.md#trailers)
 
 ## Properties
 
@@ -31,7 +31,7 @@ ___
 
 ### commands
 
-• `Readonly` **commands**: readonly [`HelpCli`](HelpCli.md)[]
+• `Readonly` **commands**: readonly [`CliHelpDefinition`](CliHelpDefinition.md)[]
 
 Subcommands supported by the command.
 
@@ -87,7 +87,7 @@ ___
 
 ### parent
 
-• `Readonly` **parent**: ``null`` \| [`HelpCli`](HelpCli.md)
+• `Readonly` **parent**: ``null`` \| [`CliHelpDefinition`](CliHelpDefinition.md)
 
 Parent command, if any.
 

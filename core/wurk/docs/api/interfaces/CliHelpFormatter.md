@@ -1,6 +1,6 @@
-[Wurk API](../README.md) / HelpFormatter
+[Wurk API](../README.md) / CliHelpFormatter
 
-# Interface: HelpFormatter
+# Interface: CliHelpFormatter
 
 Formatter for Cli help text.
 
@@ -8,7 +8,7 @@ Formatter for Cli help text.
 
 ### Methods
 
-- [format](HelpFormatter.md#format)
+- [format](CliHelpFormatter.md#format)
 
 ## Methods
 
@@ -22,7 +22,7 @@ Return the formatted help text for the given Cli.
 
 | Name | Type |
 | :------ | :------ |
-| `cli` | [`HelpCli`](HelpCli.md) |
+| `cli` | [`CliHelpDefinition`](CliHelpDefinition.md) |
 | `error` | `unknown` |
 
 #### Returns

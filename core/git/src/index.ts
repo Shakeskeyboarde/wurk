@@ -109,7 +109,7 @@ export class Git {
   /**
    * Create a new Git instance.
    */
-  protected constructor(options: Pick<GitOptions, 'dir' | 'log'>) {
+  protected constructor(options: GitOptions) {
     this.#log = options.log ?? defaultLog;
     this.#dir = options.dir;
   }
@@ -139,9 +139,9 @@ export class Git {
   };
 
   /**
-   * Get the hash of the most recent commit which modified the instance
-   * directory. This may not actually be HEAD if the instance directory
-   * was not modified in the current HEAD commit.
+   * Get the hash of the most recent commit which modified the directory. This
+   * may not actually be HEAD if the directory was not modified in the current
+   * HEAD commit.
    */
   readonly getHead = async (dir: string, options?: GitHeadOptions): Promise<string | null> => {
     if (!options?.allowShallow) {
@@ -162,8 +162,8 @@ export class Git {
   };
 
   /**
-   * Get a list of all the files in the instance directory which are
-   * ignored by Git (`.gitignore`).
+   * Get a list of all the files in the directory which are ignored by Git
+   * (`.gitignore`).
    */
   readonly getIgnored = async (dir: string): Promise<string[]> => {
     const [gitRoot, gitIgnored] = await Promise.all([

@@ -1,24 +1,17 @@
 import { parse } from 'shell-quote';
-import {
-  type Assertion,
-  beforeEach,
-  describe,
-  expect,
-  test,
-  vitest,
-} from 'vitest';
+import { type Assertion, beforeEach, describe, expect, test, vitest } from 'vitest';
 
 import {
   Cli,
   CliUsageError,
   type InferCliResult,
-  type InferResultOptions,
-  type UnknownResult,
+  type InferCliResultOptions,
+  type UnknownCliResult,
 } from './index.js';
 
-interface Expectation<TResult extends UnknownResult = UnknownResult> {
-  readonly options?: InferResultOptions<TResult>;
-  readonly parsed?: (keyof InferResultOptions<TResult>)[];
+interface Expectation<TResult extends UnknownCliResult = UnknownCliResult> {
+  readonly options?: InferCliResultOptions<TResult>;
+  readonly parsed?: (keyof InferCliResultOptions<TResult>)[];
   readonly commandResult?: {
     readonly [P in keyof TResult['commandResult']]?: Expectation<
       Exclude<TResult['commandResult'][P], undefined>
@@ -26,7 +19,7 @@ interface Expectation<TResult extends UnknownResult = UnknownResult> {
   };
 }
 
-const checkResult = <TResult extends UnknownResult>(
+const checkResult = <TResult extends UnknownCliResult>(
   result: TResult,
   expectation: Expectation<TResult>,
 ): void => {

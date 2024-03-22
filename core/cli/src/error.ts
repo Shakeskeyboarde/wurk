@@ -1,9 +1,24 @@
-interface CliUsageErrorContext {
+/**
+ * Usage error context which can be used to get or print help text.
+ */
+export interface CliUsageErrorContext {
+  /**
+   * Get the help text for the usage error.
+   */
   getHelpText(error?: unknown): string;
+  /**
+   * Print the help text for the usage error.
+   */
   printHelp(error?: unknown): void;
 }
 
-interface CliUsageErrorOptions {
+/**
+ * Options for creating a `CliUsageError`.
+ */
+export interface CliUsageErrorOptions {
+  /**
+   * Context for the usage error which can be used to get or print help text.
+   */
   readonly context?: CliUsageErrorContext;
 }
 

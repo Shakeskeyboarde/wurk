@@ -1,6 +1,6 @@
 {
   "name": "Wurk API",
-  "entryPoints": ["src/typedoc.ts"],
+  "entryPoints": ["src/index.ts"],
   "tsconfig": "src/tsconfig.json",
   "readme": "none",
   "groupOrder": [

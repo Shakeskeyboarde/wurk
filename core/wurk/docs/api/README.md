@@ -12,28 +12,41 @@ Wurk API
 
 - [Cli](classes/Cli.md)
 - [CommandContext](classes/CommandContext.md)
+- [Git](classes/Git.md)
 - [JsonAccessor](classes/JsonAccessor.md)
+- [Log](classes/Log.md)
+- [SpawnExitCodeError](classes/SpawnExitCodeError.md)
 - [Workspace](classes/Workspace.md)
 - [Workspaces](classes/Workspaces.md)
 
 ### Interfaces
 
+- [CliHelpDefinition](interfaces/CliHelpDefinition.md)
+- [CliHelpFormatter](interfaces/CliHelpFormatter.md)
+- [CliResult](interfaces/CliResult.md)
+- [CommandContextOptions](interfaces/CommandContextOptions.md)
 - [CommandHooks](interfaces/CommandHooks.md)
-- [HelpCli](interfaces/HelpCli.md)
-- [HelpFormatter](interfaces/HelpFormatter.md)
-- [Result](interfaces/Result.md)
+- [GitHeadOptions](interfaces/GitHeadOptions.md)
+- [GitLog](interfaces/GitLog.md)
+- [GitLogOptions](interfaces/GitLogOptions.md)
+- [GitOptions](interfaces/GitOptions.md)
+- [SpawnOptions](interfaces/SpawnOptions.md)
+- [SpawnResult](interfaces/SpawnResult.md)
+- [WorkspaceDependency](interfaces/WorkspaceDependency.md)
 - [WorkspaceLink](interfaces/WorkspaceLink.md)
 - [WorkspaceLinkOptions](interfaces/WorkspaceLinkOptions.md)
 - [WorkspaceOptions](interfaces/WorkspaceOptions.md)
+- [WorkspacePublished](interfaces/WorkspacePublished.md)
 - [WorkspacesOptions](interfaces/WorkspacesOptions.md)
 
 ### Type Aliases
 
-- [Action](README.md#action)
+- [CliAction](README.md#cliaction)
+- [CliOptionAction](README.md#clioptionaction)
 - [CommandActionCallback](README.md#commandactioncallback)
 - [CommandConfigCallback](README.md#commandconfigcallback)
-- [OptionAction](README.md#optionaction)
 - [WorkspaceCallback](README.md#workspacecallback)
+- [WorkspaceDependencySpec](README.md#workspacedependencyspec)
 
 ## Functions
 
@@ -48,14 +61,14 @@ Create a Wurk command plugin.
 | Name | Type |
 | :------ | :------ |
 | `TName` | extends `string` |
-| `TResult` | extends `EmptyResult` |
+| `TResult` | extends `EmptyCliResult` |
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
 | `name` | `TName` |
-| `hooks` | [`CommandHooks`](interfaces/CommandHooks.md)\<`TResult`, `TName`\> \| [`CommandActionCallback`](README.md#commandactioncallback)\<`EmptyResult`\> |
+| `hooks` | [`CommandHooks`](interfaces/CommandHooks.md)\<`TResult`, `TName`\> \| [`CommandActionCallback`](README.md#commandactioncallback)\<`EmptyCliResult`\> |
 
 #### Returns
 
@@ -84,9 +97,9 @@ export default createCommand('my-command', {
 
 ## Type Aliases
 
-### Action
+### CliAction
 
-Ƭ **Action**\<`TResult`\>: (`result`: `TResult`) => `void` \| (`result`: `TResult`) => `void` \| `Promise`\<`void`\> \| `Promise`\<`void` \| (`result`: `TResult`) => `void` \| `Promise`\<`void`\>\>
+Ƭ **CliAction**\<`TResult`\>: (`result`: `TResult`) => `void` \| (`result`: `TResult`) => `void` \| `Promise`\<`void`\> \| `Promise`\<`void` \| (`result`: `TResult`) => `void` \| `Promise`\<`void`\>\>
 
 Callback for performing an action when a command is parsed.
 
@@ -94,7 +107,7 @@ Callback for performing an action when a command is parsed.
 
 | Name | Type |
 | :------ | :------ |
-| `TResult` | extends `UnknownResult` = `UnknownResult` |
+| `TResult` | extends `UnknownCliResult` = `UnknownCliResult` |
 
 #### Type declaration
 
@@ -112,6 +125,38 @@ Callback for performing an action when a command is parsed.
 
 ___
 
+### CliOptionAction
+
+Ƭ **CliOptionAction**\<`TResult`, `TKey`\>: (`context`: \{ `key`: `TKey` ; `result`: `PartialCliResult`\<`TResult`\> ; `value`: `Exclude`\<`InferCliResultOptions`\<`TResult`\>[`TKey`], `undefined`\>  }) => `void` \| `Promise`\<`void`\>
+
+Callback for performing an action when an option is parsed.
+
+#### Type parameters
+
+| Name | Type |
+| :------ | :------ |
+| `TResult` | extends `UnknownCliResult` = `UnknownCliResult` |
+| `TKey` | extends keyof `InferCliResultOptions`\<`TResult`\> = keyof `InferCliResultOptions`\<`TResult`\> |
+
+#### Type declaration
+
+▸ (`context`): `void` \| `Promise`\<`void`\>
+
+##### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `context` | `Object` |
+| `context.key` | `TKey` |
+| `context.result` | `PartialCliResult`\<`TResult`\> |
+| `context.value` | `Exclude`\<`InferCliResultOptions`\<`TResult`\>[`TKey`], `undefined`\> |
+
+##### Returns
+
+`void` \| `Promise`\<`void`\>
+
+___
+
 ### CommandActionCallback
 
 Ƭ **CommandActionCallback**\<`TResult`\>: (`context`: [`CommandContext`](classes/CommandContext.md)\<`TResult`\>) => `Promise`\<`void`\>
@@ -122,7 +167,7 @@ Action callback for a Wurk command plugin.
 
 | Name | Type |
 | :------ | :------ |
-| `TResult` | extends `EmptyResult` = `EmptyResult` |
+| `TResult` | extends `EmptyCliResult` = `EmptyCliResult` |
 
 #### Type declaration
 
@@ -142,7 +187,7 @@ ___
 
 ### CommandConfigCallback
 
-Ƭ **CommandConfigCallback**\<`TResult`, `TName`\>: (`cli`: [`Cli`](classes/Cli.md)\<`EmptyResult`, `TName`\>, `config`: [`JsonAccessor`](classes/JsonAccessor.md)) => [`Cli`](classes/Cli.md)\<`TResult`, `TName`\>
+Ƭ **CommandConfigCallback**\<`TResult`, `TName`\>: (`cli`: [`Cli`](classes/Cli.md)\<`EmptyCliResult`, `TName`\>, `config`: [`JsonAccessor`](classes/JsonAccessor.md)) => [`Cli`](classes/Cli.md)\<`TResult`, `TName`\>
 
 Configuration callback for a Wurk command plugin.
 
@@ -150,7 +195,7 @@ Configuration callback for a Wurk command plugin.
 
 | Name | Type |
 | :------ | :------ |
-| `TResult` | extends `EmptyResult` |
+| `TResult` | extends `EmptyCliResult` |
 | `TName` | extends `string` |
 
 #### Type declaration
@@ -161,44 +206,12 @@ Configuration callback for a Wurk command plugin.
 
 | Name | Type |
 | :------ | :------ |
-| `cli` | [`Cli`](classes/Cli.md)\<`EmptyResult`, `TName`\> |
+| `cli` | [`Cli`](classes/Cli.md)\<`EmptyCliResult`, `TName`\> |
 | `config` | [`JsonAccessor`](classes/JsonAccessor.md) |
 
 ##### Returns
 
 [`Cli`](classes/Cli.md)\<`TResult`, `TName`\>
-
-___
-
-### OptionAction
-
-Ƭ **OptionAction**\<`TResult`, `TKey`\>: (`context`: \{ `key`: `TKey` ; `result`: `PartialResult`\<`TResult`\> ; `value`: `Exclude`\<`InferResultOptions`\<`TResult`\>[`TKey`], `undefined`\>  }) => `void` \| `Promise`\<`void`\>
-
-Callback for performing an action when an option is parsed.
-
-#### Type parameters
-
-| Name | Type |
-| :------ | :------ |
-| `TResult` | extends `UnknownResult` = `UnknownResult` |
-| `TKey` | extends keyof `InferResultOptions`\<`TResult`\> = keyof `InferResultOptions`\<`TResult`\> |
-
-#### Type declaration
-
-▸ (`context`): `void` \| `Promise`\<`void`\>
-
-##### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `context` | `Object` |
-| `context.key` | `TKey` |
-| `context.result` | `PartialResult`\<`TResult`\> |
-| `context.value` | `Exclude`\<`InferResultOptions`\<`TResult`\>[`TKey`], `undefined`\> |
-
-##### Returns
-
-`void` \| `Promise`\<`void`\>
 
 ___
 
@@ -223,3 +236,11 @@ Workspace collection `forEach*` asynchronous callback.
 ##### Returns
 
 `Promise`\<`void`\>
+
+___
+
+### WorkspaceDependencySpec
+
+Ƭ **WorkspaceDependencySpec**: \{ `name`: `string` ; `range`: `string` ; `raw`: `string` ; `type`: ``"npm"`` \| ``"workspace"``  } \| \{ `protocol`: `string` ; `raw`: `string` ; `suffix`: `string` ; `type`: ``"url"``  }
+
+A dependency specification parsed from a `package.json` file.

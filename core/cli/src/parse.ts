@@ -3,7 +3,7 @@ import { type UnknownCli } from './cli.js';
 import { CliUsageError } from './error.js';
 import { type Named } from './named.js';
 import { type Positional } from './positional.js';
-import { type UnknownResult } from './result.js';
+import { type UnknownCliResult } from './result.js';
 
 interface ParserParent {
   isNamed(arg: string): boolean;
@@ -11,7 +11,7 @@ interface ParserParent {
 }
 
 interface ParserResult
-  extends Pick<UnknownResult, 'name' | 'getHelpText' | 'printHelp'> {
+  extends Pick<UnknownCliResult, 'name' | 'getHelpText' | 'printHelp'> {
   readonly options: Record<string, any>;
   readonly commandResult: Record<string, ParserResult | undefined>;
   readonly parsed: Set<string>;
@@ -41,7 +41,7 @@ const noParent: ParserParent = {
 export const parse = async (
   cli: UnknownCli,
   args: readonly string[],
-): Promise<UnknownResult> => {
+): Promise<UnknownCliResult> => {
   try {
     return await parseRecursive([...args], cli);
   }

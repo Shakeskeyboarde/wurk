@@ -7,7 +7,13 @@ import { JsonAccessor } from '@wurk/json';
 import { getAnsiColorIterator, log, setLogLevel } from '@wurk/log';
 import { createPackageManager } from '@wurk/pm';
 import { spawn } from '@wurk/spawn';
-import { AbortError, createWorkspacePredicate, Workspace, type WorkspacePredicate, Workspaces } from '@wurk/workspace';
+import {
+  createWorkspacePredicate,
+  Workspace,
+  WorkspaceAbortError,
+  type WorkspacePredicate,
+  Workspaces,
+} from '@wurk/workspace';
 
 import { Config } from './config.js';
 import { loadCommandPlugins } from './plugin.js';
@@ -249,7 +255,7 @@ export const main = async (): Promise<void> => {
         error.context?.printHelp(true);
       }
 
-      if (!(error instanceof AbortError)) {
+      if (!(error instanceof WorkspaceAbortError)) {
         // Abort errors are thrown by collection `forEach*` methods when
         // iteration throws an error or is otherwise aborted. Any associated
         // error is handled by the collection, so we don't need to log it

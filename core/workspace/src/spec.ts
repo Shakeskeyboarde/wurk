@@ -3,7 +3,7 @@ import semver from 'semver';
 /**
  * A dependency specification parsed from a `package.json` file.
  */
-export type DependencySpec =
+export type WorkspaceDependencySpec =
   | {
     /**
      * The spec type.
@@ -46,7 +46,7 @@ export type DependencySpec =
  * Get the dependency spec for a dependency key/value pair from a
  * `package.json` file dependency map.
  */
-export const getDependencySpec = (id: string, raw: string): DependencySpec => {
+export const getWorkspaceDependencySpec = (id: string, raw: string): WorkspaceDependencySpec => {
   const [, protocol = '', suffix = ''] = raw.match(/^(?:([^:]*):)?(.*)$/u)!;
 
   if (protocol === 'npm' || protocol === 'workspace') {

@@ -8,7 +8,7 @@ CLI definition.
 
 | Name | Type |
 | :------ | :------ |
-| `TResult` | extends `UnknownResult` = `UnknownResult` |
+| `TResult` | extends `UnknownCliResult` = `UnknownCliResult` |
 | `TName` | extends `string` = `string` |
 
 ## Table of contents
@@ -56,7 +56,7 @@ actions. Cleanup callbacks run in the reverse order they are defined.
 
 | Name | Type |
 | :------ | :------ |
-| `callback` | [`Action`](../README.md#action)\<`TResult`\> |
+| `callback` | [`CliAction`](../README.md#cliaction)\<`TResult`\> |
 
 #### Returns
 
@@ -90,7 +90,7 @@ ___
 
 ### command
 
-▸ **command**\<`TCommandName`, `TCommandResult`\>(`command`): [`Cli`](Cli.md)\<[`Result`](../interfaces/Result.md)\<`InferResultOptions`\<`TResult`\>, `UnionProps`\<`InferResultCommand`\<`TResult`\>, `Record`\<`TCommandName`, `undefined` \| `TCommandResult`\>\>\>, `TName`\>
+▸ **command**\<`TCommandName`, `TCommandResult`\>(`command`): [`Cli`](Cli.md)\<[`CliResult`](../interfaces/CliResult.md)\<`InferCliResultOptions`\<`TResult`\>, `UnionProps`\<`InferCliResultCommand`\<`TResult`\>, `Record`\<`TCommandName`, `undefined` \| `TCommandResult`\>\>\>, `TName`\>
 
 Add a command.
 
@@ -104,7 +104,7 @@ current command if a command is matched.
 | Name | Type |
 | :------ | :------ |
 | `TCommandName` | extends `string` |
-| `TCommandResult` | extends `UnknownResult` |
+| `TCommandResult` | extends `UnknownCliResult` |
 
 #### Parameters
 
@@ -114,7 +114,7 @@ current command if a command is matched.
 
 #### Returns
 
-[`Cli`](Cli.md)\<[`Result`](../interfaces/Result.md)\<`InferResultOptions`\<`TResult`\>, `UnionProps`\<`InferResultCommand`\<`TResult`\>, `Record`\<`TCommandName`, `undefined` \| `TCommandResult`\>\>\>, `TName`\>
+[`Cli`](Cli.md)\<[`CliResult`](../interfaces/CliResult.md)\<`InferCliResultOptions`\<`TResult`\>, `UnionProps`\<`InferCliResultCommand`\<`TResult`\>, `Record`\<`TCommandName`, `undefined` \| `TCommandResult`\>\>\>, `TName`\>
 
 ___
 
@@ -188,7 +188,7 @@ ___
 
 ### option
 
-▸ **option**\<`TUsage`, `TKey`, `TRequired`, `TMapped`, `TValue`, `TParsedValue`\>(`usage`, `config?`): [`Cli`](Cli.md)\<`TKey` extends `string` ? [`Result`](../interfaces/Result.md)\<`UnionProps`\<`InferResultOptions`\<`TResult`\>, `Record`\<`TKey`, `TParsedValue` \| `TRequired` extends ``true`` ? `never` : `undefined`\>\>, `InferResultCommand`\<`TResult`\>\> : `TResult`, `TName`\>
+▸ **option**\<`TUsage`, `TKey`, `TRequired`, `TMapped`, `TValue`, `TParsedValue`\>(`usage`, `config?`): [`Cli`](Cli.md)\<`TKey` extends `string` ? [`CliResult`](../interfaces/CliResult.md)\<`UnionProps`\<`InferCliResultOptions`\<`TResult`\>, `Record`\<`TKey`, `TParsedValue` \| `TRequired` extends ``true`` ? `never` : `undefined`\>\>, `InferCliResultCommand`\<`TResult`\>\> : `TResult`, `TName`\>
 
 Define a named option.
 
@@ -219,9 +219,9 @@ Define a named option.
 
 #### Returns
 
-[`Cli`](Cli.md)\<`TKey` extends `string` ? [`Result`](../interfaces/Result.md)\<`UnionProps`\<`InferResultOptions`\<`TResult`\>, `Record`\<`TKey`, `TParsedValue` \| `TRequired` extends ``true`` ? `never` : `undefined`\>\>, `InferResultCommand`\<`TResult`\>\> : `TResult`, `TName`\>
+[`Cli`](Cli.md)\<`TKey` extends `string` ? [`CliResult`](../interfaces/CliResult.md)\<`UnionProps`\<`InferCliResultOptions`\<`TResult`\>, `Record`\<`TKey`, `TParsedValue` \| `TRequired` extends ``true`` ? `never` : `undefined`\>\>, `InferCliResultCommand`\<`TResult`\>\> : `TResult`, `TName`\>
 
-▸ **option**\<`TUsage`, `TKey`, `TRequired`, `TValue`, `TParsedValue`\>(`usage`, `config?`): [`Cli`](Cli.md)\<`TKey` extends `string` ? [`Result`](../interfaces/Result.md)\<`UnionProps`\<`InferResultOptions`\<`TResult`\>, `Record`\<`TKey`, `TParsedValue` \| `TRequired` extends ``true`` ? `never` : `undefined`\>\>, `InferResultCommand`\<`TResult`\>\> : `TResult`, `TName`\>
+▸ **option**\<`TUsage`, `TKey`, `TRequired`, `TValue`, `TParsedValue`\>(`usage`, `config?`): [`Cli`](Cli.md)\<`TKey` extends `string` ? [`CliResult`](../interfaces/CliResult.md)\<`UnionProps`\<`InferCliResultOptions`\<`TResult`\>, `Record`\<`TKey`, `TParsedValue` \| `TRequired` extends ``true`` ? `never` : `undefined`\>\>, `InferCliResultCommand`\<`TResult`\>\> : `TResult`, `TName`\>
 
 Define a positional option.
 
@@ -250,7 +250,7 @@ Define a positional option.
 
 #### Returns
 
-[`Cli`](Cli.md)\<`TKey` extends `string` ? [`Result`](../interfaces/Result.md)\<`UnionProps`\<`InferResultOptions`\<`TResult`\>, `Record`\<`TKey`, `TParsedValue` \| `TRequired` extends ``true`` ? `never` : `undefined`\>\>, `InferResultCommand`\<`TResult`\>\> : `TResult`, `TName`\>
+[`Cli`](Cli.md)\<`TKey` extends `string` ? [`CliResult`](../interfaces/CliResult.md)\<`UnionProps`\<`InferCliResultOptions`\<`TResult`\>, `Record`\<`TKey`, `TParsedValue` \| `TRequired` extends ``true`` ? `never` : `undefined`\>\>, `InferCliResultCommand`\<`TResult`\>\> : `TResult`, `TName`\>
 
 ___
 
@@ -272,7 +272,7 @@ Multiple actions will be run in the order they are defined.
 | Name | Type |
 | :------ | :------ |
 | `key` | `TKey` |
-| `callback` | [`OptionAction`](../README.md#optionaction)\<`TResult`, `TKey`\> |
+| `callback` | [`CliOptionAction`](../README.md#clioptionaction)\<`TResult`, `TKey`\> |
 
 #### Returns
 
@@ -296,7 +296,7 @@ positional.
 | :------ | :------ |
 | `TKey0` | extends `string` \| `number` \| `symbol` |
 | `TKey1` | extends `string` \| `number` \| `symbol` |
-| `TKeyN` | extends `Exclude`\<keyof `PickOptional`\<`InferResultOptions`\<`TResult`\>\>, `TKey0` \| `TKey1`\>[] |
+| `TKeyN` | extends `Exclude`\<keyof `PickOptional`\<`InferCliResultOptions`\<`TResult`\>\>, `TKey0` \| `TKey1`\>[] |
 
 #### Parameters
 
@@ -312,7 +312,7 @@ ___
 
 ### optionDefault
 
-▸ **optionDefault**\<`TKey`\>(`key`, `factory`): [`Cli`](Cli.md)\<[`Result`](../interfaces/Result.md)\<`UnionProps`\<`Omit`\<`InferResultOptions`\<`TResult`\>, `TKey`\>, `Record`\<`TKey`, `Exclude`\<`InferResultOptions`\<`TResult`\>[`TKey`], `undefined`\>\>\>, `InferResultCommand`\<`TResult`\>\>, `TName`\>
+▸ **optionDefault**\<`TKey`\>(`key`, `factory`): [`Cli`](Cli.md)\<[`CliResult`](../interfaces/CliResult.md)\<`UnionProps`\<`Omit`\<`InferCliResultOptions`\<`TResult`\>, `TKey`\>, `Record`\<`TKey`, `Exclude`\<`InferCliResultOptions`\<`TResult`\>[`TKey`], `undefined`\>\>\>, `InferCliResultCommand`\<`TResult`\>\>, `TName`\>
 
 Provide a default value for a non-required option.
 
@@ -327,11 +327,11 @@ Provide a default value for a non-required option.
 | Name | Type |
 | :------ | :------ |
 | `key` | `TKey` |
-| `factory` | `Extract`\<`InferResultOptions`\<`TResult`\>[`TKey`], ``null`` \| `string` \| `number` \| `bigint` \| `boolean`\> \| () => `Exclude`\<`InferResultOptions`\<`TResult`\>[`TKey`], `undefined`\> \| `Promise`\<`Exclude`\<`InferResultOptions`\<`TResult`\>[`TKey`], `undefined`\>\> |
+| `factory` | `Extract`\<`InferCliResultOptions`\<`TResult`\>[`TKey`], ``null`` \| `string` \| `number` \| `bigint` \| `boolean`\> \| () => `Exclude`\<`InferCliResultOptions`\<`TResult`\>[`TKey`], `undefined`\> \| `Promise`\<`Exclude`\<`InferCliResultOptions`\<`TResult`\>[`TKey`], `undefined`\>\> |
 
 #### Returns
 
-[`Cli`](Cli.md)\<[`Result`](../interfaces/Result.md)\<`UnionProps`\<`Omit`\<`InferResultOptions`\<`TResult`\>, `TKey`\>, `Record`\<`TKey`, `Exclude`\<`InferResultOptions`\<`TResult`\>[`TKey`], `undefined`\>\>\>, `InferResultCommand`\<`TResult`\>\>, `TName`\>
+[`Cli`](Cli.md)\<[`CliResult`](../interfaces/CliResult.md)\<`UnionProps`\<`Omit`\<`InferCliResultOptions`\<`TResult`\>, `TKey`\>, `Record`\<`TKey`, `Exclude`\<`InferCliResultOptions`\<`TResult`\>[`TKey`], `undefined`\>\>\>, `InferCliResultCommand`\<`TResult`\>\>, `TName`\>
 
 ___
 
@@ -359,7 +359,7 @@ ___
 
 ### optionNegation
 
-▸ **optionNegation**\<`TKey0`, `TKey1`, `TKeyN`\>(`...keys`): [`Cli`](Cli.md)\<[`Result`](../interfaces/Result.md)\<`UnionProps`\<`Omit`\<`InferResultOptions`\<`TResult`\>, `TKey0` \| `TKey1` \| `TKeyN`[`number`]\>, `Record`\<`TKey0` \| `TKey1` \| `TKeyN`[`number`], `boolean` \| keyof `PickRequired`\<`InferResultOptions`\<`TResult`\>\> extends `never` ? `undefined` : `never`\>\>, `InferResultCommand`\<`TResult`\>\>, `TName`\>
+▸ **optionNegation**\<`TKey0`, `TKey1`, `TKeyN`\>(`...keys`): [`Cli`](Cli.md)\<[`CliResult`](../interfaces/CliResult.md)\<`UnionProps`\<`Omit`\<`InferCliResultOptions`\<`TResult`\>, `TKey0` \| `TKey1` \| `TKeyN`[`number`]\>, `Record`\<`TKey0` \| `TKey1` \| `TKeyN`[`number`], `boolean` \| keyof `PickRequired`\<`InferCliResultOptions`\<`TResult`\>\> extends `never` ? `undefined` : `never`\>\>, `InferCliResultCommand`\<`TResult`\>\>, `TName`\>
 
 Treat two or more boolean options as negating each other. When one of the
 options is set, all others will be set to `false`.
@@ -375,17 +375,17 @@ NOTE: All options must be boolean typed.
 | :------ | :------ |
 | `TKey0` | extends `string` \| `number` \| `symbol` |
 | `TKey1` | extends `string` \| `number` \| `symbol` |
-| `TKeyN` | extends `Exclude`\<keyof `PickByType`\<`InferResultOptions`\<`TResult`\>, `boolean`\>, `TKey0` \| `TKey1`\>[] |
+| `TKeyN` | extends `Exclude`\<keyof `PickByType`\<`InferCliResultOptions`\<`TResult`\>, `boolean`\>, `TKey0` \| `TKey1`\>[] |
 
 #### Parameters
 
 | Name | Type |
 | :------ | :------ |
-| `...keys` | [key0: TKey0, key1: TKey1, ...keyN: UniqueArray\<TKeyN, TKeyN\>[]] |
+| `...keys` | [key0: TKey0, key1: TKey1, ...keyN: UniqueTuple\<TKeyN\>[]] |
 
 #### Returns
 
-[`Cli`](Cli.md)\<[`Result`](../interfaces/Result.md)\<`UnionProps`\<`Omit`\<`InferResultOptions`\<`TResult`\>, `TKey0` \| `TKey1` \| `TKeyN`[`number`]\>, `Record`\<`TKey0` \| `TKey1` \| `TKeyN`[`number`], `boolean` \| keyof `PickRequired`\<`InferResultOptions`\<`TResult`\>\> extends `never` ? `undefined` : `never`\>\>, `InferResultCommand`\<`TResult`\>\>, `TName`\>
+[`Cli`](Cli.md)\<[`CliResult`](../interfaces/CliResult.md)\<`UnionProps`\<`Omit`\<`InferCliResultOptions`\<`TResult`\>, `TKey0` \| `TKey1` \| `TKeyN`[`number`]\>, `Record`\<`TKey0` \| `TKey1` \| `TKeyN`[`number`], `boolean` \| keyof `PickRequired`\<`InferCliResultOptions`\<`TResult`\>\> extends `never` ? `undefined` : `never`\>\>, `InferCliResultCommand`\<`TResult`\>\>, `TName`\>
 
 ___
 
@@ -528,7 +528,7 @@ custom formatter is (or was) explicitly set on the command.
 
 | Name | Type |
 | :------ | :------ |
-| `value` | ``null`` \| [`HelpFormatter`](../interfaces/HelpFormatter.md) |
+| `value` | ``null`` \| [`CliHelpFormatter`](../interfaces/CliHelpFormatter.md) |
 
 #### Returns
 
@@ -620,7 +620,7 @@ ___
 
 ### create
 
-▸ **create**\<`TName`\>(`name`): [`Cli`](Cli.md)\<[`Result`](../interfaces/Result.md)\<{}, {}\>, `TName`\>
+▸ **create**\<`TName`\>(`name`): [`Cli`](Cli.md)\<[`CliResult`](../interfaces/CliResult.md)\<{}, {}\>, `TName`\>
 
 Define a new command line interface.
 
@@ -638,4 +638,4 @@ Define a new command line interface.
 
 #### Returns
 
-[`Cli`](Cli.md)\<[`Result`](../interfaces/Result.md)\<{}, {}\>, `TName`\>
+[`Cli`](Cli.md)\<[`CliResult`](../interfaces/CliResult.md)\<{}, {}\>, `TName`\>

@@ -1,6 +1,6 @@
 /* eslint-disable unicorn/no-process-exit */
 /* eslint-disable max-lines */
-import { type Action, type OptionAction } from './action.js';
+import { type CliAction, type CliOptionAction } from './action.js';
 import {
   assertNoCommandsWithRequiredPositionalOption,
   assertNoDefaultCommandWithPositionalOption,
@@ -16,7 +16,7 @@ import {
 } from './assert.js';
 import { optionHelpTag, optionVersionTag } from './constants.js';
 import { CliUsageError } from './error.js';
-import { defaultHelpFormatter, type HelpFormatter } from './help.js';
+import { type CliHelpFormatter, defaultCliHelpFormatter } from './help.js';
 import {
   type AnyNamedConfig,
   createNamed,
@@ -39,10 +39,10 @@ import {
   type PositionalUsageString,
 } from './positional.js';
 import {
-  type InferResultCommand,
-  type InferResultOptions,
-  type Result,
-  type UnknownResult,
+  type CliResult,
+  type InferCliResultCommand,
+  type InferCliResultOptions,
+  type UnknownCliResult,
 } from './result.js';
 import { run } from './run.js';
 import {
@@ -50,15 +50,9 @@ import {
   type PickOptional,
   type PickRequired,
   type UnionProps,
+  type UniqueTuple,
 } from './types.js';
 import { resolve } from './utils.js';
-
-type UniqueArray<
-  T extends readonly any[],
-  TT extends readonly any[] = T,
-> = T extends readonly [infer V, ...infer TRest]
-  ? V extends TRest[number] ? never : UniqueArray<TRest, TT>
-  : TT;
 
 interface CliConfig<TName extends string = string> {
   readonly name: TName;
@@ -68,15 +62,15 @@ interface CliConfig<TName extends string = string> {
   readonly version?: string;
   readonly options?: readonly (Named | Positional)[];
   readonly commands?: readonly UnknownCli[];
-  readonly actions?: readonly Action[];
-  readonly optionActions?: Readonly<Record<string, OptionAction[]>>;
+  readonly actions?: readonly CliAction[];
+  readonly optionActions?: Readonly<Record<string, CliOptionAction[]>>;
   readonly optionDefaults?: Readonly<Record<string, () => unknown>>;
   readonly isExitOnErrorEnabled?: boolean;
   readonly isUnknownNamedOptionAllowed?: boolean;
   readonly isCommandOptional?: boolean;
   readonly isDefault?: boolean;
   readonly isHidden?: boolean;
-  readonly helpFormatter?: HelpFormatter | null;
+  readonly helpFormatter?: CliHelpFormatter | null;
   readonly parent?: UnknownCli | null;
 }
 
@@ -84,7 +78,7 @@ interface CliConfig<TName extends string = string> {
  * An {@link InternalCli} instance with an unknown result type and name.
  * @internal
  */
-export type UnknownCli = InternalCli<UnknownResult, string>;
+export type UnknownCli = InternalCli<UnknownCliResult, string>;
 
 /**
  * Infer the name of a {@link Cli} instance.
@@ -100,7 +94,7 @@ export type InferCliResult<TCli extends Cli<any, any>> = TCli extends Cli<infer 
  * CLI definition.
  */
 export class Cli<
-  TResult extends UnknownResult = UnknownResult,
+  TResult extends UnknownCliResult = UnknownCliResult,
   TName extends string = string,
 > {
   readonly #internal: InternalCli<TResult, TName>;
@@ -206,12 +200,12 @@ export class Cli<
     config?: string | NamedConfig<TKey, TValue, TParsedValue, TRequired, TMapped, TResult>,
   ): Cli<
     TKey extends string
-      ? Result<
+      ? CliResult<
         UnionProps<
-          InferResultOptions<TResult>,
+          InferCliResultOptions<TResult>,
           Record<TKey, TParsedValue | (TRequired extends true ? never : undefined)>
         >,
-        InferResultCommand<TResult>
+        InferCliResultCommand<TResult>
       >
       : TResult,
     TName
@@ -236,12 +230,12 @@ export class Cli<
     config?: string | PositionalConfig<TKey, TValue, TParsedValue, TResult>,
   ): Cli<
     TKey extends string
-      ? Result<
+      ? CliResult<
         UnionProps<
-          InferResultOptions<TResult>,
+          InferCliResultOptions<TResult>,
           Record<TKey, TParsedValue | (TRequired extends true ? never : undefined)>
         >,
-        InferResultCommand<TResult>
+        InferCliResultCommand<TResult>
       >
       : TResult,
     TName
@@ -252,7 +246,7 @@ export class Cli<
       | string
       | NamedConfig<string | null, any, any, boolean, boolean, TResult>
       | PositionalConfig<string | null, any, any, TResult>,
-  ): Cli<UnknownResult, TName> {
+  ): Cli<UnknownCliResult, TName> {
     if (usage.startsWith('-')) {
       const option = createNamed(
         usage,
@@ -397,22 +391,22 @@ export class Cli<
    * NOTE: All options must be boolean typed.
    */
   optionNegation<
-    TKey0 extends keyof PickByType<InferResultOptions<TResult>, boolean>,
-    TKey1 extends Exclude<keyof PickByType<InferResultOptions<TResult>, boolean>, TKey0>,
-    TKeyN extends Exclude<keyof PickByType<InferResultOptions<TResult>, boolean>, TKey0 | TKey1>[],
-  >(...keys: [key0: TKey0, key1: TKey1, ...keyN: UniqueArray<TKeyN>]): Cli<
-    Result<
+    TKey0 extends keyof PickByType<InferCliResultOptions<TResult>, boolean>,
+    TKey1 extends Exclude<keyof PickByType<InferCliResultOptions<TResult>, boolean>, TKey0>,
+    TKeyN extends Exclude<keyof PickByType<InferCliResultOptions<TResult>, boolean>, TKey0 | TKey1>[],
+  >(...keys: [key0: TKey0, key1: TKey1, ...keyN: UniqueTuple<TKeyN>]): Cli<
+    CliResult<
       UnionProps<
-        Omit<InferResultOptions<TResult>, TKey0 | TKey1 | TKeyN[number]>,
+        Omit<InferCliResultOptions<TResult>, TKey0 | TKey1 | TKeyN[number]>,
         Record<
           TKey0 | TKey1 | TKeyN[number],
           | boolean
-          | (keyof PickRequired<InferResultOptions<TResult>> extends never
+          | (keyof PickRequired<InferCliResultOptions<TResult>> extends never
             ? undefined
             : never)
         >
       >,
-      InferResultCommand<TResult>
+      InferCliResultCommand<TResult>
     >,
     TName
   > {
@@ -435,9 +429,9 @@ export class Cli<
    * positional.
    */
   optionConflict<
-    TKey0 extends keyof PickOptional<InferResultOptions<TResult>>,
-    TKey1 extends Exclude<keyof PickOptional<InferResultOptions<TResult>>, TKey0>,
-    TKeyN extends Exclude<keyof PickOptional<InferResultOptions<TResult>>, TKey0 | TKey1>[],
+    TKey0 extends keyof PickOptional<InferCliResultOptions<TResult>>,
+    TKey1 extends Exclude<keyof PickOptional<InferCliResultOptions<TResult>>, TKey0>,
+    TKeyN extends Exclude<keyof PickOptional<InferCliResultOptions<TResult>>, TKey0 | TKey1>[],
   >(...keys: [key0: TKey0, key1: TKey1, ...keyN: TKeyN]): Cli<TResult, TName> {
     const options = keys.map((key) => {
       return this.#internal.options.find((option) => option.key === key)!;
@@ -462,9 +456,9 @@ export class Cli<
    * Define an action to run each time a specific option is parsed.
    * Multiple actions will be run in the order they are defined.
    */
-  optionAction<TKey extends keyof InferResultOptions<TResult>>(
+  optionAction<TKey extends keyof InferCliResultOptions<TResult>>(
     key: TKey,
-    callback: OptionAction<TResult, TKey>,
+    callback: CliOptionAction<TResult, TKey>,
   ): Cli<TResult, TName> {
     return new Cli({
       ...this.#internal,
@@ -472,7 +466,7 @@ export class Cli<
         ...this.#internal.optionActions,
         [key]: [
           ...(this.#internal.optionActions.key ?? []),
-          callback as OptionAction,
+          callback as CliOptionAction,
         ],
       },
     });
@@ -481,19 +475,20 @@ export class Cli<
   /**
    * Provide a default value for a non-required option.
    */
-  optionDefault<TKey extends keyof PickOptional<InferResultOptions<TResult>>>(
+  optionDefault<TKey extends keyof PickOptional<InferCliResultOptions<TResult>>>(
     key: TKey,
     factory:
-      | Extract<InferResultOptions<TResult>[TKey], null | boolean | number | bigint | string>
+      | Extract<InferCliResultOptions<TResult>[TKey], null | boolean | number | bigint | string>
       | (() =>
-      | Exclude<InferResultOptions<TResult>[TKey], undefined>
-      | Promise<Exclude<InferResultOptions<TResult>[TKey], undefined>>),
+      | Exclude<InferCliResultOptions<TResult>[TKey], undefined>
+      | Promise<Exclude<InferCliResultOptions<TResult>[TKey], undefined>>),
   ): Cli<
-      Result<
+      CliResult<
         UnionProps<
-          Omit<InferResultOptions<TResult>, TKey>, Record<TKey, Exclude<InferResultOptions<TResult>[TKey], undefined>>
+          Omit<InferCliResultOptions<TResult>, TKey>,
+          Record<TKey, Exclude<InferCliResultOptions<TResult>[TKey], undefined>>
         >,
-        InferResultCommand<TResult>
+        InferCliResultCommand<TResult>
       >,
       TName
     > {
@@ -514,12 +509,12 @@ export class Cli<
    * options, and no non-required positional options will be parsed by the
    * current command if a command is matched.
    */
-  command<TCommandName extends string, TCommandResult extends UnknownResult>(
+  command<TCommandName extends string, TCommandResult extends UnknownCliResult>(
     command: Cli<TCommandResult, TCommandName>,
   ): Cli<
-      Result<
-        InferResultOptions<TResult>,
-        UnionProps<InferResultCommand<TResult>, Record<TCommandName, TCommandResult | undefined>>
+      CliResult<
+        InferCliResultOptions<TResult>,
+        UnionProps<InferCliResultCommand<TResult>, Record<TCommandName, TCommandResult | undefined>>
       >,
       TName
     > {
@@ -554,10 +549,10 @@ export class Cli<
    * A "cleanup" callback can be returned which will be run after all command
    * actions. Cleanup callbacks run in the reverse order they are defined.
    */
-  action(callback: Action<TResult>): Cli<TResult, TName> {
+  action(callback: CliAction<TResult>): Cli<TResult, TName> {
     return new Cli({
       ...this.#internal,
-      actions: [...this.#internal.actions, callback as Action],
+      actions: [...this.#internal.actions, callback as CliAction],
     });
   }
 
@@ -614,7 +609,7 @@ export class Cli<
    * NOTE: Commands inherit the help text formatter of their parent unless a
    * custom formatter is (or was) explicitly set on the command.
    */
-  setHelpFormatter(value: HelpFormatter | null): Cli<TResult, TName> {
+  setHelpFormatter(value: CliHelpFormatter | null): Cli<TResult, TName> {
     return new Cli({ ...this.#internal, helpFormatter: value });
   }
 
@@ -649,13 +644,13 @@ export class Cli<
   /**
    * Define a new command line interface.
    */
-  static create<TName extends string>(name: TName): Cli<Result<{}, {}>, TName> {
+  static create<TName extends string>(name: TName): Cli<CliResult<{}, {}>, TName> {
     assertValidName(name);
     return new Cli({ name });
   }
 }
 
-class InternalCli<TResult extends UnknownResult, TName extends string> implements Required<CliConfig<TName>> {
+class InternalCli<TResult extends UnknownCliResult, TName extends string> implements Required<CliConfig<TName>> {
   readonly name: TName;
   readonly aliases: readonly string[];
   readonly descriptions: readonly string[];
@@ -663,15 +658,15 @@ class InternalCli<TResult extends UnknownResult, TName extends string> implement
   readonly version: string;
   readonly options: readonly (Named | Positional)[];
   readonly commands: readonly UnknownCli[];
-  readonly actions: readonly Action[];
-  readonly optionActions: Readonly<Record<string, OptionAction[]>>;
+  readonly actions: readonly CliAction[];
+  readonly optionActions: Readonly<Record<string, CliOptionAction[]>>;
   readonly optionDefaults: Readonly<Record<string, () => unknown>>;
   readonly isExitOnErrorEnabled: boolean;
   readonly isUnknownNamedOptionAllowed: boolean;
   readonly isCommandOptional: boolean;
   readonly isDefault: boolean;
   readonly isHidden: boolean;
-  readonly helpFormatter: HelpFormatter | null;
+  readonly helpFormatter: CliHelpFormatter | null;
   readonly parent: UnknownCli | null;
 
   constructor(config: CliConfig<TName>) {
@@ -699,7 +694,7 @@ class InternalCli<TResult extends UnknownResult, TName extends string> implement
       this,
       (current: UnknownCli) => current.parent,
       (current: UnknownCli) => current.helpFormatter,
-      defaultHelpFormatter,
+      defaultCliHelpFormatter,
     );
 
     return formatter.format(this, error);

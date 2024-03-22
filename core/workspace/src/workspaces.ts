@@ -4,10 +4,10 @@ import nodeProcess from 'node:process';
 import { type JsonAccessor } from '@wurk/json';
 import { Sema } from 'async-sema';
 
-import { AbortError } from './error.js';
+import { WorkspaceAbortError } from './error.js';
 import { filterWorkspaces } from './filter.js';
 import { GeneratorIterable, getDepthFirstGenerator } from './generator.js';
-import { getLinks } from './link.js';
+import { getWorkspaceLinks } from './link.js';
 import { type WorkspacePredicate } from './predicate.js';
 import { Workspace, type WorkspacePublished } from './workspace.js';
 
@@ -134,7 +134,7 @@ export class Workspaces {
       })
       .sort((a, b) => a.name.localeCompare(b.name));
 
-    const links = getLinks(workspaces);
+    const links = getWorkspaceLinks(workspaces);
 
     this.size = workspaces.length;
     this.concurrency = concurrency >= 0 ? concurrency : 0;
@@ -325,7 +325,7 @@ export class Workspaces {
     await Promise.all(promises.values());
 
     if (signal.aborted) {
-      throw new AbortError(signal.reason);
+      throw new WorkspaceAbortError(signal.reason);
     }
   }
 }

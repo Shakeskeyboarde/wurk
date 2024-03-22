@@ -1,26 +1,41 @@
 import {
-  type InferResultCommand,
-  type InferResultOptions,
-  type Result,
-  type UnknownResult,
+  type CliResult,
+  type InferCliResultCommand,
+  type InferCliResultOptions,
+  type UnknownCliResult,
 } from '@wurk/cli';
 import { Git } from '@wurk/git';
 import { Log } from '@wurk/log';
 import { type Spawn, spawn } from '@wurk/spawn';
 import { type Workspace, type Workspaces } from '@wurk/workspace';
 
-interface ContextOptions<TResult extends UnknownResult> {
+/**
+ * Options for creating a new command context.
+ */
+export interface CommandContextOptions<TResult extends UnknownCliResult> {
+  /**
+   * Results parsed from command line arguments and actions.
+   */
   readonly result: TResult;
+  /**
+   * Root workspace of the project.
+   */
   readonly root: Workspace;
+  /**
+   * Collection of all child workspaces in the project, not including the root.
+   */
   readonly workspaces: Workspaces;
+  /**
+   * The package manager (command) in use (eg. `npm`, `pnpm`, `yarn`).
+   */
   readonly pm: string;
 }
 
 /**
  * Context passed to Wurk command action hook.
  */
-export class CommandContext<TResult extends UnknownResult>
-implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>> {
+export class CommandContext<TResult extends UnknownCliResult>
+implements CliResult<InferCliResultOptions<TResult>, InferCliResultCommand<TResult>> {
   readonly #result: TResult;
 
   /**
@@ -35,7 +50,8 @@ implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>> {
   readonly root: Workspace;
 
   /**
-   * Collection of all workspaces in the project.
+   * Collection of all child workspaces in the project. Does not include the
+   * root workspace.
    */
   readonly workspaces: Workspaces;
 
@@ -55,8 +71,8 @@ implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>> {
   /**
    * Options derived from argument parsing and actions.
    */
-  get options(): InferResultOptions<TResult> {
-    return this.#result.options as InferResultOptions<TResult>;
+  get options(): InferCliResultOptions<TResult> {
+    return this.#result.options as InferCliResultOptions<TResult>;
   }
 
   /**
@@ -66,8 +82,8 @@ implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>> {
    * defined, because only zero or one commands can be matched per parent
    * command.
    */
-  get commandResult(): InferResultCommand<TResult> {
-    return this.#result.commandResult as InferResultCommand<TResult>;
+  get commandResult(): InferCliResultCommand<TResult> {
+    return this.#result.commandResult as InferCliResultCommand<TResult>;
   }
 
   /**
@@ -85,7 +101,7 @@ implements Result<InferResultOptions<TResult>, InferResultCommand<TResult>> {
   /**
    * Create a new command context.
    */
-  constructor(options: ContextOptions<TResult>) {
+  constructor(options: CommandContextOptions<TResult>) {
     const { result, root, workspaces, pm } = options;
 
     this.#result = result;

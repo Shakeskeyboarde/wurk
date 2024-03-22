@@ -1,4 +1,4 @@
-import { type UnknownResult } from './result.js';
+import { type UnknownCliResult } from './result.js';
 import { type CamelCase, type LastValue, type Split } from './types.js';
 import { camelCase } from './utils.js';
 
@@ -29,7 +29,7 @@ export interface NamedConfig<
   TParsedValue,
   TRequired extends boolean,
   TMapped extends boolean,
-  TResult extends UnknownResult,
+  TResult extends UnknownCliResult,
 > {
   /**
    * Explicit key for the option if the default key is overridden.
@@ -122,7 +122,7 @@ export type AnyNamedConfig = NamedConfig<
   any,
   boolean,
   boolean,
-  UnknownResult
+  UnknownCliResult
 >;
 
 /**
@@ -130,7 +130,7 @@ export type AnyNamedConfig = NamedConfig<
  */
 export const createNamed = (
   usage: string,
-  configOrDescription: NamedConfig<string | null, any, any, boolean, boolean, UnknownResult> | string = {},
+  configOrDescription: NamedConfig<string | null, any, any, boolean, boolean, UnknownCliResult> | string = {},
 ): Named => {
   const config = typeof configOrDescription === 'string'
     ? { description: configOrDescription }

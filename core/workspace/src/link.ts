@@ -59,7 +59,7 @@ export interface WorkspaceLinkOptions {
  * Create the workspace links (ie. the dependency graph) for a collection of
  * workspaces.
  */
-export const getLinks = (workspaces: readonly Workspace[]): WorkspaceLinks => {
+export const getWorkspaceLinks = (workspaces: readonly Workspace[]): WorkspaceLinks => {
   const linksFromDependentToDependencies = new Map<Workspace, WorkspaceLink[]>();
   const linksFromDependencyToDependents = (new Map<Workspace, WorkspaceLink[]>());
 

@@ -1,4 +1,4 @@
-import { Cli, type EmptyResult } from '@wurk/cli';
+import { Cli, type EmptyCliResult } from '@wurk/cli';
 import { type JsonAccessor } from '@wurk/json';
 import { type Workspace, type Workspaces } from '@wurk/workspace';
 
@@ -8,14 +8,14 @@ import { CommandContext } from './context.js';
  * Configuration callback for a Wurk command plugin.
  */
 export type CommandConfigCallback<
-  TResult extends EmptyResult,
+  TResult extends EmptyCliResult,
   TName extends string,
-> = (cli: Cli<EmptyResult, TName>, config: JsonAccessor) => Cli<TResult, TName>;
+> = (cli: Cli<EmptyCliResult, TName>, config: JsonAccessor) => Cli<TResult, TName>;
 
 /**
  * Action callback for a Wurk command plugin.
  */
-export type CommandActionCallback<TResult extends EmptyResult = EmptyResult> = (
+export type CommandActionCallback<TResult extends EmptyCliResult = EmptyCliResult> = (
   context: CommandContext<TResult>,
 ) => Promise<void>;
 
@@ -23,7 +23,7 @@ export type CommandActionCallback<TResult extends EmptyResult = EmptyResult> = (
  * Configuration for a Wurk command plugin.
  */
 export interface CommandHooks<
-  TResult extends EmptyResult,
+  TResult extends EmptyCliResult,
   TName extends string,
 > {
   /**
@@ -39,9 +39,11 @@ export interface CommandHooks<
 
 /**
  * Wurk command plugin.
+ *
+ * @internal
  */
 export interface Command<
-  TResult extends EmptyResult = EmptyResult,
+  TResult extends EmptyCliResult = EmptyCliResult,
   TName extends string = string,
 > {
   /**
@@ -85,7 +87,7 @@ interface InitConfig {
  */
 export const createCommand = <
   TName extends string,
-  TResult extends EmptyResult,
+  TResult extends EmptyCliResult,
 >(
   name: TName,
   hooks: CommandHooks<TResult, TName> | CommandActionCallback,
@@ -133,9 +135,11 @@ export const createCommand = <
  * Factory which loads a Wurk command. This is what is actually returned
  * from the {@link createCommand} function, even though the function returns
  * `unknown`.
+ *
+ * @internal
  */
 export class CommandFactory<
-  TResult extends EmptyResult = EmptyResult,
+  TResult extends EmptyCliResult = EmptyCliResult,
   TName extends string = string,
 > {
   /**

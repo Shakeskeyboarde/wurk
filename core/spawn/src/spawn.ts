@@ -21,7 +21,8 @@ export interface SpawnOptions {
    */
   readonly cwd?: string;
   /**
-   * Child process environment.
+   * Child process environment. This always extends the current `process.env`,
+   * but variables can be omitted by setting them to `undefined`.
    */
   readonly env?: NodeJS.ProcessEnv;
   /**
@@ -42,7 +43,7 @@ export interface SpawnOptions {
    */
   readonly input?: Buffer;
   /**
-   * Logger to use for logging.
+   * Logger to use for process logging.
    */
   readonly log?: Log;
   /**

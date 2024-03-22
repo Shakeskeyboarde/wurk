@@ -47,13 +47,13 @@ ___
 
 ### getPublished
 
-• `Optional` `Readonly` **getPublished**: (`name`: `string`, `version`: `string`) => `Promise`\<``null`` \| `WorkspacePublished`\>
+• `Optional` `Readonly` **getPublished**: (`name`: `string`, `version`: `string`) => `Promise`\<``null`` \| [`WorkspacePublished`](WorkspacePublished.md)\>
 
 Determine if a workspace version is published or not.
 
 #### Type declaration
 
-▸ (`name`, `version`): `Promise`\<``null`` \| `WorkspacePublished`\>
+▸ (`name`, `version`): `Promise`\<``null`` \| [`WorkspacePublished`](WorkspacePublished.md)\>
 
 ##### Parameters
 
@@ -64,7 +64,7 @@ Determine if a workspace version is published or not.
 
 ##### Returns
 
-`Promise`\<``null`` \| `WorkspacePublished`\>
+`Promise`\<``null`` \| [`WorkspacePublished`](WorkspacePublished.md)\>
 
 ___
 

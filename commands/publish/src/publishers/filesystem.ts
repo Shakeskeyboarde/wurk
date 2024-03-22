@@ -3,11 +3,11 @@ import nodePath from 'node:path';
 
 import semver from 'semver';
 import {
-  type DependencySpec,
   type Git,
   type JsonAccessor,
   type Workspace,
   type WorkspaceDependency,
+  type WorkspaceDependencySpec,
   type WorkspaceLink,
   type WorkspacePublished,
 } from 'wurk';
@@ -360,7 +360,7 @@ const patchConfig = (
 };
 
 const getUpdatedRange = (
-  spec: Extract<DependencySpec, { readonly type: 'npm' | 'workspace' }>,
+  spec: Extract<WorkspaceDependencySpec, { readonly type: 'npm' | 'workspace' }>,
   currentVersion: string,
 ): string | null => {
   if (spec.type === 'npm') {

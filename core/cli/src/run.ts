@@ -1,13 +1,13 @@
 import { type UnknownCli } from './cli.js';
 import { CliUsageError } from './error.js';
-import { type UnknownResult } from './result.js';
+import { type UnknownCliResult } from './result.js';
 
-type CleanupAction = (result: UnknownResult) => void | Promise<void>;
+type CleanupAction = (result: UnknownCliResult) => void | Promise<void>;
 
 /**
  * Run the actions and command actions (recursively).
  */
-export const run = async (cli: UnknownCli, result: UnknownResult): Promise<void> => {
+export const run = async (cli: UnknownCli, result: UnknownCliResult): Promise<void> => {
   const cleanupActions: CleanupAction[] = [];
 
   try {

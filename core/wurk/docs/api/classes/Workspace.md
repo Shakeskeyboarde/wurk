@@ -97,7 +97,7 @@ ___
 
 ### dependencies
 
-• `Readonly` **dependencies**: readonly `WorkspaceDependency`[]
+• `Readonly` **dependencies**: readonly [`WorkspaceDependency`](../interfaces/WorkspaceDependency.md)[]
 
 All workspace dependencies (not just local).
 
@@ -169,7 +169,7 @@ ___
 
 ### getEntrypoints
 
-• `Readonly` **getEntrypoints**: () => readonly `Entrypoint`[]
+• `Readonly` **getEntrypoints**: () => readonly `WorkspaceEntrypoint`[]
 
 Return a list of all of the entry points in the workspace
 `package.json` file. These are the files that should be built and
@@ -177,27 +177,27 @@ published with the package.
 
 #### Type declaration
 
-▸ (): readonly `Entrypoint`[]
+▸ (): readonly `WorkspaceEntrypoint`[]
 
 ##### Returns
 
-readonly `Entrypoint`[]
+readonly `WorkspaceEntrypoint`[]
 
 ___
 
 ### getPublished
 
-• `Readonly` **getPublished**: () => `Promise`\<``null`` \| `WorkspacePublished`\>
+• `Readonly` **getPublished**: () => `Promise`\<``null`` \| [`WorkspacePublished`](../interfaces/WorkspacePublished.md)\>
 
 Get publication information for the workspace.
 
 #### Type declaration
 
-▸ (): `Promise`\<``null`` \| `WorkspacePublished`\>
+▸ (): `Promise`\<``null`` \| [`WorkspacePublished`](../interfaces/WorkspacePublished.md)\>
 
 ##### Returns
 
-`Promise`\<``null`` \| `WorkspacePublished`\>
+`Promise`\<``null`` \| [`WorkspacePublished`](../interfaces/WorkspacePublished.md)\>
 
 #### Implementation of
 
@@ -231,7 +231,7 @@ ___
 
 ### log
 
-• `Readonly` **log**: `Log`
+• `Readonly` **log**: [`Log`](Log.md)
 
 Logger which should be used for messages related to workspace processing.
 
@@ -263,13 +263,13 @@ ___
 
 ### spawn
 
-• `Readonly` **spawn**: (`cmd`: `string`, `sparseArgs?`: `SpawnSparseArgs`, ...`options`: `SpawnOptions`[]) => `Promise`\<`SpawnResult`\>
+• `Readonly` **spawn**: (`cmd`: `string`, `sparseArgs?`: `SpawnSparseArgs`, ...`options`: [`SpawnOptions`](../interfaces/SpawnOptions.md)[]) => `Promise`\<[`SpawnResult`](../interfaces/SpawnResult.md)\>
 
 Spawn a child process.
 
 #### Type declaration
 
-▸ (`cmd`, `sparseArgs?`, `...options`): `Promise`\<`SpawnResult`\>
+▸ (`cmd`, `sparseArgs?`, `...options`): `Promise`\<[`SpawnResult`](../interfaces/SpawnResult.md)\>
 
 ##### Parameters
 
@@ -277,11 +277,11 @@ Spawn a child process.
 | :------ | :------ |
 | `cmd` | `string` |
 | `sparseArgs?` | `SpawnSparseArgs` |
-| `...options` | `SpawnOptions`[] |
+| `...options` | [`SpawnOptions`](../interfaces/SpawnOptions.md)[] |
 
 ##### Returns
 
-`Promise`\<`SpawnResult`\>
+`Promise`\<[`SpawnResult`](../interfaces/SpawnResult.md)\>
 
 ___
 

@@ -83,3 +83,13 @@ export type LastValue<TValue extends any[]> = TValue extends readonly [
   : TValue extends (infer TLast)[]
     ? TLast | (TValue extends [any, ...any[]] ? never : undefined)
     : never;
+
+/**
+ * Filter a tuple to only include unique values.
+ */
+export type UniqueTuple<
+  T extends readonly any[],
+  TT extends readonly any[] = T,
+> = T extends readonly [infer V, ...infer TRest]
+  ? V extends TRest[number] ? never : UniqueTuple<TRest, TT>
+  : TT;

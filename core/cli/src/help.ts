@@ -6,7 +6,7 @@ import { wrap } from './utils.js';
 /**
  * The `Cli` definition to be formatted.
  */
-export interface HelpCli {
+export interface CliHelpDefinition {
   /**
    * The name of the command.
    */
@@ -30,11 +30,11 @@ export interface HelpCli {
   /**
    * Subcommands supported by the command.
    */
-  readonly commands: readonly HelpCli[];
+  readonly commands: readonly CliHelpDefinition[];
   /**
    * Parent command, if any.
    */
-  readonly parent: HelpCli | null;
+  readonly parent: CliHelpDefinition | null;
   /**
    * Whether a subcommand is optional.
    */
@@ -52,16 +52,16 @@ export interface HelpCli {
 /**
  * Formatter for Cli help text.
  */
-export interface HelpFormatter {
+export interface CliHelpFormatter {
   /**
    * Return the formatted help text for the given Cli.
    */
-  format(cli: HelpCli, error: unknown): string;
+  format(cli: CliHelpDefinition, error: unknown): string;
 }
 
 const COLUMNS = Math.min(process.stdout.columns, 120);
 
-const formatUsage = (cli: HelpCli): string => {
+const formatUsage = (cli: CliHelpDefinition): string => {
   let name = [cli.name, ...cli.aliases].join('|');
 
   for (let parent = cli.parent; parent; parent = parent.parent) {
@@ -168,13 +168,13 @@ const formatOptions = (
   return result;
 };
 
-const formatCommands = (commands: readonly HelpCli[]): string => {
+const formatCommands = (commands: readonly CliHelpDefinition[]): string => {
   commands = commands.filter((command) => !command.isHidden);
 
   if (!commands.length) return '';
 
   const [commandMap, nameLength] = commands.reduce<
-    [Record<string, HelpCli>, number]
+    [Record<string, CliHelpDefinition>, number]
   >(
     ([map, max], command) => {
       const name = [command.name, ...command.aliases].join('|');
@@ -205,7 +205,7 @@ const formatError = (error: unknown): string => {
   return wrap(String(error), COLUMNS);
 };
 
-const format = (cli: HelpCli, error: unknown): string => {
+const format = (cli: CliHelpDefinition, error: unknown): string => {
   const groups = Object.entries(
     cli.options.reduce<Record<string, (Named | Positional)[]>>((result, option) => {
       const groupName
@@ -238,4 +238,4 @@ const format = (cli: HelpCli, error: unknown): string => {
 /**
  * Default help formatter used if no custom formatter is provided.
  */
-export const defaultHelpFormatter: HelpFormatter = { format };
+export const defaultCliHelpFormatter: CliHelpFormatter = { format };

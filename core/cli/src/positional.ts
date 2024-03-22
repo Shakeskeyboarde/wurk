@@ -1,4 +1,4 @@
-import { type UnknownResult } from './result.js';
+import { type UnknownCliResult } from './result.js';
 import { type CamelCase } from './types.js';
 import { camelCase } from './utils.js';
 
@@ -26,7 +26,7 @@ export interface PositionalConfig<
   TKey extends string | null,
   TValue,
   TParsedValue,
-  TResult extends UnknownResult,
+  TResult extends UnknownCliResult,
 > {
   /**
    * Explicit key for the option if the default key is overridden.
@@ -98,7 +98,7 @@ export type InferPositionalType<TUsage extends PositionalUsageString> = TUsage e
 /**
  * Placeholder for any positional option configuration.
  */
-export type AnyPositionalConfig = PositionalConfig<string, any, any, UnknownResult>;
+export type AnyPositionalConfig = PositionalConfig<string, any, any, UnknownCliResult>;
 
 /**
  * Create a positional option.

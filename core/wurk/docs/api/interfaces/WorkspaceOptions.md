@@ -85,7 +85,7 @@ ___
 
 ### getPublished
 
-• `Optional` `Readonly` **getPublished**: () => `Promise`\<``null`` \| `WorkspacePublished`\>
+• `Optional` `Readonly` **getPublished**: () => `Promise`\<``null`` \| [`WorkspacePublished`](WorkspacePublished.md)\>
 
 Get publication information for the workspace. This will check the
 NPM registry for the closest version which is less than or equal to (<=)
@@ -99,11 +99,11 @@ the exact current version has been published.
 
 #### Type declaration
 
-▸ (): `Promise`\<``null`` \| `WorkspacePublished`\>
+▸ (): `Promise`\<``null`` \| [`WorkspacePublished`](WorkspacePublished.md)\>
 
 ##### Returns
 
-`Promise`\<``null`` \| `WorkspacePublished`\>
+`Promise`\<``null`` \| [`WorkspacePublished`](WorkspacePublished.md)\>
 
 ___
 
@@ -117,7 +117,7 @@ ___
 
 ### log
 
-• `Optional` `Readonly` **log**: `Log`
+• `Optional` `Readonly` **log**: [`Log`](../classes/Log.md)
 
 Logger which should be used for messages related to the workspace.
 

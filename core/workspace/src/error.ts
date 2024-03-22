@@ -2,7 +2,7 @@
  * Error thrown by workspace `forEach*` methods when a callback aborts the
  * iteration.
  */
-export class AbortError extends Error {
+export class WorkspaceAbortError extends Error {
   /**
    * Create a new abort error.
    */

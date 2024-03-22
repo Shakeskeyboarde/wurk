@@ -1,6 +1,6 @@
-[Wurk API](../README.md) / Result
+[Wurk API](../README.md) / CliResult
 
-# Interface: Result\<TOptions, TCommand\>
+# Interface: CliResult\<TOptions, TCommand\>
 
 Result of CLI argument parsing and actions.
 
@@ -9,7 +9,7 @@ Result of CLI argument parsing and actions.
 | Name | Type |
 | :------ | :------ |
 | `TOptions` | extends `Record`\<`string`, `unknown`\> |
-| `TCommand` | extends `Record`\<`string`, `UnknownResult` \| `undefined`\> |
+| `TCommand` | extends `Record`\<`string`, `UnknownCliResult` \| `undefined`\> |
 
 ## Implemented by
 
@@ -19,15 +19,15 @@ Result of CLI argument parsing and actions.
 
 ### Methods
 
-- [getHelpText](Result.md#gethelptext)
-- [printHelp](Result.md#printhelp)
+- [getHelpText](CliResult.md#gethelptext)
+- [printHelp](CliResult.md#printhelp)
 
 ### Properties
 
-- [commandResult](Result.md#commandresult)
-- [name](Result.md#name)
-- [options](Result.md#options)
-- [parsed](Result.md#parsed)
+- [commandResult](CliResult.md#commandresult)
+- [name](CliResult.md#name)
+- [options](CliResult.md#options)
+- [parsed](CliResult.md#parsed)
 
 ## Methods
 

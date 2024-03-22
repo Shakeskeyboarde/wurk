@@ -6,7 +6,7 @@ Represents an edge in the workspace dependency graph.
 
 ## Hierarchy
 
-- `WorkspaceDependency`
+- [`WorkspaceDependency`](WorkspaceDependency.md)
 
   ↳ **`WorkspaceLink`**
 
@@ -48,19 +48,19 @@ entry is an alias.
 
 #### Inherited from
 
-WorkspaceDependency.id
+[WorkspaceDependency](WorkspaceDependency.md).[id](WorkspaceDependency.md#id)
 
 ___
 
 ### spec
 
-• `Readonly` **spec**: `DependencySpec`
+• `Readonly` **spec**: [`WorkspaceDependencySpec`](../README.md#workspacedependencyspec)
 
 The dependency spec.
 
 #### Inherited from
 
-WorkspaceDependency.spec
+[WorkspaceDependency](WorkspaceDependency.md).[spec](WorkspaceDependency.md#spec)
 
 ___
 
@@ -73,4 +73,4 @@ file (eg. `devDependencies`).
 
 #### Inherited from
 
-WorkspaceDependency.type
+[WorkspaceDependency](WorkspaceDependency.md).[type](WorkspaceDependency.md#type)
