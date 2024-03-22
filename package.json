@@ -39,7 +39,6 @@
     "yarn": "please-use-npm",
     "pnpm": "please-use-npm"
   },
-  "engineStrict": true,
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/eslint": "^8.56.6",
