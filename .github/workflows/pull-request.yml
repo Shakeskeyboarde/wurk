@@ -34,8 +34,8 @@ jobs:
         run: |
           set -e
           pnpm build
-          pnpm test
           pnpm dlx wurk publish --to-archive
+          pnpm test
 
       - name: Publish (Dry Run)
         run: |
