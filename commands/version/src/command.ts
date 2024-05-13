@@ -90,9 +90,10 @@ export default createCommand('version', {
     // fails (eg. dirty Git working tree), dependent workspace writes should
     // be skipped so that they don't end up referencing non-existent versions.
     await workspaces.forEach(async (workspace) => {
+      const gitHead = await git?.getHead(workspace.dir);
       const changeSet = changeSets.get(workspace)!;
 
-      await writeConfig(workspace, changeSet.version);
+      await writeConfig(workspace, changeSet.version, gitHead);
 
       if (changelog) {
         await writeChangelog(workspace, {

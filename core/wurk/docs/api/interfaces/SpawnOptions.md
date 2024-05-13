@@ -1,86 +1,77 @@
+[**Wurk API**](../README.md) • **Docs**
+
+***
+
 [Wurk API](../README.md) / SpawnOptions
 
 # Interface: SpawnOptions
 
 Options for spawning a child process.
 
-## Table of contents
-
-### Properties
-
-- [allowNonZeroExitCode](SpawnOptions.md#allownonzeroexitcode)
-- [cwd](SpawnOptions.md#cwd)
-- [env](SpawnOptions.md#env)
-- [input](SpawnOptions.md#input)
-- [log](SpawnOptions.md#log)
-- [logCommand](SpawnOptions.md#logcommand)
-- [paths](SpawnOptions.md#paths)
-- [stdio](SpawnOptions.md#stdio)
-
 ## Properties
 
-### allowNonZeroExitCode
+### allowNonZeroExitCode?
 
-• `Optional` `Readonly` **allowNonZeroExitCode**: `boolean`
+> `optional` `readonly` **allowNonZeroExitCode**: `boolean`
 
 Do not throw an error if the child process exits with a non-zero status.
 
-___
+***
 
-### cwd
+### cwd?
 
-• `Optional` `Readonly` **cwd**: `string`
+> `optional` `readonly` **cwd**: `string`
 
 Current working directory of the child process.
 
-___
+***
 
-### env
+### env?
 
-• `Optional` `Readonly` **env**: `ProcessEnv`
+> `optional` `readonly` **env**: `ProcessEnv`
 
 Child process environment. This always extends the current `process.env`,
 but variables can be omitted by setting them to `undefined`.
 
-___
+***
 
-### input
+### input?
 
-• `Optional` `Readonly` **input**: `Buffer`
+> `optional` `readonly` **input**: `Buffer`
 
 Data to write to the child process stdin.
 
-___
+***
 
-### log
+### log?
 
-• `Optional` `Readonly` **log**: [`Log`](../classes/Log.md)
+> `optional` `readonly` **log**: [`Log`](../classes/Log.md)
 
 Logger to use for process logging.
 
-___
+***
 
-### logCommand
+### logCommand?
 
-• `Optional` `Readonly` **logCommand**: `boolean` \| \{ `mapArgs?`: (`arg`: `string`) => ``null`` \| `string` \| `boolean` \| `LiteralArg` \| (`string` \| `LiteralArg`)[]  }
+> `optional` `readonly` **logCommand**: `boolean` \| `object`
 
 Print the command to the log before running it. Defaults to `true` if
 the `output` option is `echo` or `inherit`, otherwise `false`.
 
-___
+***
 
-### paths
+### paths?
 
-• `Optional` `Readonly` **paths**: readonly `string`[]
+> `optional` `readonly` **paths**: readonly `string`[]
 
 Child process PATH values to be appended to the current `process.env.PATH`
 value.
 
-___
+***
 
-### stdio
+### stdio?
 
-• `Optional` `Readonly` **stdio**: `SpawnStdio`
+> `optional` `readonly` **stdio**: `SpawnStdio`
 
 Method of handling the child process input and output streams. Defaults
 to `buffer` which stores stream output in memory and ignores stdin.

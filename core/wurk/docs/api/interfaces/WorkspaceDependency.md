@@ -1,46 +1,40 @@
+[**Wurk API**](../README.md) • **Docs**
+
+***
+
 [Wurk API](../README.md) / WorkspaceDependency
 
 # Interface: WorkspaceDependency
 
 A dependency in a workspace's `package.json` file.
 
-## Hierarchy
+## Extended by
 
-- **`WorkspaceDependency`**
-
-  ↳ [`WorkspaceLink`](WorkspaceLink.md)
-
-## Table of contents
-
-### Properties
-
-- [id](WorkspaceDependency.md#id)
-- [spec](WorkspaceDependency.md#spec)
-- [type](WorkspaceDependency.md#type)
+- [`WorkspaceLink`](WorkspaceLink.md)
 
 ## Properties
 
 ### id
 
-• `Readonly` **id**: `string`
+> `readonly` **id**: `string`
 
 The key of the dependency in the dependent workspace's `package.json`
 file. This may not be the same as the dependency's package name if the
 entry is an alias.
 
-___
+***
 
 ### spec
 
-• `Readonly` **spec**: [`WorkspaceDependencySpec`](../README.md#workspacedependencyspec)
+> `readonly` **spec**: [`WorkspaceDependencySpec`](../type-aliases/WorkspaceDependencySpec.md)
 
 The dependency spec.
 
-___
+***
 
 ### type
 
-• `Readonly` **type**: ``"dependencies"`` \| ``"devDependencies"`` \| ``"peerDependencies"`` \| ``"optionalDependencies"``
+> `readonly` **type**: `"dependencies"` \| `"devDependencies"` \| `"peerDependencies"` \| `"optionalDependencies"`
 
 The type of the dependency in the dependent workspace's `package.json`
 file (eg. `devDependencies`).

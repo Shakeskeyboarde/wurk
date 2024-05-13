@@ -1,25 +1,21 @@
+[**Wurk API**](../README.md) • **Docs**
+
+***
+
 [Wurk API](../README.md) / GitHeadOptions
 
 # Interface: GitHeadOptions
 
 Options for getting the HEAD commit hash.
 
-## Hierarchy
+## Extended by
 
-- **`GitHeadOptions`**
-
-  ↳ [`GitLogOptions`](GitLogOptions.md)
-
-## Table of contents
-
-### Properties
-
-- [allowShallow](GitHeadOptions.md#allowshallow)
+- [`GitLogOptions`](GitLogOptions.md)
 
 ## Properties
 
-### allowShallow
+### allowShallow?
 
-• `Optional` `Readonly` **allowShallow**: `boolean`
+> `optional` `readonly` **allowShallow**: `boolean`
 
 If true, do not throw an error if the repository is a shallow clone.

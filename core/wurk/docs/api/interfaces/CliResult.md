@@ -1,3 +1,7 @@
+[**Wurk API**](../README.md) • **Docs**
+
+***
+
 [Wurk API](../README.md) / CliResult
 
 # Interface: CliResult\<TOptions, TCommand\>
@@ -6,60 +10,37 @@ Result of CLI argument parsing and actions.
 
 ## Type parameters
 
-| Name | Type |
-| :------ | :------ |
-| `TOptions` | extends `Record`\<`string`, `unknown`\> |
-| `TCommand` | extends `Record`\<`string`, `UnknownCliResult` \| `undefined`\> |
+• **TOptions** *extends* `Record`\<`string`, `unknown`\>
 
-## Implemented by
-
-- [`CommandContext`](../classes/CommandContext.md)
-
-## Table of contents
-
-### Methods
-
-- [getHelpText](CliResult.md#gethelptext)
-- [printHelp](CliResult.md#printhelp)
-
-### Properties
-
-- [commandResult](CliResult.md#commandresult)
-- [name](CliResult.md#name)
-- [options](CliResult.md#options)
-- [parsed](CliResult.md#parsed)
+• **TCommand** *extends* `Record`\<`string`, `UnknownCliResult` \| `undefined`\>
 
 ## Methods
 
-### getHelpText
+### getHelpText()
 
-▸ **getHelpText**(`error?`): `string`
+> **getHelpText**(`error`?): `string`
 
 Get the help text of the CLI that produced this result.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `error?` | `unknown` |
+• **error?**: `unknown`
 
 #### Returns
 
 `string`
 
-___
+***
 
-### printHelp
+### printHelp()
 
-▸ **printHelp**(`error?`): `void`
+> **printHelp**(`error`?): `void`
 
 Print the help text of the CLI that produced this result.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `error?` | `unknown` |
+• **error?**: `unknown`
 
 #### Returns
 
@@ -69,7 +50,7 @@ Print the help text of the CLI that produced this result.
 
 ### commandResult
 
-• `Readonly` **commandResult**: \{ readonly [P in string \| number \| symbol]: undefined \| TCommand[P] }
+> `readonly` **commandResult**: \{ readonly \[P in string \| number \| symbol\]: undefined \| TCommand\[P\] \}
 
 Results of (sub-)command argument parsing and actions.
 
@@ -77,28 +58,28 @@ NOTE: This is a "dictionary" object which will have zero or one keys
 defined, because only zero or one commands can be matched per parent
 command.
 
-___
+***
 
 ### name
 
-• **name**: `string`
+> **name**: `string`
 
 Name or alias of the CLI that produced this result. If the CLI is used as
 a (sub-)command, this will be the name or alias that was matched.
 
-___
+***
 
 ### options
 
-• `Readonly` **options**: `TOptions`
+> `readonly` **options**: `TOptions`
 
 Options derived from argument parsing and actions.
 
-___
+***
 
 ### parsed
 
-• `Readonly` **parsed**: `ReadonlySet`\<`string`\>
+> `readonly` **parsed**: `ReadonlySet`\<`string`\>
 
 Option keys which have been parsed from command line arguments.
 

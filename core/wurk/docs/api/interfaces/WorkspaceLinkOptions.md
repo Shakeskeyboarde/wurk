@@ -1,43 +1,34 @@
+[**Wurk API**](../README.md) • **Docs**
+
+***
+
 [Wurk API](../README.md) / WorkspaceLinkOptions
 
 # Interface: WorkspaceLinkOptions
 
 Options for filtering workspace links.
 
-## Table of contents
-
-### Properties
-
-- [filter](WorkspaceLinkOptions.md#filter)
-- [recursive](WorkspaceLinkOptions.md#recursive)
-
 ## Properties
 
-### filter
+### filter()?
 
-• `Optional` `Readonly` **filter**: (`link`: [`WorkspaceLink`](WorkspaceLink.md)) => `boolean`
+> `optional` `readonly` **filter**: (`link`) => `boolean`
 
 If provided, filter the links. If a link is filtered, it will also stop
 recursion from traversing the filtered link's transitive links.
 
-#### Type declaration
+#### Parameters
 
-▸ (`link`): `boolean`
+• **link**: [`WorkspaceLink`](WorkspaceLink.md)
 
-##### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `link` | [`WorkspaceLink`](WorkspaceLink.md) |
-
-##### Returns
+#### Returns
 
 `boolean`
 
-___
+***
 
-### recursive
+### recursive?
 
-• `Optional` `Readonly` **recursive**: `boolean`
+> `optional` `readonly` **recursive**: `boolean`
 
 If true, include transitive links.
