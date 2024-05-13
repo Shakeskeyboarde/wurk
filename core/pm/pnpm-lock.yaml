@@ -1,0 +1,30 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@wurk/json':
+        specifier: workspace:^
+        version: link:../json
+      '@wurk/spawn':
+        specifier: workspace:^
+        version: link:../spawn
+      semver:
+        specifier: ^7.6.0
+        version: 7.6.2
+
+packages:
+
+  semver@7.6.2:
+    resolution: {integrity: sha512-FNAIBWCx9qcRhoHcgcJ0gvU7SN1lYU2ZXuSfl04bSC5OpvDHFyJCjdNHomPXxjQlCBU67YW64PzY7/VIEH7F2w==}
+    engines: {node: '>=10'}
+    hasBin: true
+
+snapshots:
+
+  semver@7.6.2: {}

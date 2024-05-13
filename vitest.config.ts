@@ -12,7 +12,8 @@ export default defineConfig({
     coverage: {
       enabled: true,
       all: true,
-      reportsDirectory: './out/coverage',
+      reporter: ['html', 'lcov', 'text-summary'],
+      reportsDirectory: './coverage',
       include: ['**/*.{ts,tsx}'],
       exclude: [
         '**/{_*,.git*,.vscode,out,lib,dist,index*,example*,*.d.ts,types.ts}',

@@ -1,0 +1,16 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@wurk/log':
+        specifier: workspace:^
+        version: link:../log
+      '@wurk/spawn':
+        specifier: workspace:^
+        version: link:../spawn

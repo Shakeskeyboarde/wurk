@@ -26,22 +26,27 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Restore
-        run: npm ci
+        run: |
+          set -e
+          corepack enable
+          pnpm install --frozen-lockfile
 
       - name: Build
         run: |
-          npm run build
-          npx wurk publish --to-archive
-          npx wurk eslint -- --max-warnings=0
-          npx wurk depcheck
-          npx wurk vitest run
+          set -e
+          pnpm build
+          (cd core/wurk; pnpm link --global)
+          wurk publish --to-archive
+          wurk eslint -- --max-warnings=0
+          wurk depcheck
+          wurk vitest run
 
       - name: Publish
         run: |
+          set -e
           npm config set //registry.npmjs.org/:_authToken '${NPM_TOKEN}'
-          npx wurk publish --from-archive
+          wurk publish --from-archive
         env:
           NPM_TOKEN: ${{secrets.NPM_TOKEN}}

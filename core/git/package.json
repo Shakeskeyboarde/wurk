@@ -27,7 +27,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@wurk/log": "*",
-    "@wurk/spawn": "*"
+    "@wurk/log": "workspace:^",
+    "@wurk/spawn": "workspace:^"
   }
 }
