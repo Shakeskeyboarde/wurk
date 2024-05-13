@@ -34,13 +34,10 @@ jobs:
         run: |
           set -e
           pnpm build
-          (cd core/wurk; pnpm link --global)
-          wurk publish --to-archive
-          wurk eslint -- --max-warnings=0
-          wurk depcheck
-          wurk vitest run
+          pnpm test
+          pnpm dlx wurk publish --to-archive
 
       - name: Publish (Dry Run)
         run: |
           set -e
-          wurk publish --from-archive --dry-run
+          pnpm dlx wurk publish --from-archive --dry-run

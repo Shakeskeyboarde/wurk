@@ -14,9 +14,9 @@
     "clean:all": "git clean -fdX -e '!/.*'",
     "eslint": "wurk exec eslint src",
     "depcheck": "wurk exec depcheck --quiet --skip-missing",
-    "build-scripts": "pnpm -r build",
+    "build-scripts": "pnpm -r build && pnpm i --prefer-offline",
     "build": "pnpm build-scripts && wurk run build --stream",
-    "test": "pnpm build && wurk eslint -- --max-warnings=0 && wurk depcheck && wurk vitest run",
+    "test": "wurk eslint --max-warnings=0 && wurk depcheck && wurk vitest run",
     "modernize": "pnpm dlx npm-check-updates@latest -i --workspaces --root --format group"
   },
   "packageManager": "pnpm@9.1.1+sha256.9551e803dcb7a1839fdf5416153a844060c7bce013218ce823410532504ac10b",

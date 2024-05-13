@@ -37,16 +37,13 @@ jobs:
         run: |
           set -e
           pnpm build
-          (cd core/wurk; pnpm link --global)
-          wurk publish --to-archive
-          wurk eslint -- --max-warnings=0
-          wurk depcheck
-          wurk vitest run
+          pnpm test
+          pnpm dlx wurk publish --to-archive
 
       - name: Publish
         run: |
           set -e
           npm config set //registry.npmjs.org/:_authToken '${NPM_TOKEN}'
-          wurk publish --from-archive
+          pnpm dlx wurk publish --from-archive
         env:
           NPM_TOKEN: ${{secrets.NPM_TOKEN}}

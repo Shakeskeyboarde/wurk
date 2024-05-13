@@ -26,7 +26,7 @@
     }
   },
   "bin": {
-    "wurk": "lib/bin.js"
+    "wurk": "./lib/bin.js"
   },
   "engines": {
     "node": ">=20"
