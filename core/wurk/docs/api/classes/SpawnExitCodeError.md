@@ -1,46 +1,32 @@
+[**Wurk API**](../README.md) • **Docs**
+
+***
+
 [Wurk API](../README.md) / SpawnExitCodeError
 
 # Class: SpawnExitCodeError
 
 Error thrown when a spawned process exits with a non-zero status.
 
-## Hierarchy
+## Extends
 
 - `Error`
 
-  ↳ **`SpawnExitCodeError`**
-
-## Table of contents
-
-### Constructors
-
-- [constructor](SpawnExitCodeError.md#constructor)
-
-### Methods
-
-- [captureStackTrace](SpawnExitCodeError.md#capturestacktrace)
-
-### Properties
-
-- [exitCode](SpawnExitCodeError.md#exitcode)
-- [signalCode](SpawnExitCodeError.md#signalcode)
-- [prepareStackTrace](SpawnExitCodeError.md#preparestacktrace)
-
 ## Constructors
 
-### constructor
+### new SpawnExitCodeError()
 
-• **new SpawnExitCodeError**(`cmd`, `exitCode`, `signalCode`): [`SpawnExitCodeError`](SpawnExitCodeError.md)
+> **new SpawnExitCodeError**(`cmd`, `exitCode`, `signalCode`): [`SpawnExitCodeError`](SpawnExitCodeError.md)
 
 Create a new `SpawnExitCodeError`.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `cmd` | `string` |
-| `exitCode` | `number` |
-| `signalCode` | ``null`` \| `Signals` |
+• **cmd**: `string`
+
+• **exitCode**: `number`
+
+• **signalCode**: `null` \| `Signals`
 
 #### Returns
 
@@ -48,22 +34,21 @@ Create a new `SpawnExitCodeError`.
 
 #### Overrides
 
-Error.constructor
+`Error.constructor`
 
 ## Methods
 
-### captureStackTrace
+### captureStackTrace()
 
-▸ **captureStackTrace**(`targetObject`, `constructorOpt?`): `void`
+> `static` **captureStackTrace**(`targetObject`, `constructorOpt`?): `void`
 
 Create .stack property on a target object
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `targetObject` | `object` |
-| `constructorOpt?` | `Function` |
+• **targetObject**: `object`
+
+• **constructorOpt?**: `Function`
 
 #### Returns
 
@@ -71,51 +56,46 @@ Create .stack property on a target object
 
 #### Inherited from
 
-Error.captureStackTrace
+`Error.captureStackTrace`
 
 ## Properties
 
 ### exitCode
 
-• `Readonly` **exitCode**: `number`
+> `readonly` **exitCode**: `number`
 
 The exit code of the process.
 
-___
+***
 
 ### signalCode
 
-• `Readonly` **signalCode**: ``null`` \| `Signals`
+> `readonly` **signalCode**: `null` \| `Signals`
 
 The signal code of the process, if it was killed by a signal.
 
-___
+***
 
-### prepareStackTrace
+### prepareStackTrace()?
 
-▪ `Static` `Optional` **prepareStackTrace**: (`err`: `Error`, `stackTraces`: `CallSite`[]) => `any`
+> `static` `optional` **prepareStackTrace**: (`err`, `stackTraces`) => `any`
 
 Optional override for formatting stack traces
 
-**`See`**
+#### See
 
 https://v8.dev/docs/stack-trace-api#customizing-stack-traces
 
-#### Type declaration
+#### Parameters
 
-▸ (`err`, `stackTraces`): `any`
+• **err**: `Error`
 
-##### Parameters
+• **stackTraces**: `CallSite`[]
 
-| Name | Type |
-| :------ | :------ |
-| `err` | `Error` |
-| `stackTraces` | `CallSite`[] |
-
-##### Returns
+#### Returns
 
 `any`
 
 #### Inherited from
 
-Error.prepareStackTrace
+`Error.prepareStackTrace`

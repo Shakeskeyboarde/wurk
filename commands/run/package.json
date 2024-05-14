@@ -38,6 +38,6 @@
     "access": "public"
   },
   "dependencies": {
-    "wurk": "*"
+    "wurk": "workspace:^"
   }
 }

@@ -1,47 +1,41 @@
+[**Wurk API**](../README.md) • **Docs**
+
+***
+
 [Wurk API](../README.md) / GitLogOptions
 
 # Interface: GitLogOptions
 
 Options for getting Git log entries.
 
-## Hierarchy
+## Extends
 
 - [`GitHeadOptions`](GitHeadOptions.md)
 
-  ↳ **`GitLogOptions`**
-
-## Table of contents
-
-### Properties
-
-- [allowShallow](GitLogOptions.md#allowshallow)
-- [end](GitLogOptions.md#end)
-- [start](GitLogOptions.md#start)
-
 ## Properties
 
-### allowShallow
+### allowShallow?
 
-• `Optional` `Readonly` **allowShallow**: `boolean`
+> `optional` `readonly` **allowShallow**: `boolean`
 
 If true, do not throw an error if the repository is a shallow clone.
 
 #### Inherited from
 
-[GitHeadOptions](GitHeadOptions.md).[allowShallow](GitHeadOptions.md#allowshallow)
+[`GitHeadOptions`](GitHeadOptions.md).[`allowShallow`](GitHeadOptions.md#allowshallow)
 
-___
+***
 
-### end
+### end?
 
-• `Optional` `Readonly` **end**: `string`
+> `optional` `readonly` **end**: `string`
 
 The commit-ish to end at.
 
-___
+***
 
-### start
+### start?
 
-• `Optional` `Readonly` **start**: ``null`` \| `string`
+> `optional` `readonly` **start**: `null` \| `string`
 
 The commit-ish to start from.

@@ -1,3 +1,7 @@
+[**Wurk API**](../README.md) • **Docs**
+
+***
+
 [Wurk API](../README.md) / CommandHooks
 
 # Interface: CommandHooks\<TResult, TName\>
@@ -6,30 +10,22 @@ Configuration for a Wurk command plugin.
 
 ## Type parameters
 
-| Name | Type |
-| :------ | :------ |
-| `TResult` | extends `EmptyCliResult` |
-| `TName` | extends `string` |
+• **TResult** *extends* `EmptyCliResult`
 
-## Table of contents
-
-### Properties
-
-- [action](CommandHooks.md#action)
-- [config](CommandHooks.md#config)
+• **TName** *extends* `string`
 
 ## Properties
 
 ### action
 
-• `Readonly` **action**: [`CommandActionCallback`](../README.md#commandactioncallback)\<`TResult`\>
+> `readonly` **action**: [`CommandActionCallback`](../type-aliases/CommandActionCallback.md)\<`TResult`\>
 
 Command implementation.
 
-___
+***
 
-### config
+### config?
 
-• `Optional` `Readonly` **config**: [`CommandConfigCallback`](../README.md#commandconfigcallback)\<`TResult`, `TName`\>
+> `optional` `readonly` **config**: [`CommandConfigCallback`](../type-aliases/CommandConfigCallback.md)\<`TResult`, `TName`\>
 
 Configure command line options.

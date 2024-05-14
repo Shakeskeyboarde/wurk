@@ -26,7 +26,7 @@
     }
   },
   "bin": {
-    "wurk": "lib/bin.js"
+    "wurk": "./lib/bin.js"
   },
   "engines": {
     "node": ">=20"
@@ -56,12 +56,12 @@
     "access": "public"
   },
   "dependencies": {
-    "@wurk/cli": "*",
-    "@wurk/git": "*",
-    "@wurk/json": "*",
-    "@wurk/log": "*",
-    "@wurk/pm": "*",
-    "@wurk/spawn": "*",
-    "@wurk/workspace": "*"
+    "@wurk/cli": "workspace:^",
+    "@wurk/git": "workspace:^",
+    "@wurk/json": "workspace:^",
+    "@wurk/log": "workspace:^",
+    "@wurk/pm": "workspace:^",
+    "@wurk/spawn": "workspace:^",
+    "@wurk/workspace": "workspace:^"
   }
 }

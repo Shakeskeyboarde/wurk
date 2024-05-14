@@ -1,0 +1,13 @@
+packages:
+  - core/cli
+  - core/json
+  - core/log
+  - core/spawn
+  - core/git
+  - core/pm
+  - core/resolve
+  - core/import
+  - core/workspace
+  - core/wurk
+  - commands/*
+  - tests/*

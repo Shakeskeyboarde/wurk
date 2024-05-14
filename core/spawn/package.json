@@ -28,8 +28,8 @@
   },
   "dependencies": {
     "@types/cross-spawn": "^6.0.6",
-    "@wurk/json": "*",
-    "@wurk/log": "*",
+    "@wurk/json": "workspace:^",
+    "@wurk/log": "workspace:^",
     "cross-spawn": "^7.0.3",
     "npm-run-path": "^5.3.0"
   }

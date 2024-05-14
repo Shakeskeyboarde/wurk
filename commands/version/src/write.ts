@@ -25,7 +25,11 @@ enum ChangelogSection {
 /**
  * Write the updated version to the workspace configuration (`package.json`).
  */
-export const writeConfig = async (workspace: Workspace, version: string): Promise<void> => {
+export const writeConfig = async (
+  workspace: Workspace,
+  version: string,
+  gitHead: string | null | undefined,
+): Promise<void> => {
   const { log, dir, config } = workspace;
   const configFilename = nodePath.resolve(dir, 'package.json');
 
@@ -35,9 +39,13 @@ export const writeConfig = async (workspace: Workspace, version: string): Promis
     configFilename,
     config
       .copy({
-        initializer: (copy) => copy
-          .at('version')
-          .set(version),
+        initializer: (copy) => {
+          copy.at('version').set(version);
+
+          if (gitHead) {
+            copy.at('gitHead').set(gitHead);
+          }
+        },
       })
       .toString(2),
   );

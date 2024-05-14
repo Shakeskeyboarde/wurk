@@ -1,91 +1,66 @@
+[**Wurk API**](../README.md) • **Docs**
+
+***
+
 [Wurk API](../README.md) / WorkspaceOptions
 
 # Interface: WorkspaceOptions
 
 Workspace configuration.
 
-## Implemented by
-
-- [`Workspace`](../classes/Workspace.md)
-
-## Table of contents
-
-### Properties
-
-- [config](WorkspaceOptions.md#config)
-- [dir](WorkspaceOptions.md#dir)
-- [getDependencyLinks](WorkspaceOptions.md#getdependencylinks)
-- [getDependentLinks](WorkspaceOptions.md#getdependentlinks)
-- [getPublished](WorkspaceOptions.md#getpublished)
-- [isSelected](WorkspaceOptions.md#isselected)
-- [log](WorkspaceOptions.md#log)
-- [relativeDir](WorkspaceOptions.md#relativedir)
-
 ## Properties
 
 ### config
 
-• `Readonly` **config**: [`JsonAccessor`](../classes/JsonAccessor.md)
+> `readonly` **config**: [`JsonAccessor`](../classes/JsonAccessor.md)
 
 Workspace configuration (package.json).
 
-___
+***
 
 ### dir
 
-• `Readonly` **dir**: `string`
+> `readonly` **dir**: `string`
 
 Absolute path of the workspace directory.
 
-___
+***
 
-### getDependencyLinks
+### getDependencyLinks()?
 
-• `Optional` `Readonly` **getDependencyLinks**: (`options?`: [`WorkspaceLinkOptions`](WorkspaceLinkOptions.md)) => readonly [`WorkspaceLink`](WorkspaceLink.md)[]
+> `optional` `readonly` **getDependencyLinks**: (`options`?) => readonly [`WorkspaceLink`](WorkspaceLink.md)[]
 
 Resolve links to local dependency workspaces.
 
-#### Type declaration
+#### Parameters
 
-▸ (`options?`): readonly [`WorkspaceLink`](WorkspaceLink.md)[]
+• **options?**: [`WorkspaceLinkOptions`](WorkspaceLinkOptions.md)
 
-##### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `options?` | [`WorkspaceLinkOptions`](WorkspaceLinkOptions.md) |
-
-##### Returns
+#### Returns
 
 readonly [`WorkspaceLink`](WorkspaceLink.md)[]
 
-___
+***
 
-### getDependentLinks
+### getDependentLinks()?
 
-• `Optional` `Readonly` **getDependentLinks**: (`options?`: [`WorkspaceLinkOptions`](WorkspaceLinkOptions.md)) => readonly [`WorkspaceLink`](WorkspaceLink.md)[]
+> `optional` `readonly` **getDependentLinks**: (`options`?) => readonly [`WorkspaceLink`](WorkspaceLink.md)[]
 
 Resolve links to local dependent workspaces.
 
-#### Type declaration
+#### Parameters
 
-▸ (`options?`): readonly [`WorkspaceLink`](WorkspaceLink.md)[]
+• **options?**: [`WorkspaceLinkOptions`](WorkspaceLinkOptions.md)
 
-##### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `options?` | [`WorkspaceLinkOptions`](WorkspaceLinkOptions.md) |
-
-##### Returns
+#### Returns
 
 readonly [`WorkspaceLink`](WorkspaceLink.md)[]
 
-___
+***
 
-### getPublished
+### getPublished()?
 
-• `Optional` `Readonly` **getPublished**: () => `Promise`\<``null`` \| [`WorkspacePublished`](WorkspacePublished.md)\>
+> `optional` `readonly` **getPublished**: () => `Promise`\<`null` \| [`WorkspacePublished`](WorkspacePublished.md)\>
 
 Get publication information for the workspace. This will check the
 NPM registry for the closest version which is less than or equal to (<=)
@@ -97,34 +72,30 @@ if the current version or a lesser version has been published. Compare
 the returned metadata version to the workspace version to determine if
 the exact current version has been published.
 
-#### Type declaration
+#### Returns
 
-▸ (): `Promise`\<``null`` \| [`WorkspacePublished`](WorkspacePublished.md)\>
+`Promise`\<`null` \| [`WorkspacePublished`](WorkspacePublished.md)\>
 
-##### Returns
+***
 
-`Promise`\<``null`` \| [`WorkspacePublished`](WorkspacePublished.md)\>
+### isSelected?
 
-___
-
-### isSelected
-
-• `Optional` `Readonly` **isSelected**: `boolean`
+> `optional` `readonly` **isSelected**: `boolean`
 
 Initial selection state of the workspace.
 
-___
+***
 
-### log
+### log?
 
-• `Optional` `Readonly` **log**: [`Log`](../classes/Log.md)
+> `optional` `readonly` **log**: [`Log`](../classes/Log.md)
 
 Logger which should be used for messages related to the workspace.
 
-___
+***
 
-### relativeDir
+### relativeDir?
 
-• `Optional` `Readonly` **relativeDir**: `string`
+> `optional` `readonly` **relativeDir**: `string`
 
 Workspace directory relative to the root workspace.

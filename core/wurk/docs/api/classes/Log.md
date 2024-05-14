@@ -1,78 +1,43 @@
+[**Wurk API**](../README.md) • **Docs**
+
+***
+
 [Wurk API](../README.md) / Log
 
 # Class: Log
 
 A simple logger with global level, prefixing, and streams.
 
-## Table of contents
-
-### Accessors
-
-- [prefix](Log.md#prefix)
-- [prefixStyle](Log.md#prefixstyle)
-
-### Constructors
-
-- [constructor](Log.md#constructor)
-
-### Properties
-
-- [\_print](Log.md#_print)
-- [clone](Log.md#clone)
-- [debug](Log.md#debug)
-- [error](Log.md#error)
-- [flush](Log.md#flush)
-- [info](Log.md#info)
-- [notice](Log.md#notice)
-- [print](Log.md#print)
-- [silly](Log.md#silly)
-- [stderr](Log.md#stderr)
-- [stdout](Log.md#stdout)
-- [sub](Log.md#sub)
-- [trace](Log.md#trace)
-- [verbose](Log.md#verbose)
-- [warn](Log.md#warn)
-
 ## Accessors
 
 ### prefix
 
-• `get` **prefix**(): `string`
+> `get` **prefix**(): `string`
 
 Get the unstyled prefix string.
 
-#### Returns
-
-`string`
-
-• `set` **prefix**(`value`): `void`
+> `set` **prefix**(`value`): `void`
 
 Set the unstyled prefix string. This will also update the styled prefix.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `value` | `string` |
-
-#### Returns
-
-`void`
-
-___
-
-### prefixStyle
-
-• `get` **prefixStyle**(): `string`
-
-Get the prefix style string. This is a prefix for the prefix which is
-allowed to contain ANSI color and style codes.
+• **value**: `string`
 
 #### Returns
 
 `string`
 
-• `set` **prefixStyle**(`value`): `void`
+***
+
+### prefixStyle
+
+> `get` **prefixStyle**(): `string`
+
+Get the prefix style string. This is a prefix for the prefix which is
+allowed to contain ANSI color and style codes.
+
+> `set` **prefixStyle**(`value`): `void`
 
 Set the prefix style string. This will also update the styled prefix.
 This is a prefix for the prefix which is allowed to contain ANSI color
@@ -80,27 +45,23 @@ and style codes.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `value` | `string` |
+• **value**: `string`
 
 #### Returns
 
-`void`
+`string`
 
 ## Constructors
 
-### constructor
+### new Log()
 
-• **new Log**(`options?`): [`Log`](Log.md)
+> **new Log**(`options`?): [`Log`](Log.md)
 
 Create a new log instance with the given options.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `options?` | `LogOptions` |
+• **options?**: `LogOptions`
 
 #### Returns
 
@@ -108,179 +69,160 @@ Create a new log instance with the given options.
 
 ## Properties
 
-### \_print
+### \_print()
 
-• `Protected` `Readonly` **\_print**: (`to`: ``"stderr"`` \| ``"stdout"``, `level`: `LogLevel`, `value`: `unknown`, `options?`: `LogPrintOptions`) => `void`
+> `protected` `readonly` **\_print**: (`to`, `level`, `value`, `options`?) => `void`
 
 _This method is intended for internal use._
 
 All logged and streamed data is passed through this method.
 
-#### Type declaration
+#### Parameters
 
-▸ (`to`, `level`, `value`, `options?`): `void`
+• **to**: `"stderr"` \| `"stdout"`
 
-##### Parameters
+• **level**: `LogLevel`
 
-| Name | Type |
-| :------ | :------ |
-| `to` | ``"stderr"`` \| ``"stdout"`` |
-| `level` | `LogLevel` |
-| `value` | `unknown` |
-| `options?` | `LogPrintOptions` |
+• **value**: `unknown`
 
-##### Returns
+• **options?**: `LogPrintOptions`
+
+#### Returns
 
 `void`
 
-___
+***
 
-### clone
+### clone()
 
-• `Readonly` **clone**: (`overrides?`: `LogOptions`) => [`Log`](Log.md)
+> `readonly` **clone**: (`overrides`?) => [`Log`](Log.md)
 
 Create a new log instance which inherits options from the current
 instance.
 
-#### Type declaration
+#### Parameters
 
-▸ (`overrides?`): [`Log`](Log.md)
+• **overrides?**: `LogOptions`
 
-##### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `overrides?` | `LogOptions` |
-
-##### Returns
+#### Returns
 
 [`Log`](Log.md)
 
-___
+***
 
 ### debug
 
-• `Readonly` **debug**: `LogFunction`
+> `readonly` **debug**: `LogFunction`
 
 Alias for `verbose`.
 
-___
+***
 
 ### error
 
-• `Readonly` **error**: `LogFunction`
+> `readonly` **error**: `LogFunction`
 
 Print a red message to stderr.
 
-___
+***
 
-### flush
+### flush()
 
-• `Readonly` **flush**: () => `void`
+> `readonly` **flush**: () => `void`
 
 Call the flush methods on `this.stdout` and `this.stderr`.
 
-#### Type declaration
-
-▸ (): `void`
-
-##### Returns
+#### Returns
 
 `void`
 
-___
+***
 
 ### info
 
-• `Readonly` **info**: `LogFunction`
+> `readonly` **info**: `LogFunction`
 
 Print an uncolored message to stdout.
 
-___
+***
 
 ### notice
 
-• `Readonly` **notice**: `LogFunction`
+> `readonly` **notice**: `LogFunction`
 
 Print an uncolored message to stderr.
 
-___
+***
 
 ### print
 
-• `Readonly` **print**: `LogFunction`
+> `readonly` **print**: `LogFunction`
 
 Print a message to stdout, regardless of log level.
 
-___
+***
 
 ### silly
 
-• `Readonly` **silly**: `LogFunction`
+> `readonly` **silly**: `LogFunction`
 
 Print a dimmed message to stderr.
 
-___
+***
 
 ### stderr
 
-• `Readonly` **stderr**: `LogStream`
+> `readonly` **stderr**: `LogStream`
 
 The standard error stream which cleans and prefixes streamed lines.
 
-___
+***
 
 ### stdout
 
-• `Readonly` **stdout**: `LogStream`
+> `readonly` **stdout**: `LogStream`
 
 The standard output stream which cleans and prefixes streamed lines.
 
-___
+***
 
-### sub
+### sub()
 
-• `Readonly` **sub**: (`suffix`: `undefined` \| ``null`` \| `string` \| `number` \| `boolean`) => [`Log`](Log.md)
+> `readonly` **sub**: (`suffix`) => [`Log`](Log.md)
 
 Create a new log instance with a suffix appended to the prefix. If there
 is no prefix, then the suffix becomes the entire prefix. If there is
 already a prefix, then the suffix is appended as a subscript
 (ie. `prefix[suffix]`). Blank, boolean, or nullish suffixes are ignored.
 
-#### Type declaration
+#### Parameters
 
-▸ (`suffix`): [`Log`](Log.md)
+• **suffix**: `undefined` \| `null` \| `string` \| `number` \| `boolean`
 
-##### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `suffix` | `undefined` \| ``null`` \| `string` \| `number` \| `boolean` |
-
-##### Returns
+#### Returns
 
 [`Log`](Log.md)
 
-___
+***
 
 ### trace
 
-• `Readonly` **trace**: `LogFunction`
+> `readonly` **trace**: `LogFunction`
 
 Alias for `silly`.
 
-___
+***
 
 ### verbose
 
-• `Readonly` **verbose**: `LogFunction`
+> `readonly` **verbose**: `LogFunction`
 
 Print a dimmed message to stderr.
 
-___
+***
 
 ### warn
 
-• `Readonly` **warn**: `LogFunction`
+> `readonly` **warn**: `LogFunction`
 
 Print a yellow message to stderr.

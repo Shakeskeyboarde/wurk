@@ -1,0 +1,31 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@wurk/cli':
+        specifier: workspace:^
+        version: link:../cli
+      '@wurk/git':
+        specifier: workspace:^
+        version: link:../git
+      '@wurk/json':
+        specifier: workspace:^
+        version: link:../json
+      '@wurk/log':
+        specifier: workspace:^
+        version: link:../log
+      '@wurk/pm':
+        specifier: workspace:^
+        version: link:../pm
+      '@wurk/spawn':
+        specifier: workspace:^
+        version: link:../spawn
+      '@wurk/workspace':
+        specifier: workspace:^
+        version: link:../workspace

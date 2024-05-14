@@ -49,7 +49,7 @@ export const publish = async (
     case 'npm':
       return void await spawn(pm, [commonArgs, '--workspaces=false'], { cwd: tmpDir, stdio: 'echo' });
     case 'pnpm':
-      return void await spawn(pm, commonArgs, { cwd: tmpDir, stdio: 'echo' });
+      return void await spawn(pm, [commonArgs, '--no-git-checks'], { cwd: tmpDir, stdio: 'echo' });
     case 'yarn':
       return void await spawn(pm, ['npm', commonArgs], { cwd: tmpDir, stdio: 'echo' });
     default:

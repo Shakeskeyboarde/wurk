@@ -1,3 +1,7 @@
+[**Wurk API**](../README.md) • **Docs**
+
+***
+
 [Wurk API](../README.md) / Workspace
 
 # Class: Workspace
@@ -8,40 +12,11 @@ Workspace information and utilities.
 
 - [`WorkspaceOptions`](../interfaces/WorkspaceOptions.md)
 
-## Table of contents
-
-### Accessors
-
-- [isDependencyOfSelected](Workspace.md#isdependencyofselected)
-- [isDependentOfSelected](Workspace.md#isdependentofselected)
-
-### Constructors
-
-- [constructor](Workspace.md#constructor)
-
-### Properties
-
-- [config](Workspace.md#config)
-- [dependencies](Workspace.md#dependencies)
-- [dir](Workspace.md#dir)
-- [getDependencyLinks](Workspace.md#getdependencylinks)
-- [getDependentLinks](Workspace.md#getdependentlinks)
-- [getEntrypoints](Workspace.md#getentrypoints)
-- [getPublished](Workspace.md#getpublished)
-- [isPrivate](Workspace.md#isprivate)
-- [isSelected](Workspace.md#isselected)
-- [log](Workspace.md#log)
-- [name](Workspace.md#name)
-- [relativeDir](Workspace.md#relativedir)
-- [spawn](Workspace.md#spawn)
-- [temp](Workspace.md#temp)
-- [version](Workspace.md#version)
-
 ## Accessors
 
 ### isDependencyOfSelected
 
-• `get` **isDependencyOfSelected**(): `boolean`
+> `get` **isDependencyOfSelected**(): `boolean`
 
 True if this workspace is a dependency of any selected workspace.
 
@@ -49,11 +24,11 @@ True if this workspace is a dependency of any selected workspace.
 
 `boolean`
 
-___
+***
 
 ### isDependentOfSelected
 
-• `get` **isDependentOfSelected**(): `boolean`
+> `get` **isDependentOfSelected**(): `boolean`
 
 True if this workspace is a dependent of (ie. depends on) any selected
 workspace.
@@ -64,18 +39,16 @@ workspace.
 
 ## Constructors
 
-### constructor
+### new Workspace()
 
-• **new Workspace**(`options`): [`Workspace`](Workspace.md)
+> **new Workspace**(`options`): [`Workspace`](Workspace.md)
 
 This is generally intended for internal use only. Use workspace
 collections instead, which create their own workspace instances.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `options` | [`WorkspaceOptions`](../interfaces/WorkspaceOptions.md) |
+• **options**: [`WorkspaceOptions`](../interfaces/WorkspaceOptions.md)
 
 #### Returns
 
@@ -85,138 +58,118 @@ collections instead, which create their own workspace instances.
 
 ### config
 
-• `Readonly` **config**: [`JsonAccessor`](JsonAccessor.md)
+> `readonly` **config**: [`JsonAccessor`](JsonAccessor.md)
 
 Workspace configuration (package.json).
 
 #### Implementation of
 
-[WorkspaceOptions](../interfaces/WorkspaceOptions.md).[config](../interfaces/WorkspaceOptions.md#config)
+[`WorkspaceOptions`](../interfaces/WorkspaceOptions.md).[`config`](../interfaces/WorkspaceOptions.md#config)
 
-___
+***
 
 ### dependencies
 
-• `Readonly` **dependencies**: readonly [`WorkspaceDependency`](../interfaces/WorkspaceDependency.md)[]
+> `readonly` **dependencies**: readonly [`WorkspaceDependency`](../interfaces/WorkspaceDependency.md)[]
 
 All workspace dependencies (not just local).
 
-___
+***
 
 ### dir
 
-• `Readonly` **dir**: `string`
+> `readonly` **dir**: `string`
 
 Absolute path of the workspace directory.
 
 #### Implementation of
 
-[WorkspaceOptions](../interfaces/WorkspaceOptions.md).[dir](../interfaces/WorkspaceOptions.md#dir)
+[`WorkspaceOptions`](../interfaces/WorkspaceOptions.md).[`dir`](../interfaces/WorkspaceOptions.md#dir)
 
-___
+***
 
-### getDependencyLinks
+### getDependencyLinks()
 
-• `Readonly` **getDependencyLinks**: (`options?`: [`WorkspaceLinkOptions`](../interfaces/WorkspaceLinkOptions.md)) => readonly [`WorkspaceLink`](../interfaces/WorkspaceLink.md)[]
+> `readonly` **getDependencyLinks**: (`options`?) => readonly [`WorkspaceLink`](../interfaces/WorkspaceLink.md)[]
 
 Get links to local dependency workspaces.
 
-#### Type declaration
+#### Parameters
 
-▸ (`options?`): readonly [`WorkspaceLink`](../interfaces/WorkspaceLink.md)[]
+• **options?**: [`WorkspaceLinkOptions`](../interfaces/WorkspaceLinkOptions.md)
 
-##### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `options?` | [`WorkspaceLinkOptions`](../interfaces/WorkspaceLinkOptions.md) |
-
-##### Returns
+#### Returns
 
 readonly [`WorkspaceLink`](../interfaces/WorkspaceLink.md)[]
 
 #### Implementation of
 
-[WorkspaceOptions](../interfaces/WorkspaceOptions.md).[getDependencyLinks](../interfaces/WorkspaceOptions.md#getdependencylinks)
+[`WorkspaceOptions`](../interfaces/WorkspaceOptions.md).[`getDependencyLinks`](../interfaces/WorkspaceOptions.md#getdependencylinks)
 
-___
+***
 
-### getDependentLinks
+### getDependentLinks()
 
-• `Readonly` **getDependentLinks**: (`options?`: [`WorkspaceLinkOptions`](../interfaces/WorkspaceLinkOptions.md)) => readonly [`WorkspaceLink`](../interfaces/WorkspaceLink.md)[]
+> `readonly` **getDependentLinks**: (`options`?) => readonly [`WorkspaceLink`](../interfaces/WorkspaceLink.md)[]
 
 Get links to local dependent workspaces.
 
-#### Type declaration
+#### Parameters
 
-▸ (`options?`): readonly [`WorkspaceLink`](../interfaces/WorkspaceLink.md)[]
+• **options?**: [`WorkspaceLinkOptions`](../interfaces/WorkspaceLinkOptions.md)
 
-##### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `options?` | [`WorkspaceLinkOptions`](../interfaces/WorkspaceLinkOptions.md) |
-
-##### Returns
+#### Returns
 
 readonly [`WorkspaceLink`](../interfaces/WorkspaceLink.md)[]
 
 #### Implementation of
 
-[WorkspaceOptions](../interfaces/WorkspaceOptions.md).[getDependentLinks](../interfaces/WorkspaceOptions.md#getdependentlinks)
+[`WorkspaceOptions`](../interfaces/WorkspaceOptions.md).[`getDependentLinks`](../interfaces/WorkspaceOptions.md#getdependentlinks)
 
-___
+***
 
-### getEntrypoints
+### getEntrypoints()
 
-• `Readonly` **getEntrypoints**: () => readonly `WorkspaceEntrypoint`[]
+> `readonly` **getEntrypoints**: () => readonly `WorkspaceEntrypoint`[]
 
 Return a list of all of the entry points in the workspace
 `package.json` file. These are the files that should be built and
 published with the package.
 
-#### Type declaration
-
-▸ (): readonly `WorkspaceEntrypoint`[]
-
-##### Returns
+#### Returns
 
 readonly `WorkspaceEntrypoint`[]
 
-___
+***
 
-### getPublished
+### getPublished()
 
-• `Readonly` **getPublished**: () => `Promise`\<``null`` \| [`WorkspacePublished`](../interfaces/WorkspacePublished.md)\>
+> `readonly` **getPublished**: () => `Promise`\<`null` \| [`WorkspacePublished`](../interfaces/WorkspacePublished.md)\>
 
 Get publication information for the workspace.
 
-#### Type declaration
+#### Returns
 
-▸ (): `Promise`\<``null`` \| [`WorkspacePublished`](../interfaces/WorkspacePublished.md)\>
-
-##### Returns
-
-`Promise`\<``null`` \| [`WorkspacePublished`](../interfaces/WorkspacePublished.md)\>
+`Promise`\<`null` \| [`WorkspacePublished`](../interfaces/WorkspacePublished.md)\>
 
 #### Implementation of
 
-[WorkspaceOptions](../interfaces/WorkspaceOptions.md).[getPublished](../interfaces/WorkspaceOptions.md#getpublished)
+[`WorkspaceOptions`](../interfaces/WorkspaceOptions.md).[`getPublished`](../interfaces/WorkspaceOptions.md#getpublished)
 
-___
+***
 
 ### isPrivate
 
-• `Readonly` **isPrivate**: `boolean`
+> `readonly` **isPrivate**: `boolean`
 
 True if this workspace has the `private` field set to `true` in its
 `package.json` file.
 
-___
+***
 
 ### isSelected
 
-• **isSelected**: `boolean`
+> **isSelected**: `boolean`
 
 True if this workspace will be included in `forEach*` method iterations.
 
@@ -225,93 +178,85 @@ selection of workspaces. Changes to this property will not hav
 
 #### Implementation of
 
-[WorkspaceOptions](../interfaces/WorkspaceOptions.md).[isSelected](../interfaces/WorkspaceOptions.md#isselected)
+[`WorkspaceOptions`](../interfaces/WorkspaceOptions.md).[`isSelected`](../interfaces/WorkspaceOptions.md#isselected)
 
-___
+***
 
 ### log
 
-• `Readonly` **log**: [`Log`](Log.md)
+> `readonly` **log**: [`Log`](Log.md)
 
 Logger which should be used for messages related to workspace processing.
 
 #### Implementation of
 
-[WorkspaceOptions](../interfaces/WorkspaceOptions.md).[log](../interfaces/WorkspaceOptions.md#log)
+[`WorkspaceOptions`](../interfaces/WorkspaceOptions.md).[`log`](../interfaces/WorkspaceOptions.md#log)
 
-___
+***
 
 ### name
 
-• `Readonly` **name**: `string`
+> `readonly` **name**: `string`
 
 Workspace package name.
 
-___
+***
 
 ### relativeDir
 
-• `Readonly` **relativeDir**: `string`
+> `readonly` **relativeDir**: `string`
 
 Workspace directory relative to the root workspace.
 
 #### Implementation of
 
-[WorkspaceOptions](../interfaces/WorkspaceOptions.md).[relativeDir](../interfaces/WorkspaceOptions.md#relativedir)
+[`WorkspaceOptions`](../interfaces/WorkspaceOptions.md).[`relativeDir`](../interfaces/WorkspaceOptions.md#relativedir)
 
-___
+***
 
-### spawn
+### spawn()
 
-• `Readonly` **spawn**: (`cmd`: `string`, `sparseArgs?`: `SpawnSparseArgs`, ...`options`: [`SpawnOptions`](../interfaces/SpawnOptions.md)[]) => `Promise`\<[`SpawnResult`](../interfaces/SpawnResult.md)\>
+> `readonly` **spawn**: (`cmd`, `sparseArgs`?, ...`options`) => `Promise`\<[`SpawnResult`](../interfaces/SpawnResult.md)\>
 
 Spawn a child process.
 
-#### Type declaration
+#### Parameters
 
-▸ (`cmd`, `sparseArgs?`, `...options`): `Promise`\<[`SpawnResult`](../interfaces/SpawnResult.md)\>
+• **cmd**: `string`
 
-##### Parameters
+• **sparseArgs?**: `SpawnSparseArgs`
 
-| Name | Type |
-| :------ | :------ |
-| `cmd` | `string` |
-| `sparseArgs?` | `SpawnSparseArgs` |
-| `...options` | [`SpawnOptions`](../interfaces/SpawnOptions.md)[] |
+• ...**options?**: [`SpawnOptions`](../interfaces/SpawnOptions.md)[]
 
-##### Returns
+#### Returns
 
 `Promise`\<[`SpawnResult`](../interfaces/SpawnResult.md)\>
 
-___
+***
 
-### temp
+### temp()
 
-• `Readonly` **temp**: (`prefix?`: `string`, `options?`: \{ `local?`: `boolean`  }) => `Promise`\<`string`\>
+> `readonly` **temp**: (`prefix`?, `options`?) => `Promise`\<`string`\>
 
 Create a temporary directory which will be cleaned up when the process
 exits.
 
-#### Type declaration
+#### Parameters
 
-▸ (`prefix?`, `options?`): `Promise`\<`string`\>
+• **prefix?**: `string`
 
-##### Parameters
+• **options?**
 
-| Name | Type |
-| :------ | :------ |
-| `prefix?` | `string` |
-| `options?` | `Object` |
-| `options.local?` | `boolean` |
+• **options.local?**: `boolean`
 
-##### Returns
+#### Returns
 
 `Promise`\<`string`\>
 
-___
+***
 
 ### version
 
-• `Readonly` **version**: `undefined` \| `string`
+> `readonly` **version**: `undefined` \| `string`
 
 Workspace package version.

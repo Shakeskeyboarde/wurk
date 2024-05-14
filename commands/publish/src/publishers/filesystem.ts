@@ -45,9 +45,8 @@ export const publishFromFilesystem = async (context: Context, workspace: Workspa
     return;
   }
 
-  const head = await git?.getHead(dir) ?? null;
   const savedConfig = await nodeFs.readFile(nodePath.resolve(dir, 'package.json'));
-  const patchedConfig = patchConfig(workspace, removePackageFields, head);
+  const patchedConfig = patchConfig(workspace, removePackageFields);
   const configFilename = nodePath.resolve(dir, 'package.json');
 
   let tempArchiveFilename: string;
@@ -77,7 +76,10 @@ export const publishFromFilesystem = async (context: Context, workspace: Workspa
     log.info`published version ${version}`;
   }
 
-  published.set(workspace, { version: version!, gitHead: head });
+  published.set(workspace, {
+    version: version!,
+    gitHead: patchedConfig.at('gitHead').as('string', null),
+  });
 };
 
 const validateWorkspace = async (
@@ -91,6 +93,7 @@ const validateWorkspace = async (
     version,
     dependencies,
     isPrivate,
+    config,
     getDependencyLinks,
     getPublished,
   } = workspace;
@@ -112,8 +115,25 @@ const validateWorkspace = async (
     return false;
   }
 
-  if (await git?.getIsDirty(dir)) {
-    throw new Error('workspace has uncommitted changes');
+  if (git) {
+    if (await git.getIsDirty(dir)) {
+      throw new Error('workspace has uncommitted changes');
+    }
+
+    const gitHead = config.at('gitHead').as('string');
+
+    if (!gitHead) {
+      throw new Error(`workspace is missing package gitHead`);
+    }
+
+    const logs = await git?.getLogs(dir, { start: gitHead });
+
+    if (logs && logs[1]?.hash !== gitHead) {
+      // The gitHead in the package should be the second-to-last commit, because
+      // the gitHead (and version) change itself must be committed in a "release"
+      // commit when the package is versioned.
+      throw new Error(`workspace has outdated package gitHead`);
+    }
   }
 
   const changelogFilename = nodePath.resolve(dir, 'CHANGELOG.md');
@@ -173,7 +193,7 @@ const validateDependencyLink = async (
 ): Promise<boolean> => {
   const { log } = workspace;
   const { type, spec, dependency } = link;
-  const { dir, name, version, isPrivate, getPublished } = dependency;
+  const { dir, name, version, isPrivate, config, getPublished } = dependency;
 
   if (type === 'devDependencies') {
     // Dev dependencies are not used after publishing, so they don't need
@@ -262,18 +282,20 @@ const validateDependencyLink = async (
       return false;
     }
 
-    if (!info.gitHead) {
+    const configGitHead = config.at('gitHead').as('string');
+
+    if (!configGitHead) {
       log.warn`local dependency "${name}" is published without a Git head`;
     }
     else {
-      const head = await git.getHead(dir);
+      const gitHead = await git.getHead(dir);
 
-      if (!head) {
+      if (!gitHead) {
         // XXX: Not sure how this would happen. Maybe if the dependency
         // workspace is ignored?
         log.warn`local dependency "${name}" has no Git head`;
       }
-      if (head !== info.gitHead) {
+      if (gitHead !== configGitHead) {
         log.info`local dependency "${name}" is published with different Git head`;
         return false;
       }
@@ -315,7 +337,6 @@ const validateArchive = async (workspace: Workspace, archiveFilename: string): P
 const patchConfig = (
   workspace: Workspace,
   removePackageFields: readonly string[] | undefined,
-  head: string | null,
 ): JsonAccessor => {
   const { config, getDependencyLinks } = workspace;
   const patchedConfig = config.copy();
@@ -346,15 +367,6 @@ const patchConfig = (
       .reduce((current, part) => current.at(part), patchedConfig)
       .set(undefined);
   });
-
-  if (head) {
-    // Set "gitHead" in the package.json file. NPM publish should do this
-    // automatically. But, it doesn't do it for packing. It's also not
-    // documented well even though it is definitely added intentionally in v7.
-    patchedConfig
-      .at('gitHead')
-      .set(head);
-  }
 
   return patchedConfig;
 };

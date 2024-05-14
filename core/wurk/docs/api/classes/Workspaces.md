@@ -1,3 +1,7 @@
+[**Wurk API**](../README.md) • **Docs**
+
+***
+
 [Wurk API](../README.md) / Workspaces
 
 # Class: Workspaces
@@ -10,40 +14,11 @@ workspaces.
 The `all` property is an iterable which includes all workspaces, regardless
 of selection status.
 
-## Table of contents
-
-### Accessors
-
-- [selectedSize](Workspaces.md#selectedsize)
-
-### Constructors
-
-- [constructor](Workspaces.md#constructor)
-
-### Methods
-
-- [[iterator]](Workspaces.md#[iterator])
-- [\_forEachAsync](Workspaces.md#_foreachasync)
-- [exclude](Workspaces.md#exclude)
-- [forEach](Workspaces.md#foreach)
-- [forEachParallel](Workspaces.md#foreachparallel)
-- [forEachSequential](Workspaces.md#foreachsequential)
-- [forEachStream](Workspaces.md#foreachstream)
-- [forEachSync](Workspaces.md#foreachsync)
-- [include](Workspaces.md#include)
-
-### Properties
-
-- [all](Workspaces.md#all)
-- [concurrency](Workspaces.md#concurrency)
-- [delaySeconds](Workspaces.md#delayseconds)
-- [size](Workspaces.md#size)
-
 ## Accessors
 
 ### selectedSize
 
-• `get` **selectedSize**(): `number`
+> `get` **selectedSize**(): `number`
 
 Number of workspaces which will be included in iteration. This respects
 workspace selection and the inclusion of dependencies and dependents.
@@ -54,17 +29,15 @@ workspace selection and the inclusion of dependencies and dependents.
 
 ## Constructors
 
-### constructor
+### new Workspaces()
 
-• **new Workspaces**(`options`): [`Workspaces`](Workspaces.md)
+> **new Workspaces**(`options`): [`Workspaces`](Workspaces.md)
 
 Create a new workspace collection.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `options` | [`WorkspacesOptions`](../interfaces/WorkspacesOptions.md) |
+• **options**: [`WorkspacesOptions`](../interfaces/WorkspacesOptions.md)
 
 #### Returns
 
@@ -72,9 +45,9 @@ Create a new workspace collection.
 
 ## Methods
 
-### [iterator]
+### `[iterator]`()
 
-▸ **[iterator]**(): `Iterator`\<[`Workspace`](Workspace.md), `any`, `undefined`\>
+> **\[iterator\]**(): `Iterator`\<[`Workspace`](Workspace.md), `any`, `undefined`\>
 
 Get an iterator for selected workspaces.
 
@@ -82,33 +55,35 @@ Get an iterator for selected workspaces.
 
 `Iterator`\<[`Workspace`](Workspace.md), `any`, `undefined`\>
 
-___
+***
 
-### \_forEachAsync
+### \_forEachAsync()
 
-▸ **_forEachAsync**(`options`): `Promise`\<`void`\>
+> `protected` **\_forEachAsync**(`options`): `Promise`\<`void`\>
 
 Asynchronously iterate over selected workspaces.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `options` | `Object` |
-| `options.callback` | [`WorkspaceCallback`](../README.md#workspacecallback) |
-| `options.concurrency` | `number` |
-| `options.signal` | `undefined` \| `AbortSignal` |
-| `options.stream` | `boolean` |
+• **options**
+
+• **options.callback**: [`WorkspaceCallback`](../type-aliases/WorkspaceCallback.md)
+
+• **options.concurrency**: `number`
+
+• **options.signal**: `undefined` \| `AbortSignal`
+
+• **options.stream**: `boolean`
 
 #### Returns
 
 `Promise`\<`void`\>
 
-___
+***
 
-### exclude
+### exclude()
 
-▸ **exclude**(`expression`): `Promise`\<`void`\>
+> **exclude**(`expression`): `Promise`\<`void`\>
 
 Exclude workspaces by name, directory, keyword, or other characteristics.
 
@@ -116,116 +91,108 @@ See the [include](Workspaces.md#include) method for expression syntax.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `expression` | `string` \| `WorkspacePredicate` |
+• **expression**: `string` \| `WorkspacePredicate`
 
 #### Returns
 
 `Promise`\<`void`\>
 
-___
+***
 
-### forEach
+### forEach()
 
-▸ **forEach**(`callback`, `signal?`): `Promise`\<`void`\>
+> **forEach**(`callback`, `signal`?): `Promise`\<`void`\>
 
 Iterate over selected workspaces. This method will behave like one of
 the other `forEach*` methods, depending on the collection configuration.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `callback` | [`WorkspaceCallback`](../README.md#workspacecallback) |
-| `signal?` | `AbortSignal` |
+• **callback**: [`WorkspaceCallback`](../type-aliases/WorkspaceCallback.md)
+
+• **signal?**: `AbortSignal`
 
 #### Returns
 
 `Promise`\<`void`\>
 
-___
+***
 
-### forEachParallel
+### forEachParallel()
 
-▸ **forEachParallel**(`callback`, `signal?`): `Promise`\<`void`\>
+> **forEachParallel**(`callback`, `signal`?): `Promise`\<`void`\>
 
 Iterate over selected workspaces in parallel, without regard for
 topology or concurrency limits.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `callback` | [`WorkspaceCallback`](../README.md#workspacecallback) |
-| `signal?` | `AbortSignal` |
+• **callback**: [`WorkspaceCallback`](../type-aliases/WorkspaceCallback.md)
+
+• **signal?**: `AbortSignal`
 
 #### Returns
 
 `Promise`\<`void`\>
 
-___
+***
 
-### forEachSequential
+### forEachSequential()
 
-▸ **forEachSequential**(`callback`, `signal?`): `Promise`\<`void`\>
+> **forEachSequential**(`callback`, `signal`?): `Promise`\<`void`\>
 
 Iterate over selected workspaces sequentially, without any concurrency.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `callback` | [`WorkspaceCallback`](../README.md#workspacecallback) |
-| `signal?` | `AbortSignal` |
+• **callback**: [`WorkspaceCallback`](../type-aliases/WorkspaceCallback.md)
+
+• **signal?**: `AbortSignal`
 
 #### Returns
 
 `Promise`\<`void`\>
 
-___
+***
 
-### forEachStream
+### forEachStream()
 
-▸ **forEachStream**(`callback`, `signal?`): `Promise`\<`void`\>
+> **forEachStream**(`callback`, `signal`?): `Promise`\<`void`\>
 
 Iterate over selected workspaces in parallel, with topological awaiting
 and concurrency limits.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `callback` | [`WorkspaceCallback`](../README.md#workspacecallback) |
-| `signal?` | `AbortSignal` |
+• **callback**: [`WorkspaceCallback`](../type-aliases/WorkspaceCallback.md)
+
+• **signal?**: `AbortSignal`
 
 #### Returns
 
 `Promise`\<`void`\>
 
-___
+***
 
-### forEachSync
+### forEachSync()
 
-▸ **forEachSync**(`callback`): `void`
+> **forEachSync**(`callback`): `void`
 
 Synchronously iterate over selected workspaces.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `callback` | (`workspace`: [`Workspace`](Workspace.md)) => `void` |
+• **callback**
 
 #### Returns
 
 `void`
 
-___
+***
 
-### include
+### include()
 
-▸ **include**(`expression`): `Promise`\<`void`\>
+> **include**(`expression`): `Promise`\<`void`\>
 
 Include workspaces by name, directory, keyword, or other characteristics.
 
@@ -245,9 +212,7 @@ Glob patterns are supported via the
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `expression` | `string` \| `WorkspacePredicate` |
+• **expression**: `string` \| `WorkspacePredicate`
 
 #### Returns
 
@@ -257,32 +222,32 @@ Glob patterns are supported via the
 
 ### all
 
-• `Readonly` **all**: `Iterable`\<[`Workspace`](Workspace.md)\>
+> `readonly` **all**: `Iterable`\<[`Workspace`](Workspace.md)\>
 
 All workspaces in the collection, regardless of selection status.
 
-___
+***
 
 ### concurrency
 
-• `Readonly` **concurrency**: `number`
+> `readonly` **concurrency**: `number`
 
 Maximum workspaces which may be processed in parallel using the
 asynchronous `forEach*` methods.
 
-___
+***
 
 ### delaySeconds
 
-• `Readonly` **delaySeconds**: `number`
+> `readonly` **delaySeconds**: `number`
 
 Delay a given number of seconds before invoking the next `forEach*`
 callback.
 
-___
+***
 
 ### size
 
-• `Readonly` **size**: `number`
+> `readonly` **size**: `number`
 
 Number of workspaces in the collection.

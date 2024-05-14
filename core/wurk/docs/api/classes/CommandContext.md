@@ -1,3 +1,7 @@
+[**Wurk API**](../README.md) • **Docs**
+
+***
+
 [Wurk API](../README.md) / CommandContext
 
 # Class: CommandContext\<TResult\>
@@ -6,46 +10,17 @@ Context passed to Wurk command action hook.
 
 ## Type parameters
 
-| Name | Type |
-| :------ | :------ |
-| `TResult` | extends `UnknownCliResult` |
+• **TResult** *extends* `UnknownCliResult`
 
 ## Implements
 
 - [`CliResult`](../interfaces/CliResult.md)\<`InferCliResultOptions`\<`TResult`\>, `InferCliResultCommand`\<`TResult`\>\>
 
-## Table of contents
-
-### Accessors
-
-- [commandResult](CommandContext.md#commandresult)
-- [name](CommandContext.md#name)
-- [options](CommandContext.md#options)
-- [parsed](CommandContext.md#parsed)
-
-### Constructors
-
-- [constructor](CommandContext.md#constructor)
-
-### Methods
-
-- [createGit](CommandContext.md#creategit)
-- [getHelpText](CommandContext.md#gethelptext)
-- [printHelp](CommandContext.md#printhelp)
-
-### Properties
-
-- [log](CommandContext.md#log)
-- [pm](CommandContext.md#pm)
-- [root](CommandContext.md#root)
-- [spawn](CommandContext.md#spawn)
-- [workspaces](CommandContext.md#workspaces)
-
 ## Accessors
 
 ### commandResult
 
-• `get` **commandResult**(): `InferCliResultCommand`\<`TResult`\>
+> `get` **commandResult**(): `InferCliResultCommand`\<`TResult`\>
 
 Results of (sub-)command argument parsing and actions.
 
@@ -57,15 +32,11 @@ command.
 
 `InferCliResultCommand`\<`TResult`\>
 
-#### Implementation of
-
-[CliResult](../interfaces/CliResult.md).[commandResult](../interfaces/CliResult.md#commandresult)
-
-___
+***
 
 ### name
 
-• `get` **name**(): `string`
+> `get` **name**(): `string`
 
 The name of the command.
 
@@ -73,15 +44,11 @@ The name of the command.
 
 `string`
 
-#### Implementation of
-
-[CliResult](../interfaces/CliResult.md).[name](../interfaces/CliResult.md#name)
-
-___
+***
 
 ### options
 
-• `get` **options**(): `InferCliResultOptions`\<`TResult`\>
+> `get` **options**(): `InferCliResultOptions`\<`TResult`\>
 
 Options derived from argument parsing and actions.
 
@@ -89,15 +56,11 @@ Options derived from argument parsing and actions.
 
 `InferCliResultOptions`\<`TResult`\>
 
-#### Implementation of
-
-[CliResult](../interfaces/CliResult.md).[options](../interfaces/CliResult.md#options)
-
-___
+***
 
 ### parsed
 
-• `get` **parsed**(): `ReadonlySet`\<`string`\>
+> `get` **parsed**(): `ReadonlySet`\<`string`\>
 
 Option keys which have been parsed from command line arguments.
 
@@ -110,29 +73,17 @@ programmatic updates and side effects.
 
 `ReadonlySet`\<`string`\>
 
-#### Implementation of
-
-[CliResult](../interfaces/CliResult.md).[parsed](../interfaces/CliResult.md#parsed)
-
 ## Constructors
 
-### constructor
+### new CommandContext()
 
-• **new CommandContext**\<`TResult`\>(`options`): [`CommandContext`](CommandContext.md)\<`TResult`\>
+> **new CommandContext**\<`TResult`\>(`options`): [`CommandContext`](CommandContext.md)\<`TResult`\>
 
 Create a new command context.
 
-#### Type parameters
-
-| Name | Type |
-| :------ | :------ |
-| `TResult` | extends `UnknownCliResult` |
-
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `options` | [`CommandContextOptions`](../interfaces/CommandContextOptions.md)\<`TResult`\> |
+• **options**: [`CommandContextOptions`](../interfaces/CommandContextOptions.md)\<`TResult`\>
 
 #### Returns
 
@@ -140,9 +91,9 @@ Create a new command context.
 
 ## Methods
 
-### createGit
+### createGit()
 
-▸ **createGit**(): `Promise`\<[`Git`](Git.md)\>
+> `readonly` **createGit**(): `Promise`\<[`Git`](Git.md)\>
 
 Create a Git API instance for the workspace directory.
 
@@ -154,19 +105,17 @@ Throws:
 
 `Promise`\<[`Git`](Git.md)\>
 
-___
+***
 
-### getHelpText
+### getHelpText()
 
-▸ **getHelpText**(`error?`): `string`
+> `readonly` **getHelpText**(`error`?): `string`
 
 Get the help text of the command that produced this result.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `error?` | `unknown` |
+• **error?**: `unknown`
 
 #### Returns
 
@@ -174,21 +123,19 @@ Get the help text of the command that produced this result.
 
 #### Implementation of
 
-[CliResult](../interfaces/CliResult.md).[getHelpText](../interfaces/CliResult.md#gethelptext)
+[`CliResult`](../interfaces/CliResult.md).[`getHelpText`](../interfaces/CliResult.md#gethelptext)
 
-___
+***
 
-### printHelp
+### printHelp()
 
-▸ **printHelp**(`error?`): `void`
+> `readonly` **printHelp**(`error`?): `void`
 
 Print the help text of the command that produced this result.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `error?` | `unknown` |
+• **error?**: `unknown`
 
 #### Returns
 
@@ -196,63 +143,59 @@ Print the help text of the command that produced this result.
 
 #### Implementation of
 
-[CliResult](../interfaces/CliResult.md).[printHelp](../interfaces/CliResult.md#printhelp)
+[`CliResult`](../interfaces/CliResult.md).[`printHelp`](../interfaces/CliResult.md#printhelp)
 
 ## Properties
 
 ### log
 
-• `Readonly` **log**: [`Log`](Log.md)
+> `readonly` **log**: [`Log`](Log.md)
 
 Global logger for the command. This logger has no prefix unless one is
 set by the command.
 
-___
+***
 
 ### pm
 
-• `Readonly` **pm**: `string`
+> `readonly` **pm**: `string`
 
 The package manager in use. This should be one of: `npm`, `pnpm`, or
 `yarn`. Additional package managers may be supported in the future.
 
-___
+***
 
 ### root
 
-• `Readonly` **root**: [`Workspace`](Workspace.md)
+> `readonly` **root**: [`Workspace`](Workspace.md)
 
 The root workspace of the project.
 
-___
+***
 
-### spawn
+### spawn()
 
-• `Readonly` **spawn**: (`cmd`: `string`, `sparseArgs?`: `SpawnSparseArgs`, ...`options`: [`SpawnOptions`](../interfaces/SpawnOptions.md)[]) => `Promise`\<[`SpawnResult`](../interfaces/SpawnResult.md)\>
+> `readonly` **spawn**: (`cmd`, `sparseArgs`?, ...`options`) => `Promise`\<[`SpawnResult`](../interfaces/SpawnResult.md)\>
 
 Spawn a child process relative to the root workspace directory.
 
-#### Type declaration
+#### Parameters
 
-▸ (`cmd`, `sparseArgs?`, `...options`): `Promise`\<[`SpawnResult`](../interfaces/SpawnResult.md)\>
+• **cmd**: `string`
 
-##### Parameters
+• **sparseArgs?**: `SpawnSparseArgs`
 
-| Name | Type |
-| :------ | :------ |
-| `cmd` | `string` |
-| `sparseArgs?` | `SpawnSparseArgs` |
-| `...options` | [`SpawnOptions`](../interfaces/SpawnOptions.md)[] |
+• ...**options?**: [`SpawnOptions`](../interfaces/SpawnOptions.md)[]
 
-##### Returns
+#### Returns
 
 `Promise`\<[`SpawnResult`](../interfaces/SpawnResult.md)\>
 
-___
+***
 
 ### workspaces
 
-• `Readonly` **workspaces**: [`Workspaces`](Workspaces.md)
+> `readonly` **workspaces**: [`Workspaces`](Workspaces.md)
 
 Collection of all child workspaces in the project. Does not include the
 root workspace.

@@ -27,8 +27,9 @@
     "access": "public"
   },
   "dependencies": {
-    "@wurk/json": "*",
-    "@wurk/spawn": "*",
-    "semver": "^7.6.0"
+    "@types/semver": "^7.5.8",
+    "@wurk/json": "workspace:^",
+    "@wurk/spawn": "workspace:^",
+    "semver": "^7.6.2"
   }
 }
